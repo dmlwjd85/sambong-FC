@@ -370,10 +370,10 @@
                                 <h3 class="text-3xl font-display text-purple-400 flex items-center gap-3">
                                     <i class="fa-solid fa-shirt"></i> 아이템 상점
                                 </h3>
-                                <p class="text-sm text-slate-400 mt-2">획득한 자산(B)으로 내 카드를 멋지게 꾸며보세요!</p>
+                                <p class="text-sm text-slate-400 mt-2" id="shopSubTitle">획득한 자산(B)으로 카드를 멋지게 꾸며보세요!</p>
                             </div>
                             <div class="text-right">
-                                <p class="text-xs text-slate-400 font-bold mb-1">보유 자산</p>
+                                <p class="text-xs text-slate-400 font-bold mb-1" id="shopWalletLabel">보유 자산</p>
                                 <div class="font-display text-3xl text-fut-gold"><span id="shopBong">0</span> B</div>
                             </div>
                         </div>
@@ -397,40 +397,47 @@
 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'sambong-futsal-ultimate'; 
 
+        // 1. 정의정, 정의영 추가 (정렬)
         const ALLOWED_PLAYERS = [
             '김단엘', '김다래', '김라희', '김민지', '김사랑비', '김지훈', '노승희', '박소윤', '박준수', '박하율', '박현수', '백시율', 
-            '이가온', '이동해', '이시형', '이예주', '이준용', '이지안', '인시진', '임은영', '조이담', '최윤희', '함인솔', '황주하', '황훈태', '황혜민', '황혜윤'
+            '이가온', '이동해', '이시형', '이예주', '이준용', '이지안', '인시진', '임은영', '정의영', '정의정', '조이담', '최윤희', '함인솔', '황주하', '황훈태', '황혜민', '황혜윤'
         ].sort((a,b) => a.localeCompare(b));
+
+        // 2. 남여 성별 매핑 (F: 여자 👧, M: 남자 👦)
+        const GENDER_MAP = {
+            '김단엘': 'M', '김다래': 'F', '김라희': 'F', '김민지': 'F', '김사랑비': 'F', '김지훈': 'M', '노승희': 'F', '박소윤': 'F', '박준수': 'M', '박하율': 'F', '박현수': 'M', '백시율': 'M', 
+            '이가온': 'F', '이동해': 'M', '이시형': 'M', '이예주': 'F', '이준용': 'M', '이지안': 'F', '인시진': 'M', '임은영': 'F', '정의영': 'M', '정의정': 'M', '조이담': 'M', '최윤희': 'F', '함인솔': 'F', '황주하': 'M', '황훈태': 'M', '황혜민': 'F', '황혜윤': 'F'
+        };
 
         // --- 데이터 상수: 오늘의 꿀팁 ---
         const DAILY_TIPS = [
             { 
                 title: "풋살의 기본, 발바닥 컨트롤! (Sole Control)", 
-                img: "", 
+                img: "👟 ⚽", 
                 category: "기본기",
                 desc: "풋살공은 축구공보다 작고 덜 튀어 오릅니다. 패스를 받을 때 발 안쪽(인사이드)으로 받기보다, 발바닥으로 공을 지그시 밟듯이 컨트롤해 보세요. 공이 튀지 않아 다음 동작(패스, 슈팅, 드리블)을 훨씬 빠르게 이어갈 수 있답니다!" 
             },
             { 
                 title: "수비의 핵심 픽소(Fixo), 라인을 지켜라!", 
-                img: "", 
+                img: "🛡️", 
                 category: "포지션",
                 desc: "축구의 센터백 역할을 하는 '픽소'는 수비의 기둥입니다. 무리하게 앞으로 나가서 공격에 가담하기보다는, 뒤에서 팀원들의 위치를 지시하고 상대의 역습을 가장 먼저 차단하는 책임감을 가져야 합니다." 
             },
             { 
                 title: "아라(Ala)의 움직임, 공간을 창출하라", 
-                img: "", 
+                img: "🏃‍♂️💨", 
                 category: "전술",
                 desc: "양쪽 측면에 위치하는 '아라(윙어)'는 쉴 새 없이 움직여야 합니다. 가만히 서서 패스를 기다리기보다는, V자로 뛰거나 수비수 뒤쪽 공간으로 침투하며 픽소나 피보가 패스할 수 있는 빈 공간을 계속해서 만들어주세요." 
             },
             { 
                 title: "강력한 슈팅을 위한 디딤발의 위치", 
-                img: "", 
+                img: "⚡⚽", 
                 category: "슈팅",
                 desc: "슈팅이 자꾸 뜨거나 약하게 나간다면 '디딤발'을 확인하세요! 디딤발은 공의 바로 옆, 주먹 하나 정도 들어갈 간격에 두어야 합니다. 디딤발의 발끝이 향하는 곳으로 공이 날아간다는 사실을 잊지 마세요." 
             },
             { 
                 title: "최강의 공격 무기, 2대1 패스 (Wall Pass)", 
-                img: "", 
+                img: "🤝", 
                 category: "팀플레이",
                 desc: "수비수를 가장 쉽게 뚫는 방법은 동료를 이용하는 것입니다. 공을 가진 선수가 동료에게 패스한 직후, 곧바로 수비수 뒤 공간으로 뛰어들어가 다시 패스를 받는 2대1 패스는 풋살에서 가장 치명적인 전술입니다." 
             }
@@ -438,6 +445,15 @@
 
         // --- 데이터 상수: 꾸미기 상점 ---
         const SHOP_ITEMS = [
+            // 3. 캐릭터(아바타) 추가
+            { id: 'avatar_lion', name: '용맹한 사자', type: 'avatar', price: 300, icon: '🦁', desc: '필드의 지배자 사자 아바타로 변경합니다.' },
+            { id: 'avatar_tiger', name: '날쌘 호랑이', type: 'avatar', price: 300, icon: '🐯', desc: '날카로운 공격 본능 호랑이 아바타로 변경합니다.' },
+            { id: 'avatar_fox', name: '영리한 여우', type: 'avatar', price: 300, icon: '🦊', desc: '센스있는 플레이 메이커 여우 아바타로 변경합니다.' },
+            { id: 'avatar_rabbit', name: '발빠른 토끼', type: 'avatar', price: 300, icon: '🐰', desc: '지치지 않는 체력의 토끼 아바타로 변경합니다.' },
+            { id: 'avatar_alien', name: '외계인', type: 'avatar', price: 1000, icon: '👽', desc: '지구 방위대급 외계인 아바타로 변경합니다.' },
+            { id: 'avatar_robot', name: '사이보그', type: 'avatar', price: 1000, icon: '🤖', desc: '지치지 않는 강철 체력 머신으로 변경합니다.' },
+            { id: 'avatar_ninja', name: '닌자', type: 'avatar', price: 500, icon: '🥷', desc: '보이지 않는 은밀한 움직임의 닌자 아바타입니다.' },
+
             { id: 'aura_fire', name: '불꽃 투지 (오라)', type: 'aura', price: 200, icon: '🔥', desc: '카드에서 뜨거운 불꽃 오라가 뿜어져 나옵니다.', class: 'aura-fire' },
             { id: 'aura_ice', name: '냉기 폭발 (오라)', type: 'aura', price: 200, icon: '❄️', desc: '카드에서 차가운 얼음 오라가 뿜어져 나옵니다.', class: 'aura-ice' },
             { id: 'aura_gold', name: '전설의 빛 (오라)', type: 'aura', price: 500, icon: '✨', desc: '최상위 선수를 위한 황금빛 오라입니다.', class: 'aura-gold' },
@@ -452,7 +468,7 @@
         ];
 
         // State 관리
-        window.playerState = { id: '', isGM: false, name: '', inventory: [], equippedAura: null, equippedShoes: null, equippedBall: null };
+        window.playerState = { id: '', isGM: false, name: '', inventory: [], equippedAura: null, equippedShoes: null, equippedBall: null, equippedAvatar: null };
         window.allPlayersData = [];
         window.checkedInPlayers = new Set();
         window.selectedPlayerId = null;
@@ -480,6 +496,15 @@
             if(['CAM','CM','CDM'].includes(pos)) return 'bg-emerald-500';
             if(['CB','LB','RB'].includes(pos)) return 'bg-blue-500';
             if(pos === 'GK') return 'bg-orange-500'; return 'bg-slate-500';
+        };
+        
+        // 4. 아바타 결정 로직 (장착템이 있으면 그것, 없으면 성별에 따라 부여)
+        const getAvatar = (p) => {
+            if (p.equippedAvatar) {
+                const avatarItem = SHOP_ITEMS.find(i => i.id === p.equippedAvatar);
+                if (avatarItem) return avatarItem.icon;
+            }
+            return GENDER_MAP[p.name] === 'F' ? '👧' : '👦';
         };
 
         window.customAlert = (m) => new Promise(r => {
@@ -509,14 +534,13 @@
 
         // --- 꿀팁 렌더링 ---
         function renderDailyTip() {
-            // 1년 중 오늘이 며칠째인지 계산하여 인덱스 결정 (매일 바뀜)
             const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
             const tip = DAILY_TIPS[dayOfYear % DAILY_TIPS.length];
 
             document.getElementById('dailyTipContainer').innerHTML = `
                 <div class="h-64 bg-slate-800 flex items-center justify-center border-b border-slate-700 relative overflow-hidden group">
                     <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition duration-500 z-10"></div>
-                    <p class="text-slate-400 text-sm z-0 absolute">${tip.img}</p>
+                    <p class="text-[6rem] z-0 absolute drop-shadow-lg">${tip.img}</p>
                     <span class="absolute top-4 left-4 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded z-20">${tip.category}</span>
                 </div>
                 <div class="p-6">
@@ -526,33 +550,49 @@
             `;
         }
 
-        // --- 상점 렌더링 ---
+        // --- 상점 렌더링 (GM도 확인 가능하도록 변경) ---
         window.renderShop = () => {
-            const p = window.allPlayersData.find(x => x.id === window.playerState.id);
-            if(!p) return;
+            // GM 모드일 때는 라커룸에서 현재 "선택된" 학생의 인벤토리를 보여줌
+            const targetId = window.playerState.isGM ? window.selectedPlayerId : window.playerState.id;
+            const p = window.allPlayersData.find(x => x.id === targetId);
+            
+            if(!p) {
+                document.getElementById('shopGrid').innerHTML = '<p class="text-slate-400">선택된 선수가 없습니다.</p>';
+                return;
+            }
             
             const bong = p.bong || 0;
             const inventory = p.inventory || [];
+            
             document.getElementById('shopBong').innerText = bong;
+            document.getElementById('shopWalletLabel').innerText = window.playerState.isGM ? `[${p.name}] 선수의 자산` : `내 보유 자산`;
+            document.getElementById('shopSubTitle').innerText = window.playerState.isGM ? `감독 모드: 아이템을 클릭해 학생에게 무료로 선물할 수 있습니다.` : `획득한 자산(B)으로 내 카드를 멋지게 꾸며보세요!`;
 
             let html = '';
             SHOP_ITEMS.forEach(item => {
                 const isOwned = inventory.includes(item.id);
-                const isEquipped = (p.equippedAura === item.id) || (p.equippedShoes === item.id) || (p.equippedBall === item.id);
+                const isEquipped = (p.equippedAura === item.id) || (p.equippedShoes === item.id) || (p.equippedBall === item.id) || (p.equippedAvatar === item.id);
                 
                 let btnHtml = '';
                 if(isEquipped) {
-                    btnHtml = `<button onclick="window.equipItem('${item.id}', '${item.type}')" class="w-full bg-slate-700 text-white text-xs font-bold py-2 rounded border border-slate-500">장착 해제</button>`;
+                    // 장착 중인 상태
+                    btnHtml = `<button onclick="window.equipItem('${item.id}', '${item.type}')" class="w-full bg-slate-700 text-white text-xs font-bold py-2 rounded border border-slate-500 hover:bg-red-900 transition">장착 해제</button>`;
                 } else if(isOwned) {
+                    // 보유하고 있으나 미장착 상태
                     btnHtml = `<button onclick="window.equipItem('${item.id}', '${item.type}')" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 rounded transition">장착하기</button>`;
                 } else {
-                    const canAfford = bong >= item.price;
-                    btnHtml = `<button onclick="window.purchaseItem('${item.id}')" class="w-full ${canAfford ? 'bg-purple-600 hover:bg-purple-500 text-white' : 'bg-slate-800 text-slate-500 cursor-not-allowed'} text-xs font-bold py-2 rounded transition">구매 (${item.price} B)</button>`;
+                    // 미보유 상태
+                    if(window.playerState.isGM) {
+                        btnHtml = `<button onclick="window.purchaseItem('${item.id}')" class="w-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 rounded transition"><i class="fa-solid fa-gift mr-1"></i> 선물하기 (무료)</button>`;
+                    } else {
+                        const canAfford = bong >= item.price;
+                        btnHtml = `<button onclick="window.purchaseItem('${item.id}')" class="w-full ${canAfford ? 'bg-purple-600 hover:bg-purple-500 text-white' : 'bg-slate-800 text-slate-500 cursor-not-allowed'} text-xs font-bold py-2 rounded transition">구매 (${item.price} B)</button>`;
+                    }
                 }
 
                 html += `
                     <div class="bg-slate-900/60 border border-slate-700 rounded-xl p-4 flex items-center gap-4 hover:border-purple-500/50 transition">
-                        <div class="text-4xl w-16 h-16 bg-slate-800 flex items-center justify-center rounded-lg shadow-inner flex-shrink-0">${item.icon}</div>
+                        <div class="text-4xl w-16 h-16 bg-slate-800 flex items-center justify-center rounded-lg shadow-inner flex-shrink-0 drop-shadow-md">${item.icon}</div>
                         <div class="flex-grow">
                             <h5 class="font-bold text-white text-sm mb-1">${item.name}</h5>
                             <p class="text-[10px] text-slate-400 mb-3 line-clamp-2">${item.desc}</p>
@@ -564,41 +604,56 @@
             document.getElementById('shopGrid').innerHTML = html;
         };
 
-        // 아이템 구매 로직
+        // 아이템 구매/선물 로직
         window.purchaseItem = async (itemId) => {
-            if(window.playerState.isGM) return window.customAlert("감독님은 꾸미기 상점을 이용할 수 없습니다.");
-            const p = window.allPlayersData.find(x => x.id === window.playerState.id);
+            const targetId = window.playerState.isGM ? window.selectedPlayerId : window.playerState.id;
+            const p = window.allPlayersData.find(x => x.id === targetId);
             const item = SHOP_ITEMS.find(x => x.id === itemId);
             if(!p || !item) return;
 
-            if((p.bong || 0) < item.price) return window.customAlert("자산(B)이 부족합니다!");
-            if(!await window.customConfirm(`[${item.name}] 아이템을 ${item.price} B에 구매하시겠습니까?`)) return;
+            let updates = {};
+
+            if(window.playerState.isGM) {
+                // 감독의 경우 무료 선물
+                if(!await window.customConfirm(`감독 권한으로 [${p.name}] 선수에게 [${item.name}]을(를) 선물하시겠습니까?\n(선수의 자산은 차감되지 않습니다.)`)) return;
+            } else {
+                // 학생의 경우 자산 차감 구매
+                if((p.bong || 0) < item.price) return window.customAlert("자산(B)이 부족합니다!");
+                if(!await window.customConfirm(`[${item.name}] 아이템을 ${item.price} B에 구매하시겠습니까?`)) return;
+                updates.bong = (p.bong || 0) - item.price;
+            }
 
             const newInventory = [...(p.inventory || []), itemId];
+            updates.inventory = newInventory;
+
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + p.id);
+            await setDoc(docRef, updates, { merge: true });
             
-            await setDoc(docRef, { bong: (p.bong || 0) - item.price, inventory: newInventory }, { merge: true });
             triggerConfetti();
-            window.customAlert(`🎉 [${item.name}] 획득 완료! 장착하기 버튼을 눌러보세요.`);
+            window.customAlert(window.playerState.isGM ? `🎁 [${item.name}] 선물 완료!` : `🎉 [${item.name}] 획득 완료! 장착하기 버튼을 눌러보세요.`);
             renderShop();
         };
 
         // 아이템 장착 로직
         window.equipItem = async (itemId, type) => {
-            const p = window.allPlayersData.find(x => x.id === window.playerState.id);
+            const targetId = window.playerState.isGM ? window.selectedPlayerId : window.playerState.id;
+            const p = window.allPlayersData.find(x => x.id === targetId);
             const item = SHOP_ITEMS.find(x => x.id === itemId);
             if(!p || !item) return;
 
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + p.id);
             let updates = {};
             
-            // 장착 토글 로직
             if(type === 'aura') updates.equippedAura = p.equippedAura === itemId ? null : itemId;
             if(type === 'shoes') updates.equippedShoes = p.equippedShoes === itemId ? null : itemId;
             if(type === 'ball') updates.equippedBall = p.equippedBall === itemId ? null : itemId;
+            if(type === 'avatar') updates.equippedAvatar = p.equippedAvatar === itemId ? null : itemId;
 
             await setDoc(docRef, updates, { merge: true });
-            renderShop(); // 버튼 상태 업데이트
+            // 장착 즉시 화면에 갱신시키기 위해 renderShop 외에도 필요한 UI 호출
+            renderShop(); 
+            renderLockerRoom();
+            renderSelectedCard(targetId);
         };
 
 
@@ -702,7 +757,7 @@
                         name: isGM ? (pId==='gm1'?'감독 J':'수석코치 J') : pId, pin, pos: 'CM',
                         pac: r(), sho: r(), pas: r(), dri: r(), def: r(), phy: r(),
                         level: 1, exp: 0, goals: 0, assists: 0, matches: 0, training: 0, saves: 0, bong: 0, lastWageWeek: '',
-                        inventory: [], equippedAura: null, equippedShoes: null, equippedBall: null
+                        inventory: [], equippedAura: null, equippedShoes: null, equippedBall: null, equippedAvatar: null
                     };
                     await setDoc(docRef, baseData);
                     window.playerState = { id: pId, isGM, ...baseData };
@@ -718,7 +773,7 @@
                 
                 if(isGM) {
                     document.getElementById('gmAttendanceTools').classList.remove('hidden');
-                    document.getElementById('btnTabShop').classList.add('hidden'); // 감독은 꾸미기 상점 숨김
+                    // 감독의 경우 꾸미기 탭을 숨기는 코드 삭제 (선생님도 진입하여 선물 가능)
                 }
 
                 window.selectedPlayerId = isGM ? (ALLOWED_PLAYERS[0] || null) : pId;
@@ -727,10 +782,9 @@
             } catch(e) { window.customAlert("로그인 에러: " + e.message); }
         }
 
-        // --- 라커룸 / 상세 카드 렌더링 ---
+        // --- 라커룸 렌더링 ---
         function renderLockerRoom() {
             const grid = document.getElementById('lockerGrid');
-            // 데이터가 0명일 때 return 해버려서 무한 로딩이 걸리던 문제를 수정했습니다.
             let html = '';
             ALLOWED_PLAYERS.forEach(name => {
                 const p = window.allPlayersData.find(x => x.name === name);
@@ -745,7 +799,7 @@
                         <div class="mini-card flex flex-col items-center p-2 rounded-xl bg-pitch-panel border-2 ${borderClass} cursor-pointer ${isSelected ? 'selected' : ''} ${isChecked ? 'checked-in' : 'checked-out'}" onclick="window.selectPlayer('${p.id}')">
                             <input type="checkbox" class="locker-checkbox absolute top-1.5 left-1.5 w-5 h-5 shadow-lg z-10" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); window.toggleCheck('${p.id}')">
                             <div class="absolute top-1 right-1 bg-slate-800 text-[9px] font-bold px-1.5 py-0.5 rounded text-white border border-slate-600 shadow">LV.${lv}</div>
-                            <div class="text-3xl mt-4 mb-1 drop-shadow-md">👦</div>
+                            <div class="text-3xl mt-4 mb-1 drop-shadow-md">${getAvatar(p)}</div>
                             <div class="font-oswald text-xl font-bold leading-none ${ovr>=80?'text-fut-gold':'text-white'}">${ovr}</div>
                             <div class="flex items-center gap-1 mt-1"><span class="text-[10px] font-bold ${getPosColor(p.pos)}">${p.pos||'CM'}</span><span class="text-xs font-bold text-slate-300 truncate max-w-[50px]">${p.name}</span></div>
                         </div>`;
@@ -764,7 +818,12 @@
 
         window.selectPlayer = (pId) => {
             window.selectedPlayerId = pId;
-            renderLockerRoom(); renderSelectedCard(pId);
+            renderLockerRoom(); 
+            renderSelectedCard(pId);
+            
+            // 상점 탭이 열려있다면 새로 선택된 선수의 인벤토리로 화면 즉시 갱신
+            if(!document.getElementById('tabShop').classList.contains('hidden')) renderShop();
+            
             if(window.innerWidth < 1024) document.getElementById('detailPanelTitle').scrollIntoView();
         };
 
@@ -789,6 +848,7 @@
             else if (ovr >= 65) card.className = "fut-card card-silver w-64 h-96 p-4 flex flex-col justify-between shadow-2xl relative";
             else card.className = "fut-card card-bronze w-64 h-96 p-4 flex flex-col justify-between shadow-2xl relative";
 
+            document.getElementById('detailAvatar').innerText = getAvatar(p);
             document.getElementById('detailName').innerText = p.name;
             document.getElementById('detailOvr').innerText = ovr;
             document.getElementById('detailPos').innerText = p.pos || 'CF';
