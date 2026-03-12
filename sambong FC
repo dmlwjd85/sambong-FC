@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="ko" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>삼봉초 풋살클럽: 얼티밋 스쿼드</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Noto Sans KR', 'sans-serif'],
+                        'display': ['Black Han Sans', 'sans-serif'],
+                        'oswald': ['Oswald', 'sans-serif'],
+                    },
+                    colors: {
+                        'pitch-bg': '#0a1912',
+                        'pitch-panel': '#11291d',
+                        'fut-gold': '#e8c271',
+                        'fut-gold-dark': '#b08d41',
+                        'fut-rare': '#38ff8e',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #0a1912; color: #f8fafc; overflow-x: hidden; background-image: radial-gradient(circle at 50% -20%, #15452d, #0a1912); }
+        h1, h2, h3, .font-display { font-family: 'Black Han Sans', sans-serif; letter-spacing: 1px; }
+        
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0a1912; }
+        ::-webkit-scrollbar-thumb { background: #1f422e; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #e8c271; }
+
+        .glass-panel { background: rgba(17, 41, 29, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(232, 194, 113, 0.2); }
+
+        /* 피파 스타일 카드 CSS */
+        .fut-card {
+            background: linear-gradient(135deg, #fceda1 0%, #e8c271 40%, #b08d41 100%);
+            clip-path: polygon(10% 0, 90% 0, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0 90%, 0 10%);
+            color: #332305;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 0 10px rgba(255,255,255,0.5);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+        }
+        .fut-card::after {
+            content: ''; position: absolute; top: 2px; left: 2px; right: 2px; bottom: 2px;
+            clip-path: polygon(10% 0, 90% 0, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0 90%, 0 10%);
+            border: 2px solid rgba(255,255,255,0.3); pointer-events: none;
+        }
+        .fut-card:hover { transform: translateY(-5px) scale(1.02); box-shadow: 0 15px 30px rgba(232, 194, 113, 0.4); z-index: 10; }
+        
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; }
+        .stat-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; font-weight: 700; }
+        .stat-val { font-weight: 900; font-size: 1.1rem; font-family: 'Oswald', sans-serif; }
+
+        .card-bronze { background: linear-gradient(135deg, #d4af37 0%, #aa771c 100%); } 
+        .card-silver { background: linear-gradient(135deg, #e2e2e2 0%, #999999 100%); }
+        .card-gold { background: linear-gradient(135deg, #fceda1 0%, #e8c271 40%, #b08d41 100%); }
+        .card-totw { background: linear-gradient(135deg, #111 0%, #333 100%); color: #e8c271; border: 1px solid #e8c271; }
+        
+        .floating-text { position: absolute; pointer-events: none; animation: floatUpFade 1s cubic-bezier(0.25, 1, 0.5, 1) forwards; font-weight: 900; z-index: 9999; text-shadow: 0 0 10px rgba(0,0,0,0.8); }
+        @keyframes floatUpFade { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-40px) scale(1.5); opacity: 0; } }
+        
+        /* 툴팁 */
+        .tooltip { visibility: hidden; position: absolute; z-index: 50; background-color: #11291d; color: #fff; text-align: center; border-radius: 6px; padding: 5px 10px; border: 1px solid #38ff8e; font-size: 0.75rem; bottom: 125%; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity 0.3s; white-space: nowrap; }
+        .has-tooltip:hover .tooltip { visibility: visible; opacity: 1; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- 로그인 오버레이 -->
+    <div id="loginOverlay" class="fixed inset-0 bg-pitch-bg z-[100] flex flex-col items-center justify-center px-4 transition-opacity duration-500">
+        <div class="text-center mb-8">
+            <i class="fa-regular fa-futbol text-5xl text-fut-rare mb-4 animate-bounce"></i>
+            <h1 class="text-5xl font-display text-white tracking-widest drop-shadow-[0_0_15px_rgba(56,255,142,0.5)]">SAMBONG FC</h1>
+            <p class="text-emerald-400 mt-2 font-bold">삼봉초 풋살클럽 (평일 훈련 & 주말 리그)</p>
+        </div>
+
+        <div class="glass-panel p-8 rounded-3xl max-w-sm w-full shadow-2xl border-t-4 border-t-fut-rare">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-slate-400 mb-1">직책 및 이름 선택</label>
+                    <select id="loginId" class="w-full bg-slate-800 border border-slate-600 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-fut-rare font-bold appearance-none mb-3">
+                        <option value="" disabled selected>선택하세요</option>
+                        <option value="player" class="text-fut-rare">👤 선수 (직접 이름 입력)</option>
+                        <option disabled>─── 코칭 스태프 ───</option>
+                        <option value="gm1" class="text-fut-gold">👑 전설감독 J (선생님)</option>
+                        <option value="gm2" class="text-fut-gold">👑 수석코치 J (코치님)</option>
+                    </select>
+                    
+                    <div id="playerNameInputContainer" class="hidden">
+                        <input type="text" id="loginPlayerName" placeholder="자신의 이름을 정확히 입력하세요" class="w-full bg-slate-900 border border-emerald-600 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-fut-rare font-bold text-center">
+                    </div>
+                </div>
+                
+                <div id="pinContainer">
+                    <label class="block text-sm font-bold text-slate-400 mb-1">비밀번호 (PIN)</label>
+                    <input type="password" id="loginPin" placeholder="4자리 숫자" class="w-full bg-slate-800 border border-slate-600 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-fut-rare font-bold text-center tracking-[0.5em]" maxlength="4" pattern="[0-9]*" inputmode="numeric">
+                </div>
+
+                <button id="btnLogin" class="w-full bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white font-bold py-3 rounded-xl shadow-lg transition transform hover:scale-105 mt-4">
+                    라커룸 입장
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 네비게이션 -->
+    <nav class="fixed top-0 w-full z-50 glass-panel border-b border-emerald-900/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-shield-halved text-2xl text-fut-gold"></i>
+                    <span class="font-display text-xl sm:text-2xl text-white tracking-wider">SAMBONG FC</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div id="saveStatus" class="hidden text-xs text-slate-400 items-center gap-2 bg-pitch-panel px-3 py-1.5 rounded-full border border-emerald-800">
+                        <span id="playerNameDisplay" class="font-bold text-white"></span>
+                    </div>
+                    <button onclick="window.logout()" class="text-xs bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-lg transition border border-slate-600">
+                        <i class="fa-solid fa-right-from-bracket"></i> 로그아웃
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="pt-24 pb-12 px-4 max-w-7xl mx-auto space-y-12">
+        
+        <!-- 헤더 -->
+        <header class="text-center space-y-4">
+            <h1 class="text-3xl sm:text-5xl font-display text-transparent bg-clip-text bg-gradient-to-r from-fut-rare to-emerald-200 drop-shadow-lg">
+                얼티밋 스쿼드 관리소
+            </h1>
+            <p class="text-slate-400 max-w-2xl mx-auto break-keep">평일 훈련과 주말 리그 경기에서 활약하고 나만의 선수 카드를 전설 등급으로 성장시키세요!</p>
+        </header>
+
+        <!-- ★ 마스터(감독/코치) 전용 경기 기록 패널 ★ -->
+        <section id="adminDashboard" class="hidden scroll-mt-24">
+            <div class="glass-panel p-6 rounded-2xl mb-8 border border-fut-gold/50 shadow-[0_0_20px_rgba(232,194,113,0.15)] bg-gradient-to-br from-pitch-panel to-emerald-900/40">
+                <h2 class="text-2xl font-display text-fut-gold mb-4 flex items-center gap-2"><i class="fa-solid fa-clipboard-list"></i> 선수단 스탯 및 출석부 관리 (코칭스태프 전용)</h2>
+                
+                <div class="overflow-x-auto pb-4">
+                    <table class="w-full text-left text-sm text-slate-300 min-w-[800px]">
+                        <thead class="text-xs uppercase bg-pitch-panel text-emerald-400 border-b border-emerald-800">
+                            <tr>
+                                <th class="px-2 py-3">선수 / OVR</th>
+                                <th class="px-2 py-3 text-center">스탯 현황 (클릭 시 직접 수정)</th>
+                                <th class="px-2 py-3 text-center">라이브 퀵 추가 (+1)</th>
+                                <th class="px-2 py-3 text-center">평점 (OVR+) 및 자산 관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminTableBody">
+                            <!-- JS 렌더링 -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- ★ 관리자 전용 날짜별 스마트 출석부 ★ -->
+                <div class="mt-8 pt-6 border-t border-emerald-800/50">
+                    <h3 class="text-xl font-display text-emerald-400 mb-4 flex items-center gap-2"><i class="fa-regular fa-calendar-check"></i> 날짜별 출석부 관리</h3>
+                    <p class="text-xs text-slate-400 mb-4">선수들을 체크하고 저장하면 해당 날짜의 출석 기록이 보관됩니다. 이전 기록을 클릭하면 당시의 출석 현황을 다시 불러옵니다.</p>
+                    
+                    <div class="flex flex-col sm:flex-row gap-4 mb-4 items-start sm:items-center">
+                        <input type="date" id="adminAttDate" class="bg-slate-800 border border-emerald-700 rounded-xl px-4 py-2 text-white font-bold outline-none focus:border-fut-rare">
+                        <button onclick="window.saveAdminAttendance()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-6 rounded-xl shadow-lg transition flex items-center">
+                            <i class="fa-solid fa-floppy-disk mr-2"></i> 현재 체크된 출석 저장
+                        </button>
+                    </div>
+                    
+                    <div id="adminAttCheckboxes" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 mb-6">
+                        <!-- JS 렌더링 (가나다 순) -->
+                    </div>
+                    
+                    <h4 class="font-bold text-slate-300 mb-3 border-b border-slate-700 pb-1">저장된 과거 출석 기록 (클릭하여 불러오기)</h4>
+                    <div id="adminAttHistory" class="flex gap-2 flex-wrap min-h-[40px]">
+                        <span class="text-sm text-slate-500"><i class="fa-solid fa-spinner fa-spin"></i> 기록을 불러오는 중...</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="grid lg:grid-cols-12 gap-8">
+            <!-- 좌측: 내 카드 & 스탯 -->
+            <div class="lg:col-span-4 space-y-6 flex flex-col items-center lg:items-start">
+                
+                <!-- 👑 내 FUT 카드 -->
+                <div id="myFutCard" class="fut-card card-gold w-64 h-96 p-4 flex flex-col justify-between mx-auto lg:mx-0">
+                    <div class="flex justify-between items-start">
+                        <div class="flex flex-col items-center relative">
+                            <span class="font-oswald text-4xl font-bold leading-none" id="cardOvr">85</span>
+                            <div class="has-tooltip cursor-pointer flex items-center gap-1 hover:text-white transition" onclick="window.openPositionModal()">
+                                <span class="font-oswald text-sm font-bold" id="cardPos">ST</span>
+                                <i class="fa-solid fa-pen text-[10px] opacity-50"></i>
+                                <span class="tooltip">포지션 변경</span>
+                            </div>
+                            <div class="mt-1 flex items-center justify-center text-xl leading-none drop-shadow-sm">🇰🇷</div>
+                        </div>
+                        <div class="text-6xl pt-2 pr-2 drop-shadow-md" id="cardAvatar">👦</div>
+                    </div>
+                    
+                    <div class="text-center border-b border-black/20 pb-1 mb-2 mt-2">
+                        <h2 class="font-display text-xl uppercase tracking-wider truncate px-2" id="cardName">선수 이름</h2>
+                    </div>
+
+                    <div class="stat-grid pb-2">
+                        <div class="stat-row"><span>속력</span><span class="stat-val" id="statPac">85</span></div>
+                        <div class="stat-row"><span>드리블</span><span class="stat-val" id="statDri">88</span></div>
+                        <div class="stat-row"><span>슈팅</span><span class="stat-val" id="statSho">82</span></div>
+                        <div class="stat-row"><span>수비</span><span class="stat-val" id="statDef">40</span></div>
+                        <div class="stat-row"><span>패스</span><span class="stat-val" id="statPas">80</span></div>
+                        <div class="stat-row"><span>피지컬</span><span class="stat-val" id="statPhy">75</span></div>
+                    </div>
+                </div>
+
+                <!-- 누적 기록 요약 및 주급 받기 -->
+                <div class="glass-panel p-5 rounded-2xl w-full max-w-sm mx-auto lg:mx-0">
+                    <h3 class="font-bold text-lg mb-4 text-emerald-400 border-b border-emerald-800 pb-2 flex justify-between items-center">
+                        <span><i class="fa-solid fa-chart-simple mr-2"></i> 내 시즌 기록</span>
+                    </h3>
+                    
+                    <div class="grid grid-cols-3 gap-2 text-center text-sm mb-2">
+                        <div class="bg-pitch-bg p-2 rounded border border-emerald-900">
+                            <div class="text-[10px] text-slate-400">경기 출장</div>
+                            <div class="font-bold text-white text-lg" id="recordMatches">0</div>
+                        </div>
+                        <div class="bg-pitch-bg p-2 rounded border border-emerald-900">
+                            <div class="text-[10px] text-slate-400">평일 훈련</div>
+                            <div class="font-bold text-emerald-400 text-lg" id="recordTraining">0</div>
+                        </div>
+                        <div class="bg-pitch-bg p-2 rounded border border-emerald-900">
+                            <div class="text-[10px] text-slate-400">골 ⚽</div>
+                            <div class="font-bold text-fut-gold text-lg" id="recordGoals">0</div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-2 text-center text-sm">
+                        <div class="bg-pitch-bg p-2 rounded border border-emerald-900">
+                            <div class="text-[10px] text-slate-400">어시스트 👟</div>
+                            <div class="font-bold text-blue-400 text-lg" id="recordAssists">0</div>
+                        </div>
+                        <div class="bg-pitch-bg p-2 rounded border border-emerald-900">
+                            <div class="text-[10px] text-slate-400">킬패스 🎯</div>
+                            <div class="font-bold text-purple-400 text-lg" id="recordKeypasses">0</div>
+                        </div>
+                        <div class="bg-pitch-bg p-2 rounded border border-emerald-900">
+                            <div class="text-[10px] text-slate-400">세이브 🧤</div>
+                            <div class="font-bold text-orange-400 text-lg" id="recordSaves">0</div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 flex flex-col gap-2">
+                        <div class="flex justify-between items-center bg-pitch-bg p-3 rounded-xl border border-fut-gold/30">
+                            <span class="text-sm font-bold text-slate-300">누적 자산 (B)</span>
+                            <span class="font-bold text-xl text-fut-gold"><span id="recordBong">0</span> B</span>
+                        </div>
+                        <button onclick="window.claimWage()" class="w-full bg-gradient-to-r from-fut-gold-dark to-fut-gold hover:from-fut-gold hover:to-yellow-200 text-slate-900 font-bold py-2.5 rounded-xl shadow-lg transition flex justify-between items-center px-4">
+                            <span><i class="fa-solid fa-sack-dollar mr-2"></i> 이번 주 주급 받기</span>
+                            <span class="text-sm bg-black/20 px-2 py-1 rounded-md" id="expectedWageDisplay">예상 주급: ? B</span>
+                        </button>
+                        <p class="text-[10px] text-slate-500 text-center"><i class="fa-solid fa-circle-info"></i> 주급은 카드 능력치(OVR)가 높을수록 많이 받습니다! (매주 1회)</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 우측: 랜덤 팀 메이커 & 전체 스쿼드 -->
+            <div class="lg:col-span-8 space-y-8">
+                
+                <!-- 🎲 팀 배정 보드 (선수용) -->
+                <div class="glass-panel p-6 rounded-2xl border-t-4 border-t-blue-500">
+                    <h3 class="text-2xl font-display text-white mb-2 flex items-center gap-2"><i class="fa-solid fa-users-gear text-blue-400"></i> 스마트 팀 배정 보드</h3>
+                    <p class="text-sm text-slate-400 mb-6">오늘 참여한 선수를 체크하고 버튼을 누르면, <strong>선수들의 포지션(공격/미드/수비/키퍼)을 골고루 배분</strong>하여 공평하게 팀을 섞어줍니다.</p>
+                    
+                    <div id="attendanceBoard" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
+                        <div class="text-center text-slate-500 col-span-full"><i class="fa-solid fa-spinner fa-spin"></i> 선수 데이터를 불러오는 중...</div>
+                    </div>
+                    
+                    <button onclick="window.generateTeams()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition transform hover:scale-[1.01] active:scale-95 text-lg">
+                        <i class="fa-solid fa-shuffle mr-2"></i> 포지션 밸런스 맞춰서 팀 섞기
+                    </button>
+
+                    <div id="teamResult" class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 hidden">
+                        <div class="bg-blue-900/20 border border-blue-500/50 p-4 rounded-xl">
+                            <h4 class="font-display text-xl text-blue-400 mb-3 text-center border-b border-blue-500/30 pb-2">TEAM A (블루)</h4>
+                            <ul id="teamA" class="space-y-2 text-sm font-bold"></ul>
+                        </div>
+                        <div class="bg-red-900/20 border border-red-500/50 p-4 rounded-xl">
+                            <h4 class="font-display text-xl text-red-400 mb-3 text-center border-b border-red-500/30 pb-2">TEAM B (레드)</h4>
+                            <ul id="teamB" class="space-y-2 text-sm font-bold"></ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ⚽ 전체 선수단 명단 (Leaderboard) -->
+                <div class="glass-panel p-6 rounded-2xl">
+                    <h3 class="text-2xl font-display text-white mb-4"><i class="fa-solid fa-ranking-star text-fut-gold"></i> 클럽 스쿼드 랭킹 (OVR 순)</h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4" id="squadContainer">
+                        <div class="text-center text-slate-500 col-span-full py-8"><i class="fa-solid fa-spinner fa-spin"></i> 선수 데이터를 불러오는 중...</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Firebase -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = 'sambong-futsal-2026'; 
+
+        // ★ 가나다순으로 자동 정렬된 허용 선수 명단 ★
+        const ALLOWED_PLAYERS = [
+            '김단엘', '박현수', '백시율', '조이담', '황훈태', '김지훈', '이준용', '이지안', '인시진', '박준수', '이시형', '황주하', '이동해',
+            '김라희', '박소윤', '박하율', '임은영', '김민지', '황혜윤', '최윤희', '노승희', '이가온', '이예주', '황혜민', '김사랑비', '김다래', '함인솔'
+        ].sort((a,b) => a.localeCompare(b));
+
+        window.playerState = { ovr: 60, pac: 60, sho: 60, pas: 60, dri: 60, def: 60, phy: 60, goals: 0, assists: 0, matches: 0, training: 0, saves: 0, keypasses: 0, bong: 0, lastWageWeek: "", isGM: false };
+        window.allPlayersData = [];
+        window.attendanceHistory = [];
+        let db, auth, currentDocRef = null;
+
+        function getWeeklyWage(ovr) {
+            if(ovr >= 85) return 30; 
+            if(ovr >= 75) return 20; 
+            if(ovr >= 65) return 15; 
+            return 10; 
+        }
+
+        function getWeekNumber(d) {
+            d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+            let yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+            let weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
+            return d.getUTCFullYear() + "-W" + weekNo;
+        }
+
+        document.getElementById('loginId').addEventListener('change', (e) => {
+            if(e.target.value === 'player') {
+                document.getElementById('playerNameInputContainer').classList.remove('hidden');
+            } else {
+                document.getElementById('playerNameInputContainer').classList.add('hidden');
+            }
+        });
+
+        window.customAlert = (m) => new Promise(r => {
+            const d = document.createElement('div'); d.className = "fixed inset-0 z-[300] flex items-center justify-center bg-black/80 px-4";
+            d.innerHTML = `<div class="bg-pitch-panel p-6 sm:p-8 rounded-3xl border-2 border-fut-gold max-w-sm w-full text-center space-y-4 shadow-2xl"><h3 class="text-xl sm:text-2xl font-display text-white">시스템 알림</h3><p class="text-sm sm:text-base text-slate-300 whitespace-pre-wrap">${m}</p><button id="bOk" class="bg-fut-gold text-slate-900 font-bold py-2 px-8 rounded-full w-full hover:bg-yellow-400">확인</button></div>`;
+            document.body.appendChild(d); document.getElementById('bOk').onclick = () => { d.remove(); r(true); };
+        });
+
+        window.customConfirm = (m) => new Promise(r => {
+            const d = document.createElement('div'); d.className = "fixed inset-0 z-[300] flex items-center justify-center bg-black/80 px-4";
+            d.innerHTML = `<div class="bg-pitch-panel p-6 sm:p-8 rounded-3xl border-2 border-fut-gold max-w-sm w-full text-center space-y-4 shadow-2xl"><h3 class="text-xl sm:text-2xl font-display text-white">확인 필요</h3><p class="text-sm sm:text-base text-slate-300 whitespace-pre-wrap">${m}</p><div class="flex gap-4 mt-6"><button id="bNo" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-6 rounded-full w-full">취소</button><button id="bYes" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-6 rounded-full w-full">결정</button></div></div>`;
+            document.body.appendChild(d); document.getElementById('bYes').onclick = () => { d.remove(); r(true); }; document.getElementById('bNo').onclick = () => { d.remove(); r(false); };
+        });
+
+        // 입력받을 수 있는 커스텀 프롬프트 추가 (스탯 수정용)
+        window.customPrompt = (m, inputType="number") => new Promise(r => {
+            const d = document.createElement('div'); d.className = "fixed inset-0 z-[300] flex items-center justify-center bg-black/80 px-4";
+            d.innerHTML = `<div class="bg-pitch-panel p-6 sm:p-8 rounded-3xl border-2 border-fut-gold max-w-sm w-full text-center space-y-4 shadow-2xl"><h3 class="text-xl sm:text-2xl font-display text-fut-gold">기록 직접 수정</h3><p class="text-sm sm:text-base text-slate-300 whitespace-pre-wrap">${m}</p><input type="${inputType}" id="promptIn" class="w-full bg-slate-800 border border-emerald-600 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-fut-rare font-bold text-center mt-2"><div class="flex gap-4 mt-6"><button id="bpNo" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-6 rounded-full w-full">취소</button><button id="bpYes" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-6 rounded-full w-full">수정 반영</button></div></div>`;
+            document.body.appendChild(d); document.getElementById('promptIn').focus();
+            document.getElementById('bpYes').onclick = () => { const v = document.getElementById('promptIn').value; d.remove(); r(v); }; 
+            document.getElementById('bpNo').onclick = () => { d.remove(); r(null); };
+        });
+
+        async function initApp() {
+            try {
+                const firebaseConfig = {
+                    apiKey: "AIzaSyAsih-sfnIZ_gX_1l7SAVZHCAhk3KzmiP8",
+                    authDomain: "sambong-world-2026.firebaseapp.com",
+                    projectId: "sambong-world-2026",
+                    storageBucket: "sambong-world-2026.firebasestorage.app",
+                    messagingSenderId: "728320769100",
+                    appId: "1:728320769100:web:7510c9a77cca6b87a788e9"
+                };
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                await signInAnonymously(auth);
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        // 선수 데이터 구독
+                        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'players'), (snapshot) => {
+                            const players = [];
+                            snapshot.forEach(d => { 
+                                if(d.id !== 'player_gm1' && d.id !== 'player_gm2') {
+                                    players.push({ id: d.id.replace('player_', ''), ...d.data() }); 
+                                }
+                            });
+                            // 전체 명단은 OVR 순으로 랭킹 정렬
+                            window.allPlayersData = players.sort((a,b) => (b.ovr||0) - (a.ovr||0));
+                            
+                            if (window.playerState.isGM) renderAdminTable();
+                            renderSquad();
+                            renderAttendanceBoard(); // 팀 짜기용 보드
+                        });
+
+                        // 출석부 히스토리 데이터 구독
+                        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'attendance'), (snap) => {
+                            const history = [];
+                            snap.forEach(d => history.push({ id: d.id, ...d.data() }));
+                            // 최신 날짜순 정렬
+                            window.attendanceHistory = history.sort((a,b) => b.id.localeCompare(a.id));
+                            if (window.playerState.isGM) renderAdminAttendanceUI();
+                        });
+
+                        const savedId = localStorage.getItem('futsal_player_id');
+                        const savedPin = localStorage.getItem('futsal_player_pin');
+                        if (savedId && savedPin) attemptLogin(savedId, savedPin, true);
+                        else document.getElementById('loginOverlay').classList.remove('hidden');
+                    }
+                });
+            } catch(e) { console.error("Firebase Init Error:", e); }
+        }
+
+        document.getElementById('btnLogin').addEventListener('click', () => {
+            let pId = document.getElementById('loginId').value;
+            const pin = document.getElementById('loginPin').value;
+            
+            if(!pId) return window.customAlert("직책(코치/선수)을 선택하세요.");
+            if(pId === 'player') {
+                const inputName = document.getElementById('loginPlayerName').value.trim();
+                if(!inputName) return window.customAlert("자신의 이름을 입력하세요.");
+                if(!ALLOWED_PLAYERS.includes(inputName)) {
+                    return window.customAlert(`[${inputName}]은(는) 풋살부 공식 명단에 등록되지 않은 이름입니다.\n오타가 없는지 확인하세요!`);
+                }
+                pId = inputName; 
+            }
+            if(!pin || pin.length !== 4) return window.customAlert("4자리 비밀번호(PIN)를 정확히 입력하세요.");
+            
+            attemptLogin(pId, pin, false);
+        });
+
+        window.logout = async () => {
+            if(await window.customConfirm("라커룸을 나가시겠습니까?")) {
+                localStorage.removeItem('futsal_player_id'); localStorage.removeItem('futsal_player_pin');
+                location.reload();
+            }
+        };
+
+        async function attemptLogin(pId, pin, isAuto) {
+            if(!auth.currentUser) return;
+            const isGM = pId === 'gm1' || pId === 'gm2';
+            let displayName = isGM ? (pId === 'gm1' ? '전설감독 J' : '수석코치 J') : pId;
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + pId);
+            
+            try {
+                const snap = await getDoc(docRef);
+                if(snap.exists()) {
+                    const data = snap.data();
+                    if(!data.pin) {
+                        if(isAuto) return;
+                        if(!await window.customConfirm(`PIN [${pin}]으로 초기 등록하시겠습니까?`)) return;
+                        window.playerState = { ...data, pin, isGM };
+                        await setDoc(docRef, { pin }, { merge: true });
+                    } else if(data.pin !== pin) {
+                        if(isAuto) { localStorage.clear(); location.reload(); return; }
+                        return window.customAlert("❌ 비밀번호가 틀렸습니다.");
+                    } else { window.playerState = { ...data, isGM }; }
+                } else {
+                    if(isAuto) return;
+                    if(!await window.customConfirm(`[${displayName}] 선수!\nPIN [${pin}]으로 신규 카드를 발급하시겠습니까?`)) return;
+                    
+                    const r = () => Math.floor(Math.random() * 11) + 55;
+                    const base = { pac: r(), sho: r(), pas: r(), dri: r(), def: r(), phy: r() };
+                    const ovr = Math.floor((base.pac + base.sho + base.pas + base.dri + base.def + base.phy)/6);
+                    
+                    window.playerState = { pin, isGM, name: displayName, pos: 'CM', ovr, ...base, goals:0, assists:0, matches:0, training:0, saves:0, keypasses:0, bong:0, lastWageWeek: '' };
+                    await setDoc(docRef, window.playerState);
+                }
+
+                localStorage.setItem('futsal_player_id', pId); localStorage.setItem('futsal_player_pin', pin);
+                currentDocRef = docRef;
+                
+                document.getElementById('loginOverlay').classList.add('hidden');
+                document.getElementById('saveStatus').classList.remove('hidden');
+                document.getElementById('saveStatus').classList.add('flex');
+                document.getElementById('playerNameDisplay').innerText = displayName;
+                
+                if(isGM) {
+                    document.getElementById('adminDashboard').classList.remove('hidden');
+                    renderAdminAttendanceUI();
+                }
+
+                onSnapshot(docRef, (s) => {
+                    if(s.exists()) { window.playerState = { ...s.data(), isGM }; updateMyUI(); }
+                });
+            } catch(e) { window.customAlert("로그인 에러: " + e.message); }
+        }
+
+        // ==========================================
+        // UI 업데이트
+        // ==========================================
+        function updateMyUI() {
+            if(window.playerState.isGM) return; 
+            
+            const p = window.playerState;
+            document.getElementById('cardName').innerText = p.name;
+            document.getElementById('cardOvr').innerText = p.ovr || 60;
+            document.getElementById('cardPos').innerText = p.pos || 'CF';
+            
+            document.getElementById('statPac').innerText = p.pac || 60; document.getElementById('statSho').innerText = p.sho || 60;
+            document.getElementById('statPas').innerText = p.pas || 60; document.getElementById('statDri').innerText = p.dri || 60;
+            document.getElementById('statDef').innerText = p.def || 60; document.getElementById('statPhy').innerText = p.phy || 60;
+
+            document.getElementById('recordMatches').innerText = p.matches || 0;
+            document.getElementById('recordTraining').innerText = p.training || 0;
+            document.getElementById('recordGoals').innerText = p.goals || 0;
+            document.getElementById('recordAssists').innerText = p.assists || 0;
+            document.getElementById('recordKeypasses').innerText = p.keypasses || 0;
+            document.getElementById('recordSaves').innerText = p.saves || 0;
+            document.getElementById('recordBong').innerText = p.bong || 0;
+
+            const expectedWage = getWeeklyWage(p.ovr || 60);
+            document.getElementById('expectedWageDisplay').innerText = `OVR 주급: ${expectedWage} B`;
+
+            const card = document.getElementById('myFutCard');
+            if(p.ovr >= 85) card.className = "fut-card card-totw w-64 h-96 p-4 flex flex-col justify-between mx-auto lg:mx-0";
+            else if (p.ovr >= 75) card.className = "fut-card card-gold w-64 h-96 p-4 flex flex-col justify-between mx-auto lg:mx-0";
+            else if (p.ovr >= 65) card.className = "fut-card card-silver w-64 h-96 p-4 flex flex-col justify-between mx-auto lg:mx-0";
+            else card.className = "fut-card card-bronze w-64 h-96 p-4 flex flex-col justify-between mx-auto lg:mx-0";
+        }
+
+        window.claimWage = async () => {
+            if(!window.playerState || window.playerState.isGM || !currentDocRef) return;
+            const weekNum = getWeekNumber(new Date());
+            
+            if(window.playerState.lastWageWeek === weekNum) {
+                return window.customAlert("❌ 이번 주 주급은 이미 수령했습니다!\n다음 주 월요일에 다시 받아주세요.");
+            }
+            
+            const wage = getWeeklyWage(window.playerState.ovr || 60);
+            await setDoc(currentDocRef, {
+                bong: (window.playerState.bong || 0) + wage,
+                lastWageWeek: weekNum
+            }, { merge: true });
+            
+            window.customAlert(`🎉 이번 주 주급 수령 완료!\n현재 능력치(OVR ${window.playerState.ovr || 60})에 맞춰 주급 [${wage} B]가 지급되었습니다.\n더 훈련해서 카드를 성장시키세요!`);
+        };
+
+        // ==========================================
+        // 팀 제너레이터 출석 보드 (모두 열람 가능, 가나다순)
+        // ==========================================
+        function renderAttendanceBoard() {
+            const board = document.getElementById('attendanceBoard');
+            if(!window.allPlayersData) return;
+            
+            let html = '';
+            // 가나다 순으로 출력하기 위해 ALLOWED_PLAYERS 기반으로 맵핑
+            ALLOWED_PLAYERS.forEach(name => {
+                const p = window.allPlayersData.find(x => x.name === name);
+                if(p) {
+                    let posColor = "text-slate-400"; 
+                    if(['ST','LW','RW','CF'].includes(p.pos)) posColor = "text-red-400";
+                    if(['CAM','CM','CDM'].includes(p.pos)) posColor = "text-emerald-400";
+                    if(['CB','LB','RB'].includes(p.pos)) posColor = "text-blue-400";
+                    if(p.pos === 'GK') posColor = "text-orange-400";
+
+                    html += `
+                    <label class="flex items-center gap-2 p-2 rounded bg-pitch-panel border border-emerald-900 hover:border-emerald-500 cursor-pointer transition">
+                        <input type="checkbox" class="attendance-chk w-4 h-4 text-emerald-500 bg-slate-800 border-slate-600 rounded focus:ring-emerald-500" data-name="${p.name}" data-pos="${p.pos||'CM'}">
+                        <span class="text-sm font-bold text-slate-300 truncate"><span class="${posColor} mr-1">[${p.pos||'CM'}]</span>${p.name}</span>
+                    </label>`;
+                }
+            });
+            if(board.children.length === 1 && board.children[0].tagName === 'DIV') {
+                board.innerHTML = html;
+            }
+        }
+
+        window.generateTeams = () => {
+            const checkboxes = document.querySelectorAll('.attendance-chk:checked');
+            if(checkboxes.length < 2) return window.customAlert("팀을 나누려면 최소 2명 이상의 선수를 출석 체크해주세요!");
+
+            const pools = { GK: [], DF: [], MF: [], FW: [] };
+            const roleMap = {
+                'ST':'FW', 'LW':'FW', 'RW':'FW', 'CF':'FW',
+                'CAM':'MF', 'CM':'MF', 'CDM':'MF', 
+                'CB':'DF', 'LB':'DF', 'RB':'DF', 
+                'GK':'GK'
+            };
+
+            checkboxes.forEach(cb => {
+                const name = cb.getAttribute('data-name');
+                const pos = cb.getAttribute('data-pos');
+                const role = roleMap[pos] || 'MF'; 
+                pools[role].push(`${name} [${pos}]`);
+            });
+
+            for(let role in pools) { pools[role].sort(() => Math.random() - 0.5); }
+
+            const teamA = []; const teamB = [];
+            let turnA = true; 
+
+            ['GK', 'DF', 'MF', 'FW'].forEach(role => {
+                pools[role].forEach(player => {
+                    if(turnA) teamA.push(player); else teamB.push(player);
+                    turnA = !turnA; 
+                });
+            });
+
+            document.getElementById('teamResult').classList.remove('hidden');
+            
+            const ulA = document.getElementById('teamA');
+            ulA.innerHTML = '';
+            teamA.forEach(p => ulA.innerHTML += `<li class="text-blue-200 border-b border-blue-500/20 pb-1 mb-1"><i class="fa-solid fa-shirt mr-2"></i>${p}</li>`);
+            
+            const ulB = document.getElementById('teamB');
+            ulB.innerHTML = '';
+            teamB.forEach(p => ulB.innerHTML += `<li class="text-red-200 border-b border-red-500/20 pb-1 mb-1"><i class="fa-solid fa-shirt mr-2"></i>${p}</li>`);
+            
+            document.getElementById('teamResult').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        };
+
+        // ==========================================
+        // 마스터(관리자) 전용 테이블 및 날짜별 출석부
+        // ==========================================
+        window.renderAdminAttendanceUI = () => {
+            if(!window.playerState.isGM) return;
+            const container = document.getElementById('adminAttCheckboxes');
+            if(!container) return;
+
+            // 오늘 날짜 기본 세팅
+            if(!document.getElementById('adminAttDate').value) {
+                document.getElementById('adminAttDate').value = new Date().toISOString().split('T')[0];
+            }
+
+            // 가나다 순 전체 명단 렌더링
+            container.innerHTML = ALLOWED_PLAYERS.map(name => `
+                <label class="flex items-center gap-2 bg-pitch-bg p-2 rounded border border-emerald-900 cursor-pointer hover:border-emerald-500 transition">
+                    <input type="checkbox" value="${name}" class="admin-att-chk text-emerald-500 bg-slate-800 border-slate-600 rounded w-4 h-4">
+                    <span class="text-xs font-bold text-slate-300">${name}</span>
+                </label>
+            `).join('');
+
+            // 히스토리 렌더링
+            const historyContainer = document.getElementById('adminAttHistory');
+            if(window.attendanceHistory.length === 0) {
+                historyContainer.innerHTML = `<span class="text-sm text-slate-500">저장된 기록이 없습니다.</span>`;
+            } else {
+                historyContainer.innerHTML = window.attendanceHistory.map(record => `
+                    <button onclick="window.loadAdminAttendance('${record.id}')" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 px-3 py-1.5 rounded-lg text-xs text-white transition shadow">
+                        📅 ${record.date} <span class="text-fut-gold ml-1">(${record.present.length}명)</span>
+                    </button>
+                `).join('');
+            }
+        };
+
+        window.saveAdminAttendance = async () => {
+            if(!window.playerState.isGM) return;
+            const dateVal = document.getElementById('adminAttDate').value;
+            if(!dateVal) return window.customAlert("날짜를 선택하세요.");
+            
+            const checkedBoxes = document.querySelectorAll('.admin-att-chk:checked');
+            const presentList = Array.from(checkedBoxes).map(cb => cb.value);
+            
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'attendance', dateVal);
+            await setDoc(docRef, { date: dateVal, present: presentList }, { merge: true });
+            
+            window.customAlert(`✅ ${dateVal} 출석 기록이 저장되었습니다!\n총 참석 인원: ${presentList.length}명`);
+        };
+
+        window.loadAdminAttendance = (dateId) => {
+            if(!window.playerState.isGM) return;
+            const record = window.attendanceHistory.find(r => r.id === dateId);
+            if(!record) return;
+            
+            document.getElementById('adminAttDate').value = record.date;
+            document.querySelectorAll('.admin-att-chk').forEach(cb => {
+                cb.checked = record.present.includes(cb.value);
+            });
+            window.customAlert(`📅 ${record.date} 출석부를 성공적으로 불러왔습니다.`);
+        };
+
+        window.renderAdminTable = function() {
+            const tbody = document.getElementById('adminTableBody');
+            
+            // 관리자 표는 가나다순으로 정렬하여 렌더링
+            const sortedPlayers = window.allPlayersData.slice().sort((a,b) => a.name.localeCompare(b.name));
+
+            tbody.innerHTML = sortedPlayers.map(p => `
+                <tr class="border-b border-emerald-800/50 hover:bg-emerald-900/30 transition">
+                    <td class="px-2 py-3 font-bold text-white whitespace-nowrap">
+                        <span class="text-fut-gold mr-1 font-oswald text-lg">[${p.ovr||60}]</span><br class="sm:hidden">
+                        ${p.name} <span class="text-[10px] text-slate-400">(${p.pos||'CF'})</span><br>
+                        <span class="text-[10px] text-yellow-500 font-normal">보유자산: ${p.bong||0}B</span>
+                    </td>
+                    <td class="px-2 py-3 text-center border-l border-emerald-900/50">
+                        <div class="grid grid-cols-2 gap-1 text-[10px] sm:text-xs max-w-[140px] mx-auto">
+                            <div class="flex justify-between bg-slate-800/60 px-1.5 py-0.5 rounded cursor-pointer hover:bg-slate-700 transition" onclick="editPlayerStat('${p.id}', 'matches', ${p.matches||0}, '${p.name}', '경기')"><span class="text-slate-400">경기</span><span class="font-bold text-white">${p.matches||0}</span></div>
+                            <div class="flex justify-between bg-slate-800/60 px-1.5 py-0.5 rounded cursor-pointer hover:bg-slate-700 transition" onclick="editPlayerStat('${p.id}', 'training', ${p.training||0}, '${p.name}', '훈련')"><span class="text-slate-400">훈련</span><span class="font-bold text-emerald-400">${p.training||0}</span></div>
+                            <div class="flex justify-between bg-slate-800/60 px-1.5 py-0.5 rounded cursor-pointer hover:bg-slate-700 transition" onclick="editPlayerStat('${p.id}', 'goals', ${p.goals||0}, '${p.name}', '골')"><span class="text-slate-400">골</span><span class="font-bold text-fut-gold">${p.goals||0}</span></div>
+                            <div class="flex justify-between bg-slate-800/60 px-1.5 py-0.5 rounded cursor-pointer hover:bg-slate-700 transition" onclick="editPlayerStat('${p.id}', 'assists', ${p.assists||0}, '${p.name}', '어시')"><span class="text-slate-400">어시</span><span class="font-bold text-blue-400">${p.assists||0}</span></div>
+                            <div class="flex justify-between bg-slate-800/60 px-1.5 py-0.5 rounded cursor-pointer hover:bg-slate-700 transition" onclick="editPlayerStat('${p.id}', 'keypasses', ${p.keypasses||0}, '${p.name}', '킬패스')"><span class="text-slate-400">킬패스</span><span class="font-bold text-purple-400">${p.keypasses||0}</span></div>
+                            <div class="flex justify-between bg-slate-800/60 px-1.5 py-0.5 rounded cursor-pointer hover:bg-slate-700 transition" onclick="editPlayerStat('${p.id}', 'saves', ${p.saves||0}, '${p.name}', '세이브')"><span class="text-slate-400">세이브</span><span class="font-bold text-orange-400">${p.saves||0}</span></div>
+                        </div>
+                    </td>
+                    <td class="px-2 py-3 text-center border-l border-emerald-900/50">
+                        <div class="flex justify-center gap-1 flex-wrap max-w-[120px] mx-auto">
+                            <button onclick="updatePlayerStat('${p.id}', 'matches', 1)" class="bg-slate-700 hover:bg-slate-600 px-1.5 py-1 rounded text-[10px] text-white transition">경기+1</button>
+                            <button onclick="updatePlayerStat('${p.id}', 'training', 1)" class="bg-emerald-900 hover:bg-emerald-700 px-1.5 py-1 rounded text-[10px] text-emerald-300 transition">훈련+1</button>
+                            <button onclick="updatePlayerStat('${p.id}', 'goals', 1)" class="bg-yellow-900/40 hover:bg-yellow-700 px-1.5 py-1 rounded text-[10px] text-yellow-300 transition">골+1</button>
+                            <button onclick="updatePlayerStat('${p.id}', 'assists', 1)" class="bg-blue-900/40 hover:bg-blue-700 px-1.5 py-1 rounded text-[10px] text-blue-300 transition">어시+1</button>
+                        </div>
+                    </td>
+                    <td class="px-2 py-3 text-center border-l border-emerald-900/50">
+                        <div class="flex flex-col gap-1 items-center">
+                            <button onclick="giveRating('${p.id}')" class="bg-emerald-600/30 hover:bg-emerald-500 text-emerald-300 hover:text-white border border-emerald-500 px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg transition whitespace-nowrap">OVR 훈련/상승</button>
+                            <div class="flex gap-1 w-full justify-center mt-1">
+                                <button onclick="updatePlayerStat('${p.id}', 'bong', 5)" class="bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-[10px] text-yellow-400 font-bold transition">+5 B</button>
+                                <button onclick="updatePlayerStat('${p.id}', 'bong', -5)" class="bg-slate-800 hover:bg-red-900 px-2 py-1 rounded text-[10px] text-red-400 font-bold transition">-5 B</button>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 마스터 전용 개별 스탯 직접 수정 로직
+        window.editPlayerStat = async (pId, statField, currentVal, pName, statLabel) => {
+            if(!window.playerState.isGM) return;
+            const val = await window.customPrompt(`[${pName}] 선수의 '${statLabel}' 기록을 직접 수정합니다.\n원하시는 최종 숫자를 입력하세요. (현재: ${currentVal})`, 'number');
+            
+            if(val !== null && val !== "") {
+                const num = parseInt(val);
+                if(!isNaN(num) && num >= 0) {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + pId);
+                    await setDoc(docRef, { [statField]: num }, {merge: true});
+                    // 직접 수동 조작 시에는 중복 보상을 막기 위해 자동 B 지급 로직을 타지 않습니다.
+                } else {
+                    window.customAlert("0 이상의 유효한 숫자를 입력하세요.");
+                }
+            }
+        };
+
+        window.updatePlayerStat = async (pId, statField, amount) => {
+            if(!window.playerState.isGM) return;
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + pId);
+            const p = window.allPlayersData.find(x => x.id === pId);
+            if(!p) return;
+            
+            let newVal = (p[statField] || 0) + amount;
+            if(newVal < 0) newVal = 0;
+            
+            let updates = {}; updates[statField] = newVal;
+            
+            // 특수 스탯 입력시 보너스 자산(B) 자동 지급
+            if(amount > 0) {
+                if(statField === 'goals') { updates.bong = (p.bong||0) + 3; animateFloatText('⚽ +3 B', 'text-fut-gold'); }
+                if(statField === 'assists') { updates.bong = (p.bong||0) + 2; animateFloatText('👟 +2 B', 'text-fut-gold'); }
+                if(statField === 'matches') { updates.bong = (p.bong||0) + 5; animateFloatText('🏃 +5 B', 'text-fut-gold'); }
+                if(statField === 'training') { updates.bong = (p.bong||0) + 1; animateFloatText('💪 +1 B', 'text-emerald-400'); }
+            }
+
+            await setDoc(docRef, updates, { merge: true });
+        }
+
+        window.giveRating = async (pId) => {
+            if(!window.playerState.isGM) return;
+            const points = await window.customPrompt("훈련 및 경기 보상으로 올릴 OVR 포인트를 입력하세요 (예: 1~3)", "number");
+            if(points === null || points === "") return;
+            const num = parseInt(points);
+            if(isNaN(num) || num <= 0) return window.customAlert("1 이상의 유효한 숫자를 입력하세요.");
+
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + pId);
+            const p = window.allPlayersData.find(x => x.id === pId);
+            
+            let updates = {
+                ovr: (p.ovr||60) + num,
+                pac: (p.pac||60) + num, sho: (p.sho||60) + num, pas: (p.pas||60) + num,
+                dri: (p.dri||60) + num, def: (p.def||60) + num, phy: (p.phy||60) + num
+            };
+            await setDoc(docRef, updates, { merge: true });
+            window.customAlert("능력치가 성공적으로 업그레이드 되었습니다!");
+        }
+
+        function animateFloatText(text, colorClass) {
+            const f = document.createElement('div');
+            f.className = `fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-5xl font-display ${colorClass} z-[300] whitespace-nowrap drop-shadow-xl`;
+            f.innerText = text;
+            f.animate([ 
+                { transform: 'translate(-50%, -50%) scale(0.8)', opacity: 0 }, 
+                { transform: 'translate(-50%, -60%) scale(1.2)', opacity: 1, offset: 0.2 },
+                { transform: 'translate(-50%, -100%) scale(1.5)', opacity: 0 } 
+            ], { duration: 1500, easing: 'ease-out' });
+            document.body.appendChild(f);
+            setTimeout(() => f.remove(), 1500);
+        }
+
+        // ==========================================
+        // 모달 및 포지션
+        // ==========================================
+        window.openPositionModal = () => {
+            if(window.playerState.isGM) return; 
+
+            const modal = document.createElement('div');
+            modal.className = "fixed inset-0 z-[200] flex items-center justify-center bg-black/80 px-4";
+            
+            const posList = [
+                { id: 'ST', desc: '스트라이커 (최전방 공격수)' }, { id: 'LW', desc: '레프트 윙어 (좌측면 공격)' }, { id: 'RW', desc: '라이트 윙어 (우측면 공격)' },
+                { id: 'CAM', desc: '공격형 미드필더 (플레이메이커)' }, { id: 'CM', desc: '중앙 미드필더 (게임 조율)' }, { id: 'CDM', desc: '수비형 미드필더 (진공청소기)' },
+                { id: 'CB', desc: '센터백 (최후방 벽)' }, { id: 'LB', desc: '레프트 백 (좌측 수비)' }, { id: 'RB', desc: '라이트 백 (우측 수비)' },
+                { id: 'GK', desc: '골키퍼 (거미손)' }
+            ];
+
+            let btnsHtml = posList.map(pos => `
+                <button onclick="window.selectPosition('${pos.id}')" class="bg-pitch-panel hover:bg-emerald-900 border border-emerald-800 p-3 rounded-xl text-left transition group">
+                    <div class="font-oswald text-lg font-bold text-fut-gold group-hover:text-white">${pos.id}</div>
+                    <div class="text-xs text-slate-400 mt-1">${pos.desc}</div>
+                </button>
+            `).join('');
+
+            modal.innerHTML = `
+                <div class="bg-pitch-bg p-6 sm:p-8 rounded-3xl border-2 border-fut-gold max-w-lg w-full shadow-2xl max-h-[90vh] flex flex-col">
+                    <h3 class="text-2xl font-display text-white mb-2 text-center">선호 포지션 변경</h3>
+                    <p class="text-xs text-slate-400 text-center mb-6">자신이 소화하고 싶은 주력 포지션을 선택하세요. 카드에 즉시 반영되며, <strong>팀 배정 시 밸런스를 맞추는 기준</strong>이 됩니다.</p>
+                    <div class="grid grid-cols-2 gap-3 overflow-y-auto pr-2 custom-scrollbar flex-grow">
+                        ${btnsHtml}
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" class="mt-6 bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-6 rounded-xl w-full transition">닫기</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            window.currentPosModal = modal;
+        };
+
+        window.selectPosition = async (newPos) => {
+            if(!currentDocRef) return;
+            await setDoc(currentDocRef, { pos: newPos }, { merge: true });
+            if(window.currentPosModal) window.currentPosModal.remove();
+            window.customAlert(`포지션이 [${newPos}] (으)로 성공적으로 변경되었습니다!`);
+        };
+
+        window.renderSquad = function() {
+            const container = document.getElementById('squadContainer');
+            if(!window.allPlayersData || window.allPlayersData.length === 0) return;
+            
+            // 랭킹 카드는 변함없이 OVR순 유지
+            container.innerHTML = window.allPlayersData.map(p => {
+                let bgClass = "bg-gradient-to-br from-[#aa771c] to-[#d4af37]"; 
+                if(p.ovr >= 85) bgClass = "bg-gradient-to-br from-gray-900 to-black border border-fut-gold text-fut-gold";
+                else if(p.ovr >= 75) bgClass = "bg-gradient-to-br from-[#e8c271] to-[#b08d41] text-yellow-900";
+                else if(p.ovr >= 65) bgClass = "bg-gradient-to-br from-gray-300 to-gray-500 text-gray-900";
+
+                return `
+                <div class="rounded-xl p-3 flex flex-col items-center justify-center relative overflow-hidden shadow-lg transform transition hover:scale-105 ${bgClass}">
+                    <div class="text-3xl font-oswald font-bold">${p.ovr || 60}</div>
+                    <div class="text-[10px] font-bold opacity-80">${p.pos || 'CF'}</div>
+                    <div class="text-3xl mt-1 mb-1 drop-shadow-md">👦</div>
+                    <div class="font-bold text-sm truncate w-full text-center">${p.name}</div>
+                    <div class="flex flex-wrap justify-center gap-1 text-[9px] mt-1 opacity-80 font-bold px-1">
+                        <span>⚽${p.goals||0}</span><span>👟${p.assists||0}</span>
+                        ${p.saves ? `<span>🧤${p.saves}</span>` : ''}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        initApp();
+    </script>
+</body>
+</html>
