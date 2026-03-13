@@ -923,6 +923,27 @@
                 `;
             });
             tbody.innerHTML = html;
+
+            const statsTbody = document.getElementById('masterStatsTableBody');
+            let statsHtml = '';
+            players.forEach(p => {
+                const ovr = getOVR(p);
+                const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
+                statsHtml += `
+                    <tr class="hover:bg-slate-800/80 transition cursor-pointer" onclick="window.switchTab('tabWorkspace'); window.selectPlayer('${p.id}')">
+                        <td class="py-3 pl-4 text-left font-bold text-white flex items-center gap-2 whitespace-nowrap"><span class="text-lg">${getAvatar(p)}</span><span>${p.name}</span></td>
+                        <td class="py-3 text-center whitespace-nowrap"><span class="text-[10px] font-bold ${getPosColor(p.pos)} border border-slate-600 px-1.5 py-0.5 rounded leading-none">${posText}</span></td>
+                        <td class="py-3 text-center font-oswald text-base text-fut-gold font-bold">${ovr}</td>
+                        <td class="py-3 text-center font-oswald text-slate-300">${p.pac||60}</td>
+                        <td class="py-3 text-center font-oswald text-slate-300">${p.sho||60}</td>
+                        <td class="py-3 text-center font-oswald text-slate-300">${p.pas||60}</td>
+                        <td class="py-3 text-center font-oswald text-slate-300">${p.dri||60}</td>
+                        <td class="py-3 text-center font-oswald text-slate-300">${p.def||60}</td>
+                        <td class="py-3 text-center font-oswald text-slate-300">${p.phy||60}</td>
+                    </tr>
+                `;
+            });
+            statsTbody.innerHTML = statsHtml;
         }
 
         async function initApp() {
