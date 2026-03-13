@@ -104,6 +104,11 @@
         .has-tooltip:hover .tooltip { visibility: visible; opacity: 1; }
         .exp-bar-fill { transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
 
+        /* 숫자 입력 화살표 숨기기 */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"] { -moz-appearance: textfield; }
+
         /* 네비게이션 탭 스타일 */
         .nav-tab { color: #94a3b8; border-bottom: 2px solid transparent; transition: all 0.3s; }
         .nav-tab:hover { color: #e2e8f0; border-bottom-color: #475569; }
@@ -149,8 +154,8 @@
         </div>
     </div>
 
-    <!-- 네비게이션 -->
-    <nav class="fixed top-0 w-full z-50 glass-panel border-b border-emerald-900/50">
+    <!-- 네비게이션 (모바일에서는 자연스럽게 스크롤되도록 relative 적용, PC에서는 sticky) -->
+    <nav class="relative lg:sticky top-0 w-full z-[100] bg-pitch-bg/95 backdrop-blur-lg border-b border-emerald-900/50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <!-- 로고 영역 -->
@@ -180,12 +185,13 @@
         </div>
     </nav>
 
-    <div class="pt-24 pb-12 px-4 max-w-7xl mx-auto space-y-8">
+    <!-- 모바일 환경에서 위쪽 여백을 확 줄임 (pt-24 -> pt-6) -->
+    <div class="pt-6 pb-12 px-4 max-w-7xl mx-auto space-y-8">
         
         <div class="grid lg:grid-cols-12 gap-8 items-start">
             
-            <!-- 좌측: 상세 정보 패널 (모든 탭에서 공통으로 고정됨) -->
-            <div class="lg:col-span-4 space-y-6 sticky top-24">
+            <!-- 좌측: 상세 정보 패널 (모바일에서는 일반 스크롤, PC에서만 고정되도록 lg:sticky 적용) -->
+            <div class="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
                 
                 <div class="glass-panel p-6 rounded-3xl border-t-4 border-fut-gold shadow-2xl relative overflow-hidden">
                     <div id="confettiOrigin" class="absolute top-10 left-1/2 transform -translate-x-1/2"></div>
@@ -200,10 +206,11 @@
 
                     <!-- 👑 상세 FUT 카드 (이펙트 래퍼 추가) -->
                     <div id="cardAuraWrapper" class="mx-auto w-fit transition-all duration-500">
-                        <div id="detailFutCard" class="fut-card card-gold w-64 h-96 p-4 flex flex-col justify-between shadow-2xl transform transition duration-500 relative">
-                            <!-- 장착 아이템 오버레이 -->
-                            <div id="overlayShoes" class="absolute bottom-4 left-3 bg-black/50 px-2 py-0.5 rounded-full border border-white/20 text-[10px] font-bold text-white hidden z-20 backdrop-blur-sm"><i class="fa-solid fa-shoe-prints mr-1"></i><span id="textShoes"></span></div>
-                            <div id="overlayBall" class="absolute bottom-4 right-3 bg-black/50 px-2 py-0.5 rounded-full border border-white/20 text-[10px] font-bold text-white hidden z-20 backdrop-blur-sm"><i class="fa-regular fa-futbol mr-1"></i><span id="textBall"></span></div>
+                        <div id="detailFutCard" class="fut-card card-gold w-64 h-96 p-4 flex flex-col justify-between shadow-2xl transform transition duration-500 relative overflow-hidden">
+                            <!-- 육각형 스탯 레이더 차트 배경 -->
+                            <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-0 opacity-20 pointer-events-none">
+                                <canvas id="statRadar" width="140" height="140"></canvas>
+                            </div>
 
                             <div class="flex justify-between items-start z-10">
                                 <div class="flex flex-col items-center relative">
@@ -215,14 +222,21 @@
                                     </div>
                                     <div class="mt-1 flex items-center justify-center text-xl leading-none drop-shadow-sm">🇰🇷</div>
                                 </div>
-                                <div class="text-6xl pt-2 pr-2 drop-shadow-md" id="detailAvatar">👦</div>
+                                
+                                <!-- 아바타 및 장착 아이템 (알차게 모아두기) -->
+                                <div class="relative pt-2 pr-2">
+                                    <div class="text-6xl drop-shadow-md relative z-10" id="detailAvatar">👦</div>
+                                    <!-- 장착 아이템 오버레이 (캐릭터 근처로 이동) -->
+                                    <div id="overlayShoes" class="absolute -bottom-2 -left-4 bg-black/80 px-1.5 py-0.5 rounded border border-white/20 text-[9px] font-bold text-white hidden z-20 backdrop-blur-sm whitespace-nowrap shadow-lg"><i class="fa-solid fa-shoe-prints mr-1 text-slate-300"></i><span id="textShoes"></span></div>
+                                    <div id="overlayBall" class="absolute -bottom-2 -right-2 bg-black/80 px-1.5 py-0.5 rounded border border-white/20 text-[9px] font-bold text-white hidden z-20 backdrop-blur-sm whitespace-nowrap shadow-lg"><i class="fa-regular fa-futbol mr-1 text-slate-300"></i><span id="textBall"></span></div>
+                                </div>
                             </div>
                             
                             <div class="text-center border-b border-black/20 pb-1 mb-2 mt-2 z-10">
                                 <h2 class="font-display text-2xl uppercase tracking-wider truncate px-2" id="detailName">선수 이름</h2>
                             </div>
 
-                            <div class="stat-grid pb-2 z-10" id="detailStatsGrid"></div>
+                            <div class="stat-grid pb-2 z-10 relative" id="detailStatsGrid"></div>
                         </div>
                     </div>
 
@@ -251,21 +265,27 @@
                     <!-- 감독 전용 경험치/기록 추가 패널 -->
                     <div id="gmControls" class="hidden mt-4 bg-slate-900/80 p-4 rounded-xl border border-emerald-800/50">
                         <h3 class="text-sm font-bold text-emerald-400 mb-3 border-b border-emerald-800/50 pb-1"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> 코치 스태프 권한: 활동 기록 추가</h3>
-                        <div class="grid grid-cols-2 gap-2">
+                        <div class="grid grid-cols-2 gap-2 mb-2">
                             <button onclick="window.addActivity('matches')" class="bg-slate-800 hover:bg-slate-700 text-white text-xs py-2 rounded border border-slate-600 transition shadow">경기 출전 (+50 EXP)</button>
                             <button onclick="window.addActivity('training')" class="bg-emerald-900/60 hover:bg-emerald-800 text-emerald-300 text-xs py-2 rounded border border-emerald-700 transition shadow">훈련 완료 (+30 EXP)</button>
                             <button onclick="window.addActivity('goals')" class="bg-yellow-900/40 hover:bg-yellow-800 text-yellow-300 text-xs py-2 rounded border border-yellow-700/50 transition shadow">골 ⚽ (+20 EXP)</button>
                             <button onclick="window.addActivity('assists')" class="bg-blue-900/40 hover:bg-blue-800 text-blue-300 text-xs py-2 rounded border border-blue-700/50 transition shadow">어시스트 👟 (+10 EXP)</button>
                         </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="window.addActivity('keypass')" class="bg-purple-900/40 hover:bg-purple-800 text-purple-300 text-xs py-2 rounded border border-purple-700/50 transition shadow">킬패스 🎯 (+15 EXP)</button>
+                            <button onclick="window.addActivity('saves')" class="bg-orange-900/40 hover:bg-orange-800 text-orange-300 text-xs py-2 rounded border border-orange-700/50 transition shadow">세이브 🧤 (+15 EXP)</button>
+                        </div>
                     </div>
 
                     <!-- 누적 기록 요약 -->
                     <div class="mt-6 bg-pitch-bg p-4 rounded-xl border border-emerald-900/50">
-                        <div class="grid grid-cols-4 gap-1 text-center text-sm">
+                        <div class="grid grid-cols-3 gap-y-3 gap-x-2 text-center text-sm">
                             <div><div class="text-[10px] text-slate-500">경기</div><div class="font-bold text-white text-lg" id="recMatches">0</div></div>
                             <div><div class="text-[10px] text-slate-500">훈련</div><div class="font-bold text-emerald-400 text-lg" id="recTraining">0</div></div>
                             <div><div class="text-[10px] text-slate-500">골</div><div class="font-bold text-fut-gold text-lg" id="recGoals">0</div></div>
                             <div><div class="text-[10px] text-slate-500">어시</div><div class="font-bold text-blue-400 text-lg" id="recAssists">0</div></div>
+                            <div><div class="text-[10px] text-slate-500">킬패스</div><div class="font-bold text-purple-400 text-lg" id="recKeypass">0</div></div>
+                            <div><div class="text-[10px] text-slate-500">세이브</div><div class="font-bold text-orange-400 text-lg" id="recSaves">0</div></div>
                         </div>
                     </div>
 
@@ -472,17 +492,20 @@
             { id: 'avatar_robot', name: '사이보그', type: 'avatar', price: 1000, icon: '🤖', desc: '지치지 않는 강철 체력 머신으로 변경합니다.' },
             { id: 'avatar_ninja', name: '닌자', type: 'avatar', price: 500, icon: '🥷', desc: '보이지 않는 은밀한 움직임의 닌자 아바타입니다.' },
 
-            { id: 'aura_fire', name: '불꽃 투지 (오라)', type: 'aura', price: 200, icon: '🔥', desc: '카드에서 뜨거운 불꽃 오라가 뿜어져 나옵니다.', class: 'aura-fire' },
-            { id: 'aura_ice', name: '냉기 폭발 (오라)', type: 'aura', price: 200, icon: '❄️', desc: '카드에서 차가운 얼음 오라가 뿜어져 나옵니다.', class: 'aura-ice' },
-            { id: 'aura_gold', name: '전설의 빛 (오라)', type: 'aura', price: 500, icon: '✨', desc: '최상위 선수를 위한 황금빛 오라입니다.', class: 'aura-gold' },
-            { id: 'aura_dark', name: '암흑 각성 (오라)', type: 'aura', price: 500, icon: '🌌', desc: '어둠의 다크 포스가 카드를 감쌉니다.', class: 'aura-dark' },
+            // 오라 (이펙트 추가 및 디자인 개선)
+            { id: 'aura_fire', name: '불꽃 투지 (오라)', type: 'aura', price: 200, icon: '<div class="w-full h-full flex items-center justify-center bg-slate-800"><i class="fa-solid fa-fire text-orange-500 text-3xl drop-shadow-[0_0_8px_rgba(255,165,0,0.8)]"></i></div>', desc: '카드에서 뜨거운 불꽃 오라가 뿜어져 나옵니다.', class: 'aura-fire' },
+            { id: 'aura_ice', name: '냉기 폭발 (오라)', type: 'aura', price: 200, icon: '<div class="w-full h-full flex items-center justify-center bg-slate-800"><i class="fa-solid fa-snowflake text-cyan-400 text-3xl drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]"></i></div>', desc: '카드에서 차가운 얼음 오라가 뿜어져 나옵니다.', class: 'aura-ice' },
+            { id: 'aura_gold', name: '전설의 빛 (오라)', type: 'aura', price: 500, icon: '<div class="w-full h-full flex items-center justify-center bg-slate-800"><i class="fa-solid fa-crown text-yellow-400 text-3xl drop-shadow-[0_0_8px_rgba(255,215,0,0.8)]"></i></div>', desc: '최상위 선수를 위한 황금빛 오라입니다.', class: 'aura-gold' },
+            { id: 'aura_dark', name: '암흑 각성 (오라)', type: 'aura', price: 500, icon: '<div class="w-full h-full flex items-center justify-center bg-slate-800"><i class="fa-solid fa-moon text-purple-500 text-3xl drop-shadow-[0_0_8px_rgba(128,0,128,0.8)]"></i></div>', desc: '어둠의 다크 포스가 카드를 감쌉니다.', class: 'aura-dark' },
             
-            { id: 'shoe_nike', name: '나이키 머큐리얼', type: 'shoes', price: 100, icon: '👟', desc: '폭발적인 스피드를 상징하는 축구화', short: '나이키' },
-            { id: 'shoe_adidas', name: '아디다스 프레데터', type: 'shoes', price: 100, icon: '👟', desc: '정확한 컨트롤을 위한 축구화', short: '아디다스' },
-            { id: 'shoe_puma', name: '푸마 퓨처', type: 'shoes', price: 100, icon: '👟', desc: '화려한 드리블러를 위한 축구화', short: '푸마' },
+            // 브랜드 축구화 (브랜드 컬러 그라데이션 기반 디자인 전면 수정)
+            { id: 'shoe_nike', name: '나이키 머큐리얼', type: 'shoes', price: 100, icon: '<div class="w-full h-full bg-gradient-to-br from-pink-500 to-orange-400 flex items-center justify-center relative"><i class="fa-solid fa-bolt text-white/30 text-4xl absolute -left-1"></i><i class="fa-solid fa-shoe-prints text-white text-3xl transform -rotate-12 relative z-10 drop-shadow-md"></i></div>', desc: '폭발적인 스피드를 상징하는 축구화', short: '나이키' },
+            { id: 'shoe_adidas', name: '아디다스 프레데터', type: 'shoes', price: 100, icon: '<div class="w-full h-full bg-gradient-to-br from-red-600 to-slate-900 flex items-center justify-center relative"><i class="fa-solid fa-grip-lines text-white/20 text-4xl absolute transform rotate-45"></i><i class="fa-solid fa-shoe-prints text-white text-3xl transform -rotate-12 relative z-10 drop-shadow-md"></i></div>', desc: '정확한 컨트롤을 위한 축구화', short: '아디다스' },
+            { id: 'shoe_puma', name: '푸마 퓨처', type: 'shoes', price: 100, icon: '<div class="w-full h-full bg-gradient-to-br from-lime-400 to-cyan-500 flex items-center justify-center relative"><i class="fa-solid fa-wave-square text-black/10 text-4xl absolute bottom-0"></i><i class="fa-solid fa-shoe-prints text-slate-900 text-3xl transform -rotate-12 relative z-10 drop-shadow-md"></i></div>', desc: '화려한 드리블러를 위한 축구화', short: '푸마' },
             
-            { id: 'ball_star', name: '스타 폴라리스', type: 'ball', price: 50, icon: '⚽', desc: '국민 풋살공 스타 매치볼', short: '스타 폴라리스' },
-            { id: 'ball_champs', name: '챔피언스 매치볼', type: 'ball', price: 150, icon: '⚽', desc: '별이 수놓아진 최고급 매치볼', short: '챔스볼' }
+            // 브랜드 축구공 (프리미엄 룩으로 디자인 수정)
+            { id: 'ball_star', name: '스타 폴라리스', type: 'ball', price: 50, icon: '<div class="w-full h-full bg-gradient-to-tr from-yellow-400 to-yellow-100 flex items-center justify-center relative"><i class="fa-solid fa-star text-yellow-600/20 text-5xl absolute"></i><i class="fa-regular fa-futbol text-yellow-800 text-4xl relative z-10 drop-shadow-md"></i></div>', desc: '국민 풋살공 스타 매치볼', short: '스타 폴라리스' },
+            { id: 'ball_champs', name: '챔피언스 매치볼', type: 'ball', price: 150, icon: '<div class="w-full h-full bg-gradient-to-br from-blue-800 to-indigo-500 flex items-center justify-center relative"><i class="fa-solid fa-star text-white/20 text-4xl absolute top-1 right-1"></i><i class="fa-solid fa-futbol text-white text-4xl relative z-10 drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]"></i></div>', desc: '별이 수놓아진 최고급 매치볼', short: '챔스볼' }
         ];
 
         // State 관리
@@ -495,7 +518,10 @@
 
         // --- 유틸리티 함수 ---
         const getOVR = (p) => Math.floor(((p.pac||60) + (p.sho||60) + (p.pas||60) + (p.dri||60) + (p.def||60) + (p.phy||60)) / 6);
-        const getWeeklyWage = (ovr) => { if(ovr >= 85) return 30; if(ovr >= 75) return 20; if(ovr >= 65) return 15; return 10; };
+        
+        // 능력치(OVR) 비례 주급 계산 공식: OVR 50일때 50B ~ OVR 99일때 200B 로 자연스럽게 책정
+        const getWeeklyWage = (ovr) => { return Math.max(50, Math.min(200, Math.floor(50 + ((ovr - 50) / 49) * 150))); };
+        
         const getExpNeeded = (level) => Math.floor(100 + ((level || 1) * 20));
         function getWeekNumber(d) {
             d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -572,28 +598,32 @@
         window.renderShop = () => {
             // GM 모드일 때는 라커룸에서 현재 "선택된" 학생의 인벤토리를 보여줌
             const targetId = window.playerState.isGM ? window.selectedPlayerId : window.playerState.id;
-            const p = window.allPlayersData.find(x => x.id === targetId);
+            const p = window.allPlayersData.find(x => x.id === targetId) || null;
             
-            if(!p) {
-                document.getElementById('shopGrid').innerHTML = '<p class="text-slate-400">선택된 선수가 없습니다.</p>';
-                return;
-            }
-            
-            const bong = p.bong || 0;
-            const inventory = p.inventory || [];
+            const bong = p ? (p.bong || 0) : 0;
+            const inventory = p ? (p.inventory || []) : [];
             
             document.getElementById('shopBong').innerText = bong;
-            document.getElementById('shopWalletLabel').innerText = window.playerState.isGM ? `[${p.name}] 선수의 자산` : `내 보유 자산`;
-            document.getElementById('shopSubTitle').innerText = window.playerState.isGM ? `마스터 관리 모드: 아이템을 클릭해 학생에게 무료로 선물하거나 회수할 수 있습니다.` : `획득한 자산(B)으로 내 카드를 멋지게 꾸며보세요!`;
+            
+            if (window.playerState.isGM) {
+                document.getElementById('shopWalletLabel').innerText = p ? `[${p.name}] 선수의 자산` : `학생 미등록/미선택`;
+                document.getElementById('shopSubTitle').innerText = p ? `마스터 관리 모드: 아이템을 클릭해 학생에게 무료로 선물하거나 회수할 수 있습니다.` : `마스터 관리 모드: 아직 라커룸에 가입(로그인)하지 않은 학생입니다.`;
+            } else {
+                document.getElementById('shopWalletLabel').innerText = `내 보유 자산`;
+                document.getElementById('shopSubTitle').innerText = `획득한 자산(B)으로 내 카드를 멋지게 꾸며보세요!`;
+            }
 
             let html = '';
             SHOP_ITEMS.forEach(item => {
                 const isOwned = inventory.includes(item.id);
-                const isEquipped = (p.equippedAura === item.id) || (p.equippedShoes === item.id) || (p.equippedBall === item.id) || (p.equippedAvatar === item.id);
+                const isEquipped = p ? ((p.equippedAura === item.id) || (p.equippedShoes === item.id) || (p.equippedBall === item.id) || (p.equippedAvatar === item.id)) : false;
                 
                 let btnHtml = '';
                 if(window.playerState.isGM) {
-                    if(isEquipped) {
+                    if (!p) {
+                        // 학생이 아직 한 번도 로그인 안 해서 DB에 없을 때
+                        btnHtml = `<button disabled class="w-full mt-2 bg-slate-800 text-slate-500 text-xs font-bold py-1.5 rounded cursor-not-allowed">학생 데이터 없음</button>`;
+                    } else if(isEquipped) {
                         btnHtml = `
                         <div class="flex gap-1 mt-2">
                             <button onclick="window.equipItem('${item.id}', '${item.type}')" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white text-[10px] font-bold py-1.5 rounded transition">장착 해제</button>
@@ -621,7 +651,7 @@
 
                 html += `
                     <div class="bg-slate-900/60 border border-slate-700 rounded-xl p-4 flex items-center gap-4 hover:border-purple-500/50 transition">
-                        <div class="text-4xl w-16 h-16 bg-slate-800 flex items-center justify-center rounded-lg shadow-inner flex-shrink-0 drop-shadow-md">${item.icon}</div>
+                        <div class="text-4xl w-16 h-16 bg-slate-800 flex items-center justify-center rounded-lg shadow-inner flex-shrink-0 drop-shadow-md overflow-hidden">${item.icon}</div>
                         <div class="flex-grow">
                             <h5 class="font-bold text-white text-sm mb-1">${item.name}</h5>
                             <p class="text-[10px] text-slate-400 mb-1 line-clamp-2">${item.desc}</p>
@@ -931,6 +961,8 @@
             document.getElementById('recTraining').innerText = p.training || 0;
             document.getElementById('recGoals').innerText = p.goals || 0;
             document.getElementById('recAssists').innerText = p.assists || 0;
+            document.getElementById('recKeypass').innerText = p.keypass || 0;
+            document.getElementById('recSaves').innerText = p.saves || 0;
 
             const stats = [
                 { id: 'pac', label: '속력' }, { id: 'dri', label: '드리블' },
@@ -942,12 +974,16 @@
             stats.forEach(s => {
                 const val = p[s.id] || 60;
                 if(isGM) {
-                    gridHtml += `<div class="stat-row flex items-center justify-between group"><span class="text-sm font-bold opacity-80 z-10">${s.label}</span><div class="flex items-center gap-1 z-10"><button onclick="window.modStat('${p.id}', '${s.id}', -1)" class="w-5 h-5 rounded bg-black/30 hover:bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-minus text-[8px]"></i></button><span class="stat-val w-6 text-center">${val}</span><button onclick="window.modStat('${p.id}', '${s.id}', 1)" class="w-5 h-5 rounded bg-black/30 hover:bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-plus text-[8px]"></i></button></div></div>`;
+                    // 일일이 누르지 않고 바로 타이핑 가능한 input 필드로 변경
+                    gridHtml += `<div class="stat-row flex items-center justify-between group"><span class="text-sm font-bold opacity-80 z-10">${s.label}</span><div class="flex items-center gap-1 z-10"><button onclick="window.modStat('${p.id}', '${s.id}', -1)" class="w-5 h-5 rounded bg-black/30 hover:bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-minus text-[8px]"></i></button><input type="number" min="1" max="99" value="${val}" class="stat-val w-8 text-center bg-transparent border-b-2 border-transparent hover:border-slate-500 focus:outline-none focus:border-emerald-400 transition cursor-text" onchange="window.setStat('${p.id}', '${s.id}', this.value)"><button onclick="window.modStat('${p.id}', '${s.id}', 1)" class="w-5 h-5 rounded bg-black/30 hover:bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-plus text-[8px]"></i></button></div></div>`;
                 } else {
                     gridHtml += `<div class="stat-row"><span class="text-sm font-bold opacity-80 z-10">${s.label}</span><span class="stat-val z-10">${val}</span></div>`;
                 }
             });
             document.getElementById('detailStatsGrid').innerHTML = gridHtml;
+            
+            // 육각형 스탯 레이더 차트 그리기
+            drawRadarChart(p);
 
             // 꾸미기 아이템 적용 (오라 이펙트)
             const auraWrapper = document.getElementById('cardAuraWrapper');
@@ -992,11 +1028,66 @@
             }
         }
 
+        // 레이더 차트 그리기 함수
+        function drawRadarChart(p) {
+            const canvas = document.getElementById('statRadar');
+            if(!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const cw = canvas.width; const ch = canvas.height;
+            const cx = cw / 2; const cy = ch / 2;
+            const r = cw * 0.45;
+            
+            ctx.clearRect(0,0,cw,ch);
+            
+            // 배경 육각형
+            ctx.beginPath();
+            for(let i=0; i<6; i++) {
+                const angle = (Math.PI / 3) * i - (Math.PI / 2);
+                ctx.lineTo(cx + r * Math.cos(angle), cy + r * Math.sin(angle));
+            }
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // 스탯 육각형 (순서: 속력, 슈팅, 패스, 피지컬, 수비, 드리블 - 시계방향)
+            const statVals = [p.pac||60, p.sho||60, p.pas||60, p.phy||60, p.def||60, p.dri||60];
+            ctx.beginPath();
+            for(let i=0; i<6; i++) {
+                const val = Math.max(1, Math.min(99, statVals[i])) / 99;
+                const angle = (Math.PI / 3) * i - (Math.PI / 2);
+                ctx.lineTo(cx + (r * val) * Math.cos(angle), cy + (r * val) * Math.sin(angle));
+            }
+            ctx.closePath();
+            
+            // OVR에 따른 차트 색상 변경 (기본 초록, 고레벨 황금)
+            const ovr = getOVR(p);
+            let color = '56, 255, 142'; 
+            if (ovr >= 85) color = '232, 194, 113'; 
+            
+            ctx.fillStyle = `rgba(${color}, 0.5)`;
+            ctx.fill();
+            ctx.strokeStyle = `rgb(${color})`;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
         // --- 감독 / 선수 기능들 ---
         window.modStat = async (pId, statKey, change) => {
             if(!window.playerState.isGM) return;
             const p = window.allPlayersData.find(x => x.id === pId);
             const newVal = Math.max(1, Math.min(99, (p[statKey] || 60) + change));
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + pId);
+            await setDoc(docRef, { [statKey]: newVal }, { merge: true });
+        };
+
+        // 직접 입력용 함수
+        window.setStat = async (pId, statKey, value) => {
+            if(!window.playerState.isGM) return;
+            const p = window.allPlayersData.find(x => x.id === pId);
+            const newVal = Math.max(1, Math.min(99, parseInt(value) || 60));
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + pId);
             await setDoc(docRef, { [statKey]: newVal }, { merge: true });
         };
@@ -1012,6 +1103,8 @@
             if(type === 'training') { expGained = 30; updates.training = (p.training||0) + 1; }
             if(type === 'goals') { expGained = 20; updates.goals = (p.goals||0) + 1; updates.bong = (p.bong||0) + 3; }
             if(type === 'assists') { expGained = 10; updates.assists = (p.assists||0) + 1; updates.bong = (p.bong||0) + 1; }
+            if(type === 'keypass') { expGained = 15; updates.keypass = (p.keypass||0) + 1; updates.bong = (p.bong||0) + 1; }
+            if(type === 'saves') { expGained = 15; updates.saves = (p.saves||0) + 1; updates.bong = (p.bong||0) + 2; }
 
             animateFloatText(`+${expGained} EXP`, 'text-emerald-400', 'confettiOrigin');
             await processExp(p, expGained, docRef, updates);
