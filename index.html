@@ -62,10 +62,8 @@
     </script>
 
     <style>
-        /* [시즌제 테마 배경 설정] 
-           선생님께서 2학기나 특별 이벤트 때 아래 .bg-season 클래스의 색상을 자유롭게 변경하여 분위기를 바꿀 수 있습니다. */
+        /* [시즌제 테마 배경 설정] */
         .bg-season { background-color: #020617; background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #020617 70%); }
-        /* 2학기 예시: .bg-season { background-color: #1a0f00; background-image: radial-gradient(circle at 50% 0%, #3d2300 0%, #1a0f00 70%); } */
 
         body { color: #f8fafc; overflow-x: hidden; }
         h1, h2, h3, .font-display { font-family: 'Black Han Sans', sans-serif; letter-spacing: 1px; }
@@ -108,7 +106,7 @@
         /* 상태 바 채우기 트랜지션 */
         .stat-fill { transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); }
         
-        /* 체크박스 애니메이션 (투두 리스트용) */
+        /* 체크박스 애니메이션 */
         .todo-checkbox:checked + div { background-color: #3b82f6; border-color: #3b82f6; }
         .todo-checkbox:checked + div i { opacity: 1; transform: scale(1); }
     </style>
@@ -488,8 +486,9 @@
     <!-- Firebase SDK 및 통합 로직 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        // ★ writeBatch를 추가하여 일괄 쓰기 트래픽을 대폭 감소시켰습니다.
+        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // ==========================================
         // 1. 완벽 복구된 데이터 베이스 (v5.3 기준 15개 직업)
@@ -651,12 +650,25 @@
 
                 onAuthStateChanged(auth, user => {
                     if (user) {
+                        // ★ [수정 1] 중복 리스너 방지: 전역 학생 리스너 하나로 통합
                         if (unsubscribeGlobal) unsubscribeGlobal();
                         unsubscribeGlobal = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'students'), snap => {
                             const students = []; let gmD = null;
                             snap.forEach(d => { if(d.id === 'student_gm') gmD = {id:'gm', ...d.data()}; else students.push({id: d.id.replace('student_',''), ...d.data()}); });
                             window.allStudentsData = students; window.gmData = gmD;
                             
+                            // 내 상태 실시간 동기화 (개별 리스너 제거 효과)
+                            if (!window.playerState.isGuest) {
+                                const myId = localStorage.getItem('sambong_student_id');
+                                if (myId) {
+                                    const myData = myId === 'gm' ? gmD : students.find(s => s.id === myId);
+                                    if (myData) {
+                                        window.playerState = { ...myData, isGuest: false, isGM: myId === 'gm' };
+                                        updateUI();
+                                    }
+                                }
+                            }
+
                             if (window.playerState && window.playerState.isGM) window.renderAdminTable(students);
                             window.renderPlaza(students, gmD);
                             window.renderHallOfFame(students);
@@ -949,64 +961,62 @@
             const isGM = (studentId === 'gm');
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', 'student_' + studentId);
             try {
+                // ★ [수정 2] 로그인 시 데이터를 1회 가져와서 처리 (불필요한 중복 onSnapshot 리스너 삭제)
                 const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
+                let data = docSnap.exists() ? docSnap.data() : null;
+
+                if (data) {
                     if (!data.pin) {
                         if (isAutoLogin) return; 
                         const isOk = await window.customConfirm(`[${STUDENT_NAMES[studentId]}]\n입력하신 [${pin}] 번호가 영구 비밀번호로 설정됩니다.\n접속하시겠습니까?`);
                         if(!isOk) return;
-                        window.playerState = { ...data, pin: pin, isGuest: false, isGM };
+                        data.pin = pin;
                         await setDoc(docRef, { pin: pin }, { merge: true });
                     } else if (data.pin !== pin) {
                         if (isAutoLogin) { localStorage.clear(); location.reload(); return; }
                         return await window.customAlert("❌ 비밀번호가 틀렸습니다!");
-                    } else {
-                        window.playerState = { ...data, isGuest: false, isGM };
                     }
                 } else {
                     if (isAutoLogin) return; 
                     const isOk = await window.customConfirm(`[${STUDENT_NAMES[studentId]}]\n입력하신 [${pin}] 번호가 영구 비밀번호로 설정됩니다.\n접속하시겠습니까?`);
                     if(!isOk) return;
-                    window.playerState = { pin, xp: 0, bong: 0.0, quests: {}, unlockedQuests: {}, jobs: [], ownedSkins: {}, equippedSkins: {}, hasShield: false, shieldHP: 0, isGuest: false, isGM };
-                    await setDoc(docRef, window.playerState);
+                    data = { pin, xp: 0, bong: 0.0, quests: {}, unlockedQuests: {}, jobs: [], ownedSkins: {}, equippedSkins: {}, hasShield: false, shieldHP: 0 };
+                    await setDoc(docRef, data);
                 }
 
-                localStorage.setItem('sambong_student_id', studentId); localStorage.setItem('sambong_student_pin', pin);
+                // ★ [수정 3] 일일 퀘스트 자동 초기화 (매일 아침 8시 기준) - 로그인 시 1회만 판별하여 불필요한 업데이트 방지
+                if (!isGM) {
+                    const now = new Date();
+                    const gameTime = new Date(now.getTime() - 8 * 60 * 60 * 1000); // 8시간을 빼서 아침 8시 전에는 어제로 인식하게 함
+                    const yyyy = gameTime.getFullYear();
+                    const mm = String(gameTime.getMonth() + 1).padStart(2, '0');
+                    const dd = String(gameTime.getDate()).padStart(2, '0');
+                    const gameDateStr = `${yyyy}-${mm}-${dd}`; 
+                    
+                    if (data.lastDailyReset !== gameDateStr) {
+                        const dailyQuestIds = QUEST_DATA.filter(q => q.type === 'daily').map(q => q.id);
+                        let modified = false; let updatedQuests = { ...(data.quests || {}) };
+                        
+                        dailyQuestIds.forEach(qId => {
+                            if (updatedQuests[qId]) { updatedQuests[qId] = false; modified = true; }
+                        });
+                        
+                        if (modified || !data.lastDailyReset) {
+                            data.quests = updatedQuests;
+                            data.lastDailyReset = gameDateStr;
+                            await setDoc(docRef, { quests: updatedQuests, lastDailyReset: gameDateStr }, { merge: true });
+                        }
+                    }
+                }
+
+                window.playerState = { ...data, isGuest: false, isGM: isGM };
+                localStorage.setItem('sambong_student_id', studentId); 
+                localStorage.setItem('sambong_student_pin', pin);
                 currentStudentDocRef = docRef;
                 completeLoginUI(STUDENT_NAMES[studentId], isGM);
+                
+                // 기존에 있던 onSnapshot(currentStudentDocRef) 중복 코드는 할당량 절약을 위해 삭제되었습니다.
 
-                onSnapshot(currentStudentDocRef, (snap) => {
-                    if (snap.exists()) { 
-                        const data = snap.data();
-                        
-                        // ★ 일일 퀘스트 자동 초기화 로직 (아침 8시 기준) ★
-                        if (!isGM && !window.playerState.isGuest) {
-                            const now = new Date();
-                            const gameTime = new Date(now.getTime() - 8 * 60 * 60 * 1000); // 8시간을 빼서 아침 8시 전에는 어제로 인식하게 함
-                            const yyyy = gameTime.getFullYear();
-                            const mm = String(gameTime.getMonth() + 1).padStart(2, '0');
-                            const dd = String(gameTime.getDate()).padStart(2, '0');
-                            const gameDateStr = `${yyyy}-${mm}-${dd}`; 
-                            
-                            if (data.lastDailyReset !== gameDateStr) {
-                                const dailyQuestIds = QUEST_DATA.filter(q => q.type === 'daily').map(q => q.id);
-                                let modified = false; let updatedQuests = { ...(data.quests || {}) };
-                                
-                                dailyQuestIds.forEach(qId => {
-                                    if (updatedQuests[qId]) { updatedQuests[qId] = false; modified = true; }
-                                });
-                                
-                                if (modified || !data.lastDailyReset) {
-                                    setDoc(currentStudentDocRef, { quests: updatedQuests, lastDailyReset: gameDateStr }, { merge: true });
-                                    return; 
-                                }
-                            }
-                        }
-                        window.playerState = { ...data, isGuest: false, isGM }; 
-                        updateUI(); 
-                    }
-                });
             } catch (e) { await window.customAlert("에러: " + e.message); }
         }
 
@@ -1218,16 +1228,20 @@
             await setDoc(docRef, updates, { merge: true });
         };
 
+        // ★ [수정 4] 학생 13명 전체를 업데이트할 때 개별 쓰기 대신 writeBatch(일괄 쓰기)를 사용하여 1회의 트래픽만 발생하도록 수정했습니다.
         window.bulkAdd = async function(type, amount) {
             const typeName = type === 'xp' ? '경험치(XP)' : '자산(B)';
             const ok = await window.customConfirm(`모든 학생에게 [${typeName}]를 ${amount}만큼 일괄 지급하시겠습니까?`);
             if(!ok) return;
+            
+            const batch = writeBatch(db);
             for (const stu of window.allStudentsData) {
                 if (stu.id === 'gm') continue;
                 let docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', 'student_' + stu.id);
                 let updates = {}; updates[type] = (stu[type] || 0) + amount;
-                await setDoc(docRef, updates, { merge: true });
+                batch.set(docRef, updates, { merge: true });
             }
+            await batch.commit();
             await window.customAlert(`🎉 모든 학생에게 +${amount} ${type === 'xp' ? 'XP' : 'B'} 일괄 지급이 완료되었습니다!`);
         };
 
@@ -1237,6 +1251,8 @@
             if(!ok) return;
             
             let protectedCount = 0; let affectedCount = 0;
+            const batch = writeBatch(db);
+
             for (const stu of window.allStudentsData) {
                 if (stu.id === 'gm') continue;
                 let docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', 'student_' + stu.id);
@@ -1251,8 +1267,9 @@
                 }
                 
                 if (deductAmount > 0) { let newVal = (stu[type] || 0) - deductAmount; if (newVal < 0) newVal = 0; updates[type] = newVal; affectedCount++; } 
-                await setDoc(docRef, updates, { merge: true });
+                batch.set(docRef, updates, { merge: true });
             }
+            await batch.commit();
             await window.customAlert(`💥 일괄 차감 공격이 완료되었습니다.\n\n✔️ 피해를 입은 학생: ${affectedCount}명\n🛡️ 방패로 방어(또는 부분방어): ${protectedCount}명`);
         };
 
@@ -1275,6 +1292,8 @@
             const ok = await window.customConfirm("⚠️ 모든 학생의 '전담 레이드(특수 퀘스트)' 완료 및 잠금 해제 상태를 초기화하시겠습니까?\n(일주일에 2회 이상 전담 수업이 있을 경우 다시 보상을 받도록 해줍니다.)");
             if(!ok) return;
             const raidIds = ['q_sci', 'q_prac', 'q_eng', 'q_dan', 'q_the'];
+            const batch = writeBatch(db);
+
             for (const stu of window.allStudentsData) {
                 if (stu.id === 'gm') continue;
                 let docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', 'student_' + stu.id);
@@ -1284,8 +1303,9 @@
                     if (updates.quests[qId]) { updates.quests[qId] = false; modified = true; } 
                     if (updates.unlockedQuests[qId]) { updates.unlockedQuests[qId] = false; modified = true; }
                 });
-                if (modified) await setDoc(docRef, { quests: updates.quests, unlockedQuests: updates.unlockedQuests }, { merge: true });
+                if (modified) batch.set(docRef, { quests: updates.quests, unlockedQuests: updates.unlockedQuests }, { merge: true });
             }
+            await batch.commit();
             await window.customAlert("✅ 모든 학생의 전담 레이드가 성공적으로 다시 잠금 및 초기화되었습니다!");
         };
 
