@@ -1048,7 +1048,7 @@
                 if(snap.exists()) {
                     const data = snap.data();
                     if(!data.pin) {
-                        if(isAuto) return;
+                        if(isAuto) { localStorage.clear(); location.reload(); return; }
                         if(!await window.customConfirm(`PIN [${pin}]으로 초기 등록하시겠습니까?`)) return;
                         await setDoc(docRef, { pin }, { merge: true });
                         window.playerState = { id: pId, isGM, ...data };
@@ -1057,7 +1057,7 @@
                         return window.customAlert("❌ 비밀번호가 틀렸습니다.");
                     } else { window.playerState = { id: pId, isGM, ...data }; }
                 } else {
-                    if(isAuto) return;
+                    if(isAuto) { localStorage.clear(); location.reload(); return; }
                     if(!await window.customConfirm(`신규 카드 발급! PIN [${pin}]으로 등록하시겠습니까?`)) return;
                     const baseData = { 
                         name: isGM ? (pId==='gm1'?'감독 J':'수석코치 J') : pId, pin, 
