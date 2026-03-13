@@ -1045,7 +1045,8 @@
             const grid = document.getElementById('lockerGrid');
             let html = '';
             ALLOWED_PLAYERS.forEach(name => {
-                const p = window.allPlayersData.find(x => x.name === name);
+                // 2. 이름뿐만 아니라 고유 ID로도 카드를 찾아내도록 이중 매칭 보정
+                const p = window.allPlayersData.find(x => x.name === name || x.id === name);
                 if(p) {
                     const isChecked = window.checkedInPlayers.has(p.id);
                     const isSelected = window.selectedPlayerId === p.id;
