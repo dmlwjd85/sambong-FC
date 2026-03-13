@@ -1525,6 +1525,83 @@
             }());
         }
 
+        // --- 출석부 관리 시스템 ---
+        window.saveAttendance = async () => {
+            if (!window.playerState.isGM) return;
+            if (window.checkedInPlayers.size === 0) return window.customAlert("체크된 선수가 없습니다.");
+            
+            // 날짜 포맷 (예: 2026-03-13)
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const dateStr = `${year}-${month}-${day}`;
+
+            const attendees = Array.from(window.checkedInPlayers);
+            
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'attendance', dateStr);
+            await setDoc(docRef, { 
+                date: dateStr, 
+                count: attendees.length,
+                players: attendees,
+                timestamp: new Date().toISOString()
+            }, { merge: true });
+            
+            triggerConfetti();
+            window.customAlert(`✅ ${dateStr}\n총 ${attendees.length}명의 출석부가 저장되었습니다!`);
+        };
+
+        window.viewAttendance = async () => {
+            if (!window.playerState.isGM) return;
+            
+            const attRef = collection(db, 'artifacts', appId, 'public', 'data', 'attendance');
+            
+            try {
+                const snap = await getDocs(attRef);
+                let logs = [];
+                snap.forEach(doc => logs.push(doc.data()));
+                logs.sort((a, b) => b.date.localeCompare(a.date)); // 최신순 정렬
+                
+                let modalHtml = `<div class="bg-pitch-bg p-6 rounded-3xl border-2 border-blue-500 max-w-sm w-full shadow-2xl max-h-[80vh] flex flex-col">
+                    <h3 class="text-xl font-display text-white mb-4 text-center">출석부 조회 기록</h3>
+                    <div class="overflow-y-auto pr-2 custom-scrollbar flex-1 space-y-3">`;
+                
+                if (logs.length === 0) {
+                    modalHtml += `<p class="text-center text-slate-400 text-sm">저장된 출석 기록이 없습니다.</p>`;
+                } else {
+                    logs.forEach(log => {
+                        const playerNames = log.players.map(pid => {
+                            const p = window.allPlayersData.find(x => x.id === pid);
+                            return p ? p.name : pid;
+                        }).join(', ');
+                        
+                        modalHtml += `
+                            <div class="bg-slate-800 p-3 rounded-xl border border-slate-600">
+                                <div class="flex justify-between items-center mb-2 border-b border-slate-700 pb-1">
+                                    <span class="font-bold text-emerald-400 text-sm"><i class="fa-regular fa-calendar mr-1"></i>${log.date}</span>
+                                    <span class="bg-blue-900 text-blue-300 text-[10px] px-2 py-0.5 rounded-full font-bold">총 ${log.count}명</span>
+                                </div>
+                                <p class="text-xs text-slate-300 leading-relaxed break-keep">${playerNames}</p>
+                            </div>
+                        `;
+                    });
+                }
+                
+                modalHtml += `</div>
+                    <button onclick="this.parentElement.parentElement.remove()" class="mt-4 bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-6 rounded-xl w-full transition">닫기</button>
+                </div>`;
+                
+                const modal = document.createElement('div');
+                modal.className = "fixed inset-0 z-[400] flex items-center justify-center bg-black/80 px-4";
+                modal.innerHTML = modalHtml;
+                document.body.appendChild(modal);
+                
+            } catch (e) {
+                console.error("출석부 조회 에러:", e);
+                window.customAlert("출석부 데이터를 불러오는데 실패했습니다.");
+            }
+        };
+
         initApp();
     </script>
 </body>
