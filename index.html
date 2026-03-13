@@ -1159,8 +1159,10 @@
             document.getElementById('detailPos').innerText = posText;
             
             const guideOverlay = document.getElementById('posGuideOverlay');
-            if (isMe && (p.pos === '미정' || !p.pos)) guideOverlay.classList.remove('hidden');
-            else guideOverlay.classList.add('hidden');
+            if (guideOverlay) {
+                if (isMe && (p.pos === '미정' || !p.pos)) guideOverlay.classList.remove('hidden');
+                else guideOverlay.classList.add('hidden');
+            }
             
             document.getElementById('detailExpText').innerText = `${exp} / ${expNeeded}`;
             document.getElementById('detailExpBar').style.width = `${expPercent}%`;
