@@ -1602,6 +1602,53 @@
             }
         };
 
+        // --- 전역 스와이프 (탭 이동) 기능 ---
+        let touchstartX = 0;
+        let touchstartY = 0;
+
+        document.addEventListener('touchstart', e => {
+            touchstartX = e.changedTouches[0].screenX;
+            touchstartY = e.changedTouches[0].screenY;
+        }, {passive: true});
+
+        document.addEventListener('touchend', e => {
+            const touchendX = e.changedTouches[0].screenX;
+            const touchendY = e.changedTouches[0].screenY;
+            
+            const distX = touchendX - touchstartX;
+            const distY = touchendY - touchstartY;
+
+            // X축 이동거리가 60px 이상이고, Y축(위아래) 이동이 60px 이하일 때만 스와이프로 인정 (스크롤 오작동 방지)
+            if (Math.abs(distX) > 60 && Math.abs(distY) < 60) {
+                // 상단 네비게이션, 가로 스크롤 표, 모달, 숫자 입력창 등에서 일어난 스와이프는 무시
+                if(e.target.closest('nav') || e.target.closest('.overflow-x-auto') || e.target.closest('.custom-scrollbar') || e.target.tagName === 'INPUT') return;
+
+                let availableTabs = ['tabWorkspace', 'tabRank', 'tabShop', 'tabTips', 'tabGuide'];
+                if(window.playerState && window.playerState.isGM) availableTabs.push('tabMaster');
+
+                let currentTab = availableTabs.find(id => {
+                    const el = document.getElementById(id);
+                    return el && !el.classList.contains('hidden');
+                }) || 'tabWorkspace';
+                
+                let currentIndex = availableTabs.indexOf(currentTab);
+
+                if (distX < 0) {
+                    // 화면을 왼쪽으로 스와이프 -> 다음 탭으로 이동
+                    if (currentIndex < availableTabs.length - 1) {
+                        window.switchTab(availableTabs[currentIndex + 1]);
+                        window.scrollTo({top: 0, behavior: 'smooth'}); // 탭 이동 시 화면 맨 위로 정렬
+                    }
+                } else {
+                    // 화면을 오른쪽으로 스와이프 -> 이전 탭으로 이동
+                    if (currentIndex > 0) {
+                        window.switchTab(availableTabs[currentIndex - 1]);
+                        window.scrollTo({top: 0, behavior: 'smooth'});
+                    }
+                }
+            }
+        }, {passive: true});
+
         initApp();
     </script>
 </body>
