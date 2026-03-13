@@ -1530,7 +1530,7 @@
             triggerConfetti(); window.customAlert(`✅ ${dateStr}\n총 ${attendees.length}명의 출석부가 저장되었습니다!`);
         };
 
-        // --- 엑셀 스타일 출석부 렌더링 ---
+        // --- 다크테마 및 2026 캘린더 연동 출석부 렌더링 ---
         window.viewAttendance = async () => {
             if (!window.playerState.isGM) return;
             const attRef = collection(db, 'artifacts', appId, 'public', 'data', 'attendance');
@@ -1538,30 +1538,34 @@
             try {
                 const snap = await getDocs(attRef);
                 let logs = []; snap.forEach(doc => logs.push(doc.data()));
-                logs.sort((a, b) => a.date.localeCompare(b.date)); // 날짜순 정렬 (과거->최신)
                 
-                const dates = logs.map(l => l.date); // ['2026-03-01', '2026-03-08', ...]
-                
-                let modalHtml = `<div class="bg-white p-4 sm:p-6 rounded-lg border-2 border-black max-w-5xl w-full shadow-2xl max-h-[90vh] flex flex-col font-sans">
-                    <h2 class="text-2xl sm:text-3xl font-bold text-center text-black mb-1 tracking-widest underline underline-offset-8 decoration-2">토요스포츠데이 (3~6학년) 출석부</h2>
-                    <p class="text-xs text-black mb-4 mt-4">2) 3~6학년 (9:20~12:30)</p>
+                // 구글 캘린더 연동 대신 2026년 실제 토요일 15주차 자동 계산 (3월 첫째주 3/7 시작 기준)
+                const dates = [];
+                let d = new Date(2026, 2, 7); 
+                for(let i=0; i<15; i++) {
+                    const y = d.getFullYear();
+                    const m = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    dates.push(`${y}-${m}-${day}`);
+                    d.setDate(d.getDate() + 7);
+                }
+
+                let modalHtml = `<div class="bg-pitch-panel p-4 sm:p-6 rounded-3xl border-2 border-emerald-500 max-w-6xl w-full shadow-2xl max-h-[90vh] flex flex-col font-sans text-white">
+                    <h2 class="text-2xl sm:text-3xl font-display text-center text-emerald-400 mb-2 tracking-widest drop-shadow-lg flex items-center justify-center gap-3"><i class="fa-solid fa-calendar-check"></i> 삼봉 풋살클럽 출석부 (2026)</h2>
+                    <p class="text-xs text-emerald-200 mb-4 mt-2 text-center">토요스포츠데이 (3~6학년) / 9:20~12:30</p>
                     
-                    <div class="overflow-auto custom-scrollbar flex-1 border border-black">
-                        <table class="excel-table whitespace-nowrap">
+                    <div class="overflow-auto custom-scrollbar flex-1 border border-emerald-800/50 rounded-xl bg-slate-900/80">
+                        <table class="w-full text-center whitespace-nowrap text-xs border-collapse">
                             <thead>
-                                <tr>
-                                    <th rowspan="2" class="w-10">연<br>번</th>
-                                    <th rowspan="2" class="w-16">학반</th>
-                                    <th rowspan="2" class="w-20 relative"><span class="absolute top-1 right-2 text-[10px]">월일</span><svg class="absolute inset-0 w-full h-full" preserveAspectRatio="none"><line x1="0" y1="0" x2="100%" y2="100%" stroke="black" stroke-width="1"/></svg><span class="absolute bottom-1 left-2 text-[10px]">성명</span></th>
-                                    <th class="w-12 bg-gray">누계</th>
-                                    ${dates.map((_, i) => `<th>${i+1}</th>`).join('')}
-                                    ${Array.from({length: Math.max(0, 15 - dates.length)}).map((_, i) => `<th>${dates.length + i + 1}</th>`).join('')}
-                                    <th rowspan="2" class="w-20">비고</th>
+                                <tr class="bg-slate-800 border-b border-emerald-800">
+                                    <th rowspan="2" class="p-2 border-r border-slate-700 w-10">연번</th>
+                                    <th rowspan="2" class="p-2 border-r border-slate-700 w-24">성명</th>
+                                    <th class="p-2 border-r border-slate-700 bg-emerald-900/40 text-emerald-300 w-12">누계</th>
+                                    ${dates.map((_, i) => `<th class="p-1 border-r border-slate-700 font-normal text-[10px] text-slate-400 w-10">${i+1}주차</th>`).join('')}
                                 </tr>
-                                <tr>
-                                    <th class="text-[9px] font-normal leading-tight bg-gray">월일<br><hr class="border-black my-0.5">요일</th>
-                                    ${dates.map(d => `<th class="text-[10px] font-normal">${d.substring(5).replace('-','/')}<br><hr class="border-black border-dashed my-0.5"><span class="text-[9px]">토</span></th>`).join('')}
-                                    ${Array.from({length: Math.max(0, 15 - dates.length)}).map(() => `<th class="text-[10px] font-normal"> / <br><hr class="border-black border-dashed my-0.5"><span class="text-[9px]">토</span></th>`).join('')}
+                                <tr class="bg-slate-800 border-b border-emerald-800">
+                                    <th class="p-1 border-r border-slate-700 text-[10px] bg-emerald-900/40">출석</th>
+                                    ${dates.map(d => `<th class="p-1 border-r border-slate-700 text-[10px]"><div class="text-emerald-400 font-bold">${d.substring(5).replace('-','/')}</div><div class="text-emerald-500/70 mt-0.5 font-bold">(토)</div></th>`).join('')}
                                 </tr>
                             </thead>
                             <tbody>`;
@@ -1572,34 +1576,30 @@
                     const pId = p ? p.id : null;
                     let attCount = 0;
                     
-                    let rowCells = dates.map(d => {
-                        const log = logs.find(l => l.date === d);
+                    let rowCells = dates.map(targetDate => {
+                        const log = logs.find(l => l.date === targetDate);
                         if(log && pId && log.players.includes(pId)) {
-                            attCount++; return `<td>O</td>`;
+                            attCount++; 
+                            return `<td class="p-1 border-r border-b border-slate-700/50"><div class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500 flex items-center justify-center mx-auto text-[10px] font-bold shadow-[0_0_5px_rgba(56,255,142,0.5)]">O</div></td>`;
                         }
-                        return `<td></td>`;
+                        return `<td class="p-1 border-r border-b border-slate-700/50 text-slate-700">-</td>`;
                     }).join('');
                     
-                    const emptyCells = Array.from({length: Math.max(0, 15 - dates.length)}).map(() => `<td></td>`).join('');
-
                     modalHtml += `
-                        <tr class="hover:bg-blue-50">
-                            <td>${idx+1}</td>
-                            <td>6</td>
-                            <td class="font-bold tracking-widest">${name}</td>
-                            <td class="bg-gray font-bold">${attCount}</td>
+                        <tr class="hover:bg-slate-800/60 transition">
+                            <td class="p-2 border-r border-b border-slate-700/50 text-slate-500">${idx+1}</td>
+                            <td class="p-2 border-r border-b border-slate-700/50 font-bold text-white tracking-widest">${name}</td>
+                            <td class="p-2 border-r border-b border-slate-700/50 bg-emerald-900/20 font-bold text-emerald-300">${attCount}</td>
                             ${rowCells}
-                            ${emptyCells}
-                            <td></td>
                         </tr>
                     `;
                 });
                 
                 modalHtml += `</tbody></table></div>
-                    <button onclick="this.parentElement.parentElement.remove()" class="mt-4 bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 px-6 rounded w-full transition border border-black shadow">닫기</button>
+                    <button onclick="this.parentElement.parentElement.remove()" class="mt-6 bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-xl w-full transition shadow-lg text-lg">닫기</button>
                 </div>`;
                 
-                const modal = document.createElement('div'); modal.className = "fixed inset-0 z-[400] flex items-center justify-center bg-black/80 px-2 sm:px-4"; modal.innerHTML = modalHtml; document.body.appendChild(modal);
+                const modal = document.createElement('div'); modal.className = "fixed inset-0 z-[400] flex items-center justify-center bg-black/90 px-2 sm:px-4 backdrop-blur-sm"; modal.innerHTML = modalHtml; document.body.appendChild(modal);
             } catch (e) { console.error("조회 에러:", e); window.customAlert("데이터를 불러오는데 실패했습니다."); }
         };
 
