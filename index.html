@@ -104,13 +104,6 @@
             white-space: nowrap;
         }
 
-        /* 엑셀 스타일 출석부 테이블 */
-        .excel-table { width: 100%; border-collapse: collapse; background-color: #fff; color: #000; font-family: 'Noto Sans KR', sans-serif; }
-        .excel-table th, .excel-table td { border: 1px solid #000; padding: 4px; text-align: center; vertical-align: middle; }
-        .excel-table th { background-color: #f3f4f6; font-weight: bold; font-size: 0.8rem; }
-        .excel-table td { font-size: 0.75rem; }
-        .excel-table .bg-gray { background-color: #e5e7eb; }
-
         .mini-card { position: relative; transition: all 0.2s; overflow: hidden; }
         .mini-card:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 5px 15px rgba(56,255,142,0.3); border-color: #38ff8e; }
         .mini-card.selected { border-color: #e8c271; box-shadow: 0 0 15px rgba(232,194,113,0.6); background-color: rgba(232,194,113,0.1); }
@@ -192,10 +185,14 @@
                 <div class="flex items-center space-x-1 sm:space-x-3 text-xs sm:text-sm flex-grow overflow-x-auto hide-scrollbar whitespace-nowrap scroll-smooth">
                     <button onclick="window.switchTab('tabWorkspace')" id="btnTabWorkspace" class="nav-tab active pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-person-booth mr-1"></i>라커룸</button>
                     <button onclick="window.switchTab('tabRank')" id="btnTabRank" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-trophy mr-1 text-yellow-400"></i>명예의전당</button>
+                    <!-- 선수 비교 탭 추가 -->
+                    <button onclick="window.switchTab('tabCompare')" id="btnTabCompare" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-code-compare mr-1 text-pink-400"></i>선수비교</button>
                     <button onclick="window.switchTab('tabShop')" id="btnTabShop" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-store mr-1 text-purple-400"></i>상점</button>
                     <button onclick="window.switchTab('tabTips')" id="btnTabTips" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-lightbulb mr-1 text-orange-400"></i>꿀팁</button>
                     <button onclick="window.switchTab('tabGuide')" id="btnTabGuide" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-circle-info mr-1 text-cyan-400"></i>이용안내</button>
                     <button onclick="window.switchTab('tabMaster')" id="btnTabMaster" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 hidden flex-shrink-0"><i class="fa-solid fa-chart-line mr-1 text-fut-rare"></i>현황판(마스터)</button>
+                    <!-- 마스터 전용 스탯현황 탭 추가 -->
+                    <button onclick="window.switchTab('tabMasterStats')" id="btnTabMasterStats" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 hidden flex-shrink-0"><i class="fa-solid fa-list-ol mr-1 text-emerald-400"></i>스탯현황</button>
                 </div>
 
                 <div class="flex items-center space-x-2 pl-2 border-l border-slate-700/50 flex-shrink-0">
@@ -299,7 +296,7 @@
 
                     <!-- 감독 전용 패널 -->
                     <div id="gmWalletManager" class="hidden mt-4 bg-slate-900/90 p-3 rounded-xl border border-fut-gold shadow-lg flex justify-between items-center relative z-30">
-                        <span class="text-xs font-bold text-slate-300">자산 관리: <span id="gmViewBong" class="text-fut-gold text-xl font-display ml-1">0</span> B</span>
+                        <span class="text-xs font-bold text-slate-300 flex items-center">자산 관리: <span id="gmViewBong" class="ml-1"></span><span class="text-fut-gold ml-1">B</span></span>
                         <div class="flex gap-1">
                             <button onclick="window.manualAddBong(1)" class="bg-emerald-700 hover:bg-emerald-600 px-2.5 py-1 rounded text-xs font-bold text-white transition">+1</button>
                             <button onclick="window.manualAddBong(5)" class="bg-emerald-700 hover:bg-emerald-600 px-2.5 py-1 rounded text-xs font-bold text-white transition">+5</button>
@@ -468,6 +465,29 @@
                     </div>
                 </div>
 
+                <!-- 탭: 선수 비교 화면 컨테이너 추가 -->
+                <div id="tabCompare" class="hidden space-y-6">
+                    <div class="glass-panel p-4 sm:p-8 rounded-3xl border-t-4 border-t-pink-500">
+                        <h3 class="text-2xl sm:text-3xl font-display text-pink-400 mb-6 flex items-center gap-3">
+                            <i class="fa-solid fa-code-compare"></i> 스탯 비교실
+                        </h3>
+                        
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div id="compareViewArea" class="bg-slate-900/80 rounded-2xl p-4 sm:p-6 border border-slate-700 shadow-xl flex flex-col justify-center min-h-[400px]">
+                                <div class="text-center text-slate-500 py-10">비교할 선수를 아래 명단에서 선택해주세요.</div>
+                            </div>
+                            
+                            <div class="bg-slate-900/50 rounded-2xl p-4 border border-slate-700 h-[500px] flex flex-col">
+                                <h4 class="text-emerald-400 font-bold mb-3 flex items-center gap-2 border-b border-slate-700 pb-2">
+                                    <i class="fa-solid fa-users"></i> 비교 대상 선택
+                                </h4>
+                                <div id="comparePlayerList" class="overflow-y-auto custom-scrollbar flex-1 space-y-2 pr-2">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- 탭 3: 꾸미기 상점 -->
                 <div id="tabShop" class="hidden space-y-6">
                     <div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-purple-500">
@@ -552,6 +572,35 @@
                     </div>
                 </div>
 
+                <!-- 탭: 스탯 현황판(마스터 전용) 화면 컨테이너 추가 -->
+                <div id="tabMasterStats" class="hidden space-y-6">
+                    <div class="glass-panel p-4 sm:p-8 rounded-3xl border-t-4 border-t-emerald-400 overflow-hidden">
+                        <h3 class="text-2xl sm:text-3xl font-display text-emerald-400 mb-2 flex items-center gap-2 sm:gap-3">
+                            <i class="fa-solid fa-list-ol"></i> 선수 스탯 현황판 (마스터)
+                        </h3>
+                        <p class="text-xs sm:text-sm text-slate-400 mb-4 sm:mb-6">능력치 이름을 클릭하면 내림차순으로 정렬됩니다. (스마트폰에서는 표를 좌우로 스크롤하세요)</p>
+                        
+                        <div class="overflow-x-auto custom-scrollbar rounded-xl border border-slate-700 shadow-inner bg-slate-900">
+                            <table class="w-full text-center text-[11px] sm:text-sm text-slate-300 min-w-[700px] sm:min-w-[900px]">
+                                <thead class="bg-slate-800 text-slate-400 font-bold border-b border-slate-600 whitespace-nowrap select-none">
+                                    <tr>
+                                        <th class="py-3 pl-4 text-left">이름</th>
+                                        <th class="py-3 px-1">포지션</th>
+                                        <th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('ovr')">OVR <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+                                        <th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('pac')">PAC <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+                                        <th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('sho')">SHO <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+                                        <th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('pas')">PAS <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+                                        <th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('dri')">DRI <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+                                        <th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('def')">DEF <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+                                        <th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('phy')">PHY <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="masterStatsTableBodyOnly" class="bg-slate-900/50 divide-y divide-slate-700/50 whitespace-nowrap"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -622,6 +671,9 @@
         window.checkedInPlayers = new Set();
         window.selectedPlayerId = null;
         window.targetTeamCount = 2; 
+        
+        window.compareTargetId = null;
+        window.currentSortKey = 'ovr';
 
         let db, auth;
 
@@ -653,7 +705,6 @@
         
         const getWeeklyWage = (ovr) => { return Math.max(50, Math.min(200, Math.floor(50 + ((ovr - 50) / 49) * 150))); };
         
-        // 경험치 산정 공식 시 레벨 0일 때도 정상 처리되도록 널 병합 연산자(??) 적용
         const getExpNeeded = (level) => Math.floor(100 + ((level ?? 1) * 20));
         function getWeekNumber(d) {
             d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -686,9 +737,8 @@
             document.body.appendChild(d); document.getElementById('bYes').onclick = () => { d.remove(); r(true); }; document.getElementById('bNo').onclick = () => { d.remove(); r(false); };
         });
 
-        // 라커룸 외 탭 이동 시 카드 패널 숨기기 및 레이아웃 확장 로직 적용
         window.switchTab = (tabId) => {
-            ['tabWorkspace', 'tabTips', 'tabShop', 'tabRank', 'tabGuide', 'tabMaster'].forEach(id => {
+            ['tabWorkspace', 'tabTips', 'tabShop', 'tabRank', 'tabGuide', 'tabMaster', 'tabCompare', 'tabMasterStats'].forEach(id => {
                 const el = document.getElementById(id); if(el) el.classList.add('hidden');
                 const btn = document.getElementById('btn' + id.charAt(0).toUpperCase() + id.slice(1)); if(btn) btn.classList.remove('active');
             });
@@ -713,6 +763,8 @@
             if(tabId === 'tabShop') renderShop();
             if(tabId === 'tabRank') renderLeaderboard();
             if(tabId === 'tabMaster') renderMasterDashboard();
+            if(tabId === 'tabCompare') window.renderCompareList();
+            if(tabId === 'tabMasterStats') window.renderMasterStats();
         };
 
         function renderDailyTip() {
@@ -844,7 +896,6 @@
         };
 
         function renderLeaderboard() {
-            // 명예의 전당에서 레벨 0인 학생도 표시되도록 필터링 조건 수정
             const players = window.allPlayersData.filter(p => (p.level ?? 1) >= 0); 
             const categories = [
                 { id: 'goals', name: '득점왕', icon: '⚽', color: 'text-yellow-400', border: 'border-yellow-400/50' },
@@ -932,28 +983,159 @@
                 `;
             });
             tbody.innerHTML = html;
+        }
 
-            const statsTbody = document.getElementById('masterStatsTableBody');
+        window.sortMasterStats = (key) => {
+            window.currentSortKey = key;
+            window.renderMasterStats();
+        };
+
+        window.renderMasterStats = () => {
+            if(!window.playerState.isGM) return;
+            const statsTbody = document.getElementById('masterStatsTableBodyOnly');
+            if(!statsTbody) return;
             let statsHtml = '';
+            
+            const players = [...window.allPlayersData].sort((a,b) => {
+                if(window.currentSortKey === 'ovr') return getOVR(b) - getOVR(a);
+                const bBonus = getBonusStats(b); const aBonus = getBonusStats(a);
+                const bVal = (b[window.currentSortKey]||60) + (bBonus[window.currentSortKey]||0);
+                const aVal = (a[window.currentSortKey]||60) + (aBonus[window.currentSortKey]||0);
+                if (bVal !== aVal) return bVal - aVal;
+                return getOVR(b) - getOVR(a);
+            });
+
             players.forEach(p => {
                 const ovr = getOVR(p);
                 const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
+                const b = getBonusStats(p);
+                
+                const getCell = (key) => {
+                    const base = p[key]||60; const bonus = b[key]||0; const total = Math.min(99, base + bonus);
+                    const isHighlight = window.currentSortKey === key;
+                    return `<td class="py-3 text-center font-oswald text-sm sm:text-base ${isHighlight ? 'text-white font-bold bg-slate-800/50' : 'text-slate-300'}">${total} ${bonus>0 ? `<span class="text-[9px] text-emerald-400 ml-0.5 absolute mt-0.5">+${bonus}</span>`:''}</td>`;
+                };
+
                 statsHtml += `
                     <tr class="hover:bg-slate-800/80 transition cursor-pointer" onclick="window.switchTab('tabWorkspace'); window.selectPlayer('${p.id}')">
-                        <td class="py-3 pl-4 text-left font-bold text-white flex items-center gap-2 whitespace-nowrap"><span class="text-lg">${getAvatar(p)}</span><span>${p.name}</span></td>
+                        <td class="py-3 pl-4 text-left font-bold text-white flex items-center gap-2 whitespace-nowrap"><span class="text-base sm:text-lg">${getAvatar(p)}</span><span>${p.name}</span></td>
                         <td class="py-3 text-center whitespace-nowrap"><span class="text-[10px] font-bold ${getPosColor(p.pos)} border border-slate-600 px-1.5 py-0.5 rounded leading-none">${posText}</span></td>
-                        <td class="py-3 text-center font-oswald text-base text-fut-gold font-bold">${ovr}</td>
-                        <td class="py-3 text-center font-oswald text-slate-300">${p.pac||60}</td>
-                        <td class="py-3 text-center font-oswald text-slate-300">${p.sho||60}</td>
-                        <td class="py-3 text-center font-oswald text-slate-300">${p.pas||60}</td>
-                        <td class="py-3 text-center font-oswald text-slate-300">${p.dri||60}</td>
-                        <td class="py-3 text-center font-oswald text-slate-300">${p.def||60}</td>
-                        <td class="py-3 text-center font-oswald text-slate-300">${p.phy||60}</td>
+                        <td class="py-3 text-center font-oswald text-base sm:text-lg ${window.currentSortKey==='ovr' ? 'text-white bg-slate-800/50' : 'text-fut-gold'} font-bold">${ovr}</td>
+                        ${getCell('pac')}
+                        ${getCell('sho')}
+                        ${getCell('pas')}
+                        ${getCell('dri')}
+                        ${getCell('def')}
+                        ${getCell('phy')}
                     </tr>
                 `;
             });
             statsTbody.innerHTML = statsHtml;
-        }
+        };
+
+        window.renderCompareList = () => {
+            const listContainer = document.getElementById('comparePlayerList');
+            if(!listContainer) return;
+            let html = '';
+            const myId = window.selectedPlayerId;
+            const players = [...window.allPlayersData].sort((a,b) => getOVR(b) - getOVR(a));
+            
+            players.forEach(p => {
+                if(p.id === myId) return; 
+                const ovr = getOVR(p);
+                const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
+                html += `
+                    <div class="flex items-center justify-between p-3 rounded-xl cursor-pointer transition ${window.compareTargetId === p.id ? 'bg-pink-900/40 border-pink-500' : 'bg-slate-800 hover:bg-slate-700 border-slate-600'} border" onclick="window.selectCompareTarget('${p.id}')">
+                        <div class="flex items-center gap-3">
+                            <div class="text-2xl">${getAvatar(p)}</div>
+                            <div>
+                                <div class="font-bold text-white text-sm">${p.name}</div>
+                                <div class="text-[10px] font-bold ${getPosColor(p.pos)}">${posText}</div>
+                            </div>
+                        </div>
+                        <div class="font-oswald text-lg text-fut-gold font-bold">${ovr}</div>
+                    </div>
+                `;
+            });
+            listContainer.innerHTML = html;
+            window.renderCompareView();
+        };
+
+        window.selectCompareTarget = (pId) => {
+            window.compareTargetId = pId;
+            window.renderCompareList();
+        };
+
+        window.renderCompareView = () => {
+            const view = document.getElementById('compareViewArea');
+            if(!view) return;
+            const myId = window.selectedPlayerId;
+            const myP = window.allPlayersData.find(x => x.id === myId);
+            const tgP = window.allPlayersData.find(x => x.id === window.compareTargetId);
+
+            if(!myP || !tgP) {
+                view.innerHTML = `<div class="text-center text-slate-500 py-10 flex flex-col items-center"><i class="fa-solid fa-users text-4xl mb-3 text-slate-700"></i><span>우측 (또는 하단) 명단에서 비교할 대상을 선택하세요.</span></div>`;
+                return;
+            }
+
+            const myOvr = getOVR(myP); const tgOvr = getOVR(tgP);
+            const myBonus = getBonusStats(myP); const tgBonus = getBonusStats(tgP);
+
+            const stats = [
+                { id: 'pac', label: '속력 (PAC)' }, { id: 'sho', label: '슈팅 (SHO)' },
+                { id: 'pas', label: '패스 (PAS)' }, { id: 'dri', label: '드리블 (DRI)' },
+                { id: 'def', label: '수비 (DEF)' }, { id: 'phy', label: '피지컬 (PHY)' }
+            ];
+
+            let statRows = '';
+            stats.forEach(s => {
+                const myVal = Math.min(99, (myP[s.id]||60) + myBonus[s.id]);
+                const tgVal = Math.min(99, (tgP[s.id]||60) + tgBonus[s.id]);
+                
+                const myColor = myVal > tgVal ? 'text-emerald-400' : (myVal < tgVal ? 'text-slate-500' : 'text-slate-300');
+                const tgColor = tgVal > myVal ? 'text-pink-400' : (tgVal < myVal ? 'text-slate-500' : 'text-slate-300');
+
+                const myW = (myVal / 99) * 100; const tgW = (tgVal / 99) * 100;
+
+                statRows += `
+                    <div class="mb-4">
+                        <div class="flex justify-between items-center text-xs font-bold mb-1.5 px-1">
+                            <span class="${myColor} font-oswald text-lg w-10 text-right drop-shadow-md">${myVal}</span>
+                            <span class="text-slate-400 w-24 text-center tracking-widest text-[10px] sm:text-xs">${s.label}</span>
+                            <span class="${tgColor} font-oswald text-lg w-10 text-left drop-shadow-md">${tgVal}</span>
+                        </div>
+                        <div class="flex gap-1 items-center justify-center">
+                            <div class="flex-1 bg-slate-800 h-2.5 sm:h-3 rounded-l-full flex justify-end overflow-hidden shadow-inner">
+                                <div class="${myVal > tgVal ? 'bg-emerald-500' : 'bg-emerald-500/50'} h-full rounded-l-full transition-all duration-500" style="width: ${myW}%"></div>
+                            </div>
+                            <div class="w-1 h-3 bg-slate-700 flex-shrink-0"></div>
+                            <div class="flex-1 bg-slate-800 h-2.5 sm:h-3 rounded-r-full flex justify-start overflow-hidden shadow-inner">
+                                <div class="${tgVal > myVal ? 'bg-pink-500' : 'bg-pink-500/50'} h-full rounded-r-full transition-all duration-500" style="width: ${tgW}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            view.innerHTML = `
+                <div class="flex justify-between items-center mb-8 bg-slate-900/50 p-4 rounded-2xl border border-slate-700/50 shadow-inner">
+                    <div class="flex flex-col items-center flex-1">
+                        <div class="text-4xl mb-2 drop-shadow-lg">${getAvatar(myP)}</div>
+                        <div class="font-bold text-white text-sm sm:text-base">${myP.name}</div>
+                        <div class="font-oswald text-3xl text-emerald-400 font-bold mt-1 drop-shadow-md">${myOvr}</div>
+                    </div>
+                    <div class="text-2xl sm:text-3xl font-display text-slate-600 px-2 italic">VS</div>
+                    <div class="flex flex-col items-center flex-1">
+                        <div class="text-4xl mb-2 drop-shadow-lg">${getAvatar(tgP)}</div>
+                        <div class="font-bold text-white text-sm sm:text-base">${tgP.name}</div>
+                        <div class="font-oswald text-3xl text-pink-400 font-bold mt-1 drop-shadow-md">${tgOvr}</div>
+                    </div>
+                </div>
+                <div class="px-2 sm:px-6">
+                    ${statRows}
+                </div>
+            `;
+        };
 
         async function initApp() {
             try {
@@ -981,7 +1163,6 @@
                                 } catch(e) { console.error("Parse err", e); }
                             });
                             
-                            // 레벨 0을 정상 정렬하기 위해 널 병합 연산자(??) 반영
                             window.allPlayersData = players.sort((a,b) => {
                                 const lvDiff = (b.level ?? 1) - (a.level ?? 1);
                                 if(lvDiff !== 0) return lvDiff;
@@ -995,6 +1176,8 @@
                             if(!document.getElementById('tabShop').classList.contains('hidden')) renderShop();
                             if(!document.getElementById('tabRank').classList.contains('hidden')) renderLeaderboard();
                             if(!document.getElementById('tabMaster').classList.contains('hidden')) renderMasterDashboard();
+                            if(!document.getElementById('tabCompare').classList.contains('hidden')) window.renderCompareList();
+                            if(!document.getElementById('tabMasterStats').classList.contains('hidden')) window.renderMasterStats();
                         }, (error) => { console.error("데이터 로드 에러:", error); renderLockerRoom(); });
 
                         const savedId = localStorage.getItem('sfc_pid');
@@ -1016,7 +1199,6 @@
             pinInput.value = '';
         });
 
-        // 1. 중복 클릭 방지 로직 적용
         document.getElementById('btnLogin').addEventListener('click', async () => {
             const btn = document.getElementById('btnLogin');
             const originalText = btn.innerHTML;
@@ -1053,8 +1235,6 @@
             }
             
             const isGM = pId === 'gm1' || pId === 'gm2';
-            
-            // 데이터베이스 저장을 위한 완벽하게 안전한 ID 생성 (한글만 추출)
             const safeDocId = getSafeDocId(pId);
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + safeDocId);
             
@@ -1098,6 +1278,7 @@
                 if(isGM) {
                     document.getElementById('gmAttendanceTools').classList.remove('hidden');
                     document.getElementById('btnTabMaster').classList.remove('hidden');
+                    document.getElementById('btnTabMasterStats').classList.remove('hidden');
                 }
 
                 window.selectedPlayerId = isGM ? getSafeDocId(ALLOWED_PLAYERS[0]) : safeDocId;
@@ -1153,10 +1334,10 @@
             window.selectedPlayerId = pId;
             renderLockerRoom(); renderSelectedCard(pId);
             if(!document.getElementById('tabShop').classList.contains('hidden')) renderShop();
+            if(!document.getElementById('tabCompare').classList.contains('hidden')) window.renderCompareList();
             if(window.innerWidth < 1024) document.getElementById('detailPanelTitle').scrollIntoView();
         };
 
-        // 2. 카드 레이아웃 정리 및 5부위 펜타곤 인벤토리 적용 (스탯 오류 수정)
         function renderSelectedCard(pId) {
             const p = window.allPlayersData.find(x => x.id === pId);
             if(!p) return;
@@ -1164,7 +1345,6 @@
             const isMe = window.playerState.id === pId;
             const isGM = window.playerState.isGM;
             const ovr = getOVR(p);
-            // 레벨 0을 정상적으로 받아올 수 있도록 널 병합 연산자(??) 적용
             const lv = p.level ?? 1;
             const exp = p.exp || 0;
             const expNeeded = getExpNeeded(lv);
@@ -1186,7 +1366,6 @@
             document.getElementById('detailName').innerText = p.name;
             document.getElementById('detailOvr').innerText = ovr;
             
-            // 한글 포지션 매핑 적용
             const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
             document.getElementById('detailPos').innerText = posText;
             
@@ -1226,7 +1405,6 @@
                 const baseVal = p[s.id] || 60; const bVal = bonus[s.id] || 0; const totalVal = Math.min(99, baseVal + bVal);
                 let bonusBadge = bVal > 0 ? `<span class="text-[10px] text-emerald-400 font-bold leading-none absolute -top-1.5 right-1">+${bVal}</span>` : '';
                 
-                // 스탯 레이아웃: [숫자] [이름] (EA FC 스타일)
                 if(isGM) {
                     gridHtml += `
                         <div class="flex items-center justify-start gap-1 text-current w-full group relative pl-1">
@@ -1252,7 +1430,6 @@
             document.getElementById('detailStatsGrid').innerHTML = gridHtml;
             drawRadarChart(p, bonus);
 
-            // 5부위 오각형 인벤토리 장착 표시 처리
             const equipSlots = [
                 { id: 'slotHead', equip: p.equipHead, empty: '🧢', label: '머리' },
                 { id: 'slotHandL', equip: p.equipHandL, empty: '🧤', label: '왼손' },
@@ -1289,7 +1466,7 @@
             if(isGM) {
                 document.getElementById('gmControls').classList.remove('hidden');
                 document.getElementById('gmWalletManager').classList.remove('hidden');
-                document.getElementById('gmViewBong').innerText = p.bong || 0;
+                document.getElementById('gmViewBong').innerHTML = `<input type="number" value="${p.bong || 0}" class="w-16 bg-transparent text-center border-b border-slate-600 focus:border-emerald-500 focus:outline-none transition-colors m-0 p-0 text-fut-gold font-display text-xl leading-none" onchange="window.setRecord('${p.id}', 'bong', this.value)">`;
             } else {
                 document.getElementById('gmControls').classList.add('hidden');
                 document.getElementById('gmWalletManager').classList.add('hidden');
@@ -1405,7 +1582,6 @@
                 window.allPlayersData.forEach(p => {
                     const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
                     if (type === 'exp') {
-                        // 레벨 0 처리를 위해 널 병합 연산자(??) 적용
                         let currentLv = p.level ?? 1; let currentExp = (p.exp || 0) + amount; let leveledUp = false;
                         while(currentExp >= getExpNeeded(currentLv)) { currentExp -= getExpNeeded(currentLv); currentLv++; leveledUp = true; }
                         let updatesObj = { exp: currentExp };
@@ -1422,7 +1598,6 @@
             } catch (error) { window.customAlert("지급 중 오류가 발생했습니다."); }
         };
 
-        // 전체 학생의 레벨과 경험치를 0으로 완전히 초기화하는 함수 추가
         window.resetAllLevels = async () => {
             if(!window.playerState.isGM) return;
             if(!await window.customConfirm(`⚠️ 경고: 모든 학생의 레벨과 경험치를 0으로 초기화하시겠습니까?\n(스탯과 자산, 누적 기록은 그대로 유지됩니다)`)) return;
@@ -1440,7 +1615,6 @@
         };
 
         async function processExp(p, expGained, docRef, updatesObj) {
-            // 레벨 0 처리를 위해 널 병합 연산자(??) 적용
             let currentLv = p.level ?? 1, currentExp = (p.exp || 0) + expGained, leveledUp = false;
             while(currentExp >= getExpNeeded(currentLv)) { currentExp -= getExpNeeded(currentLv); currentLv++; leveledUp = true; }
             updatesObj.exp = currentExp;
@@ -1599,7 +1773,6 @@
             triggerConfetti(); window.customAlert(`✅ ${dateStr}\n총 ${attendees.length}명의 출석부가 저장되었습니다!`);
         };
 
-        // --- 다크테마 및 2026 캘린더 연동 출석부 렌더링 ---
         window.viewAttendance = async () => {
             if (!window.playerState.isGM) return;
             const attRef = collection(db, 'artifacts', appId, 'public', 'data', 'attendance');
@@ -1608,7 +1781,6 @@
                 const snap = await getDocs(attRef);
                 let logs = []; snap.forEach(doc => logs.push(doc.data()));
                 
-                // 구글 캘린더 연동 대신 2026년 실제 토요일 15주차 자동 계산 (3월 첫째주 3/7 시작 기준)
                 const dates = [];
                 let d = new Date(2026, 2, 7); 
                 for(let i=0; i<15; i++) {
@@ -1672,14 +1844,12 @@
             } catch (e) { console.error("조회 에러:", e); window.customAlert("데이터를 불러오는데 실패했습니다."); }
         };
 
-        // 전역 스와이프
         let touchstartX = 0; let touchstartY = 0;
         document.addEventListener('touchstart', e => { touchstartX = e.changedTouches[0].screenX; touchstartY = e.changedTouches[0].screenY; }, {passive: true});
         document.addEventListener('touchend', e => {
             const distX = e.changedTouches[0].screenX - touchstartX; const distY = e.changedTouches[0].screenY - touchstartY;
             if (Math.abs(distX) > 60 && Math.abs(distY) < 60) {
                 if(e.target.closest('nav') || e.target.closest('.overflow-x-auto') || e.target.closest('.custom-scrollbar') || e.target.tagName === 'INPUT') return;
-                // ✨ [추가/수정] 스와이프 탭 배열에도 새 메뉴 추가
                 let availableTabs = ['tabWorkspace', 'tabRank', 'tabCompare', 'tabShop', 'tabTips', 'tabGuide'];
                 if(window.playerState && window.playerState.isGM) {
                     availableTabs.push('tabMaster');
