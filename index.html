@@ -1323,6 +1323,15 @@
             await setDoc(docRef, { [statKey]: newVal }, { merge: true });
         };
 
+        window.setRecord = async (pId, statKey, value) => {
+            if(!window.playerState.isGM) return;
+            const p = window.allPlayersData.find(x => x.id === pId);
+            if(!p) return;
+            const newVal = Math.max(0, parseInt(value) || 0);
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
+            await setDoc(docRef, { [statKey]: newVal }, { merge: true });
+        };
+
         window.addActivity = async (type) => {
             if(!window.selectedPlayerId) return;
             const pId = window.selectedPlayerId;
