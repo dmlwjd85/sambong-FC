@@ -1679,6 +1679,7 @@
             const distX = e.changedTouches[0].screenX - touchstartX; const distY = e.changedTouches[0].screenY - touchstartY;
             if (Math.abs(distX) > 60 && Math.abs(distY) < 60) {
                 if(e.target.closest('nav') || e.target.closest('.overflow-x-auto') || e.target.closest('.custom-scrollbar') || e.target.tagName === 'INPUT') return;
+                // ✨ [추가/수정] 스와이프 탭 배열에도 새 메뉴 추가
                 let availableTabs = ['tabWorkspace', 'tabRank', 'tabCompare', 'tabShop', 'tabTips', 'tabGuide'];
                 if(window.playerState && window.playerState.isGM) {
                     availableTabs.push('tabMaster');
