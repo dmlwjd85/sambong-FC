@@ -1188,12 +1188,21 @@
             document.getElementById('detailExpText').innerText = `${exp} / ${expNeeded}`;
             document.getElementById('detailExpBar').style.width = `${expPercent}%`;
 
-            document.getElementById('recMatches').innerText = p.matches || 0;
-            document.getElementById('recTraining').innerText = p.training || 0;
-            document.getElementById('recGoals').innerText = p.goals || 0;
-            document.getElementById('recAssists').innerText = p.assists || 0;
-            document.getElementById('recKeypass').innerText = p.keypass || 0;
-            document.getElementById('recSaves').innerText = p.saves || 0;
+            const renderRecord = (id, key, val) => {
+                const el = document.getElementById(id);
+                if (isGM) {
+                    el.innerHTML = `<input type="number" value="${val}" class="w-full max-w-[50px] bg-transparent text-center border-b border-slate-600 focus:border-emerald-500 focus:outline-none transition-colors m-0 p-0 text-white font-bold text-lg" onchange="window.setRecord('${p.id}', '${key}', this.value)">`;
+                } else {
+                    el.innerText = val;
+                }
+            };
+
+            renderRecord('recMatches', 'matches', p.matches || 0);
+            renderRecord('recTraining', 'training', p.training || 0);
+            renderRecord('recGoals', 'goals', p.goals || 0);
+            renderRecord('recAssists', 'assists', p.assists || 0);
+            renderRecord('recKeypass', 'keypass', p.keypass || 0);
+            renderRecord('recSaves', 'saves', p.saves || 0);
 
             const stats = [
                 { id: 'pac', label: '속력' }, { id: 'dri', label: '드리블' },
