@@ -1679,8 +1679,11 @@
             const distX = e.changedTouches[0].screenX - touchstartX; const distY = e.changedTouches[0].screenY - touchstartY;
             if (Math.abs(distX) > 60 && Math.abs(distY) < 60) {
                 if(e.target.closest('nav') || e.target.closest('.overflow-x-auto') || e.target.closest('.custom-scrollbar') || e.target.tagName === 'INPUT') return;
-                let availableTabs = ['tabWorkspace', 'tabRank', 'tabShop', 'tabTips', 'tabGuide'];
-                if(window.playerState && window.playerState.isGM) availableTabs.push('tabMaster');
+                let availableTabs = ['tabWorkspace', 'tabRank', 'tabCompare', 'tabShop', 'tabTips', 'tabGuide'];
+                if(window.playerState && window.playerState.isGM) {
+                    availableTabs.push('tabMaster');
+                    availableTabs.push('tabMasterStats');
+                }
                 let currentTab = availableTabs.find(id => { const el = document.getElementById(id); return el && !el.classList.contains('hidden'); }) || 'tabWorkspace';
                 let currentIndex = availableTabs.indexOf(currentTab);
 
