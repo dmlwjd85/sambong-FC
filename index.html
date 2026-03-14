@@ -328,6 +328,12 @@
                                 <button onclick="window.giveAll('bong', 10)" class="flex-1 bg-gradient-to-r from-fut-gold-dark to-fut-gold hover:from-fut-gold hover:to-yellow-200 text-slate-900 text-xs py-2.5 rounded shadow font-bold transition">전체 +10 B 지급</button>
                             </div>
                         </div>
+
+                        <!-- 전체 학생 레벨 0 초기화 버튼 영역 추가 -->
+                        <div class="mt-3 pt-3 border-t border-red-800/50">
+                            <h4 class="text-[11px] font-bold text-red-400 mb-2 flex items-center gap-1"><i class="fa-solid fa-rotate-left"></i> 전체 레벨 초기화</h4>
+                            <button onclick="window.resetAllLevels()" class="w-full bg-red-900/40 hover:bg-red-800 text-red-200 text-xs py-2.5 rounded shadow font-bold transition border border-red-700/50">전체 학생 레벨 0으로 초기화</button>
+                        </div>
                     </div>
 
                     <!-- 누적 기록 요약 -->
@@ -646,7 +652,9 @@
         };
         
         const getWeeklyWage = (ovr) => { return Math.max(50, Math.min(200, Math.floor(50 + ((ovr - 50) / 49) * 150))); };
-        const getExpNeeded = (level) => Math.floor(100 + ((level || 1) * 20));
+        
+        // 경험치 산정 공식 시 레벨 0일 때도 정상 처리되도록 널 병합 연산자(??) 적용
+        const getExpNeeded = (level) => Math.floor(100 + ((level ?? 1) * 20));
         function getWeekNumber(d) {
             d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
             d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
@@ -836,7 +844,8 @@
         };
 
         function renderLeaderboard() {
-            const players = window.allPlayersData.filter(p => p.level > 0); 
+            // 명예의 전당에서 레벨 0인 학생도 표시되도록 필터링 조건 수정
+            const players = window.allPlayersData.filter(p => (p.level ?? 1) >= 0); 
             const categories = [
                 { id: 'goals', name: '득점왕', icon: '⚽', color: 'text-yellow-400', border: 'border-yellow-400/50' },
                 { id: 'assists', name: '어시왕', icon: '🤝', color: 'text-blue-400', border: 'border-blue-400/50' },
@@ -972,8 +981,9 @@
                                 } catch(e) { console.error("Parse err", e); }
                             });
                             
+                            // 레벨 0을 정상 정렬하기 위해 널 병합 연산자(??) 반영
                             window.allPlayersData = players.sort((a,b) => {
-                                const lvDiff = (b.level||1) - (a.level||1);
+                                const lvDiff = (b.level ?? 1) - (a.level ?? 1);
                                 if(lvDiff !== 0) return lvDiff;
                                 return getOVR(b) - getOVR(a);
                             });
@@ -1154,7 +1164,8 @@
             const isMe = window.playerState.id === pId;
             const isGM = window.playerState.isGM;
             const ovr = getOVR(p);
-            const lv = p.level || 1;
+            // 레벨 0을 정상적으로 받아올 수 있도록 널 병합 연산자(??) 적용
+            const lv = p.level ?? 1;
             const exp = p.exp || 0;
             const expNeeded = getExpNeeded(lv);
             const expPercent = Math.min(100, Math.floor((exp / expNeeded) * 100));
@@ -1394,7 +1405,8 @@
                 window.allPlayersData.forEach(p => {
                     const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
                     if (type === 'exp') {
-                        let currentLv = p.level || 1; let currentExp = (p.exp || 0) + amount; let leveledUp = false;
+                        // 레벨 0 처리를 위해 널 병합 연산자(??) 적용
+                        let currentLv = p.level ?? 1; let currentExp = (p.exp || 0) + amount; let leveledUp = false;
                         while(currentExp >= getExpNeeded(currentLv)) { currentExp -= getExpNeeded(currentLv); currentLv++; leveledUp = true; }
                         let updatesObj = { exp: currentExp };
                         if(leveledUp) {
@@ -1410,8 +1422,26 @@
             } catch (error) { window.customAlert("지급 중 오류가 발생했습니다."); }
         };
 
+        // 전체 학생의 레벨과 경험치를 0으로 완전히 초기화하는 함수 추가
+        window.resetAllLevels = async () => {
+            if(!window.playerState.isGM) return;
+            if(!await window.customConfirm(`⚠️ 경고: 모든 학생의 레벨과 경험치를 0으로 초기화하시겠습니까?\n(스탯과 자산, 누적 기록은 그대로 유지됩니다)`)) return;
+            
+            try {
+                const batch = writeBatch(db);
+                window.allPlayersData.forEach(p => {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
+                    batch.set(docRef, { exp: 0, level: 0 }, { merge: true });
+                });
+                await batch.commit();
+                triggerConfetti();
+                window.customAlert("✅ 모든 학생의 레벨과 경험치가 0으로 초기화되었습니다!");
+            } catch (error) { window.customAlert("초기화 중 오류가 발생했습니다."); }
+        };
+
         async function processExp(p, expGained, docRef, updatesObj) {
-            let currentLv = p.level || 1, currentExp = (p.exp || 0) + expGained, leveledUp = false;
+            // 레벨 0 처리를 위해 널 병합 연산자(??) 적용
+            let currentLv = p.level ?? 1, currentExp = (p.exp || 0) + expGained, leveledUp = false;
             while(currentExp >= getExpNeeded(currentLv)) { currentExp -= getExpNeeded(currentLv); currentLv++; leveledUp = true; }
             updatesObj.exp = currentExp;
             if(leveledUp) {
