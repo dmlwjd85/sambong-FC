@@ -187,13 +187,14 @@
                     <span class="font-display text-lg sm:text-xl text-white tracking-wider pt-1 hidden md:block">SAMBONG</span>
                 </div>
                 
+                <!-- 탭 메뉴 리스트 (꿀팁이 두번째로 이동됨) -->
                 <div class="flex items-center space-x-1 sm:space-x-3 text-xs sm:text-sm flex-grow overflow-x-auto hide-scrollbar whitespace-nowrap scroll-smooth">
                     <button onclick="window.switchTab('tabWorkspace')" id="btnTabWorkspace" class="nav-tab active pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-person-booth mr-1"></i>라커룸</button>
+                    <button onclick="window.switchTab('tabTips')" id="btnTabTips" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-lightbulb mr-1 text-orange-400"></i>꿀팁&공지</button>
                     <button onclick="window.switchTab('tabAchievements')" id="btnTabAchievements" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-medal mr-1 text-yellow-300"></i>도전과제</button>
                     <button onclick="window.switchTab('tabRank')" id="btnTabRank" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-trophy mr-1 text-yellow-400"></i>명예의전당</button>
                     <button onclick="window.switchTab('tabCompare')" id="btnTabCompare" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-code-compare mr-1 text-pink-400"></i>선수비교</button>
                     <button onclick="window.switchTab('tabShop')" id="btnTabShop" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-store mr-1 text-purple-400"></i>상점</button>
-                    <button onclick="window.switchTab('tabTips')" id="btnTabTips" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-lightbulb mr-1 text-orange-400"></i>꿀팁</button>
                     <button onclick="window.switchTab('tabGuide')" id="btnTabGuide" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-circle-info mr-1 text-cyan-400"></i>이용안내</button>
                     <button onclick="window.switchTab('tabMaster')" id="btnTabMaster" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 hidden flex-shrink-0"><i class="fa-solid fa-chart-line mr-1 text-fut-rare"></i>현황판(마스터)</button>
                     <button onclick="window.switchTab('tabMasterStats')" id="btnTabMasterStats" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 hidden flex-shrink-0"><i class="fa-solid fa-list-ol mr-1 text-emerald-400"></i>스탯현황</button>
@@ -236,7 +237,7 @@
                         </div>
                     </div>
 
-                    <!-- 👑 새로운 디자인의 FUT 카드 (FC 게임 스타일 정렬) -->
+                    <!-- 👑 새로운 디자인의 FUT 카드 -->
                     <div id="cardAuraWrapper" class="mx-auto w-fit transition-all duration-500 z-10 relative">
                         <div id="detailFutCard" class="fut-card w-[300px] h-[460px] p-5 flex flex-col relative shadow-2xl z-10 mx-auto transition-all duration-300">
                             
@@ -279,7 +280,7 @@
                                     <canvas id="statRadar" width="160" height="160"></canvas>
                                 </div>
                                 
-                                <!-- EA FC 스타일 3x2 스탯 그리드 복구 및 정렬 -->
+                                <!-- EA FC 스타일 3x2 스탯 그리드 -->
                                 <div class="w-full grid grid-cols-3 gap-y-1 gap-x-1 z-10 px-2" id="detailStatsGrid">
                                     <!-- 자바스크립트로 스탯 렌더링 됨 -->
                                 </div>
@@ -457,6 +458,35 @@
                     </div>
                 </div>
 
+                <!-- 탭 2: 꿀팁 & 공지 (순서 변경됨) -->
+                <div id="tabTips" class="hidden space-y-8">
+                    <!-- 📢 공지사항 패널 -->
+                    <div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-red-500 relative">
+                        <h3 class="text-2xl sm:text-3xl font-display text-red-400 mb-4 flex items-center gap-3">
+                            <i class="fa-solid fa-bullhorn text-red-500 animate-pulse"></i> 감독님 공지사항
+                        </h3>
+                        <!-- 공지사항 표시 영역 -->
+                        <div id="announcementContent" class="bg-slate-900/80 rounded-2xl p-5 border border-slate-700 text-white whitespace-pre-wrap min-h-[100px] leading-relaxed break-keep font-medium text-sm sm:text-base shadow-inner">등록된 공지사항이 없습니다. 불러오는 중...</div>
+                        
+                        <!-- 감독용 글쓰기 에디터 (GM에게만 보임) -->
+                        <div id="gmAnnouncementEditor" class="hidden mt-4 pt-4 border-t border-slate-700">
+                            <h4 class="text-xs font-bold text-slate-400 mb-2 flex items-center gap-1"><i class="fa-solid fa-pen-to-square"></i> 공지사항 작성 (감독 전용)</h4>
+                            <textarea id="announcementInput" class="w-full bg-slate-800 border border-slate-600 rounded-xl p-4 text-white focus:border-red-400 focus:outline-none mb-3 resize-y custom-scrollbar" rows="4" placeholder="대회 일정, 훈련 안내 등 풋살부 공지사항을 자유롭게 입력하세요..."></textarea>
+                            <button onclick="window.saveAnnouncement()" class="w-full sm:w-auto bg-gradient-to-r from-red-700 to-red-600 hover:from-red-600 hover:to-red-500 text-white font-bold py-3 px-8 rounded-xl transition shadow-lg flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-floppy-disk"></i> 전체 학생에게 공지 등록하기
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 💡 오늘의 꿀팁 패널 -->
+                    <div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-orange-500">
+                        <h3 class="text-2xl sm:text-3xl font-display text-orange-400 mb-6 flex items-center gap-3">
+                            <i class="fa-solid fa-book-open"></i> 오늘의 풋살 꿀팁 <span class="text-[10px] font-sans text-slate-400 font-normal ml-2 border border-slate-600 px-2 py-1 rounded bg-slate-800">3일마다 갱신</span>
+                        </h3>
+                        <div id="dailyTipContainer" class="bg-slate-900/80 rounded-2xl border border-slate-700 overflow-hidden shadow-2xl"></div>
+                    </div>
+                </div>
+
                 <!-- 탭: 도전 과제 (Achievements) -->
                 <div id="tabAchievements" class="hidden space-y-6">
                     <div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-yellow-300">
@@ -484,7 +514,7 @@
                     </div>
                 </div>
 
-                <!-- 탭 2: 기록실 (명예의 전당) -->
+                <!-- 탭: 기록실 (명예의 전당) -->
                 <div id="tabRank" class="hidden space-y-6">
                     <div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-yellow-400">
                         <h3 class="text-3xl font-display text-yellow-400 mb-6 flex items-center gap-3">
@@ -496,7 +526,7 @@
                     </div>
                 </div>
 
-                <!-- 탭: 선수 비교 화면 컨테이너 추가 -->
+                <!-- 탭: 선수 비교 화면 컨테이너 -->
                 <div id="tabCompare" class="hidden space-y-6">
                     <div class="glass-panel p-4 sm:p-8 rounded-3xl border-t-4 border-t-pink-500">
                         <h3 class="text-2xl sm:text-3xl font-display text-pink-400 mb-6 flex items-center gap-3">
@@ -539,16 +569,6 @@
                     </div>
                 </div>
 
-                <!-- 탭 4: 꿀팁 -->
-                <div id="tabTips" class="hidden space-y-6">
-                    <div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-orange-500">
-                        <h3 class="text-3xl font-display text-orange-400 mb-6 flex items-center gap-3">
-                            <i class="fa-solid fa-book-open"></i> 오늘의 풋살 꿀팁
-                        </h3>
-                        <div id="dailyTipContainer" class="bg-slate-900/80 rounded-2xl border border-slate-700 overflow-hidden shadow-2xl"></div>
-                    </div>
-                </div>
-
                 <!-- 탭 5: 이용안내 -->
                 <div id="tabGuide" class="hidden space-y-6">
                     <div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-cyan-400">
@@ -567,6 +587,10 @@
                             <div class="bg-slate-900/60 p-5 rounded-xl border border-slate-700 hover:border-cyan-500/50 transition">
                                 <h4 class="text-base sm:text-lg font-bold text-white mb-2 flex items-center gap-2"><i class="fa-solid fa-shirt text-purple-400"></i> 3. 5부위 전용 꾸미기 상점</h4>
                                 <p class="text-sm text-slate-300 leading-relaxed break-keep">자산(B)으로 <b>[머리, 왼손, 오른손, 왼발, 오른발]</b> 아바타 주위를 감싸는 오각형 5개 슬롯에 장착할 수 있는 아이템을 구매하세요. 장착하는 즉시 보너스 능력치가 추가 적용됩니다.</p>
+                            </div>
+                            <div class="bg-slate-900/60 p-5 rounded-xl border border-slate-700 hover:border-cyan-500/50 transition">
+                                <h4 class="text-base sm:text-lg font-bold text-white mb-2 flex items-center gap-2"><i class="fa-solid fa-circle-question text-pink-400"></i> 4. 스탯 세부 설명 안내</h4>
+                                <p class="text-sm text-slate-300 leading-relaxed break-keep">선수 정보의 능력치 화면에서 <b>스탯의 이름(속력, 슈팅 등)을 클릭</b>해보세요. 해당 스탯이 풋살에서 어떤 역할을 하는지 자세한 설명을 볼 수 있습니다.</p>
                             </div>
                         </div>
                     </div>
@@ -619,7 +643,6 @@
 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'sambong-futsal-ultimate'; 
 
-        // [네트워크 에러 방지 핵심 로직] 문서 ID(Document ID)를 생성할 때 한글과 영문 숫자만 남기고 모든 공백 및 특수문자 완벽 제거
         const getSafeDocId = (name) => {
             if(name === 'gm1' || name === 'gm2') return name;
             return name.replace(/[^가-힣a-zA-Z0-9]/g, ''); 
@@ -637,6 +660,27 @@
 
         const POS_KR = { 'Pivo': '피보(FW)', 'Ala': '아라(MF)', 'Fixo': '픽소(DF)', 'Goleiro': '골레이로(GK)', '미정': '포지션 미정' };
 
+        // --- 스탯 클릭 시 설명 딕셔너리 ---
+        const STAT_DESC = {
+            'pac': '🏃‍♂️ 속력 (Pace)\n\n단거리 전력 질주 속도와 순간적인 가속도입니다.\n치고 달리기나 수비 복귀 시 가장 먼저 도착할 수 있게 해줍니다.',
+            'sho': '⚽ 슈팅 (Shooting)\n\n슈팅 파워와 정확도입니다.\n골대 구석을 찌르는 강력한 슛을 날리거나 골망을 찢을 듯한 파워가 강해집니다.',
+            'pas': '🤝 패스 (Passing)\n\n짧은 패스와 롱패스의 정확도입니다.\n좁은 풋살 경기장에서 가장 중요하며, 동료의 발밑에 택배처럼 공을 보낼 수 있습니다.',
+            'dri': '🪄 드리블 (Dribbling)\n\n발바닥 컨트롤, 방향 전환, 볼 키핑 능력입니다.\n수비수들 사이에서 요리조리 공을 지켜내며 상대를 벗겨내는 개인기 능력입니다.',
+            'def': '🛡️ 수비 (Defending)\n\n상대 공격수를 끈질기게 따라다니며 마크하고, 태클과 몸싸움으로 공을 빼앗는 능력입니다.',
+            'phy': '💪 피지컬 (Physical)\n\n어깨싸움에서 밀리지 않는 힘과 지치지 않는 체력입니다.\n등지고 버티는 피보(FW)에게 특히 중요한 능력치입니다.',
+            'ref': '⚡ 반사신경 (Reflexes)\n\n순간적인 반응 속도입니다.\n주로 골레이로(GK)가 빠른 슈팅을 동물적인 감각으로 막아낼 때 쓰입니다.',
+            'int': '👁️ 가로채기 (Interceptions)\n\n상대방의 패스 길을 미리 읽고 중간에서 커트하는 지능적인 수비 능력입니다.\n공격의 흐름을 단번에 끊어 역습을 시작합니다.',
+            'pst': '🎯 위치선정 (Positioning)\n\n공격 시 상대 수비가 없는 빈 공간을 찾아 들어가고, 수비 시에는 가장 위험한 곳을 미리 막아내는 전술적 지능입니다.',
+            'dis': '🚀 볼배급 (Distribution)\n\n수비를 성공하거나 골레이로가 공을 잡았을 때, 정확한 롱패스나 스루패스로 앞쪽 공격수에게 빠르게 전개해주는 빌드업 능력입니다.',
+            'cmp': '🧘 평정심 (Composure)\n\n상대가 강하게 압박하거나 골키퍼와 1:1 찬스가 왔을 때 당황하지 않고 침착하게 플레이하는 멘탈 능력입니다.',
+            'wrk': '🔥 활동량 (Work Rate)\n\n경기장 전 지역을 쉴 새 없이 뛰어다니는 체력과 투지입니다.\n공이 없을 때(오프더볼) 공간을 창출하고 팀을 돕는 헌신적인 능력입니다.'
+        };
+
+        window.showStatDesc = (statKey) => {
+            const titleMap = { pac:'속력 (PAC)', sho:'슈팅 (SHO)', pas:'패스 (PAS)', dri:'드리블 (DRI)', def:'수비 (DEF)', phy:'피지컬 (PHY)', ref:'반사신경 (REF)', int:'가로채기 (INT)', pst:'위치선정 (PST)', dis:'볼배급 (DIS)', cmp:'평정심 (CMP)', wrk:'활동량 (WRK)' };
+            window.customAlert(`[${titleMap[statKey]}]\n\n${STAT_DESC[statKey]}`);
+        };
+
         window.addEventListener('DOMContentLoaded', () => {
             const nameSelect = document.getElementById('loginPlayerName');
             if(nameSelect) {
@@ -648,53 +692,104 @@
             }
         });
 
+        // --- 100가지 풋살 꿀팁 (3일 단위 갱신용) ---
         const DAILY_TIPS = [
-            { title: "풋살의 4가지 포지션, 완벽 이해하기! 🧠", img: "🏟️", category: "기본상식", desc: "풋살은 축구와 포지션 이름이 달라요!<br><br><b>1. 피보(Pivo):</b> 최전방 공격수!<br><b>2. 아라(Ala):</b> 양쪽 날개!<br><b>3. 픽소(Fixo):</b> 최후방 수비수!<br><b>4. 골레이로(Goleiro):</b> 골키퍼!" },
-            { title: "풋살의 기본, 발바닥 컨트롤! (Sole Control)", img: "👟 ⚽", category: "기본기", desc: "풋살공은 축구공보다 작고 덜 튀어 오릅니다. 패스를 받을 때 발 안쪽(인사이드)으로 받기보다, 발바닥으로 공을 지그시 밟듯이 컨트롤해 보세요." },
+            // 💡 [기본 규정 및 상식]
+            { title: "풋살과 축구의 가장 큰 차이점?", img: "⚽", category: "기본상식", desc: "풋살은 5인제 실내 축구입니다. 공이 밖으로 나가면 손으로 던지는 스로인이 아닌 '발로 차서 넣는 킥인'을 합니다!" },
+            { title: "풋살공은 왜 잘 안 튈까요?", img: "⬇️", category: "기본상식", desc: "풋살공은 4호공 사이즈이며 로우 바운스(Low Bounce) 특성이 있습니다. 좁은 경기장에서 공이 너무 튀면 컨트롤하기 어렵기 때문이죠." },
+            { title: "가장 중요한 '4초 룰'을 아시나요?", img: "⏱️", category: "기본규칙", desc: "킥인, 코너킥, 프리킥, 골클리어런스(골키퍼가 공을 던질 때)는 모두 공을 잡은 후 '4초' 안에 처리해야 합니다. 속도감이 생명이죠!" },
+            { title: "풋살화(인도어화)와 축구화의 차이", img: "👟", category: "기본상식", desc: "풋살화 바닥은 평평한 고무 재질(IC/IN)이나 잔잔한 돌기(TF)로 되어 있습니다. 좁은 공간에서 발바닥 컨트롤을 쉽게 하기 위함입니다." },
+            { title: "골키퍼(골레이로)에게 다시 패스하기?", img: "🧤", category: "기본규칙", desc: "골레이로가 공을 처리한 후, 상대편 선수가 공을 건드리기 전까지는 우리 편이 골레이로에게 다시 백패스를 할 수 없습니다. (위반 시 간접프리킥)" },
+            { title: "풋살의 전후반 시간은?", img: "⏰", category: "기본상식", desc: "정식 풋살 경기는 전, 후반 각각 20분씩입니다. 공이 라인 밖으로 나가면 시계가 멈추는 '순수 경기 시간'을 적용합니다." },
+            { title: "퇴장(레드카드)을 당하면 어떻게 될까?", img: "🟥", category: "기본규칙", desc: "선수가 퇴장당하면 그 선수는 다시 뛸 수 없지만, 2분이 지나거나 상대 팀이 골을 넣으면 다른 교체 선수가 대신 코트에 들어올 수 있습니다." },
+            { title: "킥인 할 때 주의사항!", img: "🦶", category: "기본규칙", desc: "킥인을 할 때 공은 반드시 라인 위나 바깥에 멈춰 있어야 합니다. 축구의 스로인처럼 라인을 밟고 차도 무방하지만, 공이 굴러가면 반칙입니다." },
+            { title: "반칙도 누적이 된다고?", img: "⚠️", category: "기본규칙", desc: "한 팀이 전반 또는 후반에 파울을 6개째 범하는 순간부터, 상대 팀에게 벽이 없는 '세컨드 페널티 마크 프리킥'이 주어집니다." },
+            { title: "선수 교체는 무제한!", img: "🔄", category: "기본규칙", desc: "축구와 달리 풋살은 선수 교체 횟수에 제한이 없고, 언제든 코치의 지시로 교체 구역을 통해 자유롭게 들어오고 나갈 수 있습니다." },
+            
+            // 👟 [기본기: 발바닥 컨트롤 & 패스]
+            { title: "풋살 컨트롤의 꽃, '발바닥 컨트롤'", img: "👣", category: "기본기", desc: "강한 패스를 받을 때 발 안쪽(인사이드)으로 받으면 공이 멀리 튈 수 있습니다. 발바닥으로 공을 위에서 지그시 밟듯이 세워보세요." },
+            { title: "토 킥(Toe Kick)의 위력", img: "⚡", category: "슈팅", desc: "일명 '꼬발슛'. 풋살에서는 공간이 좁아 슛을 때릴 타이밍이 짧습니다. 발끝으로 찌르듯이 차는 토 킥은 템포가 빠르고 강력합니다." },
+            { title: "정확한 인사이드 패스", img: "🎯", category: "기본기", desc: "패스의 기본은 발목을 고정하고 발 안쪽 넓은 면(인사이드)으로 공의 정중앙을 밀어 차는 것입니다. 동료의 '오른발/왼발'을 지정해서 줘보세요." },
+            { title: "디딤발의 방향이 패스의 방향", img: "🦶", category: "기본기", desc: "패스를 하거나 슛을 할 때 공 옆에 두는 디딤발의 발끝 방향이 목표물(동료나 골대)을 향해야 정확도가 높아집니다." },
+            { title: "발바닥 드래그(Drag) 돌파", img: "🪄", category: "개인기", desc: "발바닥으로 공을 밟은 채로 옆이나 뒤로 슥 끌어당겨 수비수의 타이밍을 뺏는 기술입니다. 풋살에서 가장 많이 쓰이는 필수 돌파기입니다." },
+            { title: "패스 앤 무브(Pass & Move)의 정석", img: "🏃‍♂️", category: "기본기", desc: "동료에게 패스를 주고 가만히 서 있으면 안 됩니다! 패스를 찔러주고 즉시 다른 빈 공간으로 뛰어들어가야 수비진이 무너집니다." },
+            { title: "퍼스트 터치의 중요성", img: "✨", category: "기본기", desc: "공을 받을 때 가만히 세워두는 것보다, 내가 다음 동작(슈팅, 패스, 돌파)을 하기 가장 좋은 방향으로 터치해 두는 것이 고수의 비결입니다." },
+            { title: "팬텀 드리블 (라 크로케타)", img: "🕺", category: "개인기", desc: "양발 안쪽을 사용하여 공을 왼쪽 발에서 오른쪽 발로 빠르게 넘기며 돌파하는 기술입니다. 좁은 공간에서 수비수를 제치기 좋습니다." },
+            { title: "수비 등지기 (스크린 플레이)", img: "🛡️", category: "기본기", desc: "등 뒤에 수비수가 바짝 붙었을 때, 엉덩이와 등, 팔을 이용해 수비수가 공에 발을 뻗지 못하게 공간을 차단하는 기술입니다." },
+            { title: "월패스(2대1 패스)의 파괴력", img: "🤝", category: "기본기", desc: "나에게 수비수가 붙었을 때 동료에게 패스하고 빈 공간으로 침투하세요. 동료가 벽(Wall)처럼 논스톱으로 내게 다시 공을 내주면 완벽한 찬스가 됩니다." },
+
+            // 🧠 [포지션 및 전술]
+            { title: "피보(Pivo)의 핵심 역할", img: "👑", category: "전술", desc: "피보는 최전방 타겟맨입니다. 상대 수비수를 등지고 버티면서 동료에게 공을 내어주거나, 틈이 보이면 직접 돌아서서 슛을 때립니다." },
+            { title: "아라(Ala)의 움직임", img: "🦅", category: "전술", desc: "아라는 양 측면 윙어입니다. 공수 양면을 쉴 새 없이 오가며 공격의 활로를 뚫어주는 팀의 엔진 역할을 합니다." },
+            { title: "픽소(Fixo)는 사령관", img: "👁️", category: "전술", desc: "최후방 수비수인 픽소는 수비 라인을 지휘하고 빌드업의 시발점이 됩니다. 침착함과 넓은 시야가 필수입니다." },
+            { title: "골레이로(Goleiro)의 빌드업", img: "🧤", category: "전술", desc: "현대 풋살에서 골키퍼는 '손을 쓸 수 있는 마지막 필드 플레이어'입니다. 정확한 스로인과 발밑 패스로 공격의 첫 단추를 꿰어주세요." },
+            { title: "로테이션(Rotation)이란?", img: "🔄", category: "전술", desc: "풋살은 정해진 자리에만 있지 않습니다. 패스를 한 선수가 빈 공간으로 빠지고, 다른 선수가 그 자리를 채워주는 순환 움직임을 로테이션이라고 합니다." },
+            { title: "세트피스(코너킥) 전술", img: "⛳", category: "전술", desc: "코너킥 시 골대 앞에는 항상 상대 수비가 많습니다. 오히려 뒤쪽에서 달려오는 동료에게 컷백 패스를 내주어 중거리 슛을 노려보세요." },
+            { title: "다이애그널 런(대각선 침투)", img: "↗️", category: "전술", desc: "직선으로 뛰는 것보다, 수비수와 수비수 사이 공간으로 대각선 침투를 하면 패스를 받기도 쉽고 수비진을 흔들 수 있습니다." },
+            { title: "압박(Pressing)의 타이밍", img: "🔥", category: "전술", desc: "수비 시 상대가 공을 잡는 순간, 터치가 길었을 때, 구석에 몰렸을 때가 강하게 압박해서 공을 빼앗을 수 있는 황금 타이밍입니다." },
+            { title: "L자 달리기", img: "📏", category: "전술", desc: "마크맨을 떼어낼 때 직선으로 달리지 말고, 앞이나 옆으로 살짝 뛰다가 'L'자 형태로 갑자기 꺾어 달리면 수비를 완벽히 속일 수 있습니다." },
+            { title: "존 디펜스(지역 방어) vs 맨투맨", img: "🛡️", category: "전술", desc: "특정 선수를 끝까지 따라다니는 맨투맨과 달리, 자신이 맡은 '구역'에 들어오는 선수를 방어하는 것이 지역 방어입니다. 상황에 맞게 섞어 쓰는 게 좋습니다." },
+
+            // 🏃‍♂️ [혼자 & 친구와 연습]
+            { title: "벽 치기 (Wall Pass) 연습", img: "🧱", category: "혼자연습", desc: "단단한 벽을 향해 1~2m 떨어져서 인사이드로 패스하고 튀어나오는 공을 발바닥으로 잡는 연습을 매일 100번씩 해보세요." },
+            { title: "리프팅(저글링) 연습의 효과", img: "⚽", category: "혼자연습", desc: "공을 떨어뜨리지 않고 계속 차올리는 리프팅은 공에 대한 감각(터치감)과 집중력을 길러주는 최고의 기본 훈련입니다." },
+            { title: "콘(Cone) 드리블 지그재그", img: "🦺", category: "혼자연습", desc: "물병이나 콘을 5개 일렬로 세우고 양발 안쪽과 바깥쪽을 번갈아 쓰며 지그재그로 통과하는 연습을 해보세요." },
+            { title: "친구와 2인 1조 롱패스", img: "👟", category: "친구와연습", desc: "친구와 10m 정도 거리를 두고, 서로 발등(인스텝)으로 공을 강하고 낮게 차서 정확하게 연결하는 훈련을 해보세요." },
+            { title: "가운데 공 뺏기 (론도)", img: "⭕", category: "팀연습", desc: "3~4명이 원을 만들고 1명이 술래가 되어 공을 뺏는 놀이입니다. 원 안의 사람들은 원터치나 투터치로만 패스하며 반응 속도를 기릅니다." },
+            { title: "페인트(속임수) 모션 연습", img: "🕺", category: "개인기", desc: "거울을 보거나 동영상을 찍으면서, 내가 슛을 할 것처럼 다리를 크게 휘두르는 동작이 진짜 속을 만한지 스스로 체크해 보세요." },
+            { title: "양발 사용의 중요성", img: "⚖️", category: "기본기", desc: "풋살에서는 한쪽 발만 쓰면 수비수에게 패턴을 읽히기 쉽습니다. 평소 안 쓰는 약한 발로 벽 치기 연습을 꾸준히 해보세요." },
+            { title: "드리블 시야 넓히기", img: "👀", category: "혼자연습", desc: "공을 몰고 갈 때 시선을 공에만 고정하지 마세요. 고개를 들고 전방을 보면서 감각만으로 공을 몰고 가는 연습이 필요합니다." },
+            { title: "슈팅 파워 기르기", img: "💥", category: "혼자연습", desc: "슈팅 힘을 기르려면 단순히 다리 힘만 쓰는 것이 아니라, 찰 때 상체를 살짝 앞으로 숙이고 임팩트 순간 발목을 꽉 고정해야 합니다." },
+            { title: "골키퍼 캐칭 연습", img: "🧤", category: "혼자연습", desc: "벽에 공을 세게 던지고 튀어나오는 공을 가슴 쪽으로 'W'자 모양의 손 모양을 만들어 안전하게 품에 안는 연습을 반복하세요." },
+
+            // 🌟 [멘탈리티 및 팀워크]
+            { title: "최고의 기술은 '콜 플레이'", img: "🗣️", category: "팀워크", desc: "'나한테 줘!', '뒤에 수비 있다!', '돌아뛰어!' 경기장 안에서는 부끄러워하지 말고 끊임없이 소리쳐서 서로 정보를 공유해야 합니다." },
+            { title: "실수에 대한 태도", img: "💪", category: "멘탈리티", desc: "내가 패스 미스를 해서 골을 먹혔다고 고개 숙이지 마세요. 손을 들어 미안함을 표시하고, '다음엔 막자!'하며 바로 수비로 뛰어가는 것이 진짜 에이스입니다." },
+            { title: "득점보다 멋진 어시스트", img: "🤝", category: "팀워크", desc: "내가 무리해서 슛을 쏘는 것보다, 더 좋은 위치에 있는 동료에게 완벽한 패스를 밀어넣어 줄 때의 쾌감은 골 이상입니다." },
+            { title: "수비 가담은 필수", img: "🛡️", category: "멘탈리티", desc: "아무리 공격을 잘하는 피보라도, 우리 팀이 공을 뺏겼을 때는 전속력으로 뛰어 내려와 수비 진영을 갖추어야 합니다. 풋살은 전원 공격, 전원 수비!" },
+            { title: "상대방을 존중하는 스포츠맨십", img: "🤝", category: "매너", desc: "파울을 했을 때는 먼저 다가가서 손을 내밀어 일으켜 주세요. 승리보다 중요한 것은 멋진 매너와 스포츠맨십입니다." },
+            { title: "경기가 안 풀릴 때는 심호흡", img: "🧘", category: "멘탈리티", desc: "계속 슛이 빗나가거나 뺏길 때는 흥분하기 쉽습니다. 그럴 땐 평정심(CMP)을 잃지 말고 깊게 심호흡하며 기본에 집중하세요." },
+            { title: "심판의 판정에 승복하기", img: "👨‍⚖️", category: "매너", desc: "내가 보기엔 파울이 아니더라도 심판의 휘슬이 울렸다면 바로 인정하고 다음 플레이를 준비하세요. 불평은 흐름만 깰 뿐입니다." },
+            { title: "잘하는 동료에게 배우기", img: "👀", category: "멘탈리티", desc: "나보다 축구를 잘하는 친구를 질투하기보다, 그 친구가 공을 어떻게 잡고 패스하는지 유심히 관찰하고 따라 해보세요." },
+            { title: "팀의 분위기 메이커", img: "🔥", category: "팀워크", desc: "팀이 지고 있을 때 가장 필요한 선수는 화를 내는 선수가 아니라, 박수를 치며 '할 수 있어! 파이팅!'을 외치는 선수입니다." },
+            { title: "다치지 않는 것이 1순위", img: "🏥", category: "상식", desc: "무리한 태클이나 공중볼 경합은 큰 부상으로 이어집니다. 공보다 상대의 발이 먼저 보인다면 무리하지 말고 양보하는 것도 실력입니다." },
+            
+            // 📜 [역사 및 재미있는 사실]
+            { title: "풋살의 탄생지", img: "🇺🇾", category: "역사", desc: "풋살(Futsal)은 1930년 우루과이의 후안 카를로스 세리아니 교사가 청소년들을 위해 농구장 크기에서 즐길 수 있도록 고안한 스포츠입니다." },
+            { title: "Futsal 이라는 이름의 뜻?", img: "📖", category: "역사", desc: "Futsal은 스페인어/포르투갈어의 'Futbol(축구)'과 'Sala/Salão(실내)'라는 두 단어가 합쳐져 만들어진 이름입니다. 즉, 실내 축구라는 뜻이죠!" },
+            { title: "세계 최고의 풋살 전설, 팔캉(Falcão)", img: "🐐", category: "역사", desc: "브라질의 풋살 전설 '팔캉'은 화려한 개인기와 엄청난 득점력으로 풋살의 펠레/메시로 불립니다. 유튜브에서 그의 하이라이트를 검색해보세요!" },
+            { title: "축구 스타들의 풋살 사랑", img: "🌟", category: "역사", desc: "네이마르, 호나우지뉴, 이니에스타 같은 세계적인 축구 스타들은 모두 어린 시절 풋살을 통해 좁은 공간에서의 세밀한 기술을 마스터했습니다." }
         ];
 
-        // --- 플래티넘 트로피(도전 과제) 데이터베이스 ---
+        // --- 도전 과제 (Achievements) ---
         const ACHIEVEMENTS = [
-            // 개인 기록 (득점)
             { id: 'goal_1', category: '개인 기록', title: '마수걸이 골', desc: '풋살화 끈을 꽉 묶고 첫 골을 기록하세요. 발바닥 컨트롤 후 빠른 타이밍의 슈팅이 중요합니다!', reqKey: 'goals', reqValue: 1, icon: '⚽', color: 'text-yellow-400', bg: 'bg-yellow-400' },
             { id: 'goal_10', category: '개인 기록', title: '골잡이의 탄생', desc: '누적 10골 달성! 확실한 팀의 피보(Pivo)나 득점력 있는 아라(Ala)로 인정받기 시작했습니다.', reqKey: 'goals', reqValue: 10, icon: '🔥', color: 'text-orange-500', bg: 'bg-orange-500' },
             { id: 'goal_50', category: '개인 기록', title: '득점 폭격기', desc: '누적 50골 달성! 상대 팀 픽소(Fixo)들이 가장 두려워하는 선수가 되었습니다.', reqKey: 'goals', reqValue: 50, icon: '🚀', color: 'text-red-500', bg: 'bg-red-500' },
-
-            // 협동/팀 플레이 (어시스트, 킬패스)
             { id: 'ast_1', category: '팀 플레이', title: '이타적인 플레이', desc: '첫 어시스트를 기록하세요. 풋살은 좁은 공간에서 이루어지므로 동료를 활용하는 패스가 핵심입니다.', reqKey: 'assists', reqValue: 1, icon: '🤝', color: 'text-emerald-400', bg: 'bg-emerald-400' },
             { id: 'ast_20', category: '팀 플레이', title: '티키타카 마스터', desc: '누적 20어시스트 달성! 쉴 새 없는 패스 앤 무브로 상대 수비진을 붕괴시키는 패스 마스터입니다.', reqKey: 'assists', reqValue: 20, icon: '🪄', color: 'text-purple-400', bg: 'bg-purple-400' },
             { id: 'key_10', category: '팀 플레이', title: '공간의 창조자', desc: '킬패스 10회 달성! 밀집 수비를 한 번에 허무는 스루패스는 풋살 경기에서 가장 아름다운 장면입니다.', reqKey: 'keypass', reqValue: 10, icon: '🎯', color: 'text-blue-400', bg: 'bg-blue-400' },
-
-            // 수비 및 헌신 (세이브) - 풋살은 필드 플레이어도 골대 앞 수비를 자주 함
             { id: 'save_1', category: '수비/헌신', title: '최후의 보루', desc: '첫 세이브를 기록하세요. 골대 앞에서의 헌신적인 수비는 한 골을 넣은 것 이상의 가치가 있습니다.', reqKey: 'saves', reqValue: 1, icon: '🧤', color: 'text-orange-300', bg: 'bg-orange-300' },
             { id: 'save_30', category: '수비/헌신', title: '통곡의 벽', desc: '누적 30세이브 달성! 1골 밀어내기 매치에서 당신의 수비가 팀을 연승으로 이끌고 있습니다.', reqKey: 'saves', reqValue: 30, icon: '🧱', color: 'text-slate-300', bg: 'bg-slate-300' },
-
-            // 꾸준함 (출전, 훈련)
             { id: 'match_10', category: '꾸준함', title: '풋살장 적응 완료', desc: '10경기 출전. 밀어내기 매치의 빠른 공수 전환과 템포에 완벽히 적응했습니다!', reqKey: 'matches', reqValue: 10, icon: '🏃‍♂️', color: 'text-green-400', bg: 'bg-green-400' },
             { id: 'match_50', category: '꾸준함', title: '심장 두 개 (강철 체력)', desc: '50경기 출전! 지치지 않는 체력으로 코트를 누비는 팀의 언성 히어로입니다.', reqKey: 'matches', reqValue: 50, icon: '🫀', color: 'text-pink-500', bg: 'bg-pink-500' },
             { id: 'train_20', category: '꾸준함', title: '연습 벌레', desc: '개인 훈련 20회 달성. 땀방울은 절대 배신하지 않습니다. 기본기가 눈에 띄게 탄탄해졌습니다.', reqKey: 'training', reqValue: 20, icon: '💦', color: 'text-cyan-400', bg: 'bg-cyan-400' },
-
-            // 레벨업 (종합)
             { id: 'lv_5', category: '레벨업', title: '루키 탈출', desc: '레벨 5 달성. 풋살의 기본 룰과 4가지 포지션에 대한 이해도를 모두 갖추었습니다.', reqKey: 'level', reqValue: 5, icon: '🌱', color: 'text-lime-400', bg: 'bg-lime-400' },
             { id: 'lv_20', category: '레벨업', title: '팀의 에이스', desc: '레벨 20 달성. 이제 어느 팀에 들어가도 1인분 이상을 해내는 믿음직한 에이스입니다!', reqKey: 'level', reqValue: 20, icon: '🌟', color: 'text-yellow-300', bg: 'bg-yellow-300' },
             { id: 'lv_50', category: '레벨업', title: '레전드의 시작', desc: '레벨 50 달성. 삼봉 FC 명예의 전당에 영원히 기록될 전설적인 선수가 되었습니다.', reqKey: 'level', reqValue: 50, icon: '👑', color: 'text-fut-gold', bg: 'bg-fut-gold' },
         ];
 
-        // --- 5부위 개편 꾸미기 상점 ---
+        // --- 상점 시스템 ---
         const SHOP_ITEMS = [
             { id: 'head_lion', name: '사자 마스크', type: 'head', price: 300, icon: '🦁', desc: '필드의 지배자 사자 마스크입니다.', bonusText: '피지컬+2', bonusStats: {phy: 2} },
             { id: 'head_tiger', name: '호랑이 마스크', type: 'head', price: 300, icon: '🐯', desc: '날카로운 공격 본능 호랑이 마스크입니다.', bonusText: '슈팅+2', bonusStats: {sho: 2} },
             { id: 'head_alien', name: '외계인 헬멧', type: 'head', price: 1000, icon: '👽', desc: '지구 방위대급 외계인 헬멧입니다.', bonusText: '드리블+3', bonusStats: {dri: 3} },
-            
             { id: 'handL_captain', name: '황금 완장 [좌]', type: 'handL', price: 200, icon: '🟨', desc: '팀을 이끄는 주장의 완장 (왼손 전용).', bonusText: '패스+2', bonusStats: {pas: 2} },
             { id: 'handL_shield', name: '얼음 방패 [좌]', type: 'handL', price: 400, icon: '🛡️', desc: '철벽 수비를 위한 얼음 방패입니다.', bonusText: '수비+3', bonusStats: {def: 3} },
-
             { id: 'handR_whistle', name: '명장의 호루라기 [우]', type: 'handR', price: 200, icon: '🏅', desc: '경기를 지배하는 호루라기 (오른손 전용).', bonusText: '피지컬+2', bonusStats: {phy: 2} },
             { id: 'handR_fireglove', name: '불꽃 장갑 [우]', type: 'handR', price: 400, icon: '🧤', desc: '뜨거운 투지의 골키퍼 장갑입니다.', bonusText: '수비+3', bonusStats: {def: 3} },
-            
             { id: 'footL_nike', name: '머큐리얼 [좌]', type: 'footL', price: 150, icon: '👟', desc: '폭발적인 스피드를 상징하는 왼발 축구화.', bonusText: '속력+2', bonusStats: {pac: 2} },
             { id: 'footL_adidas', name: '프레데터 [좌]', type: 'footL', price: 150, icon: '🥾', desc: '정확한 컨트롤을 위한 왼발 축구화.', bonusText: '패스+2', bonusStats: {pas: 2} },
-            
             { id: 'footR_nike', name: '머큐리얼 [우]', type: 'footR', price: 150, icon: '👟', desc: '폭발적인 스피드를 상징하는 오른발 축구화.', bonusText: '슈팅+2', bonusStats: {sho: 2} },
             { id: 'footR_puma', name: '푸마 퓨처 [우]', type: 'footR', price: 150, icon: '🥾', desc: '화려한 드리블러를 위한 오른발 축구화.', bonusText: '드리블+2', bonusStats: {dri: 2} },
         ];
@@ -710,13 +805,11 @@
 
         let db, auth;
 
-        // UI 요소의 존재 유무를 확인하는 안전 함수
         const isVisible = (id) => {
             const el = document.getElementById(id);
             return el && !el.classList.contains('hidden');
         };
 
-        // --- 티어 계산 함수 ---
         const getTierInfo = (ovr) => {
             if(ovr < 70) return { name: '루키 (Rookie)', class: 'tier-badge-rookie', cardClass: 'card-rookie' };
             if(ovr < 80) return { name: '세미프로 (Semi-Pro)', class: 'tier-badge-semipro', cardClass: 'card-semipro' };
@@ -737,13 +830,6 @@
             return bonuses;
         };
 
-        const POS_KEY_STATS = {
-            'Pivo': ['sho', 'phy', 'pst'], // 슈팅, 피지컬, 위치선정
-            'Ala': ['pac', 'dri', 'wrk'],  // 속력, 드리블, 활동량
-            'Fixo': ['def', 'int', 'pas'], // 수비, 가로채기, 패스
-            'Goleiro': ['ref', 'dis', 'cmp'] // 반사신경, 볼배급, 평정심
-        };
-
         const getOVR = (p) => {
             const b = getBonusStats(p);
             const stats = {
@@ -759,7 +845,7 @@
             
             for (const [key, val] of Object.entries(stats)) {
                 if (keyStats.includes(key)) {
-                    weightedSum += val * 1.1; // 핵심 능력치는 10% 추가 가중치
+                    weightedSum += val * 1.1; 
                     totalWeight += 0.1;
                 } else {
                     weightedSum += val;
@@ -793,7 +879,7 @@
 
         window.customAlert = (m) => new Promise(r => {
             const d = document.createElement('div'); d.className = "fixed inset-0 z-[300] flex items-center justify-center bg-black/80 px-4";
-            d.innerHTML = `<div class="bg-pitch-panel p-6 sm:p-8 rounded-3xl border-2 border-fut-gold max-w-sm w-full text-center space-y-4 shadow-2xl"><h3 class="text-xl font-display text-white">알림</h3><p class="text-sm text-slate-300 whitespace-pre-wrap">${m}</p><button id="bOk" class="bg-fut-gold text-slate-900 font-bold py-2.5 px-8 rounded-xl w-full hover:bg-yellow-400 transition">확인</button></div>`;
+            d.innerHTML = `<div class="bg-pitch-panel p-6 sm:p-8 rounded-3xl border-2 border-fut-gold max-w-sm w-full text-center space-y-4 shadow-2xl"><h3 class="text-xl font-display text-white">알림</h3><p class="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed break-keep">${m}</p><button id="bOk" class="bg-fut-gold text-slate-900 font-bold py-2.5 px-8 rounded-xl w-full hover:bg-yellow-400 transition mt-4">확인</button></div>`;
             document.body.appendChild(d); document.getElementById('bOk').onclick = () => { d.remove(); r(true); };
         });
 
@@ -804,7 +890,7 @@
         });
 
         window.switchTab = (tabId) => {
-            ['tabWorkspace', 'tabAchievements', 'tabTips', 'tabShop', 'tabRank', 'tabGuide', 'tabMaster', 'tabCompare', 'tabMasterStats'].forEach(id => {
+            ['tabWorkspace', 'tabTips', 'tabAchievements', 'tabShop', 'tabRank', 'tabGuide', 'tabMaster', 'tabCompare', 'tabMasterStats'].forEach(id => {
                 const el = document.getElementById(id); if(el) el.classList.add('hidden');
                 const btn = document.getElementById('btn' + id.charAt(0).toUpperCase() + id.slice(1)); if(btn) btn.classList.remove('active');
             });
@@ -815,7 +901,7 @@
             const leftPanel = document.getElementById('leftCardPanel');
             const rightPanel = document.getElementById('rightContentPanel');
             
-            if (tabId === 'tabWorkspace' || tabId === 'tabAchievements') {
+            if (tabId === 'tabWorkspace' || tabId === 'tabAchievements' || tabId === 'tabTips') {
                 leftPanel?.classList.remove('hidden', 'lg:hidden');
                 rightPanel?.classList.remove('lg:col-span-12');
                 rightPanel?.classList.add('lg:col-span-8');
@@ -825,8 +911,13 @@
                 rightPanel?.classList.add('lg:col-span-12');
             }
 
+            if(tabId === 'tabTips') {
+                renderDailyTip();
+                const gmEditor = document.getElementById('gmAnnouncementEditor');
+                if(window.playerState.isGM) gmEditor?.classList.remove('hidden');
+                else gmEditor?.classList.add('hidden');
+            }
             if(tabId === 'tabAchievements') window.renderAchievements();
-            if(tabId === 'tabTips') renderDailyTip();
             if(tabId === 'tabShop') renderShop();
             if(tabId === 'tabRank') renderLeaderboard();
             if(tabId === 'tabMaster') renderMasterDashboard();
@@ -835,16 +926,19 @@
         };
 
         function renderDailyTip() {
+            // 일수를 3일로 나누어 3일마다 배열의 인덱스가 바뀌도록 처리
             const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
-            const tip = DAILY_TIPS[dayOfYear % DAILY_TIPS.length];
+            const tipIndex = Math.floor(dayOfYear / 3) % DAILY_TIPS.length;
+            const tip = DAILY_TIPS[tipIndex];
+            
             document.getElementById('dailyTipContainer').innerHTML = `
                 <div class="h-64 bg-slate-800 flex items-center justify-center border-b border-slate-700 relative overflow-hidden group">
-                    <p class="text-[6rem] z-0 absolute drop-shadow-lg">${tip.img}</p>
-                    <span class="absolute top-4 left-4 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded z-20">${tip.category}</span>
+                    <p class="text-[6rem] z-0 absolute drop-shadow-lg transition-transform duration-700 group-hover:scale-125">${tip.img}</p>
+                    <span class="absolute top-4 left-4 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded z-20 shadow-md">${tip.category}</span>
                 </div>
                 <div class="p-6">
-                    <h4 class="text-2xl font-display text-white mb-4 leading-tight">${tip.title}</h4>
-                    <p class="text-slate-300 text-base leading-relaxed break-keep">${tip.desc}</p>
+                    <h4 class="text-2xl font-display text-white mb-4 leading-tight break-keep">${tip.title}</h4>
+                    <p class="text-slate-300 text-sm sm:text-base leading-relaxed break-keep font-medium">${tip.desc}</p>
                 </div>
             `;
         }
@@ -899,7 +993,6 @@
 
             grid.innerHTML = html;
 
-            // 전체 프로그레스 바 업데이트
             const totalPercent = Math.floor((completedCount / ACHIEVEMENTS.length) * 100);
             document.getElementById('achievementProgressText').innerText = `${totalPercent}%`;
             document.getElementById('achievementProgressBar').style.width = `${totalPercent}%`;
@@ -1289,6 +1382,7 @@
 
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
+                        // 플레이어 목록 리스너
                         onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'players'), (snapshot) => {
                             const players = [];
                             snapshot.forEach(d => { 
@@ -1319,6 +1413,20 @@
                             if(isVisible('tabMasterStats')) window.renderMasterStats();
                         }, (error) => { console.error("데이터 로드 에러:", error); renderLockerRoom(); });
 
+                        // 공지사항 리스너 추가
+                        onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'announcement'), (docSnap) => {
+                            const el = document.getElementById('announcementContent');
+                            const input = document.getElementById('announcementInput');
+                            if(docSnap.exists() && docSnap.data().text) {
+                                const text = docSnap.data().text;
+                                if(el) el.innerText = text;
+                                if(input) input.value = text;
+                            } else {
+                                if(el) el.innerText = "현재 등록된 공지사항이 없습니다.\n라커룸에 입장해서 친구들과 즐겁게 축구해요!";
+                                if(input) input.value = "";
+                            }
+                        }, (error) => { console.error("공지사항 로드 에러:", error); });
+
                         const savedId = localStorage.getItem('sfc_pid');
                         const savedPin = localStorage.getItem('sfc_pin');
                         if (savedId && savedPin) attemptLogin(savedId, savedPin, true);
@@ -1327,6 +1435,15 @@
                 });
             } catch(e) { console.error("Firebase Init Error:", e); renderLockerRoom(); }
         }
+
+        // 공지사항 저장 (GM 전용)
+        window.saveAnnouncement = async () => {
+            if(!window.playerState.isGM) return;
+            const text = document.getElementById('announcementInput').value;
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'announcement');
+            await setDoc(docRef, { text: text, updatedAt: new Date().toISOString() }, { merge: true });
+            window.customAlert("공지사항이 모든 학생들에게 성공적으로 전송되었습니다!");
+        };
 
         document.getElementById('loginId')?.addEventListener('change', (e) => {
             const nameContainer = document.getElementById('playerNameInputContainer');
@@ -1423,6 +1540,7 @@
                     document.getElementById('gmAttendanceTools')?.classList.remove('hidden');
                     document.getElementById('btnTabMaster')?.classList.remove('hidden');
                     document.getElementById('btnTabMasterStats')?.classList.remove('hidden');
+                    document.getElementById('gmAnnouncementEditor')?.classList.remove('hidden');
                 }
 
                 window.selectedPlayerId = isGM ? getSafeDocId(ALLOWED_PLAYERS[0]) : safeDocId;
@@ -1569,11 +1687,11 @@
                     gridHtml += `
                         <div class="flex items-center justify-center gap-0.5 text-current w-full group relative">
                             <button onclick="window.modStat('${p.id}', '${s.id}', -1)" class="w-3 h-3 rounded bg-black/30 hover:bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-minus text-[6px]"></i></button>
-                            <div class="relative flex flex-col items-center justify-center">
-                                <input type="number" min="1" max="99" value="${baseVal}" class="font-oswald text-lg font-bold w-6 text-center bg-transparent border-b border-transparent hover:border-current focus:outline-none transition cursor-text leading-none p-0 m-0 text-current" onchange="window.setStat('${p.id}', '${s.id}', this.value)">
+                            <div class="relative flex flex-col items-center justify-center w-6">
+                                <input type="number" min="1" max="99" value="${baseVal}" class="font-oswald text-lg font-bold w-full text-center bg-transparent border-b border-transparent hover:border-current focus:outline-none transition cursor-text leading-none p-0 m-0 text-current" onchange="window.setStat('${p.id}', '${s.id}', this.value)">
                                 ${bonusBadge}
                             </div>
-                            <span class="font-bold text-[9px] tracking-tighter whitespace-nowrap opacity-90">${s.label}</span>
+                            <span class="font-bold text-[9px] tracking-tighter whitespace-nowrap opacity-90 cursor-pointer hover:text-emerald-400" onclick="window.showStatDesc('${s.id}')">${s.label} <i class="fa-solid fa-circle-question opacity-70 text-[7px]"></i></span>
                             <button onclick="window.modStat('${p.id}', '${s.id}', 1)" class="w-3 h-3 rounded bg-black/30 hover:bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-plus text-[6px]"></i></button>
                         </div>`;
                 } else {
@@ -1583,7 +1701,7 @@
                                 <span class="font-oswald text-lg font-bold leading-none tracking-tight">${totalVal}</span>
                                 ${bonusBadge}
                             </div>
-                            <span class="font-bold text-[10px] opacity-90 tracking-tighter whitespace-nowrap">${s.label}</span>
+                            <span class="font-bold text-[10px] opacity-90 tracking-tighter whitespace-nowrap cursor-pointer hover:text-emerald-400 transition" onclick="window.showStatDesc('${s.id}')">${s.label} <i class="fa-solid fa-circle-question opacity-70 text-[8px]"></i></span>
                         </div>`;
                 }
             });
@@ -2045,8 +2163,8 @@
         document.addEventListener('touchend', e => {
             const distX = e.changedTouches[0].screenX - touchstartX; const distY = e.changedTouches[0].screenY - touchstartY;
             if (Math.abs(distX) > 60 && Math.abs(distY) < 60) {
-                if(e.target.closest('nav') || e.target.closest('.overflow-x-auto') || e.target.closest('.custom-scrollbar') || e.target.tagName === 'INPUT') return;
-                let availableTabs = ['tabWorkspace', 'tabAchievements', 'tabRank', 'tabCompare', 'tabShop', 'tabTips', 'tabGuide'];
+                if(e.target.closest('nav') || e.target.closest('.overflow-x-auto') || e.target.closest('.custom-scrollbar') || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+                let availableTabs = ['tabWorkspace', 'tabTips', 'tabAchievements', 'tabRank', 'tabCompare', 'tabShop', 'tabGuide'];
                 if(window.playerState && window.playerState.isGM) {
                     availableTabs.push('tabMaster');
                     availableTabs.push('tabMasterStats');
