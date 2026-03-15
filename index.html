@@ -2205,16 +2205,29 @@
         // Initialize Firebase & Logic
         const initApp = async () => {
             try {
-                const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-                    apiKey: "dummy", authDomain: "dummy", projectId: "dummy", storageBucket: "dummy", messagingSenderId: "dummy", appId: "dummy"
-                };
+                let firebaseConfig;
+                try {
+                    firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+                        apiKey: "dummy", authDomain: "dummy", projectId: "dummy", storageBucket: "dummy", messagingSenderId: "dummy", appId: "dummy"
+                    };
+                } catch(e) { firebaseConfig = __firebase_config; } // 파싱 에러 방지
+
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
 
+                // 🚨 핵심 해결 부분: 토큰이 만료되었을 때 튕기지 않고 자동으로 익명 로그인으로 우회
                 const initAuth = async () => {
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) { await signInWithCustomToken(auth, __initial_auth_token); } 
-                    else { await signInAnonymously(auth); }
+                    try {
+                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) { 
+                            await signInWithCustomToken(auth, __initial_auth_token); 
+                        } else { 
+                            await signInAnonymously(auth); 
+                        }
+                    } catch (authErr) {
+                        console.warn("권한 토큰 만료. 익명 로그인으로 전환합니다.", authErr);
+                        await signInAnonymously(auth);
+                    }
                 };
                 await initAuth();
 
@@ -2238,7 +2251,6 @@
                                 if(dbPlayers.has(safeId)) {
                                     players.push(dbPlayers.get(safeId));
                                 } else {
-                                    // 🚀 DB에 아직 없는 학생도 UI에 표시되도록 기본 스탯 제공
                                     players.push({
                                         id: safeId, name: name, pos: '미정',
                                         pac: 60, sho: 60, pas: 60, dri: 60, def: 60, phy: 60,
@@ -2287,12 +2299,20 @@
                             }
                         }, (error) => console.error("Event Listen Error:", error));
 
-                        // Auto login
-                        const savedPid = localStorage.getItem('sfc_pid');
-                        const savedPin = localStorage.getItem('sfc_pin');
-                        if(savedPid && savedPin) {
-                            setTimeout(() => { document.getElementById('loginId').value = savedPid.includes('gm') ? savedPid : 'player'; document.getElementById('loginPin').value = savedPin; handleLogin(savedPid, savedPin, true); }, 100);
-                        }
+                        // 🚨 핵심 해결 부분: 로컬스토리지 권한 차단 시 앱이 멈추는 현상 방지
+                        try {
+                            const savedPid = localStorage.getItem('sfc_pid');
+                            const savedPin = localStorage.getItem('sfc_pin');
+                            if(savedPid && savedPin) {
+                                setTimeout(() => { 
+                                    const loginIdEl = document.getElementById('loginId');
+                                    const loginPinEl = document.getElementById('loginPin');
+                                    if(loginIdEl) loginIdEl.value = savedPid.includes('gm') ? savedPid : 'player'; 
+                                    if(loginPinEl) loginPinEl.value = savedPin; 
+                                    handleLogin(savedPid, savedPin, true); 
+                                }, 100);
+                            }
+                        } catch(lsErr) { console.warn("자동로그인 확인 불가:", lsErr); }
                     } else {
                         document.getElementById('loginOverlay').classList.remove('hidden');
                     }
@@ -2300,7 +2320,9 @@
 
             } catch (error) {
                 console.error("Init Error:", error);
-                window.customAlert("앱 초기화 중 오류가 발생했습니다. 새로고침 해주세요.");
+                // 오류가 나더라도 경고창 대신 로그인 오버레이를 띄워 수동 진입을 유도합니다.
+                const overlay = document.getElementById('loginOverlay');
+                if(overlay) overlay.classList.remove('hidden');
             }
         };
 
