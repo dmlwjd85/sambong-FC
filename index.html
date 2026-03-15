@@ -127,6 +127,11 @@
         .nav-tab { color: #94a3b8; border-bottom: 2px solid transparent; transition: all 0.3s; flex-shrink: 0; cursor: pointer; }
         .nav-tab:hover { color: #e2e8f0; border-bottom-color: #475569; }
         .nav-tab.active { color: #38ff8e; border-bottom-color: #38ff8e; font-weight: bold; text-shadow: 0 0 10px rgba(56,255,142,0.4); }
+
+        /* 업적 카드 필터 (미달성 흑백 효과) */
+        .achieved-card { border-color: #e8c271; background-color: rgba(232, 194, 113, 0.1); box-shadow: 0 0 15px rgba(232, 194, 113, 0.2); }
+        .unachieved-card { opacity: 0.6; filter: grayscale(80%); border-color: rgba(255,255,255,0.1); }
+        .unachieved-card:hover { opacity: 0.9; filter: grayscale(40%); }
     </style>
 </head>
 <body class="antialiased">
@@ -184,6 +189,7 @@
                 
                 <div class="flex items-center space-x-1 sm:space-x-3 text-xs sm:text-sm flex-grow overflow-x-auto hide-scrollbar whitespace-nowrap scroll-smooth">
                     <button onclick="window.switchTab('tabWorkspace')" id="btnTabWorkspace" class="nav-tab active pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-person-booth mr-1"></i>라커룸</button>
+                    <button onclick="window.switchTab('tabAchievements')" id="btnTabAchievements" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-medal mr-1 text-yellow-300"></i>도전과제</button>
                     <button onclick="window.switchTab('tabRank')" id="btnTabRank" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-trophy mr-1 text-yellow-400"></i>명예의전당</button>
                     <button onclick="window.switchTab('tabCompare')" id="btnTabCompare" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-code-compare mr-1 text-pink-400"></i>선수비교</button>
                     <button onclick="window.switchTab('tabShop')" id="btnTabShop" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-store mr-1 text-purple-400"></i>상점</button>
@@ -451,6 +457,33 @@
                     </div>
                 </div>
 
+                <!-- 탭: 도전 과제 (Achievements) -->
+                <div id="tabAchievements" class="hidden space-y-6">
+                    <div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-yellow-300">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 border-b border-slate-700 pb-4 gap-4">
+                            <div>
+                                <h3 class="text-3xl font-display text-yellow-300 flex items-center gap-3">
+                                    <i class="fa-solid fa-medal"></i> 플래티넘 트로피 룸
+                                </h3>
+                                <p class="text-sm text-slate-400 mt-2 break-keep leading-relaxed">밀어내기 매치에서 다양한 미션을 수행하고 컬렉션을 완성하세요!<br>달성률 100%를 향한 여러분의 땀방울은 배신하지 않습니다.</p>
+                            </div>
+                            <div class="text-left sm:text-right w-full sm:w-auto bg-slate-900/50 p-3 rounded-xl border border-slate-700">
+                                <p class="text-xs text-slate-400 font-bold mb-1" id="achievementTargetName">내 달성률</p>
+                                <div class="font-display text-3xl text-fut-gold drop-shadow-md" id="achievementProgressText">0%</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 전체 프로그레스 바 -->
+                        <div class="w-full bg-slate-800 rounded-full h-4 border border-slate-600 overflow-hidden mb-8 shadow-inner relative">
+                            <div id="achievementProgressBar" class="bg-gradient-to-r from-yellow-600 via-yellow-400 to-yellow-200 h-4 rounded-full shadow-[0_0_15px_#e8c271] transition-all duration-1000 ease-out" style="width: 0%"></div>
+                        </div>
+                        
+                        <div id="achievementsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- JS에서 렌더링 -->
+                        </div>
+                    </div>
+                </div>
+
                 <!-- 탭 2: 기록실 (명예의 전당) -->
                 <div id="tabRank" class="hidden space-y-6">
                     <div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-yellow-400">
@@ -620,6 +653,33 @@
             { title: "풋살의 기본, 발바닥 컨트롤! (Sole Control)", img: "👟 ⚽", category: "기본기", desc: "풋살공은 축구공보다 작고 덜 튀어 오릅니다. 패스를 받을 때 발 안쪽(인사이드)으로 받기보다, 발바닥으로 공을 지그시 밟듯이 컨트롤해 보세요." },
         ];
 
+        // --- 플래티넘 트로피(도전 과제) 데이터베이스 ---
+        const ACHIEVEMENTS = [
+            // 개인 기록 (득점)
+            { id: 'goal_1', category: '개인 기록', title: '마수걸이 골', desc: '풋살화 끈을 꽉 묶고 첫 골을 기록하세요. 발바닥 컨트롤 후 빠른 타이밍의 슈팅이 중요합니다!', reqKey: 'goals', reqValue: 1, icon: '⚽', color: 'text-yellow-400', bg: 'bg-yellow-400' },
+            { id: 'goal_10', category: '개인 기록', title: '골잡이의 탄생', desc: '누적 10골 달성! 확실한 팀의 피보(Pivo)나 득점력 있는 아라(Ala)로 인정받기 시작했습니다.', reqKey: 'goals', reqValue: 10, icon: '🔥', color: 'text-orange-500', bg: 'bg-orange-500' },
+            { id: 'goal_50', category: '개인 기록', title: '득점 폭격기', desc: '누적 50골 달성! 상대 팀 픽소(Fixo)들이 가장 두려워하는 선수가 되었습니다.', reqKey: 'goals', reqValue: 50, icon: '🚀', color: 'text-red-500', bg: 'bg-red-500' },
+
+            // 협동/팀 플레이 (어시스트, 킬패스)
+            { id: 'ast_1', category: '팀 플레이', title: '이타적인 플레이', desc: '첫 어시스트를 기록하세요. 풋살은 좁은 공간에서 이루어지므로 동료를 활용하는 패스가 핵심입니다.', reqKey: 'assists', reqValue: 1, icon: '🤝', color: 'text-emerald-400', bg: 'bg-emerald-400' },
+            { id: 'ast_20', category: '팀 플레이', title: '티키타카 마스터', desc: '누적 20어시스트 달성! 쉴 새 없는 패스 앤 무브로 상대 수비진을 붕괴시키는 패스 마스터입니다.', reqKey: 'assists', reqValue: 20, icon: '🪄', color: 'text-purple-400', bg: 'bg-purple-400' },
+            { id: 'key_10', category: '팀 플레이', title: '공간의 창조자', desc: '킬패스 10회 달성! 밀집 수비를 한 번에 허무는 스루패스는 풋살 경기에서 가장 아름다운 장면입니다.', reqKey: 'keypass', reqValue: 10, icon: '🎯', color: 'text-blue-400', bg: 'bg-blue-400' },
+
+            // 수비 및 헌신 (세이브) - 풋살은 필드 플레이어도 골대 앞 수비를 자주 함
+            { id: 'save_1', category: '수비/헌신', title: '최후의 보루', desc: '첫 세이브를 기록하세요. 골대 앞에서의 헌신적인 수비는 한 골을 넣은 것 이상의 가치가 있습니다.', reqKey: 'saves', reqValue: 1, icon: '🧤', color: 'text-orange-300', bg: 'bg-orange-300' },
+            { id: 'save_30', category: '수비/헌신', title: '통곡의 벽', desc: '누적 30세이브 달성! 1골 밀어내기 매치에서 당신의 수비가 팀을 연승으로 이끌고 있습니다.', reqKey: 'saves', reqValue: 30, icon: '🧱', color: 'text-slate-300', bg: 'bg-slate-300' },
+
+            // 꾸준함 (출전, 훈련)
+            { id: 'match_10', category: '꾸준함', title: '풋살장 적응 완료', desc: '10경기 출전. 밀어내기 매치의 빠른 공수 전환과 템포에 완벽히 적응했습니다!', reqKey: 'matches', reqValue: 10, icon: '🏃‍♂️', color: 'text-green-400', bg: 'bg-green-400' },
+            { id: 'match_50', category: '꾸준함', title: '심장 두 개 (강철 체력)', desc: '50경기 출전! 지치지 않는 체력으로 코트를 누비는 팀의 언성 히어로입니다.', reqKey: 'matches', reqValue: 50, icon: '🫀', color: 'text-pink-500', bg: 'bg-pink-500' },
+            { id: 'train_20', category: '꾸준함', title: '연습 벌레', desc: '개인 훈련 20회 달성. 땀방울은 절대 배신하지 않습니다. 기본기가 눈에 띄게 탄탄해졌습니다.', reqKey: 'training', reqValue: 20, icon: '💦', color: 'text-cyan-400', bg: 'bg-cyan-400' },
+
+            // 레벨업 (종합)
+            { id: 'lv_5', category: '레벨업', title: '루키 탈출', desc: '레벨 5 달성. 풋살의 기본 룰과 4가지 포지션에 대한 이해도를 모두 갖추었습니다.', reqKey: 'level', reqValue: 5, icon: '🌱', color: 'text-lime-400', bg: 'bg-lime-400' },
+            { id: 'lv_20', category: '레벨업', title: '팀의 에이스', desc: '레벨 20 달성. 이제 어느 팀에 들어가도 1인분 이상을 해내는 믿음직한 에이스입니다!', reqKey: 'level', reqValue: 20, icon: '🌟', color: 'text-yellow-300', bg: 'bg-yellow-300' },
+            { id: 'lv_50', category: '레벨업', title: '레전드의 시작', desc: '레벨 50 달성. 삼봉 FC 명예의 전당에 영원히 기록될 전설적인 선수가 되었습니다.', reqKey: 'level', reqValue: 50, icon: '👑', color: 'text-fut-gold', bg: 'bg-fut-gold' },
+        ];
+
         // --- 5부위 개편 꾸미기 상점 ---
         const SHOP_ITEMS = [
             { id: 'head_lion', name: '사자 마스크', type: 'head', price: 300, icon: '🦁', desc: '필드의 지배자 사자 마스크입니다.', bonusText: '피지컬+2', bonusStats: {phy: 2} },
@@ -677,11 +737,36 @@
             return bonuses;
         };
 
+        const POS_KEY_STATS = {
+            'Pivo': ['sho', 'phy', 'pst'], // 슈팅, 피지컬, 위치선정
+            'Ala': ['pac', 'dri', 'wrk'],  // 속력, 드리블, 활동량
+            'Fixo': ['def', 'int', 'pas'], // 수비, 가로채기, 패스
+            'Goleiro': ['ref', 'dis', 'cmp'] // 반사신경, 볼배급, 평정심
+        };
+
         const getOVR = (p) => {
             const b = getBonusStats(p);
-            const sum = (p.pac||60)+b.pac + (p.sho||60)+b.sho + (p.pas||60)+b.pas + (p.dri||60)+b.dri + (p.def||60)+b.def + (p.phy||60)+b.phy +
-                        (p.ref||60)+b.ref + (p.int||60)+b.int + (p.pst||60)+b.pst + (p.dis||60)+b.dis + (p.cmp||60)+b.cmp + (p.wrk||60)+b.wrk;
-            return Math.floor(sum / 12);
+            const stats = {
+                pac: (p.pac||60)+b.pac, sho: (p.sho||60)+b.sho, pas: (p.pas||60)+b.pas,
+                dri: (p.dri||60)+b.dri, def: (p.def||60)+b.def, phy: (p.phy||60)+b.phy,
+                ref: (p.ref||60)+b.ref, int: (p.int||60)+b.int, pst: (p.pst||60)+b.pst,
+                dis: (p.dis||60)+b.dis, cmp: (p.cmp||60)+b.cmp, wrk: (p.wrk||60)+b.wrk
+            };
+            
+            let totalWeight = 12;
+            let weightedSum = 0;
+            const keyStats = POS_KEY_STATS[p.pos] || [];
+            
+            for (const [key, val] of Object.entries(stats)) {
+                if (keyStats.includes(key)) {
+                    weightedSum += val * 1.1; // 핵심 능력치는 10% 추가 가중치
+                    totalWeight += 0.1;
+                } else {
+                    weightedSum += val;
+                }
+            }
+            
+            return Math.min(99, Math.floor(weightedSum / totalWeight));
         };
         
         const getWeeklyWage = (ovr) => { return Math.max(50, Math.min(200, Math.floor(50 + ((ovr - 50) / 49) * 150))); };
@@ -719,7 +804,7 @@
         });
 
         window.switchTab = (tabId) => {
-            ['tabWorkspace', 'tabTips', 'tabShop', 'tabRank', 'tabGuide', 'tabMaster', 'tabCompare', 'tabMasterStats'].forEach(id => {
+            ['tabWorkspace', 'tabAchievements', 'tabTips', 'tabShop', 'tabRank', 'tabGuide', 'tabMaster', 'tabCompare', 'tabMasterStats'].forEach(id => {
                 const el = document.getElementById(id); if(el) el.classList.add('hidden');
                 const btn = document.getElementById('btn' + id.charAt(0).toUpperCase() + id.slice(1)); if(btn) btn.classList.remove('active');
             });
@@ -730,7 +815,7 @@
             const leftPanel = document.getElementById('leftCardPanel');
             const rightPanel = document.getElementById('rightContentPanel');
             
-            if (tabId === 'tabWorkspace') {
+            if (tabId === 'tabWorkspace' || tabId === 'tabAchievements') {
                 leftPanel?.classList.remove('hidden', 'lg:hidden');
                 rightPanel?.classList.remove('lg:col-span-12');
                 rightPanel?.classList.add('lg:col-span-8');
@@ -740,6 +825,7 @@
                 rightPanel?.classList.add('lg:col-span-12');
             }
 
+            if(tabId === 'tabAchievements') window.renderAchievements();
             if(tabId === 'tabTips') renderDailyTip();
             if(tabId === 'tabShop') renderShop();
             if(tabId === 'tabRank') renderLeaderboard();
@@ -762,6 +848,68 @@
                 </div>
             `;
         }
+
+        window.renderAchievements = () => {
+            const targetId = window.playerState.isGM ? window.selectedPlayerId : window.playerState.id;
+            const p = window.allPlayersData.find(x => x.id === targetId) || null;
+            const grid = document.getElementById('achievementsGrid');
+            if(!grid || !p) return;
+
+            document.getElementById('achievementTargetName').innerText = window.playerState.isGM ? `[${p.name}]의 달성률` : `내 달성률`;
+
+            let completedCount = 0;
+            let html = '';
+
+            ACHIEVEMENTS.forEach(ach => {
+                const pValue = ach.reqKey === 'level' ? (p.level || 1) : (p[ach.reqKey] || 0);
+                const isAchieved = pValue >= ach.reqValue;
+                const progressPercent = Math.min(100, Math.floor((pValue / ach.reqValue) * 100));
+                
+                if(isAchieved) completedCount++;
+
+                const cardStyle = isAchieved ? 'achieved-card' : 'unachieved-card bg-slate-900/60';
+                const checkIcon = isAchieved ? `<i class="fa-solid fa-circle-check text-fut-gold absolute top-3 right-3 text-lg drop-shadow-md"></i>` : '';
+                
+                html += `
+                    <div class="${cardStyle} rounded-2xl p-4 border transition duration-300 relative flex flex-col h-full">
+                        ${checkIcon}
+                        <div class="flex items-start gap-3 mb-2">
+                            <div class="text-3xl w-12 h-12 bg-slate-800 flex items-center justify-center rounded-xl shadow-inner border border-slate-600 flex-shrink-0">
+                                ${ach.icon}
+                            </div>
+                            <div>
+                                <span class="text-[9px] font-bold ${ach.color} px-1.5 py-0.5 rounded border border-current opacity-80 mb-1 inline-block">${ach.category}</span>
+                                <h4 class="font-bold text-white text-sm sm:text-base leading-tight">${ach.title}</h4>
+                            </div>
+                        </div>
+                        <p class="text-[10px] sm:text-xs text-slate-400 leading-relaxed mb-4 flex-grow break-keep">${ach.desc}</p>
+                        
+                        <div class="mt-auto">
+                            <div class="flex justify-between items-end mb-1">
+                                <span class="text-[9px] font-bold text-slate-500">진행도</span>
+                                <span class="text-[10px] font-bold ${isAchieved ? 'text-fut-gold' : 'text-slate-300'}">${pValue} / ${ach.reqValue}</span>
+                            </div>
+                            <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden shadow-inner">
+                                <div class="${isAchieved ? 'bg-fut-gold' : ach.bg} h-1.5 rounded-full transition-all duration-700" style="width: ${progressPercent}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            grid.innerHTML = html;
+
+            // 전체 프로그레스 바 업데이트
+            const totalPercent = Math.floor((completedCount / ACHIEVEMENTS.length) * 100);
+            document.getElementById('achievementProgressText').innerText = `${totalPercent}%`;
+            document.getElementById('achievementProgressBar').style.width = `${totalPercent}%`;
+            
+            if (totalPercent === 100) {
+                document.getElementById('achievementProgressText').classList.add('animate-pulse');
+            } else {
+                document.getElementById('achievementProgressText').classList.remove('animate-pulse');
+            }
+        };
 
         window.renderShop = () => {
             const targetId = window.playerState.isGM ? window.selectedPlayerId : window.playerState.id;
@@ -1163,6 +1311,7 @@
                             if(window.selectedPlayerId) renderSelectedCard(window.selectedPlayerId);
                             renderActivePool();
                             
+                            if(isVisible('tabAchievements')) window.renderAchievements();
                             if(isVisible('tabShop')) renderShop();
                             if(isVisible('tabRank')) renderLeaderboard();
                             if(isVisible('tabMaster')) renderMasterDashboard();
@@ -1329,6 +1478,7 @@
         window.selectPlayer = (pId) => {
             window.selectedPlayerId = pId;
             renderLockerRoom(); renderSelectedCard(pId);
+            if(isVisible('tabAchievements')) window.renderAchievements();
             if(isVisible('tabShop')) renderShop();
             if(isVisible('tabCompare')) window.renderCompareList();
             
@@ -1705,13 +1855,13 @@
         window.changePositionModal = (pId) => {
             const modal = document.createElement('div'); modal.className = "fixed inset-0 z-[400] flex items-center justify-center bg-black/80 px-4";
             const posList = [
-                { id: 'Pivo', name: '피보(FW)', desc: '최전방 공격수: 등지고 버티거나 골을 넣는 타겟맨!' }, 
-                { id: 'Ala', name: '아라(MF)', desc: '측면 윙어: 양옆을 부지런히 오가며 공수를 연결하는 살림꾼!' },
-                { id: 'Fixo', name: '픽소(DF)', desc: '최후방 수비수: 수비를 지휘하고 패스를 시작하는 사령관!' }, 
-                { id: 'Goleiro', name: '골레이로(GK)', desc: '골키퍼: 손과 발을 모두 써서 최후의 방어를 해내는 수호신!' }
+                { id: 'Pivo', name: '피보(FW)', desc: '최전방 공격수: 등지고 버티거나 골을 넣는 타겟맨!', keys: ['슈팅', '피지컬', '위치선정'] }, 
+                { id: 'Ala', name: '아라(MF)', desc: '측면 윙어: 양옆을 부지런히 오가며 공수를 연결하는 살림꾼!', keys: ['속력', '드리블', '활동량'] },
+                { id: 'Fixo', name: '픽소(DF)', desc: '최후방 수비수: 수비를 지휘하고 패스를 시작하는 사령관!', keys: ['수비', '가로채기', '패스'] }, 
+                { id: 'Goleiro', name: '골레이로(GK)', desc: '골키퍼: 손과 발을 모두 써서 최후의 방어를 해내는 수호신!', keys: ['반사신경', '볼배급', '평정심'] }
             ];
-            const btns = posList.map(pos => `<button onclick="window.confirmChangePos('${pId}', '${pos.id}')" class="bg-slate-800 hover:bg-emerald-900 border border-slate-600 hover:border-emerald-500 p-3 rounded-xl text-left transition group"><div class="font-bold text-lg text-emerald-400 group-hover:text-white">${pos.name}</div><div class="text-[11px] text-slate-400 mt-1">${pos.desc}</div></button>`).join('');
-            modal.innerHTML = `<div class="bg-pitch-bg p-6 rounded-3xl border-2 border-emerald-500 max-w-sm w-full shadow-2xl"><h3 class="text-xl font-display text-white mb-4 text-center">선호 포지션 변경</h3><div class="grid grid-cols-1 gap-3 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">${btns}</div><button onclick="this.parentElement.parentElement.remove()" class="mt-4 bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-6 rounded-xl w-full transition">취소</button></div>`;
+            const btns = posList.map(pos => `<button onclick="window.confirmChangePos('${pId}', '${pos.id}')" class="bg-slate-800 hover:bg-emerald-900 border border-slate-600 hover:border-emerald-500 p-3 rounded-xl text-left transition group flex flex-col gap-1"><div class="flex justify-between items-center w-full"><div class="font-bold text-lg text-emerald-400 group-hover:text-white">${pos.name}</div><div class="flex gap-1">${pos.keys.map(k => `<span class="bg-emerald-900/50 text-emerald-300 border border-emerald-500/50 text-[9px] px-1.5 py-0.5 rounded whitespace-nowrap">${k} +10%</span>`).join('')}</div></div><div class="text-[11px] text-slate-400 mt-1">${pos.desc}</div></button>`).join('');
+            modal.innerHTML = `<div class="bg-pitch-bg p-6 rounded-3xl border-2 border-emerald-500 max-w-sm w-full sm:max-w-md shadow-2xl"><h3 class="text-xl font-display text-white mb-2 text-center">선호 포지션 변경</h3><p class="text-[10px] text-emerald-400 mb-4 text-center leading-relaxed">포지션별 핵심 능력치 3가지는 <b>OVR 계산 시 10% 가중치</b>가 붙습니다.<br>나의 스탯에 가장 유리한 포지션을 찾아보세요!</p><div class="grid grid-cols-1 gap-3 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">${btns}</div><button onclick="this.parentElement.parentElement.remove()" class="mt-4 bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-6 rounded-xl w-full transition">취소</button></div>`;
             document.body.appendChild(modal); window.posModalInstance = modal;
         };
 
@@ -1896,7 +2046,7 @@
             const distX = e.changedTouches[0].screenX - touchstartX; const distY = e.changedTouches[0].screenY - touchstartY;
             if (Math.abs(distX) > 60 && Math.abs(distY) < 60) {
                 if(e.target.closest('nav') || e.target.closest('.overflow-x-auto') || e.target.closest('.custom-scrollbar') || e.target.tagName === 'INPUT') return;
-                let availableTabs = ['tabWorkspace', 'tabRank', 'tabCompare', 'tabShop', 'tabTips', 'tabGuide'];
+                let availableTabs = ['tabWorkspace', 'tabAchievements', 'tabRank', 'tabCompare', 'tabShop', 'tabTips', 'tabGuide'];
                 if(window.playerState && window.playerState.isGM) {
                     availableTabs.push('tabMaster');
                     availableTabs.push('tabMasterStats');
