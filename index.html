@@ -614,6 +614,40 @@
                                         <th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-200" onclick="window.sortMasterStats('wrk')">WRK <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
                                     </tr>
                                 </thead>
+                                <tbody id="masterTableBody" class="bg-slate-900/50 divide-y divide-slate-700/50 whitespace-nowrap"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tabMasterStats" class="hidden space-y-6">
+                    <div class="glass-panel p-4 sm:p-8 rounded-3xl border-t-4 border-t-emerald-400 overflow-hidden">
+                        <h3 class="text-2xl sm:text-3xl font-display text-emerald-400 mb-2 flex items-center gap-2 sm:gap-3">
+                            <i class="fa-solid fa-list-ol"></i> 상세 스탯 현황판 (마스터)
+                        </h3>
+                        <p class="text-xs sm:text-sm text-slate-400 mb-4 sm:mb-6">각 스탯 헤더를 클릭하여 정렬할 수 있습니다. (+수치는 장착 아이템 보너스)</p>
+                        
+                        <div class="overflow-x-auto custom-scrollbar rounded-xl border border-slate-700 shadow-inner bg-slate-900">
+                            <table class="w-full text-center text-[11px] sm:text-sm text-slate-300 min-w-[700px] sm:min-w-[1200px]">
+                                <thead class="bg-slate-800 text-slate-400 font-bold border-b border-slate-600 whitespace-nowrap select-none">
+                                    <tr>
+                                        <th class="py-3 pl-4 text-left">이름</th>
+                                        <th class="py-3 px-1">포지션</th>
+                                        <th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('ovr')">OVR <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+                                        <th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('pac')">PAC <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+                                        <th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('sho')">SHO <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+                                        <th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('pas')">PAS <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+                                        <th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('dri')">DRI <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+                                        <th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('def')">DEF <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+                                        <th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('phy')">PHY <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+                                        <th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-200" onclick="window.sortMasterStats('ref')">REF <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+                                        <th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-200" onclick="window.sortMasterStats('int')">INT <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+                                        <th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-200" onclick="window.sortMasterStats('pst')">PST <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+                                        <th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-200" onclick="window.sortMasterStats('dis')">DIS <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+                                        <th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-200" onclick="window.sortMasterStats('cmp')">CMP <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+                                        <th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-200" onclick="window.sortMasterStats('wrk')">WRK <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+                                    </tr>
+                                </thead>
                                 <tbody id="masterStatsTableBodyOnly" class="bg-slate-900/50 divide-y divide-slate-700/50 whitespace-nowrap"></tbody>
                             </table>
                         </div>
@@ -837,7 +871,7 @@
         const getAvatar = (p) => GENDER_MAP[p.name] === 'F' ? '👧' : '👦';
 
         // -------------------------
-        // 🚨 누락되었던 필수 UI 함수들 복구 구역
+        // 🔄 핵심 UI 렌더링 기능
         // -------------------------
         
         window.switchTab = (tabId) => {
@@ -867,7 +901,7 @@
                 const gmEditor = document.getElementById('gmAnnouncementEditor');
                 if(window.playerState.isGM) gmEditor?.classList.remove('hidden'); else gmEditor?.classList.add('hidden');
             }
-            if(tabId === 'tabShop') renderShop();
+            if(tabId === 'tabShop') window.renderShop();
             if(tabId === 'tabAchievements') window.renderAchievements();
             if(tabId === 'tabRank') renderLeaderboard();
             if(tabId === 'tabCompare') window.renderCompareList();
@@ -936,9 +970,9 @@
 
         window.selectPlayer = (pId) => {
             window.selectedPlayerId = pId;
-            window.renderLockerRoom(); renderSelectedCard(pId);
+            window.renderLockerRoom(); window.renderSelectedCard(pId);
             if(isVisible('tabAchievements')) window.renderAchievements();
-            if(isVisible('tabShop')) renderShop();
+            if(isVisible('tabShop')) window.renderShop();
             if(isVisible('tabCompare')) window.renderCompareList();
             
             const detailPanelTitle = document.getElementById('detailPanelTitle');
@@ -960,729 +994,622 @@
             container.innerHTML = html;
         }
 
-        window.changeTeamCount = (delta) => { 
-            window.targetTeamCount = Math.max(2, Math.min(6, window.targetTeamCount + delta)); 
-            const el = document.getElementById('targetTeamCount');
-            if(el) el.innerText = window.targetTeamCount; 
-        };
-
-        window.generateBalancedTeams = () => {
-            const numTeams = window.targetTeamCount;
-            if(window.checkedInPlayers.size < numTeams) return window.customAlert(`팀을 ${numTeams}개로 나누려면 최소 ${numTeams}명 이상 출석 체크를 해주세요!`);
-            
-            const players = []; window.checkedInPlayers.forEach(id => { const p = window.allPlayersData.find(x => x.id === id); if(p) players.push(p); });
-            const roleMap = { 'Pivo':'FW', 'Ala':'MF', 'Fixo':'DF', 'Goleiro':'GK', '미정':'MF' };
-            const pools = { FW: [], MF: [], DF: [], GK: [] };
-            players.forEach(p => pools[roleMap[p.pos] || 'MF'].push(p));
-            for(let r in pools) pools[r].sort((a,b) => getOVR(b) - getOVR(a));
-
-            const teams = Array.from({length: numTeams}, (_, i) => ({ id: i, players: [], sumOvr: 0 }));
-
-            ['GK', 'DF', 'MF', 'FW'].forEach(role => {
-                pools[role].forEach(p => { teams.sort((a,b) => a.sumOvr - b.sumOvr); teams[0].players.push(p); teams[0].sumOvr += getOVR(p); });
-            });
-            teams.sort((a,b) => a.id - b.id);
-
-            const resultContainer = document.getElementById('teamResult'); 
-            if(!resultContainer) return;
-            
-            resultContainer.classList.remove('hidden');
-            resultContainer.className = `mt-8 grid grid-cols-1 sm:grid-cols-2 ${numTeams > 2 ? 'lg:grid-cols-3' : ''} gap-4 sm:gap-6`;
-
-            const colors = [
-                { name: 'BLUE', border: 'border-blue-500/50', bg: 'from-blue-900/40', text: 'text-blue-400', borderSub: 'border-blue-500/30' }, { name: 'RED', border: 'border-red-500/50', bg: 'from-red-900/40', text: 'text-red-400', borderSub: 'border-red-500/30' },
-                { name: 'GREEN', border: 'border-emerald-500/50', bg: 'from-emerald-900/40', text: 'text-emerald-400', borderSub: 'border-emerald-500/30' }, { name: 'PURPLE', border: 'border-purple-500/50', bg: 'from-purple-900/40', text: 'text-purple-400', borderSub: 'border-purple-500/30' },
-                { name: 'ORANGE', border: 'border-orange-500/50', bg: 'from-orange-900/40', text: 'text-orange-400', borderSub: 'border-orange-500/30' }, { name: 'YELLOW', border: 'border-yellow-500/50', bg: 'from-yellow-900/40', text: 'text-yellow-400', borderSub: 'border-yellow-500/30' },
-            ];
-
-            let html = '';
-            teams.forEach((t, i) => {
-                const c = colors[i % colors.length]; const avgOvr = t.players.length > 0 ? (t.sumOvr / t.players.length).toFixed(1) : 0;
-                let listHtml = t.players.map(p => {
-                    const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
-                    return `<li class="flex justify-between items-center bg-slate-900/60 p-2 rounded border border-slate-700/50 mb-1"><div class="flex items-center gap-2"><span class="w-8 text-center text-[10px] font-bold text-white ${getPosBg(p.pos)} rounded py-0.5">${posText}</span><span class="text-sm font-bold text-white">${p.name}</span></div><span class="font-oswald text-xs text-fut-gold border border-fut-gold/30 px-1.5 rounded bg-black/40">${getOVR(p)}</span></li>`;
-                }).join('');
-
-                html += `<div class="bg-gradient-to-b ${c.bg} to-slate-900/40 border-2 ${c.border} p-5 rounded-2xl relative shadow-lg"><h4 class="font-display text-2xl ${c.text} mb-1 text-center">TEAM ${c.name}</h4><p class="text-center text-xs font-bold text-slate-300 mb-4 pb-3 border-b ${c.borderSub} tracking-widest">TEAM OVR: <span class="text-white font-oswald text-lg">${avgOvr}</span> <span class="ml-2 text-[10px] text-slate-500">(${t.players.length}명)</span></p><ul class="space-y-2">${listHtml}</ul></div>`;
-            });
-
-            resultContainer.innerHTML = html; resultContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        };
-
-        window.renderAchievements = () => {
+        // -------------------------
+        // 🛍️ 상점 및 아이템 강화 렌더링
+        // -------------------------
+        window.renderShop = () => {
             const targetId = window.playerState.isGM ? window.selectedPlayerId : window.playerState.id;
             const p = window.allPlayersData.find(x => x.id === targetId) || null;
-            const grid = document.getElementById('achievementsGrid');
-            if(!grid || !p) return;
-
-            document.getElementById('achievementTargetName').innerText = window.playerState.isGM ? `[${p.name}]의 달성률` : `내 달성률`;
-
-            let completedCount = 0;
-            let html = '';
-
-            ACHIEVEMENTS.forEach(ach => {
-                const pValue = ach.reqKey === 'level' ? (p.level || 1) : (p[ach.reqKey] || 0);
-                const isAchieved = pValue >= ach.reqValue;
-                const progressPercent = Math.min(100, Math.floor((pValue / ach.reqValue) * 100));
-                
-                if(isAchieved) completedCount++;
-
-                const cardStyle = isAchieved ? 'achieved-card' : 'unachieved-card bg-slate-900/60';
-                const checkIcon = isAchieved ? `<i class="fa-solid fa-circle-check text-fut-gold absolute top-3 right-3 text-lg drop-shadow-md"></i>` : '';
-                
-                html += `
-                    <div class="${cardStyle} rounded-2xl p-4 border transition duration-300 relative flex flex-col h-full">
-                        ${checkIcon}
-                        <div class="flex items-start gap-3 mb-2">
-                            <div class="text-3xl w-12 h-12 bg-slate-800 flex items-center justify-center rounded-xl shadow-inner border border-slate-600 flex-shrink-0">
-                                ${ach.icon}
-                            </div>
-                            <div>
-                                <span class="text-[9px] font-bold ${ach.color} px-1.5 py-0.5 rounded border border-current opacity-80 mb-1 inline-block">${ach.category}</span>
-                                <h4 class="font-bold text-white text-sm sm:text-base leading-tight">${ach.title}</h4>
-                            </div>
-                        </div>
-                        <p class="text-[10px] sm:text-xs text-slate-400 leading-relaxed mb-4 flex-grow break-keep">${ach.desc}</p>
-                        
-                        <div class="mt-auto">
-                            <div class="flex justify-between items-end mb-1">
-                                <span class="text-[9px] font-bold text-slate-500">진행도</span>
-                                <span class="text-[10px] font-bold ${isAchieved ? 'text-fut-gold' : 'text-slate-300'}">${pValue} / ${ach.reqValue}</span>
-                            </div>
-                            <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden shadow-inner">
-                                <div class="${isAchieved ? 'bg-fut-gold' : ach.bg} h-1.5 rounded-full transition-all duration-700" style="width: ${progressPercent}%"></div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-
-            grid.innerHTML = html;
-
-            const totalPercent = Math.floor((completedCount / ACHIEVEMENTS.length) * 100);
-            document.getElementById('achievementProgressText').innerText = `${totalPercent}%`;
-            document.getElementById('achievementProgressBar').style.width = `${totalPercent}%`;
-        };
-
-        function renderLeaderboard() {
-            const players = window.allPlayersData.filter(p => (p.level ?? 1) >= 0); 
-            const categories = [
-                { id: 'goals', name: '득점왕', icon: '⚽', color: 'text-yellow-400', border: 'border-yellow-400/50' },
-                { id: 'assists', name: '어시왕', icon: '🤝', color: 'text-blue-400', border: 'border-blue-400/50' },
-                { id: 'matches', name: '최다 출전', icon: '🏃‍♂️', color: 'text-emerald-400', border: 'border-emerald-400/50' },
-                { id: 'saves', name: '수문장 (세이브)', icon: '🧤', color: 'text-orange-400', border: 'border-orange-400/50' },
-                { id: 'keypass', name: '킬패스 마스터', icon: '🎯', color: 'text-purple-400', border: 'border-purple-400/50' },
-                { id: 'training', name: '성실왕 (훈련)', icon: '💦', color: 'text-fut-rare', border: 'border-fut-rare/50' }
-            ];
+            const bong = p ? (p.bong || 0) : 0;
+            const inventory = p ? (p.inventory || []) : [];
+            const itemLevels = p ? (p.itemLevels || {}) : {};
+            
+            document.getElementById('shopBong').innerText = bong;
+            document.getElementById('shopWalletLabel').innerText = window.playerState.isGM ? (p ? `[${p.name}] 선수의 자산` : `학생 미등록`) : (window.playerState.isGuest ? `게스트 자산 없음` : `내 보유 자산`);
 
             let html = '';
-            categories.forEach(cat => {
-                const sorted = [...players].sort((a, b) => {
-                    const diff = (b[cat.id] || 0) - (a[cat.id] || 0);
-                    if (diff !== 0) return diff;
-                    return getOVR(b) - getOVR(a);
-                }).filter(p => (p[cat.id] || 0) > 0).slice(0, 3);
-
-                let listHtml = '';
-                if (sorted.length === 0) {
-                    listHtml = `<p class="text-xs text-slate-500 text-center py-4">아직 기록이 없습니다.</p>`;
-                } else {
-                    const medals = ['🥇', '🥈', '🥉'];
-                    sorted.forEach((p, idx) => {
-                        const tier = getTierInfo(getOVR(p));
-                        const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
-                        
-                        listHtml += `
-                            <div class="flex items-center justify-between bg-slate-800/50 p-2 rounded-lg mb-1 border border-slate-700">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-lg w-6 text-center">${medals[idx]}</span>
-                                    <span class="text-2xl">${getAvatar(p)}</span>
-                                    <div>
-                                        <p class="text-sm font-bold text-white leading-none">${p.name}</p>
-                                        <div class="flex items-center gap-1 mt-1">
-                                            <span class="text-[8px] ${tier.class} px-1 rounded border leading-none py-0.5">${tier.name.split(' ')[0]}</span>
-                                            <span class="text-[9px] ${cat.color} font-bold">${posText}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="font-oswald text-xl font-bold ${cat.color} bg-black/30 px-3 py-1 rounded-lg border ${cat.border}">${p[cat.id]||0}</div>
-                            </div>
-                        `;
-                    });
+            SHOP_ITEMS.forEach(item => {
+                const isOwned = inventory.includes(item.id);
+                const isEquipped = p ? (p.equipHead === item.id || p.equipHandL === item.id || p.equipHandR === item.id || p.equipFootL === item.id || p.equipFootR === item.id) : false;
+                const level = itemLevels[item.id] || 0;
+                const enhData = ENHANCE_LEVELS[level] || ENHANCE_LEVELS[0];
+                const nextEnhData = ENHANCE_LEVELS[level + 1];
+                
+                let statsHtml = '';
+                for (const [k, v] of Object.entries(item.baseStats || {})) {
+                    const totalStat = v + enhData.statPlus;
+                    statsHtml += `<span class="inline-block bg-emerald-900/50 text-emerald-300 border border-emerald-500/50 text-[9px] px-1 rounded mr-1 mb-1">${STAT_NAMES[k].split(' ')[0]} +${totalStat}</span>`;
+                }
+                let growthHtml = '';
+                for (const [k, v] of Object.entries(item.baseGrowth || {})) {
+                    const totalGrowth = Math.floor(v * enhData.growthMult);
+                    growthHtml += `<span class="inline-block bg-purple-900/50 text-purple-300 border border-purple-500/50 text-[9px] px-1 rounded mr-1 mb-1">성장 +${totalGrowth}%</span>`;
                 }
 
-                html += `
-                    <div class="bg-slate-900/60 rounded-2xl border border-slate-700 overflow-hidden shadow-lg hover:border-slate-500 transition duration-300">
-                        <div class="bg-slate-800 p-3 border-b border-slate-700 flex items-center justify-between">
-                            <h4 class="font-display text-lg text-white flex items-center gap-2"><span class="text-2xl">${cat.icon}</span> ${cat.name}</h4>
+                let btnHtml = '';
+                let enhanceBtnHtml = '';
+
+                if(isOwned && nextEnhData && !window.playerState.isGuest) {
+                    const canEnhance = bong >= item.price;
+                    enhanceBtnHtml = `
+                        <div class="mt-2 pt-2 border-t border-slate-700 w-full">
+                            <button onclick="window.enhanceItem('${item.id}')" class="w-full relative overflow-hidden group ${canEnhance ? 'bg-gradient-to-r from-purple-700 to-indigo-600 hover:from-purple-600 hover:to-indigo-500 text-white shadow-[0_0_10px_rgba(168,85,247,0.5)]' : 'bg-slate-800 text-slate-500 cursor-not-allowed'} text-xs font-bold py-2 rounded transition-all">
+                                <span class="relative z-10 flex items-center justify-center gap-2"><i class="fa-solid fa-hammer ${canEnhance ? 'animate-bounce' : ''}"></i> 강화 도전 (${item.price} B) - 성공률 ${nextEnhData.chance}%</span>
+                                ${canEnhance ? `<div class="absolute inset-0 w-1/4 h-full bg-white/20 -skew-x-12 -translate-x-full group-hover:translate-x-[400%] transition-transform duration-700"></div>` : ''}
+                            </button>
                         </div>
-                        <div class="p-3">${listHtml}</div>
-                    </div>
-                `;
-            });
-            document.getElementById('leaderboardGrid').innerHTML = html;
-        }
+                    `;
+                } else if (isOwned && !nextEnhData) {
+                    enhanceBtnHtml = `<div class="mt-2 pt-2 border-t border-slate-700 w-full text-center text-[10px] font-bold text-red-400">MAX LEVEL 도달</div>`;
+                }
 
-        function renderMasterDashboard() {
-            if(!window.playerState.isGM) return;
-            const tbody = document.getElementById('masterTableBody');
-            if(!tbody) return;
-            let html = '';
-            
-            const players = [...window.allPlayersData].sort((a,b) => getOVR(b) - getOVR(a));
-            
-            players.forEach(p => {
-                const ovr = getOVR(p);
-                const tier = getTierInfo(ovr);
-                const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
+                if(window.playerState.isGM) {
+                    if (!p) { btnHtml = `<button disabled class="w-full mt-2 bg-slate-800 text-slate-500 text-xs font-bold py-1.5 rounded">데이터 없음</button>`; } 
+                    else if(isOwned) { 
+                        btnHtml = `
+                            <div class="flex gap-1 mt-2">
+                                <button onclick="window.equipItem('${item.id}', '${item.type}')" class="flex-1 ${isEquipped ? 'bg-slate-700 hover:bg-slate-600' : 'bg-emerald-700 hover:bg-emerald-600'} text-white text-[10px] font-bold py-1.5 rounded shadow">${isEquipped ? '장착 해제' : '대리 장착'}</button>
+                                <button onclick="window.revokeItem('${item.id}')" class="flex-1 bg-red-800 hover:bg-red-700 text-white text-[10px] font-bold py-1.5 rounded shadow">🗑️ 회수</button>
+                            </div>
+                            ${enhanceBtnHtml}
+                        `; 
+                    } 
+                    else { btnHtml = `<button onclick="window.purchaseItem('${item.id}')" class="w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-1.5 rounded shadow"><i class="fa-solid fa-gift mr-1"></i> 무료 선물하기</button>`; }
+                } else if(window.playerState.isGuest) {
+                    btnHtml = `<button onclick="window.customAlert('게스트는 아이템을 구매할 수 없습니다.')" class="w-full mt-2 bg-slate-800 hover:bg-slate-700 text-slate-500 text-xs font-bold py-1.5 rounded shadow cursor-not-allowed">구매 (${item.price} B)</button>`;
+                } else {
+                    if(isOwned) { 
+                        btnHtml = `
+                            <button onclick="window.equipItem('${item.id}', '${item.type}')" class="w-full mt-2 ${isEquipped ? 'bg-slate-700 border border-slate-500' : 'bg-emerald-600 hover:bg-emerald-500'} text-white text-xs font-bold py-1.5 rounded shadow">${isEquipped ? '장착 해제' : '장착하기'}</button>
+                            ${enhanceBtnHtml}
+                        `; 
+                    } else {
+                        const canAfford = bong >= item.price;
+                        btnHtml = `<button onclick="window.purchaseItem('${item.id}')" class="w-full mt-2 ${canAfford ? 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white shadow-lg' : 'bg-slate-800 text-slate-500 cursor-not-allowed'} text-xs font-bold py-1.5 rounded">구매 (${item.price} B)</button>`;
+                    }
+                }
+
+                const slotKo = { 'head':'머리', 'handL':'왼손', 'handR':'오른손', 'footL':'왼발', 'footR':'오른발' }[item.type];
 
                 html += `
-                    <tr class="hover:bg-slate-800/80 transition cursor-pointer" onclick="window.switchTab('tabWorkspace'); window.selectPlayer('${p.id}')">
-                        <td class="py-3 pl-4 text-left font-bold text-white flex items-center gap-2 whitespace-nowrap"><span class="text-lg">${getAvatar(p)}</span><span>${p.name}</span></td>
-                        <td class="py-3 text-center whitespace-nowrap"><span class="text-[10px] font-bold ${getPosColor(p.pos)} border border-slate-600 px-1.5 py-0.5 rounded leading-none">${posText}</span></td>
-                        <td class="py-3 text-center whitespace-nowrap"><span class="text-[10px] font-bold ${tier.class} border px-1.5 py-0.5 rounded shadow-sm">${tier.name.split(' ')[0]}</span></td>
-                        <td class="py-3 text-center font-oswald text-base text-fut-gold font-bold">${ovr}</td>
-                        <td class="py-3 text-center text-slate-300">${p.matches||0}</td>
-                        <td class="py-3 text-center text-slate-300">${p.goals||0}</td>
-                        <td class="py-3 text-center text-slate-300">${p.assists||0}</td>
-                        <td class="py-3 text-center text-slate-300">${p.saves||0}</td>
-                        <td class="py-3 text-center text-slate-300">${p.training||0}</td>
-                        <td class="py-3 text-center font-oswald text-orange-400 text-sm">${p.exp||0}</td>
-                        <td class="py-3 pr-4 text-right font-oswald text-emerald-400 font-bold text-sm">${p.bong||0} B</td>
-                    </tr>
-                `;
-            });
-            tbody.innerHTML = html;
-        }
-
-        window.sortMasterStats = (key) => {
-            window.currentSortKey = key;
-            window.renderMasterStats();
-        };
-
-        window.renderMasterStats = () => {
-            if(!window.playerState.isGM) return;
-            const statsTbody = document.getElementById('masterStatsTableBodyOnly');
-            if(!statsTbody) return;
-            let statsHtml = '';
-            
-            const players = [...window.allPlayersData].sort((a,b) => {
-                if(window.currentSortKey === 'ovr') return getOVR(b) - getOVR(a);
-                const bBonus = getBonusStats(b).flat; const aBonus = getBonusStats(a).flat;
-                const bVal = (b[window.currentSortKey]||60) + (bBonus[window.currentSortKey]||0);
-                const aVal = (a[window.currentSortKey]||60) + (aBonus[window.currentSortKey]||0);
-                if (bVal !== aVal) return bVal - aVal;
-                return getOVR(b) - getOVR(a);
-            });
-
-            players.forEach(p => {
-                const ovr = getOVR(p);
-                const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
-                const b = getBonusStats(p).flat;
-                
-                const getCell = (key) => {
-                    const base = p[key]||60; const bonus = b[key]||0; const total = Math.min(99, base + bonus);
-                    const isHighlight = window.currentSortKey === key;
-                    return `<td class="py-3 text-center font-oswald text-sm sm:text-base ${isHighlight ? 'text-white font-bold bg-slate-800/50' : 'text-slate-300'}">${total} ${bonus>0 ? `<span class="text-[9px] text-emerald-400 ml-0.5 absolute mt-0.5">+${bonus}</span>`:''}</td>`;
-                };
-
-                statsHtml += `
-                    <tr class="hover:bg-slate-800/80 transition cursor-pointer" onclick="window.switchTab('tabWorkspace'); window.selectPlayer('${p.id}')">
-                        <td class="py-3 pl-4 text-left font-bold text-white flex items-center gap-2 whitespace-nowrap"><span class="text-base sm:text-lg">${getAvatar(p)}</span><span>${p.name}</span></td>
-                        <td class="py-3 text-center whitespace-nowrap"><span class="text-[10px] font-bold ${getPosColor(p.pos)} border border-slate-600 px-1.5 py-0.5 rounded leading-none">${posText}</span></td>
-                        <td class="py-3 text-center font-oswald text-base sm:text-lg ${window.currentSortKey==='ovr' ? 'text-white bg-slate-800/50' : 'text-fut-gold'} font-bold">${ovr}</td>
-                        ${getCell('pac')}
-                        ${getCell('sho')}
-                        ${getCell('pas')}
-                        ${getCell('dri')}
-                        ${getCell('def')}
-                        ${getCell('phy')}
-                        ${getCell('ref')}
-                        ${getCell('int')}
-                        ${getCell('pst')}
-                        ${getCell('dis')}
-                        ${getCell('cmp')}
-                        ${getCell('wrk')}
-                    </tr>
-                `;
-            });
-            statsTbody.innerHTML = statsHtml;
-        };
-
-        window.renderCompareList = () => {
-            const listContainer = document.getElementById('comparePlayerList');
-            if(!listContainer) return;
-            let html = '';
-            const myId = window.selectedPlayerId;
-            const players = [...window.allPlayersData].sort((a,b) => getOVR(b) - getOVR(a));
-            
-            players.forEach(p => {
-                if(p.id === myId) return; 
-                const ovr = getOVR(p);
-                const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
-                html += `
-                    <div class="flex items-center justify-between p-3 rounded-xl cursor-pointer transition ${window.compareTargetId === p.id ? 'bg-pink-900/40 border-pink-500' : 'bg-slate-800 hover:bg-slate-700 border-slate-600'} border" onclick="window.selectCompareTarget('${p.id}')">
-                        <div class="flex items-center gap-3">
-                            <div class="text-2xl">${getAvatar(p)}</div>
-                            <div>
-                                <div class="font-bold text-white text-sm">${p.name}</div>
-                                <div class="text-[10px] font-bold ${getPosColor(p.pos)}">${posText}</div>
+                    <div class="bg-slate-900/80 border ${isOwned ? 'border-purple-500/50 shadow-[0_0_10px_rgba(168,85,247,0.2)]' : 'border-slate-700'} rounded-xl p-4 flex flex-col justify-between hover:border-purple-400 transition duration-300">
+                        <div class="flex items-start gap-4">
+                            <div class="text-4xl w-16 h-16 bg-slate-800 flex items-center justify-center rounded-lg shadow-inner flex-shrink-0 relative border ${isOwned ? 'border-purple-500' : 'border-slate-600'} ${isOwned ? enhData.css : ''}">
+                                <span class="z-10 relative drop-shadow-md">${item.icon}</span>
+                                <div class="absolute -top-2 -left-2 bg-slate-700 text-white text-[8px] px-1.5 py-0.5 rounded border border-slate-500 z-20">${slotKo}</div>
+                                ${isOwned && level > 0 ? `<div class="absolute -bottom-2 -right-2 bg-black text-[9px] font-bold px-1.5 py-0.5 rounded border border-current z-20 ${enhData.color}">${enhData.text}</div>` : ''}
+                            </div>
+                            <div class="flex-grow">
+                                <h5 class="font-bold text-white text-sm mb-1 line-clamp-1">${item.name}</h5>
+                                <p class="text-[9px] sm:text-[10px] text-slate-400 mb-2 line-clamp-2 leading-tight">${item.desc}</p>
+                                <div class="flex flex-wrap">${statsHtml}${growthHtml}</div>
                             </div>
                         </div>
-                        <div class="font-oswald text-lg text-fut-gold font-bold">${ovr}</div>
+                        <div class="mt-3">
+                            ${btnHtml}
+                        </div>
                     </div>
                 `;
             });
-            listContainer.innerHTML = html;
-            window.renderCompareView();
+            const shopGrid = document.getElementById('shopGrid');
+            if(shopGrid) shopGrid.innerHTML = html;
         };
 
-        window.selectCompareTarget = (pId) => {
-            window.compareTargetId = pId;
-            window.renderCompareList();
+        // -------------------------
+        // 📊 선수 상세 카드 렌더링
+        // -------------------------
+        window.renderSelectedCard = (pId) => {
+            const p = window.allPlayersData.find(x => x.id === pId);
+            if(!p) return;
+
+            const isMe = window.playerState.id === pId;
+            const isGM = window.playerState.isGM;
+            const ovr = getOVR(p);
+            const lv = p.level ?? 1;
+            const exp = p.exp || 0;
+            const expNeeded = getExpNeeded(lv);
+            const expPercent = Math.min(100, Math.floor((exp / expNeeded) * 100));
+            const bonus = getBonusStats(p); // { flat, growth }
+            const tier = getTierInfo(ovr);
+
+            const titleEl = document.getElementById('detailPanelTitle');
+            if(titleEl) titleEl.innerText = isMe ? '내 선수 정보' : `${p.name} 선수의 정보`;
+            
+            const levelEl = document.getElementById('detailLevel');
+            if(levelEl) levelEl.innerText = lv;
+            
+            const badge = document.getElementById('detailTierBadge');
+            if(badge) {
+                badge.innerText = tier.name;
+                badge.className = `px-2 py-1 rounded border text-[10px] font-bold shadow-md whitespace-nowrap ${tier.class}`;
+            }
+
+            const card = document.getElementById('detailFutCard');
+            if(card) {
+                card.className = `fut-card w-[300px] h-[460px] p-5 flex flex-col relative shadow-2xl z-10 mx-auto transition-all duration-300 ${tier.cardClass}`;
+            }
+
+            const avatarEl = document.getElementById('detailAvatar');
+            if(avatarEl) avatarEl.innerText = getAvatar(p);
+            
+            const nameEl = document.getElementById('detailName');
+            if(nameEl) nameEl.innerText = p.name;
+            
+            const ovrEl = document.getElementById('detailOvr');
+            if(ovrEl) ovrEl.innerText = ovr;
+            
+            const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
+            const posEl = document.getElementById('detailPos');
+            if(posEl) posEl.innerText = posText;
+            
+            const expTextEl = document.getElementById('detailExpText');
+            if(expTextEl) expTextEl.innerText = `${exp} / ${expNeeded}`;
+            
+            const expBarEl = document.getElementById('detailExpBar');
+            if(expBarEl) expBarEl.style.width = `${expPercent}%`;
+
+            const renderRecord = (id, key, val) => {
+                const el = document.getElementById(id);
+                if(!el) return;
+                if (isGM) {
+                    el.innerHTML = `<input type="number" value="${val}" class="w-full max-w-[50px] bg-transparent text-center border-b border-slate-600 focus:border-emerald-500 focus:outline-none transition-colors m-0 p-0 text-white font-bold text-lg" onchange="window.setRecord('${p.id}', '${key}', this.value)">`;
+                } else {
+                    el.innerText = val;
+                }
+            };
+
+            renderRecord('recMatches', 'matches', p.matches || 0);
+            renderRecord('recTraining', 'training', p.training || 0);
+            renderRecord('recGoals', 'goals', p.goals || 0);
+            renderRecord('recAssists', 'assists', p.assists || 0);
+            renderRecord('recKeypass', 'keypass', p.keypass || 0);
+            renderRecord('recSaves', 'saves', p.saves || 0);
+
+            const stats = [
+                { id: 'pac', label: '속력' }, { id: 'sho', label: '슈팅' }, { id: 'pas', label: '패스' },
+                { id: 'dri', label: '드리블' }, { id: 'def', label: '수비' }, { id: 'phy', label: '피지컬' },
+                { id: 'ref', label: '반사' }, { id: 'int', label: '가로채기' }, { id: 'pst', label: '위치' },
+                { id: 'dis', label: '볼배급' }, { id: 'cmp', label: '평정심' }, { id: 'wrk', label: '활동량' }
+            ];
+            
+            let gridHtml = '';
+            stats.forEach(s => {
+                const baseVal = p[s.id] || 60; const bVal = bonus.flat[s.id] || 0; const totalVal = Math.min(99, baseVal + bVal);
+                let bonusBadge = bVal > 0 ? `<span class="text-[9px] text-emerald-400 font-bold leading-none absolute -top-1 -right-1">+${bVal}</span>` : '';
+                
+                if(isGM) {
+                    gridHtml += `
+                        <div class="flex items-center justify-center gap-0.5 text-current w-full group relative">
+                            <button onclick="window.modStat('${p.id}', '${s.id}', -1)" class="w-3 h-3 rounded bg-black/30 hover:bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-minus text-[6px]"></i></button>
+                            <div class="relative flex flex-col items-center justify-center w-6">
+                                <input type="number" min="1" max="99" value="${baseVal}" class="font-oswald text-lg font-bold w-full text-center bg-transparent border-b border-transparent hover:border-current focus:outline-none transition cursor-text leading-none p-0 m-0 text-current" onchange="window.setStat('${p.id}', '${s.id}', this.value)">
+                                ${bonusBadge}
+                            </div>
+                            <span class="font-bold text-[9px] tracking-tighter whitespace-nowrap opacity-90 cursor-pointer hover:text-emerald-400" onclick="window.showStatDesc('${s.id}')">${s.label} <i class="fa-solid fa-circle-question opacity-70 text-[7px]"></i></span>
+                            <button onclick="window.modStat('${p.id}', '${s.id}', 1)" class="w-3 h-3 rounded bg-black/30 hover:bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-plus text-[6px]"></i></button>
+                        </div>`;
+                } else {
+                    gridHtml += `
+                        <div class="flex items-center justify-start gap-1 text-current w-full pl-1.5">
+                            <div class="relative flex items-center justify-center w-6">
+                                <span class="font-oswald text-lg font-bold leading-none tracking-tight">${totalVal}</span>
+                                ${bonusBadge}
+                            </div>
+                            <span class="font-bold text-[10px] opacity-90 tracking-tighter whitespace-nowrap cursor-pointer hover:text-emerald-400 transition" onclick="window.showStatDesc('${s.id}')">${s.label} <i class="fa-solid fa-circle-question opacity-70 text-[8px]"></i></span>
+                        </div>`;
+                }
+            });
+            const statsGridEl = document.getElementById('detailStatsGrid');
+            if(statsGridEl) statsGridEl.innerHTML = gridHtml;
+            
+            drawRadarChart(p, bonus.flat);
+
+            const equipSlots = [
+                { id: 'slotHead', equip: p.equipHead, empty: '🧢', label: '머리' },
+                { id: 'slotHandL', equip: p.equipHandL, empty: '🧤', label: '왼손' },
+                { id: 'slotHandR', equip: p.equipHandR, empty: '📿', label: '오른손' },
+                { id: 'slotFootL', equip: p.equipFootL, empty: '👟', label: '왼발' },
+                { id: 'slotFootR', equip: p.equipFootR, empty: '🥾', label: '오른발' }
+            ];
+
+            equipSlots.forEach(slot => {
+                const el = document.getElementById(slot.id);
+                if(el) {
+                    if(slot.equip) {
+                        const item = SHOP_ITEMS.find(x => x.id === slot.equip);
+                        const level = (p.itemLevels && p.itemLevels[slot.equip]) || 0;
+                        const enhData = ENHANCE_LEVELS[level] || ENHANCE_LEVELS[0];
+                        
+                        if(item) {
+                            el.innerHTML = `<span class="item-icon">${item.icon}</span><span class="item-label">${slot.label}</span>${level>0?`<span class="absolute -top-1 -right-1 text-[8px] font-bold ${enhData.color} z-10">${enhData.text}</span>`:''}`;
+                            el.className = `item-slot-mini equipped ${enhData.css}`;
+                        }
+                    } else {
+                        el.innerHTML = `<span class="opacity-30 text-lg">${slot.empty}</span><span class="item-label">${slot.label}</span>`;
+                        el.className = 'item-slot-mini';
+                    }
+                }
+            });
+
+            const playerTrainingPanel = document.getElementById('playerTrainingPanel');
+            const iconEditPos = document.getElementById('iconEditPos');
+            const btnChangePos = document.getElementById('btnChangePos');
+            
+            if(isMe && !isGM && !window.playerState.isGuest) {
+                playerTrainingPanel?.classList.remove('hidden');
+                
+                const recBongEl = document.getElementById('recBong');
+                if(recBongEl) recBongEl.innerText = p.bong || 0;
+                
+                const expWageEl = document.getElementById('expectedWageDisplay');
+                if(expWageEl) expWageEl.innerText = `OVR 주급: ${getWeeklyWage(ovr)} B`;
+                
+                iconEditPos?.classList.remove('hidden');
+                if(btnChangePos) btnChangePos.onclick = () => window.changePositionModal(p.id);
+            } else {
+                playerTrainingPanel?.classList.add('hidden');
+                iconEditPos?.classList.add('hidden');
+                if(btnChangePos) btnChangePos.onclick = null;
+            }
+            
+            const gmControls = document.getElementById('gmControls');
+            const gmWalletManager = document.getElementById('gmWalletManager');
+            const gmViewBong = document.getElementById('gmViewBong');
+            
+            if(isGM) {
+                gmControls?.classList.remove('hidden');
+                gmWalletManager?.classList.remove('hidden');
+                if(gmViewBong) {
+                    gmViewBong.innerHTML = `<input type="number" value="${p.bong || 0}" class="w-16 bg-transparent text-center border-b border-slate-600 focus:border-emerald-500 focus:outline-none transition-colors m-0 p-0 text-fut-gold font-display text-xl leading-none" onchange="window.setRecord('${p.id}', 'bong', this.value)">`;
+                }
+            } else {
+                gmControls?.classList.add('hidden');
+                gmWalletManager?.classList.add('hidden');
+            }
+        }
+
+        // -------------------------
+        // ✨ 핵심: 확률형 성장 및 경험치 처리 (레벨업)
+        // -------------------------
+        async function processExp(p, expGained, docRef, updatesObj) {
+            let currentLv = p.level ?? 1, currentExp = (p.exp || 0) + expGained, leveledUp = false;
+            let increasedStats = [];
+            
+            while(currentExp >= getExpNeeded(currentLv)) { 
+                currentExp -= getExpNeeded(currentLv); 
+                currentLv++; 
+                leveledUp = true; 
+            }
+            updatesObj.exp = currentExp;
+            
+            if(leveledUp) {
+                updatesObj.level = currentLv;
+                const bonuses = getBonusStats(p); // { flat, growth }
+                const statKeys = ['pac', 'sho', 'pas', 'dri', 'def', 'phy', 'ref', 'int', 'pst', 'dis', 'cmp', 'wrk'];
+                
+                statKeys.forEach(s => {
+                    const baseChance = 10; // 기본 10%
+                    const itemGrowthChance = bonuses.growth[s] || 0;
+                    const totalChance = baseChance + itemGrowthChance;
+                    
+                    if (Math.random() * 100 < totalChance) {
+                        const nextVal = Math.min(99, (p[s] || 60) + 1);
+                        updatesObj[s] = nextVal;
+                        if (nextVal > (p[s]||60)) increasedStats.push(STAT_NAMES[s].split(' ')[0]);
+                    }
+                });
+
+                triggerConfetti(); 
+                
+                const statsMsg = increasedStats.length > 0 ? `\n\n💪 스탯 성장 내역:\n${increasedStats.join(', ')} 능력이 +1 증가했습니다!` : `\n\n(이번 레벨업에서는 상승한 스탯이 없습니다. 아이템을 장착해보세요!)`;
+                setTimeout(() => window.customAlert(`🎉 축하합니다!\n[${p.name}] 선수가 레벨 ${currentLv} (으)로 올랐습니다!${statsMsg}`), 500);
+            }
+            await setDoc(docRef, updatesObj, { merge: true });
+        }
+
+        // -------------------------
+        // ⚔️ 아이템 강화 실행 함수
+        // -------------------------
+        window.enhanceItem = async (itemId) => {
+            if(window.playerState.isGuest) return window.customAlert("게스트는 이용할 수 없는 기능입니다.");
+            
+            const pId = window.playerState.isGM ? window.selectedPlayerId : window.playerState.id;
+            const p = window.allPlayersData.find(x => x.id === pId);
+            const item = SHOP_ITEMS.find(x => x.id === itemId);
+            if(!p || !item) return;
+
+            const cost = item.price;
+            if(!window.playerState.isGM && (p.bong || 0) < cost) return window.customAlert(`자산이 부족합니다. (필요 자산: ${cost} B)`);
+
+            const currentLevel = (p.itemLevels && p.itemLevels[itemId]) || 0;
+            const nextEnhData = ENHANCE_LEVELS[currentLevel + 1];
+            if(!nextEnhData) return window.customAlert("이미 최대 레벨입니다.");
+
+            if(!await window.customConfirm(`[${item.name}] 장비를 +${currentLevel+1}강으로 강화하시겠습니까?\n비용: ${cost} B / 성공 확률: ${nextEnhData.chance}%\n(실패 시 강화 단계가 1단계 하락합니다!)`)) return;
+
+            let updates = {};
+            if(!window.playerState.isGM) updates.bong = (p.bong || 0) - cost;
+
+            const roll = Math.random() * 100;
+            const isSuccess = roll < nextEnhData.chance;
+
+            const newItemLevels = { ...(p.itemLevels || {}) };
+
+            if (isSuccess) {
+                newItemLevels[itemId] = currentLevel + 1;
+                updates.itemLevels = newItemLevels;
+                
+                triggerConfetti();
+                
+                if (currentLevel + 1 >= 4) {
+                    const eventRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'latest_event');
+                    await setDoc(eventRef, { 
+                        text: `🎉 전설 탄생! [${p.name}] 학생이 [${item.name}] +${currentLevel+1}강 강화에 성공했습니다! 🎉`,
+                        timestamp: Date.now() 
+                    });
+                    window.customAlert(`🔥 대성공!!🔥\n[${item.name}] 장비가 +${currentLevel+1}강이 되었습니다!\n(전광판에 공지되었습니다!)`);
+                } else {
+                    window.customAlert(`✨ 강화 성공!\n[${item.name}] 장비가 +${currentLevel+1}강이 되었습니다.`);
+                }
+            } else {
+                newItemLevels[itemId] = Math.max(0, currentLevel - 1);
+                updates.itemLevels = newItemLevels;
+                window.customAlert(`💥 앗! 강화에 실패했습니다...\n장비의 강화 단계가 +${newItemLevels[itemId]}강으로 하락했습니다.`);
+            }
+
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
+            await setDoc(docRef, updates, { merge: true });
+            window.renderShop();
+            window.renderSelectedCard(pId);
         };
 
-        window.renderCompareView = () => {
-            const view = document.getElementById('compareViewArea');
-            if(!view) return;
-            const myId = window.selectedPlayerId;
-            const myP = window.allPlayersData.find(x => x.id === myId);
-            const tgP = window.allPlayersData.find(x => x.id === window.compareTargetId);
+        // -------------------------
+        // 🔐 초기화 및 로그인/로그아웃 로직
+        // -------------------------
+        async function initApp() {
+            try {
+                const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "AIzaSyAsih-sfnIZ_gX_1l7SAVZHCAhk3KzmiP8", authDomain: "sambong-world-2026.firebaseapp.com", projectId: "sambong-world-2026" };
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app); db = getFirestore(app);
+                
+                const initAuth = async () => {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) { await signInWithCustomToken(auth, __initial_auth_token); } 
+                    else { await signInAnonymously(auth); }
+                };
+                await initAuth();
 
-            if(!myP || !tgP) {
-                view.innerHTML = `<div class="text-center text-slate-500 py-10 flex flex-col items-center"><i class="fa-solid fa-users text-4xl mb-3 text-slate-700"></i><span>우측 (또는 하단) 명단에서 비교할 대상을 선택하세요.</span></div>`;
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'players'), (snapshot) => {
+                            const dbPlayers = new Map();
+                            snapshot.forEach(d => { 
+                                try {
+                                    if(!d.id.includes('gm')) {
+                                        const data = d.data();
+                                        const cleanId = d.id.replace('player_', '');
+                                        dbPlayers.set(cleanId, { id: cleanId, name: data.name || cleanId, ...data }); 
+                                    }
+                                } catch(e) { console.error("Parse err", e); }
+                            });
+                            
+                            const players = [];
+                            ALLOWED_PLAYERS.forEach(name => {
+                                const safeId = getSafeDocId(name);
+                                if(dbPlayers.has(safeId)) {
+                                    players.push(dbPlayers.get(safeId));
+                                } else {
+                                    // 🚀 DB에 아직 없는 학생도 UI에 표시되도록 기본 스탯 제공 (화면 텅 빔 방지)
+                                    players.push({
+                                        id: safeId, name: name, pos: '미정',
+                                        pac: 60, sho: 60, pas: 60, dri: 60, def: 60, phy: 60,
+                                        ref: 60, int: 60, pst: 60, dis: 60, cmp: 60, wrk: 60,
+                                        level: 1, exp: 0, goals: 0, assists: 0, matches: 0, training: 0, saves: 0, keypass: 0, bong: 0,
+                                        inventory: [], itemLevels: {}
+                                    });
+                                }
+                            });
+                            
+                            window.allPlayersData = players.sort((a,b) => {
+                                const lvDiff = (b.level ?? 1) - (a.level ?? 1);
+                                if(lvDiff !== 0) return lvDiff;
+                                return getOVR(b) - getOVR(a);
+                            });
+                            
+                            window.renderLockerRoom();
+                            if(window.selectedPlayerId) window.renderSelectedCard(window.selectedPlayerId);
+                            renderActivePool();
+                            
+                            if(isVisible('tabAchievements')) window.renderAchievements();
+                            if(isVisible('tabShop')) window.renderShop();
+                            if(isVisible('tabRank')) renderLeaderboard();
+                            if(isVisible('tabMaster')) renderMasterDashboard();
+                            if(isVisible('tabCompare')) window.renderCompareList();
+                            if(isVisible('tabMasterStats')) window.renderMasterStats();
+                        });
+
+                        onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'announcement'), (docSnap) => {
+                            const el = document.getElementById('announcementContent');
+                            const input = document.getElementById('announcementInput');
+                            if(docSnap.exists() && docSnap.data().text) {
+                                const text = docSnap.data().text;
+                                if(el) el.innerText = text;
+                                if(input) input.value = text;
+                            } else {
+                                if(el) el.innerText = "현재 등록된 공지사항이 없습니다.";
+                                if(input) input.value = "";
+                            }
+                        });
+
+                        let marqueeTimeout;
+                        onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'latest_event'), (docSnap) => {
+                            if(docSnap.exists() && docSnap.data().text) {
+                                const data = docSnap.data();
+                                if(Date.now() - data.timestamp < 30000) {
+                                    const mContainer = document.getElementById('globalMarqueeContainer');
+                                    const mText = document.getElementById('globalMarqueeText');
+                                    if(mContainer && mText) {
+                                        mText.innerText = data.text;
+                                        mContainer.classList.remove('hidden');
+                                        clearTimeout(marqueeTimeout);
+                                        marqueeTimeout = setTimeout(() => { mContainer.classList.add('hidden'); }, 15000);
+                                    }
+                                }
+                            }
+                        });
+
+                        const savedId = localStorage.getItem('sfc_pid');
+                        const savedPin = localStorage.getItem('sfc_pin');
+                        if (savedId && savedPin) attemptLogin(savedId, savedPin, true);
+                        else document.getElementById('loginOverlay')?.classList.remove('hidden');
+                    }
+                });
+            } catch(e) { console.error("Firebase Init Error:", e); window.renderLockerRoom(); }
+        }
+
+        window.saveAnnouncement = async () => {
+            if(!window.playerState.isGM) return;
+            const text = document.getElementById('announcementInput').value;
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'announcement');
+            await setDoc(docRef, { text: text, updatedAt: new Date().toISOString() }, { merge: true });
+            window.customAlert("공지사항이 등록되었습니다!");
+        };
+
+        document.getElementById('loginId')?.addEventListener('change', (e) => {
+            const nameContainer = document.getElementById('playerNameInputContainer');
+            const nameInput = document.getElementById('loginPlayerName');
+            const pinContainer = document.getElementById('pinContainer');
+            const pinInput = document.getElementById('loginPin');
+
+            if (e.target.value === 'player') { 
+                nameContainer?.classList.remove('hidden'); setTimeout(() => nameInput?.focus(), 100); pinContainer?.classList.remove('hidden');
+            } else if (e.target.value === 'guest') {
+                nameContainer?.classList.add('hidden'); if(nameInput) nameInput.value = ''; pinContainer?.classList.add('hidden'); if(pinInput) pinInput.value = '';
+            } else { 
+                nameContainer?.classList.add('hidden'); if(nameInput) nameInput.value = ''; pinContainer?.classList.remove('hidden');
+            }
+            if(pinInput && e.target.value !== 'guest') pinInput.value = '';
+        });
+
+        document.getElementById('btnLogin')?.addEventListener('click', async () => {
+            const btn = document.getElementById('btnLogin'); const originalText = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 처리 중...';
+
+            let pId = document.getElementById('loginId')?.value; const pin = document.getElementById('loginPin')?.value.trim();
+            if(!pId) { btn.disabled = false; btn.innerHTML = originalText; return window.customAlert("입장 자격을 선택하세요."); }
+            if(pId === 'player') {
+                pId = document.getElementById('loginPlayerName')?.value;
+                if(!pId) { btn.disabled = false; btn.innerHTML = originalText; return window.customAlert("자신의 이름을 선택하세요."); }
+            }
+            if(pId !== 'guest' && (!pin || pin.length !== 4)) { 
+                btn.disabled = false; btn.innerHTML = originalText; return window.customAlert("4자리 비밀번호를 입력하세요."); 
+            }
+            
+            await attemptLogin(pId, pin, false);
+            btn.disabled = false; btn.innerHTML = originalText;
+        });
+
+        window.logout = async () => {
+            if(await window.customConfirm("라커룸을 나가시겠습니까?")) { localStorage.removeItem('sfc_pid'); localStorage.removeItem('sfc_pin'); location.reload(); }
+        };
+
+        async function attemptLogin(pId, pin, isAuto) {
+            if(!auth.currentUser) return isAuto ? null : window.customAlert("서버 연결 대기 중입니다.");
+            
+            if(pId === 'guest') {
+                window.playerState = { id: 'guest', isGM: false, isGuest: true, name: '게스트', inventory: [], itemLevels: {} };
+                localStorage.setItem('sfc_pid', 'guest'); localStorage.setItem('sfc_pin', '0000');
+                document.getElementById('loginOverlay')?.classList.add('hidden');
+                document.getElementById('saveStatus')?.classList.remove('hidden'); document.getElementById('saveStatus')?.classList.add('flex');
+                document.getElementById('playerNameDisplay').innerText = '게스트';
+                document.getElementById('playerRoleDisplay').innerText = 'GUEST (보기 전용)';
+                window.selectedPlayerId = getSafeDocId(ALLOWED_PLAYERS[0]);
+                if(window.selectedPlayerId) window.renderSelectedCard(window.selectedPlayerId);
                 return;
             }
 
-            const myOvr = getOVR(myP); const tgOvr = getOVR(tgP);
-            const myBonus = getBonusStats(myP).flat; const tgBonus = getBonusStats(tgP).flat;
-
-            const stats = [
-                { id: 'pac', label: '속력 (PAC)' }, { id: 'sho', label: '슈팅 (SHO)' },
-                { id: 'pas', label: '패스 (PAS)' }, { id: 'dri', label: '드리블 (DRI)' },
-                { id: 'def', label: '수비 (DEF)' }, { id: 'phy', label: '피지컬 (PHY)' },
-                { id: 'ref', label: '반사신경 (REF)' }, { id: 'int', label: '가로채기 (INT)' },
-                { id: 'pst', label: '위치선정 (PST)' }, { id: 'dis', label: '볼배급 (DIS)' },
-                { id: 'cmp', label: '평정심 (CMP)' }, { id: 'wrk', label: '활동량 (WRK)' }
-            ];
-
-            let statRows = '';
-            stats.forEach(s => {
-                const myVal = Math.min(99, (myP[s.id]||60) + myBonus[s.id]);
-                const tgVal = Math.min(99, (tgP[s.id]||60) + tgBonus[s.id]);
-                
-                const myColor = myVal > tgVal ? 'text-emerald-400' : (myVal < tgVal ? 'text-slate-500' : 'text-slate-300');
-                const tgColor = tgVal > myVal ? 'text-pink-400' : (tgVal < myVal ? 'text-slate-500' : 'text-slate-300');
-
-                const myW = (myVal / 99) * 100; const tgW = (tgVal / 99) * 100;
-
-                statRows += `
-                    <div class="mb-2.5">
-                        <div class="flex justify-between items-center text-[10px] sm:text-xs font-bold mb-1 px-1">
-                            <span class="${myColor} font-oswald text-sm sm:text-base w-8 text-right drop-shadow-md">${myVal}</span>
-                            <span class="text-slate-400 w-28 text-center tracking-widest text-[9px] sm:text-[10px]">${s.label}</span>
-                            <span class="${tgColor} font-oswald text-sm sm:text-base w-8 text-left drop-shadow-md">${tgVal}</span>
-                        </div>
-                        <div class="flex gap-1 items-center justify-center">
-                            <div class="flex-1 bg-slate-800 h-1.5 sm:h-2 rounded-l-full flex justify-end overflow-hidden shadow-inner">
-                                <div class="${myVal > tgVal ? 'bg-emerald-500' : 'bg-emerald-500/50'} h-full rounded-l-full transition-all duration-500" style="width: ${myW}%"></div>
-                            </div>
-                            <div class="w-0.5 h-2 bg-slate-700 flex-shrink-0"></div>
-                            <div class="flex-1 bg-slate-800 h-1.5 sm:h-2 rounded-r-full flex justify-start overflow-hidden shadow-inner">
-                                <div class="${tgVal > myVal ? 'bg-pink-500' : 'bg-pink-500/50'} h-full rounded-r-full transition-all duration-500" style="width: ${tgW}%"></div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-
-            view.innerHTML = `
-                <div class="flex justify-between items-center mb-8 bg-slate-900/50 p-4 rounded-2xl border border-slate-700/50 shadow-inner">
-                    <div class="flex flex-col items-center flex-1">
-                        <div class="text-4xl mb-2 drop-shadow-lg">${getAvatar(myP)}</div>
-                        <div class="font-bold text-white text-sm sm:text-base">${myP.name}</div>
-                        <div class="font-oswald text-3xl text-emerald-400 font-bold mt-1 drop-shadow-md">${myOvr}</div>
-                    </div>
-                    <div class="text-2xl sm:text-3xl font-display text-slate-600 px-2 italic">VS</div>
-                    <div class="flex flex-col items-center flex-1">
-                        <div class="text-4xl mb-2 drop-shadow-lg">${getAvatar(tgP)}</div>
-                        <div class="font-bold text-white text-sm sm:text-base">${tgP.name}</div>
-                        <div class="font-oswald text-3xl text-pink-400 font-bold mt-1 drop-shadow-md">${tgOvr}</div>
-                    </div>
-                </div>
-                <div class="px-2 sm:px-6">
-                    ${statRows}
-                </div>
-            `;
-        };
-
-        window.saveAttendance = async () => {
-            if (!window.playerState.isGM) return;
-            if (window.checkedInPlayers.size === 0) return window.customAlert("체크된 선수가 없습니다.");
-            
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const day = String(today.getDate()).padStart(2, '0');
-            const dateStr = `${year}-${month}-${day}`;
-            const attendees = Array.from(window.checkedInPlayers);
-            
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'attendance', dateStr);
-            await setDoc(docRef, { date: dateStr, count: attendees.length, players: attendees, timestamp: new Date().toISOString() }, { merge: true });
-            
-            triggerConfetti(); window.customAlert(`✅ ${dateStr}\n총 ${attendees.length}명의 출석부가 저장되었습니다!`);
-        };
-
-        window.viewAttendance = async () => {
-            if (!window.playerState.isGM) return;
-            const attRef = collection(db, 'artifacts', appId, 'public', 'data', 'attendance');
+            const isGM = pId === 'gm1' || pId === 'gm2';
+            const safeDocId = getSafeDocId(pId);
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + safeDocId);
             
             try {
-                const snap = await getDocs(attRef);
-                let logs = []; snap.forEach(doc => logs.push(doc.data()));
+                const snap = await getDoc(docRef);
+                const r = () => Math.floor(Math.random() * 6) + 55;
                 
-                const dates = [];
-                let d = new Date(2026, 2, 7); 
-                for(let i=0; i<30; i++) {
-                    const y = d.getFullYear(); const m = String(d.getMonth() + 1).padStart(2, '0'); const day = String(d.getDate()).padStart(2, '0');
-                    dates.push(`${y}-${m}-${day}`); d.setDate(d.getDate() + 7);
+                if(snap.exists()) {
+                    const data = snap.data();
+                    if(!data.pin) {
+                        if(isAuto) { localStorage.clear(); location.reload(); return; }
+                        if(!await window.customConfirm(`PIN [${pin}]으로 초기 등록하시겠습니까?`)) return;
+                        
+                        // 🚀 감독이 미리 스탯을 수정해둔 경우(문서만 있고 PIN이 없는 상태) 기존 데이터 보존
+                        const updateData = {
+                            pin,
+                            pos: data.pos || '미정',
+                            pac: data.pac || r(), sho: data.sho || r(), pas: data.pas || r(),
+                            dri: data.dri || r(), def: data.def || r(), phy: data.phy || r(),
+                            ref: data.ref || r(), int: data.int || r(), pst: data.pst || r(),
+                            dis: data.dis || r(), cmp: data.cmp || r(), wrk: data.wrk || r(),
+                            level: data.level || 1, exp: data.exp || 0, goals: data.goals || 0,
+                            assists: data.assists || 0, matches: data.matches || 0, training: data.training || 0,
+                            saves: data.saves || 0, keypass: data.keypass || 0, bong: data.bong || 0,
+                            inventory: data.inventory || [], itemLevels: data.itemLevels || {}
+                        };
+                        
+                        await setDoc(docRef, { ...updateData, updatedAt: new Date().toISOString() }, { merge: true });
+                        window.playerState = { id: safeDocId, isGM, isGuest: false, ...data, ...updateData };
+                    } else if(data.pin !== pin) {
+                        if(isAuto) { localStorage.clear(); location.reload(); return; }
+                        return window.customAlert("❌ 비밀번호가 틀렸습니다.");
+                    } else { window.playerState = { id: safeDocId, isGM, isGuest: false, ...data }; }
+                } else {
+                    if(isAuto) { localStorage.clear(); location.reload(); return; }
+                    if(!await window.customConfirm(`신규 카드 발급! PIN [${pin}]으로 등록하시겠습니까?`)) return;
+                    const baseData = { 
+                        name: isGM ? (pId==='gm1'?'감독 J':'수석코치 J') : pId, pin, pos: isGM ? 'Fixo' : '미정', 
+                        pac: r(), sho: r(), pas: r(), dri: r(), def: r(), phy: r(),
+                        ref: r(), int: r(), pst: r(), dis: r(), cmp: r(), wrk: r(),
+                        level: 1, exp: 0, goals: 0, assists: 0, matches: 0, training: 0, saves: 0, keypass: 0, bong: 0, lastWageWeek: '',
+                        inventory: [], itemLevels: {}, equipHead: null, equipHandL: null, equipHandR: null, equipFootL: null, equipFootR: null,
+                        updatedAt: new Date().toISOString()
+                    };
+                    await setDoc(docRef, baseData, { merge: true });
+                    window.playerState = { id: safeDocId, isGM, isGuest: false, ...baseData };
                 }
 
-                let modalHtml = `<div class="bg-pitch-panel p-4 sm:p-6 rounded-3xl border-2 border-emerald-500 w-full sm:w-[95vw] max-w-7xl shadow-2xl max-h-[90vh] flex flex-col font-sans text-white relative">
-                    <h2 class="text-2xl sm:text-3xl font-display text-center text-emerald-400 mb-2 tracking-widest drop-shadow-lg flex items-center justify-center gap-3"><i class="fa-solid fa-calendar-check"></i> 삼봉 풋살클럽 출석부 (2026)</h2>
-                    <p class="text-xs text-emerald-200 mb-4 mt-2 text-center">토요스포츠데이 (3~6학년) / 9:20~12:30 / 좌우로 스크롤하여 30주차 전체 일정을 확인하세요!</p>
-                    
-                    <div class="overflow-x-auto overflow-y-auto custom-scrollbar flex-1 border border-emerald-800/50 rounded-xl bg-slate-900/80">
-                        <table class="w-full text-center whitespace-nowrap text-xs border-collapse">
-                            <thead>
-                                <tr class="bg-slate-800 border-b border-emerald-800 sticky top-0 z-20 shadow-md">
-                                    <th rowspan="2" class="p-2 border-r border-slate-700 w-10 sticky left-0 bg-slate-800 z-30">연번</th>
-                                    <th rowspan="2" class="p-2 border-r border-slate-700 w-24 sticky left-10 bg-slate-800 z-30 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">성명</th>
-                                    <th class="p-2 border-r border-slate-700 bg-emerald-900/80 text-emerald-300 w-12 sticky left-[136px] z-30 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">누계</th>
-                                    ${dates.map((_, i) => `<th class="p-1 border-r border-slate-700 font-normal text-[10px] text-slate-400 w-12">${i+1}주차</th>`).join('')}
-                                </tr>
-                                <tr class="bg-slate-800 border-b border-emerald-800 sticky top-8 z-10 shadow-md">
-                                    <th class="p-1 border-r border-slate-700 text-[10px] bg-emerald-900/80 sticky left-[136px] z-30 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">출석</th>
-                                    ${dates.map(d => `<th class="p-1 border-r border-slate-700 text-[10px]"><div class="text-emerald-400 font-bold">${d.substring(5).replace('-','/')}</div><div class="text-emerald-500/70 mt-0.5 font-bold">(토)</div></th>`).join('')}
-                                </tr>
-                            </thead>
-                            <tbody>`;
+                localStorage.setItem('sfc_pid', pId); localStorage.setItem('sfc_pin', pin);
+                document.getElementById('loginOverlay')?.classList.add('hidden');
+                document.getElementById('saveStatus')?.classList.remove('hidden'); document.getElementById('saveStatus')?.classList.add('flex');
+                document.getElementById('playerNameDisplay').innerText = window.playerState.name;
+                document.getElementById('playerRoleDisplay').innerText = isGM ? 'MASTER' : 'PLAYER';
                 
-                ALLOWED_PLAYERS.forEach((name, idx) => {
-                    const safeDocId = getSafeDocId(name);
-                    const p = window.allPlayersData.find(x => x.id === safeDocId);
-                    const pId = p ? p.id : null;
-                    let attCount = 0;
-                    
-                    let rowCells = dates.map(targetDate => {
-                        const log = logs.find(l => l.date === targetDate);
-                        if(log && pId && log.players.includes(pId)) {
-                            attCount++; 
-                            return `<td class="p-1 border-r border-b border-slate-700/50"><div class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500 flex items-center justify-center mx-auto text-[10px] font-bold shadow-[0_0_5px_rgba(56,255,142,0.5)]">O</div></td>`;
-                        }
-                        return `<td class="p-1 border-r border-b border-slate-700/50 text-slate-700">-</td>`;
-                    }).join('');
-                    
-                    modalHtml += `
-                        <tr class="hover:bg-slate-800/60 transition group">
-                            <td class="p-2 border-r border-b border-slate-700/50 text-slate-500 sticky left-0 bg-slate-900 group-hover:bg-slate-800">${idx+1}</td>
-                            <td class="p-2 border-r border-b border-slate-700/50 font-bold text-white tracking-widest sticky left-10 bg-slate-900 group-hover:bg-slate-800 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">${name}</td>
-                            <td class="p-2 border-r border-b border-slate-700/50 bg-emerald-900/20 font-bold text-emerald-300 sticky left-[136px] group-hover:bg-emerald-900/40 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">${attCount}</td>
-                            ${rowCells}
-                        </tr>
-                    `;
-                });
-                
-                modalHtml += `</tbody></table></div>
-                    <button onclick="this.parentElement.parentElement.remove()" class="mt-6 bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-xl w-full sm:w-64 mx-auto transition shadow-lg text-lg">닫기</button>
-                </div>`;
-                
-                const modal = document.createElement('div'); modal.className = "fixed inset-0 z-[400] flex items-center justify-center bg-black/90 px-2 sm:px-4 backdrop-blur-sm"; modal.innerHTML = modalHtml; document.body.appendChild(modal);
-            } catch (e) { console.error("조회 에러:", e); window.customAlert("데이터를 불러오는데 실패했습니다."); }
-        };
+                if(isGM) {
+                    document.getElementById('gmAttendanceTools')?.classList.remove('hidden'); document.getElementById('gmAttendanceTools')?.classList.add('flex');
+                    document.getElementById('btnTabMaster')?.classList.remove('hidden'); document.getElementById('btnTabMasterStats')?.classList.remove('hidden');
+                    document.getElementById('gmAnnouncementEditor')?.classList.remove('hidden');
+                }
 
-        window.purchaseItem = async (itemId) => {
-            if(window.playerState.isGuest) return window.customAlert("게스트는 이용할 수 없는 기능입니다.");
-            
-            const targetId = window.playerState.isGM ? window.selectedPlayerId : window.playerState.id;
-            const p = window.allPlayersData.find(x => x.id === targetId);
-            const item = SHOP_ITEMS.find(x => x.id === itemId);
-            if(!p || !item) return;
-
-            let updates = {};
-            if(window.playerState.isGM) {
-                if(!await window.customConfirm(`감독 권한으로 [${p.name}] 선수에게 [${item.name}]을 선물하시겠습니까?`)) return;
-            } else {
-                if((p.bong || 0) < item.price) return window.customAlert("자산(B)이 부족합니다!");
-                if(!await window.customConfirm(`[${item.name}] 아이템을 ${item.price} B에 구매하시겠습니까?`)) return;
-                updates.bong = (p.bong || 0) - item.price;
-            }
-
-            updates.inventory = [...(p.inventory || []), itemId];
-            // 구매 시 아이템 레벨 0으로 초기화
-            updates.itemLevels = { ...(p.itemLevels || {}), [itemId]: 0 };
-
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
-            await setDoc(docRef, updates, { merge: true });
-            
-            triggerConfetti();
-            window.customAlert(window.playerState.isGM ? `🎁 [${item.name}] 선물 완료!` : `🎉 [${item.name}] 구매 완료! 장착하기를 눌러보세요.`);
-            window.renderShop();
-        };
-
-        window.revokeItem = async (itemId) => {
-            if(!window.playerState.isGM) return;
-            const targetId = window.selectedPlayerId;
-            const p = window.allPlayersData.find(x => x.id === targetId);
-            const item = SHOP_ITEMS.find(x => x.id === itemId);
-            if(!p || !item) return;
-
-            if(!await window.customConfirm(`[${p.name}] 선수의 [${item.name}] 아이템을 회수하시겠습니까?`)) return;
-
-            let updates = { inventory: (p.inventory || []).filter(id => id !== itemId) };
-            const newItemLevels = { ...(p.itemLevels || {}) };
-            delete newItemLevels[itemId];
-            updates.itemLevels = newItemLevels;
-
-            if(p.equipHead === itemId) updates.equipHead = null;
-            if(p.equipHandL === itemId) updates.equipHandL = null;
-            if(p.equipHandR === itemId) updates.equipHandR = null;
-            if(p.equipFootL === itemId) updates.equipFootL = null;
-            if(p.equipFootR === itemId) updates.equipFootR = null;
-
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
-            await setDoc(docRef, updates, { merge: true });
-            
-            window.customAlert(`🗑️ 아이템이 회수되었습니다.`);
-            window.renderShop(); window.renderLockerRoom(); renderSelectedCard(targetId);
-        };
-
-        window.equipItem = async (itemId, type) => {
-            if(window.playerState.isGuest) return window.customAlert("게스트는 이용할 수 없는 기능입니다.");
-            const targetId = window.playerState.isGM ? window.selectedPlayerId : window.playerState.id;
-            const p = window.allPlayersData.find(x => x.id === targetId);
-            if(!p) return;
-
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
-            let updates = {};
-            const fieldMap = { 'head':'equipHead', 'handL':'equipHandL', 'handR':'equipHandR', 'footL':'equipFootL', 'footR':'equipFootR' };
-            const field = fieldMap[type];
-            if(field) {
-                updates[field] = p[field] === itemId ? null : itemId;
-            }
-
-            await setDoc(docRef, updates, { merge: true });
-            window.renderShop(); window.renderLockerRoom(); renderSelectedCard(targetId);
-        };
-
-        function animateFloatText(text, colorClass, parentId) {
-            const parent = document.getElementById(parentId); if(!parent) return;
-            const f = document.createElement('div'); f.className = `absolute left-1/2 transform -translate-x-1/2 text-3xl font-display ${colorClass} z-50 whitespace-nowrap drop-shadow-xl`;
-            f.innerText = text; f.style.animation = 'floatUpFade 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards';
-            parent.appendChild(f); setTimeout(() => f.remove(), 1200);
+                window.selectedPlayerId = isGM ? getSafeDocId(ALLOWED_PLAYERS[0]) : safeDocId;
+                if(window.selectedPlayerId) window.renderSelectedCard(window.selectedPlayerId);
+            } catch(e) { console.error("Login Error:", e); if(!isAuto) window.customAlert(`서버 통신 오류: ${e.message}`); }
         }
 
-        function triggerConfetti() {
-            var duration = 2000, end = Date.now() + duration;
-            (function frame() {
-                confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#38ff8e', '#e8c271'] });
-                confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#38ff8e', '#e8c271'] });
-                if (Date.now() < end) requestAnimationFrame(frame);
-            }());
-        }
+        let touchstartX = 0; let touchstartY = 0;
+        document.addEventListener('touchstart', e => { touchstartX = e.changedTouches[0].screenX; touchstartY = e.changedTouches[0].screenY; }, {passive: true});
+        document.addEventListener('touchend', e => {
+            const distX = e.changedTouches[0].screenX - touchstartX; const distY = e.changedTouches[0].screenY - touchstartY;
+            if (Math.abs(distX) > 60 && Math.abs(distY) < 60) {
+                if(e.target.closest('nav') || e.target.closest('.overflow-x-auto') || e.target.closest('.custom-scrollbar') || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+                let availableTabs = ['tabWorkspace', 'tabTips', 'tabShop', 'tabAchievements', 'tabRank', 'tabCompare', 'tabGuide'];
+                if(window.playerState && window.playerState.isGM) { availableTabs.push('tabMaster', 'tabMasterStats'); }
+                let currentTab = availableTabs.find(id => { const el = document.getElementById(id); return el && !el.classList.contains('hidden'); }) || 'tabWorkspace';
+                let currentIndex = availableTabs.indexOf(currentTab);
 
-        function drawRadarChart(p, bonusFlat) {
-            const canvas = document.getElementById('statRadar'); if(!canvas) return;
-            const ctx = canvas.getContext('2d');
-            const cw = canvas.width; const ch = canvas.height; const cx = cw / 2; const cy = ch / 2; const r = cw * 0.45;
-            
-            ctx.clearRect(0,0,cw,ch);
-            ctx.beginPath();
-            for(let i=0; i<12; i++) {
-                const angle = (Math.PI * 2 / 12) * i - (Math.PI / 2);
-                ctx.lineTo(cx + r * Math.cos(angle), cy + r * Math.sin(angle));
+                if (distX < 0 && currentIndex < availableTabs.length - 1) { window.switchTab(availableTabs[currentIndex + 1]); window.scrollTo({top: 0, behavior: 'smooth'}); } 
+                else if (distX > 0 && currentIndex > 0) { window.switchTab(availableTabs[currentIndex - 1]); window.scrollTo({top: 0, behavior: 'smooth'}); }
             }
-            ctx.closePath(); ctx.fillStyle = 'rgba(0, 0, 0, 0.2)'; ctx.fill(); ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)'; ctx.lineWidth = 1; ctx.stroke();
+        }, {passive: true});
 
-            const statVals = [
-                (p.pac||60)+bonusFlat.pac, (p.sho||60)+bonusFlat.sho, (p.pas||60)+bonusFlat.pas, 
-                (p.dri||60)+bonusFlat.dri, (p.def||60)+bonusFlat.def, (p.phy||60)+bonusFlat.phy,
-                (p.ref||60)+bonusFlat.ref, (p.int||60)+bonusFlat.int, (p.pst||60)+bonusFlat.pst, 
-                (p.dis||60)+bonusFlat.dis, (p.cmp||60)+bonusFlat.cmp, (p.wrk||60)+bonusFlat.wrk
-            ];
-            
-            ctx.beginPath();
-            for(let i=0; i<12; i++) {
-                const val = Math.max(1, Math.min(99, statVals[i])) / 99;
-                const angle = (Math.PI * 2 / 12) * i - (Math.PI / 2);
-                ctx.lineTo(cx + (r * val) * Math.cos(angle), cy + (r * val) * Math.sin(angle));
-            }
-            ctx.closePath();
-            
-            const ovr = getOVR(p);
-            let color = '56, 255, 142'; 
-            if (ovr >= 90) color = '138, 43, 226'; 
-            else if (ovr >= 80) color = '232, 194, 113'; 
-            
-            ctx.fillStyle = `rgba(${color}, 0.5)`; ctx.fill(); ctx.strokeStyle = `rgb(${color})`; ctx.lineWidth = 2; ctx.stroke();
-        }
-
-        window.modStat = async (pId, statKey, change) => {
-            if(!window.playerState.isGM) return;
-            const p = window.allPlayersData.find(x => x.id === pId);
-            const newVal = Math.max(1, Math.min(99, (p[statKey] || 60) + change));
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + pId);
-            await setDoc(docRef, { [statKey]: newVal }, { merge: true });
-        };
-
-        window.setStat = async (pId, statKey, value) => {
-            if(!window.playerState.isGM) return;
-            const p = window.allPlayersData.find(x => x.id === pId);
-            const newVal = Math.max(1, Math.min(99, parseInt(value) || 60));
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + pId);
-            await setDoc(docRef, { [statKey]: newVal }, { merge: true });
-        };
-
-        window.setRecord = async (pId, statKey, value) => {
-            if(!window.playerState.isGM) return;
-            const p = window.allPlayersData.find(x => x.id === pId);
-            if(!p) return;
-            const newVal = Math.max(0, parseInt(value) || 0);
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
-            await setDoc(docRef, { [statKey]: newVal }, { merge: true });
-        };
-
-        window.addActivity = async (type) => {
-            if(!window.selectedPlayerId) return;
-            if(window.playerState.isGuest) return window.customAlert("게스트는 이용할 수 없는 기능입니다.");
-            
-            const pId = window.selectedPlayerId;
-            if(!window.playerState.isGM && pId !== window.playerState.id) return window.customAlert("❌ 자신의 기록만 추가할 수 있습니다!");
-            
-            const p = window.allPlayersData.find(x => x.id === pId);
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + pId);
-            let expGained = 0, updates = {};
-
-            if(type === 'matches') { expGained = 50; updates.matches = (p.matches||0) + 1; }
-            if(type === 'training') { expGained = 30; updates.training = (p.training||0) + 1; }
-            if(type === 'goals') { expGained = 20; updates.goals = (p.goals||0) + 1; updates.bong = (p.bong||0) + 3; }
-            if(type === 'assists') { expGained = 10; updates.assists = (p.assists||0) + 1; updates.bong = (p.bong||0) + 1; }
-            if(type === 'keypass') { expGained = 15; updates.keypass = (p.keypass||0) + 1; updates.bong = (p.bong||0) + 1; }
-            if(type === 'saves') { expGained = 15; updates.saves = (p.saves||0) + 1; updates.bong = (p.bong||0) + 2; }
-
-            animateFloatText(`+${expGained} EXP`, 'text-emerald-400', 'confettiOrigin');
-            await processExp(p, expGained, docRef, updates);
-        };
-
-        window.undoActivity = async (type) => {
-            if(!window.selectedPlayerId) return;
-            if(window.playerState.isGuest) return window.customAlert("게스트는 이용할 수 없는 기능입니다.");
-            
-            const pId = window.selectedPlayerId;
-            if(!window.playerState.isGM && pId !== window.playerState.id) return window.customAlert("❌ 자신의 기록만 조작할 수 있습니다.");
-
-            const p = window.allPlayersData.find(x => x.id === pId);
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + pId);
-            let expDeduct = 1, updates = {}; 
-
-            if(type === 'matches' && p.matches > 0) { expDeduct += 50; updates.matches = p.matches - 1; }
-            else if(type === 'training' && p.training > 0) { expDeduct += 30; updates.training = p.training - 1; }
-            else if(type === 'goals' && p.goals > 0) { expDeduct += 20; updates.goals = p.goals - 1; updates.bong = Math.max(0, (p.bong||0) - 3); }
-            else if(type === 'assists' && p.assists > 0) { expDeduct += 10; updates.assists = p.assists - 1; updates.bong = Math.max(0, (p.bong||0) - 1); }
-            else if(type === 'keypass' && p.keypass > 0) { expDeduct += 15; updates.keypass = p.keypass - 1; updates.bong = Math.max(0, (p.bong||0) - 1); }
-            else if(type === 'saves' && p.saves > 0) { expDeduct += 15; updates.saves = p.saves - 1; updates.bong = Math.max(0, (p.bong||0) - 2); }
-            else return window.customAlert("❌ 차감할 해당 기록이 없습니다.");
-
-            if(!await window.customConfirm("방금 입력한 기록을 취소하시겠습니까?\n(경험치 1이 추가 페널티로 차감됩니다.)")) return;
-
-            animateFloatText(`-${expDeduct} EXP`, 'text-red-400', 'confettiOrigin');
-            updates.exp = Math.max(0, (p.exp || 0) - expDeduct);
-            await setDoc(docRef, updates, { merge: true });
-        };
-
-        window.giveAll = async (type, amount) => {
-            if(!window.playerState.isGM) return;
-            const msg = type === 'exp' ? `모든 학생에게 [${amount} EXP]를 일괄 지급하시겠습니까?` : `모든 학생에게 [${amount} B]를 일괄 지급하시겠습니까?`;
-            if(!await window.customConfirm(msg)) return;
-            
-            try {
-                const batch = writeBatch(db);
-                window.allPlayersData.forEach(p => {
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
-                    if (type === 'exp') {
-                        let currentLv = p.level ?? 1; let currentExp = (p.exp || 0) + amount; let leveledUp = false;
-                        while(currentExp >= getExpNeeded(currentLv)) { currentExp -= getExpNeeded(currentLv); currentLv++; leveledUp = true; }
-                        let updatesObj = { exp: currentExp };
-                        if(leveledUp) {
-                            updatesObj.level = currentLv;
-                            if(currentLv % 3 === 0) {
-                                ['pac', 'sho', 'pas', 'dri', 'def', 'phy', 'ref', 'int', 'pst', 'dis', 'cmp', 'wrk'].forEach(s => updatesObj[s] = Math.min(99, (p[s]||60) + 1));
-                            }
-                        }
-                        batch.set(docRef, updatesObj, { merge: true });
-                    } else if (type === 'bong') { batch.set(docRef, { bong: (p.bong || 0) + amount }, { merge: true }); }
-                });
-                await batch.commit(); triggerConfetti(); window.customAlert(`✅ 모든 학생에게 성공적으로 지급되었습니다!`);
-            } catch (error) { window.customAlert("지급 중 오류가 발생했습니다."); }
-        };
-
-        window.resetAllLevels = async () => {
-            if(!window.playerState.isGM) return;
-            if(!await window.customConfirm(`⚠️ 경고: 모든 학생의 레벨과 경험치를 0으로 초기화하시겠습니까?\n(스탯과 자산, 누적 기록은 그대로 유지됩니다)`)) return;
-            
-            try {
-                const batch = writeBatch(db);
-                window.allPlayersData.forEach(p => {
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
-                    batch.set(docRef, { exp: 0, level: 0 }, { merge: true });
-                });
-                await batch.commit();
-                triggerConfetti();
-                window.customAlert("✅ 모든 학생의 레벨과 경험치가 0으로 초기화되었습니다!");
-            } catch (error) { window.customAlert("초기화 중 오류가 발생했습니다."); }
-        };
-
-        window.manualAddBong = async (amount) => {
-            if(!window.playerState.isGM || !window.selectedPlayerId) return;
-            const p = window.allPlayersData.find(x => x.id === window.selectedPlayerId);
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
-            await setDoc(docRef, { bong: Math.max(0, (p.bong||0) + amount) }, { merge: true });
-            animateFloatText(`${amount>0?'+':''}${amount} B`, amount>0?'text-fut-gold':'text-red-500', 'confettiOrigin');
-        };
-
-        window.claimWage = async () => {
-            if(!window.playerState.id || window.playerState.isGM) return;
-            if(window.playerState.isGuest) return window.customAlert("게스트는 이용할 수 없는 기능입니다.");
-            
-            const p = window.allPlayersData.find(x => x.id === window.playerState.id);
-            const weekNum = getWeekNumber(new Date());
-            if(p.lastWageWeek === weekNum) return window.customAlert("❌ 이번 주 주급은 이미 수령했습니다!\n다음 주에 다시 받아주세요.");
-            const wage = getWeeklyWage(getOVR(p));
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
-            await setDoc(docRef, { bong: (p.bong || 0) + wage, lastWageWeek: weekNum }, { merge: true });
-            triggerConfetti(); window.customAlert(`💰 주급 수령 완료!\n현재 능력치에 맞춰 [${wage} B]가 지급되었습니다.`);
-        };
-
-        window.changePositionModal = (pId) => {
-            const modal = document.createElement('div'); modal.className = "fixed inset-0 z-[400] flex items-center justify-center bg-black/80 px-4";
-            const posList = [
-                { id: 'Pivo', name: '피보(FW)', desc: '최전방 공격수: 등지고 버티거나 골을 넣는 타겟맨!', keys: ['슈팅', '피지컬', '위치선정'] }, 
-                { id: 'Ala', name: '아라(MF)', desc: '측면 윙어: 양옆을 부지런히 오가며 공수를 연결하는 살림꾼!', keys: ['속력', '드리블', '활동량'] },
-                { id: 'Fixo', name: '픽소(DF)', desc: '최후방 수비수: 수비를 지휘하고 패스를 시작하는 사령관!', keys: ['수비', '가로채기', '패스'] }, 
-                { id: 'Goleiro', name: '골레이로(GK)', desc: '골키퍼: 손과 발을 모두 써서 최후의 방어를 해내는 수호신!', keys: ['반사신경', '볼배급', '평정심'] }
-            ];
-            const btns = posList.map(pos => `<button onclick="window.confirmChangePos('${pId}', '${pos.id}')" class="bg-slate-800 hover:bg-emerald-900 border border-slate-600 hover:border-emerald-500 p-3 rounded-xl text-left transition group flex flex-col gap-1"><div class="flex justify-between items-center w-full"><div class="font-bold text-lg text-emerald-400 group-hover:text-white">${pos.name}</div><div class="flex gap-1">${pos.keys.map(k => `<span class="bg-emerald-900/50 text-emerald-300 border border-emerald-500/50 text-[9px] px-1.5 py-0.5 rounded whitespace-nowrap">${k} +10%</span>`).join('')}</div></div><div class="text-[11px] text-slate-400 mt-1">${pos.desc}</div></button>`).join('');
-            modal.innerHTML = `<div class="bg-pitch-bg p-6 rounded-3xl border-2 border-emerald-500 max-w-sm w-full sm:max-w-md shadow-2xl"><h3 class="text-xl font-display text-white mb-2 text-center">선호 포지션 변경</h3><p class="text-[10px] text-emerald-400 mb-4 text-center leading-relaxed">포지션별 핵심 능력치 3가지는 <b>OVR 계산 시 10% 가중치</b>가 붙습니다.<br>나의 스탯에 가장 유리한 포지션을 찾아보세요!</p><div class="grid grid-cols-1 gap-3 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">${btns}</div><button onclick="this.parentElement.parentElement.remove()" class="mt-4 bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-6 rounded-xl w-full transition">취소</button></div>`;
-            document.body.appendChild(modal); window.posModalInstance = modal;
-        };
-
-        window.confirmChangePos = async (pId, newPos) => {
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(pId));
-            await setDoc(docRef, { pos: newPos }, { merge: true });
-            if(window.posModalInstance) window.posModalInstance.remove();
-            window.customAlert(`포지션이 [${POS_KR[newPos]}] (으)로 변경되었습니다.`);
-        };
-
+        initApp();
     </script>
 </body>
 </html>
