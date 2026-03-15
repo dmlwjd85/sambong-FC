@@ -162,6 +162,7 @@
                     <label class="block text-sm font-bold text-slate-400 mb-1">라커룸 입장 자격 확인</label>
                     <select id="loginId" class="w-full bg-slate-800 border border-slate-600 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-fut-rare font-bold appearance-none mb-3">
                         <option value="" disabled selected>선택하세요</option>
+                        <option value="guest" class="text-slate-400">👀 게스트 (둘러보기)</option>
                         <option value="player" class="text-fut-rare">👤 삼봉 FC 선수 (이름 선택)</option>
                         <option disabled>─── 코칭 스태프 ───</option>
                         <option value="gm1" class="text-fut-gold">👑 전설감독 J (선생님)</option>
@@ -362,7 +363,7 @@
                         </div>
                     </div>
 
-                    <!-- 훈련 및 주급 -->
+                    <!-- 본인 전용 양심 기록소 및 주급 (게스트에게는 숨겨짐) -->
                     <div id="playerTrainingPanel" class="mt-4 flex flex-col gap-3 relative z-30">
                         <div class="flex justify-between items-center bg-slate-800 p-3 rounded-xl border border-fut-gold/30 shadow-inner">
                             <span class="text-sm font-bold text-slate-300">내 지갑 (자산)</span>
@@ -423,7 +424,6 @@
                                 </h3>
                                 <p class="text-sm text-slate-400 mt-1">훈련/경기에 참여한 선수를 체크해주세요. (카드 클릭 시 좌측에 상세 정보 표시)</p>
                             </div>
-                            <!-- Flex 속성 충돌 해결 완료 -->
                             <div id="gmAttendanceTools" class="hidden w-full sm:w-auto justify-end gap-2">
                                 <button onclick="window.viewAttendance()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg transition flex items-center text-sm flex-1 sm:flex-none justify-center">
                                     <i class="fa-solid fa-file-excel mr-2"></i> 출석부 조회
@@ -582,7 +582,7 @@
                     </div>
                 </div>
 
-                <!-- 탭 5: 이용안내 (최신화 완료) -->
+                <!-- 탭 5: 이용안내 -->
                 <div id="tabGuide" class="hidden space-y-6">
                     <div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-cyan-400">
                         <h3 class="text-3xl font-display text-cyan-400 mb-6 flex items-center gap-3">
@@ -890,7 +890,7 @@
             { id: 'footR_puma', name: '푸마 퓨처 [우]', type: 'footR', price: 150, icon: '🥾', desc: '화려한 드리블러를 위한 오른발 축구화.', bonusText: '드리블+2', bonusStats: {dri: 2} },
         ];
 
-        window.playerState = { id: '', isGM: false, name: '', inventory: [], equipHead: null, equipHandL: null, equipHandR: null, equipFootL: null, equipFootR: null };
+        window.playerState = { id: '', isGM: false, isGuest: false, name: '', inventory: [], equipHead: null, equipHandL: null, equipHandR: null, equipFootL: null, equipFootR: null };
         window.allPlayersData = [];
         window.checkedInPlayers = new Set();
         window.selectedPlayerId = null;
@@ -1109,7 +1109,7 @@
             const inventory = p ? (p.inventory || []) : [];
             
             document.getElementById('shopBong').innerText = bong;
-            document.getElementById('shopWalletLabel').innerText = window.playerState.isGM ? (p ? `[${p.name}] 선수의 자산` : `학생 미등록`) : `내 보유 자산`;
+            document.getElementById('shopWalletLabel').innerText = window.playerState.isGM ? (p ? `[${p.name}] 선수의 자산` : `학생 미등록`) : (window.playerState.isGuest ? `게스트 자산 없음` : `내 보유 자산`);
 
             let html = '';
             SHOP_ITEMS.forEach(item => {
@@ -1122,6 +1122,8 @@
                     else if(isEquipped) { btnHtml = `<div class="flex gap-1 mt-2"><button onclick="window.equipItem('${item.id}', '${item.type}')" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white text-[10px] font-bold py-1.5 rounded shadow">장착 해제</button><button onclick="window.revokeItem('${item.id}')" class="flex-1 bg-red-800 hover:bg-red-700 text-white text-[10px] font-bold py-1.5 rounded shadow">🗑️ 회수</button></div>`; } 
                     else if(isOwned) { btnHtml = `<div class="flex gap-1 mt-2"><button onclick="window.equipItem('${item.id}', '${item.type}')" class="flex-1 bg-emerald-700 hover:bg-emerald-600 text-white text-[10px] font-bold py-1.5 rounded shadow">대리 장착</button><button onclick="window.revokeItem('${item.id}')" class="flex-1 bg-red-800 hover:bg-red-700 text-white text-[10px] font-bold py-1.5 rounded shadow">🗑️ 회수</button></div>`; } 
                     else { btnHtml = `<button onclick="window.purchaseItem('${item.id}')" class="w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-1.5 rounded shadow"><i class="fa-solid fa-gift mr-1"></i> 무료 선물하기</button>`; }
+                } else if(window.playerState.isGuest) {
+                    btnHtml = `<button onclick="window.customAlert('게스트는 아이템을 구매할 수 없습니다.')" class="w-full mt-2 bg-slate-800 hover:bg-slate-700 text-slate-500 text-xs font-bold py-1.5 rounded shadow cursor-not-allowed">구매 (${item.price} B)</button>`;
                 } else {
                     if(isEquipped) { btnHtml = `<button onclick="window.equipItem('${item.id}', '${item.type}')" class="w-full mt-2 bg-slate-700 text-white text-xs font-bold py-1.5 rounded border border-slate-500 shadow">장착 해제</button>`; } 
                     else if(isOwned) { btnHtml = `<button onclick="window.equipItem('${item.id}', '${item.type}')" class="w-full mt-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-1.5 rounded shadow">장착하기</button>`; } 
@@ -1152,6 +1154,8 @@
         };
 
         window.purchaseItem = async (itemId) => {
+            if(window.playerState.isGuest) return window.customAlert("게스트는 이용할 수 없는 기능입니다.");
+            
             const targetId = window.playerState.isGM ? window.selectedPlayerId : window.playerState.id;
             const p = window.allPlayersData.find(x => x.id === targetId);
             const item = SHOP_ITEMS.find(x => x.id === itemId);
@@ -1199,6 +1203,7 @@
         };
 
         window.equipItem = async (itemId, type) => {
+            if(window.playerState.isGuest) return window.customAlert("게스트는 이용할 수 없는 기능입니다.");
             const targetId = window.playerState.isGM ? window.selectedPlayerId : window.playerState.id;
             const p = window.allPlayersData.find(x => x.id === targetId);
             if(!p) return;
@@ -1543,14 +1548,28 @@
             window.customAlert("공지사항이 모든 학생들에게 성공적으로 전송되었습니다!");
         };
 
+        // UI 이벤트 처리 (게스트 선택 시 PIN 감추기 등)
         document.getElementById('loginId')?.addEventListener('change', (e) => {
             const nameContainer = document.getElementById('playerNameInputContainer');
             const nameInput = document.getElementById('loginPlayerName');
+            const pinContainer = document.getElementById('pinContainer');
             const pinInput = document.getElementById('loginPin');
 
-            if (e.target.value === 'player') { nameContainer?.classList.remove('hidden'); setTimeout(() => nameInput?.focus(), 100); } 
-            else { nameContainer?.classList.add('hidden'); if(nameInput) nameInput.value = ''; }
-            if(pinInput) pinInput.value = '';
+            if (e.target.value === 'player') { 
+                nameContainer?.classList.remove('hidden'); 
+                setTimeout(() => nameInput?.focus(), 100); 
+                pinContainer?.classList.remove('hidden');
+            } else if (e.target.value === 'guest') {
+                nameContainer?.classList.add('hidden'); 
+                if(nameInput) nameInput.value = ''; 
+                pinContainer?.classList.add('hidden'); // 게스트는 PIN 컨테이너 숨김
+                if(pinInput) pinInput.value = '';
+            } else { 
+                nameContainer?.classList.add('hidden'); 
+                if(nameInput) nameInput.value = ''; 
+                pinContainer?.classList.remove('hidden');
+            }
+            if(pinInput && e.target.value !== 'guest') pinInput.value = '';
         });
 
         document.getElementById('btnLogin')?.addEventListener('click', async () => {
@@ -1567,7 +1586,11 @@
                 pId = document.getElementById('loginPlayerName')?.value;
                 if(!pId) { btn.disabled = false; btn.innerHTML = originalText; return window.customAlert("자신의 이름을 선택하세요."); }
             }
-            if(!pin || pin.length !== 4) { btn.disabled = false; btn.innerHTML = originalText; return window.customAlert("4자리 비밀번호(PIN)를 입력하세요."); }
+            
+            // 게스트가 아닌 경우에만 PIN 체크
+            if(pId !== 'guest' && (!pin || pin.length !== 4)) { 
+                btn.disabled = false; btn.innerHTML = originalText; return window.customAlert("4자리 비밀번호(PIN)를 입력하세요."); 
+            }
             
             await attemptLogin(pId, pin, false);
             
@@ -1588,6 +1611,27 @@
                 return;
             }
             
+            // 🚨 게스트 로그인 처리
+            if(pId === 'guest') {
+                window.playerState = { id: 'guest', isGM: false, isGuest: true, name: '게스트', inventory: [] };
+                localStorage.setItem('sfc_pid', 'guest'); 
+                localStorage.setItem('sfc_pin', '0000'); // 게스트용 더미 PIN
+                
+                document.getElementById('loginOverlay')?.classList.add('hidden');
+                document.getElementById('saveStatus')?.classList.remove('hidden');
+                document.getElementById('saveStatus')?.classList.add('flex');
+                
+                const nameDisplay = document.getElementById('playerNameDisplay');
+                if(nameDisplay) nameDisplay.innerText = '게스트';
+                
+                const roleDisplay = document.getElementById('playerRoleDisplay');
+                if(roleDisplay) roleDisplay.innerText = 'GUEST (보기 전용)';
+                
+                window.selectedPlayerId = getSafeDocId(ALLOWED_PLAYERS[0]);
+                if(window.selectedPlayerId) renderSelectedCard(window.selectedPlayerId);
+                return;
+            }
+
             const isGM = pId === 'gm1' || pId === 'gm2';
             const safeDocId = getSafeDocId(pId);
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + safeDocId);
@@ -1602,11 +1646,11 @@
                         if(isAuto) { localStorage.clear(); location.reload(); return; }
                         if(!await window.customConfirm(`PIN [${pin}]으로 초기 등록하시겠습니까?`)) return;
                         await setDoc(docRef, { pin, updatedAt: new Date().toISOString() }, { merge: true });
-                        window.playerState = { id: safeDocId, isGM, ...data };
+                        window.playerState = { id: safeDocId, isGM, isGuest: false, ...data };
                     } else if(data.pin !== pin) {
                         if(isAuto) { localStorage.clear(); location.reload(); return; }
                         return window.customAlert("❌ 비밀번호가 틀렸습니다.");
-                    } else { window.playerState = { id: safeDocId, isGM, ...data }; }
+                    } else { window.playerState = { id: safeDocId, isGM, isGuest: false, ...data }; }
                 } else {
                     if(isAuto) { localStorage.clear(); location.reload(); return; }
                     if(!await window.customConfirm(`신규 카드 발급! PIN [${pin}]으로 등록하시겠습니까?`)) return;
@@ -1619,7 +1663,7 @@
                         updatedAt: new Date().toISOString()
                     };
                     await setDoc(docRef, baseData, { merge: true });
-                    window.playerState = { id: safeDocId, isGM, ...baseData };
+                    window.playerState = { id: safeDocId, isGM, isGuest: false, ...baseData };
                 }
 
                 localStorage.setItem('sfc_pid', pId); localStorage.setItem('sfc_pin', pin);
@@ -1687,6 +1731,9 @@
         }
 
         window.toggleCheck = (pId) => {
+            // 게스트 차단
+            if(window.playerState.isGuest) return window.customAlert("게스트 모드에서는 출석 체크를 할 수 없습니다.");
+            
             if(window.checkedInPlayers.has(pId)) window.checkedInPlayers.delete(pId);
             else window.checkedInPlayers.add(pId);
             renderLockerRoom(); renderActivePool();
@@ -1837,7 +1884,8 @@
             const iconEditPos = document.getElementById('iconEditPos');
             const btnChangePos = document.getElementById('btnChangePos');
             
-            if(isMe && !isGM) {
+            // 🚨 본인 전용 (게스트는 당연히 isMe가 false이므로 여기서 막힘)
+            if(isMe && !isGM && !window.playerState.isGuest) {
                 playerTrainingPanel?.classList.remove('hidden');
                 
                 const recBongEl = document.getElementById('recBong');
@@ -1931,10 +1979,15 @@
             await setDoc(docRef, { [statKey]: newVal }, { merge: true });
         };
 
+        // 🚨 본인이 스스로 기록하는 함수 (안전장치 추가)
         window.addActivity = async (type) => {
             if(!window.selectedPlayerId) return;
+            if(window.playerState.isGuest) return window.customAlert("게스트는 이용할 수 없는 기능입니다.");
+            
             const pId = window.selectedPlayerId;
+            // 본인 카드인지 체크 (GM은 제외)
             if(!window.playerState.isGM && pId !== window.playerState.id) return window.customAlert("❌ 자신의 기록만 추가할 수 있습니다!");
+            
             const p = window.allPlayersData.find(x => x.id === pId);
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + pId);
             let expGained = 0, updates = {};
@@ -1950,8 +2003,11 @@
             await processExp(p, expGained, docRef, updates);
         };
 
+        // 🚨 본인이 스스로 기록 취소하는 함수
         window.undoActivity = async (type) => {
             if(!window.selectedPlayerId) return;
+            if(window.playerState.isGuest) return window.customAlert("게스트는 이용할 수 없는 기능입니다.");
+            
             const pId = window.selectedPlayerId;
             if(!window.playerState.isGM && pId !== window.playerState.id) return window.customAlert("❌ 자신의 기록만 조작할 수 있습니다.");
 
@@ -2038,6 +2094,8 @@
 
         window.claimWage = async () => {
             if(!window.playerState.id || window.playerState.isGM) return;
+            if(window.playerState.isGuest) return window.customAlert("게스트는 이용할 수 없는 기능입니다.");
+            
             const p = window.allPlayersData.find(x => x.id === window.playerState.id);
             const weekNum = getWeekNumber(new Date());
             if(p.lastWageWeek === weekNum) return window.customAlert("❌ 이번 주 주급은 이미 수령했습니다!\n다음 주에 다시 받아주세요.");
