@@ -136,6 +136,18 @@
 </head>
 <body class="antialiased">
 
+    <!-- 전술 도식용 화살표 마커 정의 (공통 사용) -->
+    <svg width="0" height="0" class="hidden">
+        <defs>
+            <marker id="arrowYellow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto-start-reverse">
+                <path d="M 0 0 L 6 3 L 0 6 z" fill="#e8c271" />
+            </marker>
+            <marker id="arrowGreen" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto-start-reverse">
+                <path d="M 0 0 L 6 3 L 0 6 z" fill="#38ff8e" />
+            </marker>
+        </defs>
+    </svg>
+
     <!-- 로그인 오버레이 -->
     <div id="loginOverlay" class="fixed inset-0 bg-pitch-bg z-[100] flex flex-col items-center justify-center px-4 transition-opacity duration-500">
         <div class="text-center mb-8">
@@ -411,7 +423,8 @@
                                 </h3>
                                 <p class="text-sm text-slate-400 mt-1">훈련/경기에 참여한 선수를 체크해주세요. (카드 클릭 시 좌측에 상세 정보 표시)</p>
                             </div>
-                            <div id="gmAttendanceTools" class="hidden w-full sm:w-auto flex gap-2 justify-end">
+                            <!-- Flex 속성 충돌 해결 완료 -->
+                            <div id="gmAttendanceTools" class="hidden w-full sm:w-auto justify-end gap-2">
                                 <button onclick="window.viewAttendance()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg transition flex items-center text-sm flex-1 sm:flex-none justify-center">
                                     <i class="fa-solid fa-file-excel mr-2"></i> 출석부 조회
                                 </button>
@@ -458,7 +471,7 @@
                     </div>
                 </div>
 
-                <!-- 탭 2: 꿀팁 & 공지 (순서 변경됨) -->
+                <!-- 탭 2: 꿀팁 & 공지 -->
                 <div id="tabTips" class="hidden space-y-8">
                     <!-- 📢 공지사항 패널 -->
                     <div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-red-500 relative">
@@ -569,7 +582,7 @@
                     </div>
                 </div>
 
-                <!-- 탭 5: 이용안내 -->
+                <!-- 탭 5: 이용안내 (최신화 완료) -->
                 <div id="tabGuide" class="hidden space-y-6">
                     <div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-cyan-400">
                         <h3 class="text-3xl font-display text-cyan-400 mb-6 flex items-center gap-3">
@@ -585,12 +598,16 @@
                                 <p class="text-sm text-slate-300 leading-relaxed break-keep">경기가 끝나면 내 카드 화면에서 <b>스스로 골, 어시스트 등을 입력</b>합니다. 취소 시 경험치 1이 페널티로 차감되니 신중하게 눌러주세요.</p>
                             </div>
                             <div class="bg-slate-900/60 p-5 rounded-xl border border-slate-700 hover:border-cyan-500/50 transition">
-                                <h4 class="text-base sm:text-lg font-bold text-white mb-2 flex items-center gap-2"><i class="fa-solid fa-shirt text-purple-400"></i> 3. 5부위 전용 꾸미기 상점</h4>
-                                <p class="text-sm text-slate-300 leading-relaxed break-keep">자산(B)으로 <b>[머리, 왼손, 오른손, 왼발, 오른발]</b> 아바타 주위를 감싸는 오각형 5개 슬롯에 장착할 수 있는 아이템을 구매하세요. 장착하는 즉시 보너스 능력치가 추가 적용됩니다.</p>
+                                <h4 class="text-base sm:text-lg font-bold text-white mb-2 flex items-center gap-2"><i class="fa-solid fa-book-open text-orange-400"></i> 3. 꿀팁 게시판 (3일 갱신)</h4>
+                                <p class="text-sm text-slate-300 leading-relaxed break-keep">이해하기 어려운 전술이나 움직임은 <b>도식화된 그림과 함께 3일마다 새로운 꿀팁으로 제공</b>됩니다. 매번 라커룸에 들어올 때 확인하세요!</p>
                             </div>
                             <div class="bg-slate-900/60 p-5 rounded-xl border border-slate-700 hover:border-cyan-500/50 transition">
-                                <h4 class="text-base sm:text-lg font-bold text-white mb-2 flex items-center gap-2"><i class="fa-solid fa-circle-question text-pink-400"></i> 4. 스탯 세부 설명 안내</h4>
-                                <p class="text-sm text-slate-300 leading-relaxed break-keep">선수 정보의 능력치 화면에서 <b>스탯의 이름(속력, 슈팅 등)을 클릭</b>해보세요. 해당 스탯이 풋살에서 어떤 역할을 하는지 자세한 설명을 볼 수 있습니다.</p>
+                                <h4 class="text-base sm:text-lg font-bold text-white mb-2 flex items-center gap-2"><i class="fa-solid fa-shirt text-purple-400"></i> 4. 5부위 전용 꾸미기 상점</h4>
+                                <p class="text-sm text-slate-300 leading-relaxed break-keep">자산(B)으로 <b>[머리, 왼손, 오른손, 왼발, 오른발]</b> 아바타 주위를 감싸는 오각형 5개 슬롯에 장착할 수 있는 아이템을 구매하세요. 장착하는 즉시 보너스 능력치가 추가 적용됩니다.</p>
+                            </div>
+                            <div class="bg-gradient-to-r from-slate-900/60 to-emerald-900/30 p-5 rounded-xl border border-emerald-700/50 hover:border-emerald-500/80 transition">
+                                <h4 class="text-base sm:text-lg font-bold text-emerald-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-bullseye text-red-400"></i> 5. 목표: 30주 만에 레벨 100 달성!</h4>
+                                <p class="text-sm text-emerald-100/80 leading-relaxed break-keep">경험치 시스템이 리밸런싱 되었습니다. 매주 토요스포츠데이(약 10경기)에 꾸준히 참여하고 각종 훈련과 기록을 쌓으면, <b>정확히 30주 후 전설의 100레벨(만렙)</b>에 도달할 수 있습니다. 끈기 있게 도전해보세요!</p>
                             </div>
                         </div>
                     </div>
@@ -660,7 +677,6 @@
 
         const POS_KR = { 'Pivo': '피보(FW)', 'Ala': '아라(MF)', 'Fixo': '픽소(DF)', 'Goleiro': '골레이로(GK)', '미정': '포지션 미정' };
 
-        // 🚨 이전에 누락되었던 필수 데이터: OVR 계산 시 포지션별 10% 가중치가 부여되는 스탯 목록입니다.
         const POS_KEY_STATS = {
             'Pivo': ['sho', 'phy', 'pst'],
             'Ala': ['pac', 'dri', 'wrk'],
@@ -701,7 +717,7 @@
             }
         });
 
-        // --- 100가지 풋살 꿀팁 (3일 단위 갱신용) 꽉 채운 데이터! ---
+        // --- 100가지 풋살 꿀팁 & SVG 도식 추가 완료 ---
         const DAILY_TIPS = [
             // 💡 [기본 규정 및 규칙] 1~15
             { title: "풋살과 축구의 가장 큰 차이점?", img: "⚽", category: "기본상식", desc: "풋살은 5인제 실내 축구입니다. 공이 밖으로 나가면 손으로 던지는 스로인이 아닌 '발로 차서 넣는 킥인'을 합니다!" },
@@ -726,11 +742,25 @@
             { title: "정확한 인사이드 패스", img: "🎯", category: "기본기", desc: "패스의 기본은 발목을 고정하고 발 안쪽 넓은 면으로 공의 정중앙을 밀어 차는 것입니다. 동료의 '오른발/왼발'을 지정해서 줘보세요." },
             { title: "디딤발의 방향이 패스의 방향", img: "🦶", category: "기본기", desc: "패스를 하거나 슛을 할 때 공 옆에 두는 디딤발의 발끝 방향이 목표물(동료나 골대)을 향해야 정확도가 높아집니다." },
             { title: "발바닥 드래그(Drag) 돌파", img: "🪄", category: "개인기", desc: "발바닥으로 공을 밟은 채로 옆이나 뒤로 슥 끌어당겨 수비수의 타이밍을 뺏는 기술입니다. 풋살에서 가장 많이 쓰이는 돌파기입니다." },
-            { title: "패스 앤 무브(Pass & Move)의 정석", img: "🏃‍♂️", category: "기본기", desc: "동료에게 패스를 주고 가만히 서 있으면 안 됩니다! 패스를 찔러주고 즉시 다른 빈 공간으로 뛰어들어가야 수비진이 무너집니다." },
+            
+            // 📝 [도식 추가] 패스 앤 무브
+            { 
+                title: "패스 앤 무브(Pass & Move)의 정석", img: "🏃‍♂️", category: "기본기", 
+                diagram: `<div class="my-5 w-full flex justify-center"><svg width="260" height="150" viewBox="0 0 240 140" class="bg-emerald-900/30 border border-emerald-700/50 rounded-xl shadow-inner"><line x1="120" y1="0" x2="120" y2="140" stroke="rgba(255,255,255,0.1)" stroke-width="2"/><circle cx="120" cy="70" r="25" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2"/><circle cx="140" cy="70" r="7" fill="#ef4444"/><text x="140" y="55" fill="#ef4444" font-size="10" text-anchor="middle" font-weight="bold">수비</text><circle cx="60" cy="90" r="7" fill="#38ff8e"/><text x="60" y="108" fill="#38ff8e" font-size="10" text-anchor="middle" font-weight="bold">나</text><circle cx="140" cy="110" r="7" fill="#38ff8e"/><text x="140" y="128" fill="#38ff8e" font-size="10" text-anchor="middle" font-weight="bold">동료</text><path d="M 65 92 L 132 108" fill="none" stroke="#e8c271" stroke-width="2" stroke-dasharray="4" marker-end="url(#arrowYellow)"/><path d="M 65 85 Q 110 40 160 55" fill="none" stroke="#38ff8e" stroke-width="2" marker-end="url(#arrowGreen)"/><text x="100" y="115" fill="#e8c271" font-size="10" font-weight="bold">1. 패스</text><text x="110" y="50" fill="#38ff8e" font-size="10" font-weight="bold">2. 빈공간 침투</text></svg></div>`,
+                desc: "동료에게 패스를 주고 가만히 서 있으면 안 됩니다! 패스를 찔러주고 즉시 다른 빈 공간으로 뛰어들어가야 수비진이 무너집니다." 
+            },
+            
             { title: "퍼스트 터치의 중요성", img: "✨", category: "기본기", desc: "공을 받을 때 가만히 세워두는 것보다, 내가 다음 동작(슈팅, 패스, 돌파)을 하기 가장 좋은 방향으로 터치해 두는 것이 고수의 비결입니다." },
             { title: "팬텀 드리블 (라 크로케타)", img: "🕺", category: "개인기", desc: "양발 안쪽을 사용하여 공을 왼쪽 발에서 오른쪽 발로 빠르게 넘기며 돌파하는 기술입니다. 좁은 공간에서 수비수를 제치기 좋습니다." },
             { title: "수비 등지기 (스크린 플레이)", img: "🛡️", category: "기본기", desc: "등 뒤에 수비수가 바짝 붙었을 때, 엉덩이와 등, 팔을 이용해 수비수가 공에 발을 뻗지 못하게 공간을 차단하는 기술입니다." },
-            { title: "월패스(2대1 패스)의 파괴력", img: "🤝", category: "기본기", desc: "나에게 수비수가 붙었을 때 동료에게 패스하고 빈 공간으로 침투하세요. 동료가 벽(Wall)처럼 논스톱으로 내게 다시 공을 내주면 완벽한 찬스가 됩니다." },
+            
+            // 📝 [도식 추가] 월패스 (2대1)
+            { 
+                title: "월패스(2대1 패스)의 파괴력", img: "🤝", category: "기본기", 
+                diagram: `<div class="my-5 w-full flex justify-center"><svg width="260" height="150" viewBox="0 0 240 140" class="bg-emerald-900/30 border border-emerald-700/50 rounded-xl shadow-inner"><circle cx="120" cy="60" r="7" fill="#ef4444"/><text x="120" y="45" fill="#ef4444" font-size="10" text-anchor="middle" font-weight="bold">수비</text><circle cx="60" cy="80" r="7" fill="#38ff8e"/><circle cx="130" cy="110" r="7" fill="#38ff8e"/><text x="130" y="128" fill="#38ff8e" font-size="10" text-anchor="middle" font-weight="bold">벽(Wall)</text><path d="M 65 85 L 122 108" fill="none" stroke="#e8c271" stroke-width="2" stroke-dasharray="4" marker-end="url(#arrowYellow)"/><path d="M 65 73 L 135 40" fill="none" stroke="#38ff8e" stroke-width="2" marker-end="url(#arrowGreen)"/><path d="M 135 105 L 145 50" fill="none" stroke="#e8c271" stroke-width="2" stroke-dasharray="4" marker-end="url(#arrowYellow)"/></svg></div>`,
+                desc: "나에게 수비수가 붙었을 때 동료에게 패스하고 빈 공간으로 침투하세요. 동료가 벽(Wall)처럼 논스톱으로 내게 다시 공을 내주면 완벽한 찬스가 됩니다." 
+            },
+            
             { title: "스루패스(Through Pass)의 타이밍", img: "🔪", category: "기본기", desc: "수비수와 수비수 사이의 좁은 틈으로 동료가 뛰는 방향을 예측해 찔러넣는 패스입니다. 너무 강하지 않게 깔아차는 것이 핵심입니다." },
             { title: "공중볼 트래핑 (가슴, 허벅지)", img: "🤹", category: "기본기", desc: "높이 뜬 공을 받을 때는 당황하지 말고 공이 떨어지는 위치를 파악한 뒤, 가슴이나 허벅지의 넓은 면적으로 쿠션처럼 부드럽게 받아내세요." },
             { title: "페인트(속임수) 슛 모션", img: "🎩", category: "개인기", desc: "강하게 슛을 할 것처럼 다리를 크게 휘두른 후, 슛 대신 공을 살짝 접어 수비수를 속이는 기술입니다. 태클을 유도하기 아주 좋습니다." },
@@ -738,15 +768,36 @@
             { title: "시야 넓히기 연습", img: "👀", category: "기본기", desc: "공을 몰고 갈 때 시선을 공에만 꽂지 마세요. 턱을 살짝 들고 전방과 좌우의 빈 공간, 동료의 위치를 끊임없이 확인해야 합니다." },
 
             // 🧠 [포지션 및 전술] 31~45
-            { title: "피보(Pivo)의 핵심 역할", img: "👑", category: "전술", desc: "피보는 최전방 타겟맨입니다. 상대 수비수를 등지고 버티면서 동료에게 공을 내어주거나, 틈이 보이면 직접 돌아서서 슛을 때립니다." },
+            
+            // 📝 [도식 추가] 피보 플레이
+            { 
+                title: "피보(Pivo)의 핵심 역할", img: "👑", category: "전술", 
+                diagram: `<div class="my-5 w-full flex justify-center"><svg width="260" height="150" viewBox="0 0 240 140" class="bg-emerald-900/30 border border-emerald-700/50 rounded-xl shadow-inner"><path d="M 240 40 A 40 40 0 0 0 240 100" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2"/><circle cx="195" cy="70" r="7" fill="#ef4444"/><circle cx="180" cy="70" r="7" fill="#38ff8e"/><text x="180" y="90" fill="#38ff8e" font-size="10" text-anchor="middle" font-weight="bold">피보</text><circle cx="80" cy="70" r="7" fill="#38ff8e"/><text x="80" y="90" fill="#38ff8e" font-size="10" text-anchor="middle" font-weight="bold">아라/픽소</text><path d="M 87 68 L 170 68" fill="none" stroke="#e8c271" stroke-width="2" stroke-dasharray="4" marker-end="url(#arrowYellow)"/><path d="M 175 63 Q 190 40 210 50" fill="none" stroke="#38ff8e" stroke-width="2" marker-end="url(#arrowGreen)"/><text x="215" y="45" fill="#38ff8e" font-size="10" font-weight="bold">터닝 슛</text></svg></div>`,
+                desc: "피보는 최전방 타겟맨입니다. 상대 수비수를 등지고 버티면서 동료에게 공을 내어주거나, 틈이 보이면 직접 돌아서서 슛을 때립니다." 
+            },
+            
             { title: "아라(Ala)의 움직임", img: "🦅", category: "전술", desc: "아라는 양 측면 윙어입니다. 공수 양면을 쉴 새 없이 오가며 공격의 활로를 뚫어주는 팀의 엔진 역할을 합니다." },
             { title: "픽소(Fixo)는 사령관", img: "👁️", category: "전술", desc: "최후방 수비수인 픽소는 수비 라인을 지휘하고 빌드업의 시발점이 됩니다. 침착함과 넓은 시야가 필수입니다." },
             { title: "골레이로(Goleiro)의 빌드업", img: "🧤", category: "전술", desc: "현대 풋살에서 골키퍼는 '손을 쓸 수 있는 마지막 필드 플레이어'입니다. 정확한 스로인과 발밑 패스로 공격의 첫 단추를 꿰어주세요." },
             { title: "로테이션(Rotation)이란?", img: "🔄", category: "전술", desc: "풋살은 정해진 자리에만 있지 않습니다. 패스를 한 선수가 빈 공간으로 빠지고, 다른 선수가 그 자리를 채워주는 순환 움직임을 로테이션이라고 합니다." },
             { title: "세트피스(코너킥) 전술", img: "⛳", category: "전술", desc: "코너킥 시 골대 앞에는 항상 상대 수비가 많습니다. 오히려 뒤쪽에서 달려오는 동료에게 컷백 패스를 내주어 중거리 슛을 노려보세요." },
-            { title: "다이애그널 런(대각선 침투)", img: "↗️", category: "전술", desc: "직선으로 뛰는 것보다, 수비수와 수비수 사이 공간으로 대각선 침투를 하면 패스를 받기도 쉽고 수비진을 흔들 수 있습니다." },
+            
+            // 📝 [도식 추가] 다이애그널 런
+            { 
+                title: "다이애그널 런(대각선 침투)", img: "↗️", category: "전술", 
+                diagram: `<div class="my-5 w-full flex justify-center"><svg width="260" height="150" viewBox="0 0 240 140" class="bg-emerald-900/30 border border-emerald-700/50 rounded-xl shadow-inner"><line x1="120" y1="0" x2="120" y2="140" stroke="rgba(255,255,255,0.1)" stroke-width="2"/><circle cx="140" cy="40" r="7" fill="#ef4444"/><circle cx="140" cy="100" r="7" fill="#ef4444"/><circle cx="80" cy="40" r="7" fill="#38ff8e"/><circle cx="60" cy="100" r="7" fill="#38ff8e"/><path d="M 87 45 L 160 85" fill="none" stroke="#38ff8e" stroke-width="2" marker-end="url(#arrowGreen)"/><path d="M 67 98 L 155 88" fill="none" stroke="#e8c271" stroke-width="2" stroke-dasharray="4" marker-end="url(#arrowYellow)"/><text x="175" y="85" fill="#38ff8e" font-size="10" font-weight="bold">수비사이 침투</text></svg></div>`,
+                desc: "직선으로 뛰는 것보다, 수비수와 수비수 사이 공간으로 대각선 침투를 하면 패스를 받기도 쉽고 수비진을 흔들 수 있습니다." 
+            },
+            
             { title: "압박(Pressing)의 타이밍", img: "🔥", category: "전술", desc: "수비 시 상대가 공을 잡는 순간, 터치가 길었을 때, 구석에 몰렸을 때가 강하게 압박해서 공을 빼앗을 수 있는 황금 타이밍입니다." },
-            { title: "L자 달리기 (페이크 무브)", img: "📏", category: "전술", desc: "마크맨을 떼어낼 때 직선으로 달리지 말고, 앞이나 옆으로 살짝 뛰다가 'L'자 형태로 갑자기 꺾어 달리면 수비를 완벽히 속일 수 있습니다." },
+            
+            // 📝 [도식 추가] L자 달리기
+            { 
+                title: "L자 달리기 (페이크 무브)", img: "📏", category: "전술", 
+                diagram: `<div class="my-5 w-full flex justify-center"><svg width="260" height="150" viewBox="0 0 240 140" class="bg-emerald-900/30 border border-emerald-700/50 rounded-xl shadow-inner"><line x1="120" y1="0" x2="120" y2="140" stroke="rgba(255,255,255,0.1)" stroke-width="2"/><circle cx="160" cy="70" r="7" fill="#ef4444"/><text x="160" y="90" fill="#ef4444" font-size="10" text-anchor="middle" font-weight="bold">수비</text><circle cx="140" cy="70" r="7" fill="#38ff8e"/><path d="M 140 63 L 140 30 L 180 30" fill="none" stroke="#38ff8e" stroke-width="2" marker-end="url(#arrowGreen)"/><text x="145" y="45" fill="#38ff8e" font-size="10" font-weight="bold">수비 유인 후 이탈</text></svg></div>`,
+                desc: "마크맨을 떼어낼 때 직선으로 달리지 말고, 앞이나 옆으로 살짝 뛰다가 'L'자 형태로 갑자기 꺾어 달리면 수비를 완벽히 속일 수 있습니다." 
+            },
+            
             { title: "존 디펜스(지역 방어) vs 맨투맨", img: "🛡️", category: "전술", desc: "특정 선수를 끝까지 따라다니는 맨투맨과 달리, 자신이 맡은 '구역'에 들어오는 선수를 방어하는 것이 지역 방어입니다. 상황에 맞게 섞어 쓰는 게 좋습니다." },
             { title: "가짜 공격수 (False 9) 전략", img: "🎭", category: "전술", desc: "최전방 공격수(피보)가 골대 앞이 아닌 미드필드 지역까지 깊게 내려와 공을 받아주면 상대 수비가 끌려나와 뒷공간이 텅 비게 됩니다." },
             { title: "오버래핑(Overlapping)의 정석", img: "🚀", category: "전술", desc: "동료가 공을 잡고 있을 때, 동료의 뒤쪽에서 시작해 바깥쪽으로 빠르게 추월하며 달려나가 공간을 만드는 전술적 움직임입니다." },
@@ -766,7 +817,7 @@
             { title: "방향 전환(Turn) 달리기", img: "↩️", category: "혼자연습", desc: "공 없이도 할 수 있습니다. 앞으로 전력 질주하다가 휘슬(또는 타이머) 소리에 맞춰 급격히 뒤로 돌아서 뛰는 연습으로 민첩성을 기르세요." },
             { title: "2:1 패스 타이밍 연습", img: "🤝", category: "친구와연습", desc: "수비수 역할의 콘을 세워두고, 친구에게 패스한 뒤 콘을 돌아 뛰어 들어가며 다시 리턴 패스를 받는 연습을 반복하세요." },
             { title: "발바닥 롤링(Rolling) 연습", img: "🛹", category: "혼자연습", desc: "오른발 발바닥으로 공을 왼쪽으로 굴리고, 바로 왼발 발바닥으로 공을 잡아 오른쪽으로 굴리는 동작을 좌우로 반복하세요." },
-            { title: "타겟 슈팅 연습", img: "🎯", category: "혼자연습", desc: "빈 골대에 수건이나 조끼를 구석에 매달아 놓고, 오직 그 표적만 맞추겠다는 생각으로 정확도 위주의 슈팅 연습을 해보세요." },
+            { title: "타겟 슈팅 연습", img: "🎯", category: "혼자연습", desc: "빈 골대에 수건이나 조끼를 매달아 놓고, 오직 그 표적만 맞추겠다는 생각으로 정확도 위주의 슈팅 연습을 해보세요." },
             { title: "등지고 돌아서기 훈련", img: "🌪️", category: "친구와연습", desc: "친구가 내 등 뒤에서 가볍게 밀고 있을 때, 공을 발바닥으로 잡고 한 번에 몸을 돌려 슈팅까지 이어가는 '피보 턴'을 연습하세요." },
             { title: "스피드 사다리(Ladder) 스텝", img: "🪜", category: "혼자연습", desc: "바닥에 그려진 사다리 칸을 빠르게 밟고 지나가는 스텝 훈련은 풋살의 생명인 '잔발 치기'와 민첩성을 극대화해 줍니다." },
             { title: "공중볼 트래핑 내기", img: "🎾", category: "친구와연습", desc: "친구와 높게 공을 차올려 준 뒤, 떨어지는 공을 원 바운드 안에 발이나 가슴으로 완벽하게 컨트롤하는 내기를 해보세요." },
@@ -886,7 +937,6 @@
             
             let totalWeight = 12;
             let weightedSum = 0;
-            // 여기서 POS_KEY_STATS 가 없으면 참조 에러가 났습니다. 다시 복구 완료!
             const keyStats = POS_KEY_STATS[p.pos] || [];
             
             for (const [key, val] of Object.entries(stats)) {
@@ -903,7 +953,9 @@
         
         const getWeeklyWage = (ovr) => { return Math.max(50, Math.min(200, Math.floor(50 + ((ovr - 50) / 49) * 150))); };
         
-        const getExpNeeded = (level) => Math.floor(100 + ((level ?? 1) * 20));
+        // 🚨 30주 만렙 (레벨 100) 도달을 위한 경험치 공식 리밸런싱
+        const getExpNeeded = (level) => Math.floor(40 + ((level ?? 1) * 3));
+
         function getWeekNumber(d) {
             d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
             d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
@@ -972,7 +1024,6 @@
         };
 
         function renderDailyTip() {
-            // 일수를 3일로 나누어 3일마다 배열의 인덱스가 바뀌도록 처리
             const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
             const tipIndex = Math.floor(dayOfYear / 3) % DAILY_TIPS.length;
             const tip = DAILY_TIPS[tipIndex];
@@ -984,6 +1035,7 @@
                 </div>
                 <div class="p-6">
                     <h4 class="text-2xl font-display text-white mb-4 leading-tight break-keep">${tip.title}</h4>
+                    ${tip.diagram ? tip.diagram : ''}
                     <p class="text-slate-300 text-sm sm:text-base leading-relaxed break-keep font-medium">${tip.desc}</p>
                 </div>
             `;
@@ -1583,7 +1635,8 @@
                 if(roleDisplay) roleDisplay.innerText = isGM ? 'MASTER' : 'PLAYER';
                 
                 if(isGM) {
-                    document.getElementById('gmAttendanceTools')?.classList.remove('hidden');
+                    const gmAttTools = document.getElementById('gmAttendanceTools');
+                    if(gmAttTools) { gmAttTools.classList.remove('hidden'); gmAttTools.classList.add('flex'); }
                     document.getElementById('btnTabMaster')?.classList.remove('hidden');
                     document.getElementById('btnTabMasterStats')?.classList.remove('hidden');
                     document.getElementById('gmAnnouncementEditor')?.classList.remove('hidden');
@@ -1994,28 +2047,6 @@
             triggerConfetti(); window.customAlert(`💰 주급 수령 완료!\n현재 능력치에 맞춰 [${wage} B]가 지급되었습니다.`);
         };
 
-        window.buyConsumable = async (type) => {
-            if(!window.playerState.id || window.playerState.isGM) return;
-            const p = window.allPlayersData.find(x => x.id === window.playerState.id);
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
-            
-            if(type === 'exp') {
-                if((p.bong||0) < 10) return window.customAlert("자산(B)이 부족합니다!");
-                if(!await window.customConfirm(`[집중 훈련]을 10 B에 구매하시겠습니까?\n(경험치 50 즉시 획득)`)) return;
-                await processExp(p, 50, docRef, { bong: p.bong - 10 });
-                animateFloatText("-10 B", "text-red-400", "confettiOrigin"); setTimeout(() => animateFloatText("+50 EXP", "text-emerald-400", "confettiOrigin"), 600);
-            }
-            else if(type === 'stat') {
-                if((p.bong||0) < 50) return window.customAlert("자산(B)이 부족합니다! 열심히 모아보세요.");
-                if(!await window.customConfirm(`[포지션 특훈]을 50 B에 진행하시겠습니까?\n(임의의 스탯 1개가 1상승합니다)`)) return;
-                const stats = ['pac', 'sho', 'pas', 'dri', 'def', 'phy', 'ref', 'int', 'pst', 'dis', 'cmp', 'wrk'];
-                const targetStat = stats[Math.floor(Math.random()*stats.length)];
-                let updates = { bong: p.bong - 50 }; updates[targetStat] = Math.min(99, (p[targetStat]||60) + 1);
-                await setDoc(docRef, updates, { merge: true });
-                triggerConfetti(); window.customAlert(`특훈 성공!!\n[${targetStat.toUpperCase()}] 스탯이 1 올랐습니다!`);
-            }
-        };
-
         window.changePositionModal = (pId) => {
             const modal = document.createElement('div'); modal.className = "fixed inset-0 z-[400] flex items-center justify-center bg-black/80 px-4";
             const posList = [
@@ -2133,6 +2164,7 @@
             triggerConfetti(); window.customAlert(`✅ ${dateStr}\n총 ${attendees.length}명의 출석부가 저장되었습니다!`);
         };
 
+        // 🚨 출석부 모달 복구 및 30주 스크롤 확장 적용
         window.viewAttendance = async () => {
             if (!window.playerState.isGM) return;
             const attRef = collection(db, 'artifacts', appId, 'public', 'data', 'attendance');
@@ -2143,7 +2175,8 @@
                 
                 const dates = [];
                 let d = new Date(2026, 2, 7); 
-                for(let i=0; i<15; i++) {
+                // 30주로 확장
+                for(let i=0; i<30; i++) {
                     const y = d.getFullYear();
                     const m = String(d.getMonth() + 1).padStart(2, '0');
                     const day = String(d.getDate()).padStart(2, '0');
@@ -2151,21 +2184,21 @@
                     d.setDate(d.getDate() + 7);
                 }
 
-                let modalHtml = `<div class="bg-pitch-panel p-4 sm:p-6 rounded-3xl border-2 border-emerald-500 max-w-6xl w-full shadow-2xl max-h-[90vh] flex flex-col font-sans text-white">
+                let modalHtml = `<div class="bg-pitch-panel p-4 sm:p-6 rounded-3xl border-2 border-emerald-500 w-full sm:w-[95vw] max-w-7xl shadow-2xl max-h-[90vh] flex flex-col font-sans text-white relative">
                     <h2 class="text-2xl sm:text-3xl font-display text-center text-emerald-400 mb-2 tracking-widest drop-shadow-lg flex items-center justify-center gap-3"><i class="fa-solid fa-calendar-check"></i> 삼봉 풋살클럽 출석부 (2026)</h2>
-                    <p class="text-xs text-emerald-200 mb-4 mt-2 text-center">토요스포츠데이 (3~6학년) / 9:20~12:30</p>
+                    <p class="text-xs text-emerald-200 mb-4 mt-2 text-center">토요스포츠데이 (3~6학년) / 9:20~12:30 / 좌우로 스크롤하여 30주차 전체 일정을 확인하세요!</p>
                     
-                    <div class="overflow-auto custom-scrollbar flex-1 border border-emerald-800/50 rounded-xl bg-slate-900/80">
+                    <div class="overflow-x-auto overflow-y-auto custom-scrollbar flex-1 border border-emerald-800/50 rounded-xl bg-slate-900/80">
                         <table class="w-full text-center whitespace-nowrap text-xs border-collapse">
                             <thead>
-                                <tr class="bg-slate-800 border-b border-emerald-800">
-                                    <th rowspan="2" class="p-2 border-r border-slate-700 w-10">연번</th>
-                                    <th rowspan="2" class="p-2 border-r border-slate-700 w-24">성명</th>
-                                    <th class="p-2 border-r border-slate-700 bg-emerald-900/40 text-emerald-300 w-12">누계</th>
-                                    ${dates.map((_, i) => `<th class="p-1 border-r border-slate-700 font-normal text-[10px] text-slate-400 w-10">${i+1}주차</th>`).join('')}
+                                <tr class="bg-slate-800 border-b border-emerald-800 sticky top-0 z-20 shadow-md">
+                                    <th rowspan="2" class="p-2 border-r border-slate-700 w-10 sticky left-0 bg-slate-800 z-30">연번</th>
+                                    <th rowspan="2" class="p-2 border-r border-slate-700 w-24 sticky left-10 bg-slate-800 z-30 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">성명</th>
+                                    <th class="p-2 border-r border-slate-700 bg-emerald-900/80 text-emerald-300 w-12 sticky left-[136px] z-30 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">누계</th>
+                                    ${dates.map((_, i) => `<th class="p-1 border-r border-slate-700 font-normal text-[10px] text-slate-400 w-12">${i+1}주차</th>`).join('')}
                                 </tr>
-                                <tr class="bg-slate-800 border-b border-emerald-800">
-                                    <th class="p-1 border-r border-slate-700 text-[10px] bg-emerald-900/40">출석</th>
+                                <tr class="bg-slate-800 border-b border-emerald-800 sticky top-8 z-10 shadow-md">
+                                    <th class="p-1 border-r border-slate-700 text-[10px] bg-emerald-900/80 sticky left-[136px] z-30 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">출석</th>
                                     ${dates.map(d => `<th class="p-1 border-r border-slate-700 text-[10px]"><div class="text-emerald-400 font-bold">${d.substring(5).replace('-','/')}</div><div class="text-emerald-500/70 mt-0.5 font-bold">(토)</div></th>`).join('')}
                                 </tr>
                             </thead>
@@ -2187,17 +2220,17 @@
                     }).join('');
                     
                     modalHtml += `
-                        <tr class="hover:bg-slate-800/60 transition">
-                            <td class="p-2 border-r border-b border-slate-700/50 text-slate-500">${idx+1}</td>
-                            <td class="p-2 border-r border-b border-slate-700/50 font-bold text-white tracking-widest">${name}</td>
-                            <td class="p-2 border-r border-b border-slate-700/50 bg-emerald-900/20 font-bold text-emerald-300">${attCount}</td>
+                        <tr class="hover:bg-slate-800/60 transition group">
+                            <td class="p-2 border-r border-b border-slate-700/50 text-slate-500 sticky left-0 bg-slate-900 group-hover:bg-slate-800">${idx+1}</td>
+                            <td class="p-2 border-r border-b border-slate-700/50 font-bold text-white tracking-widest sticky left-10 bg-slate-900 group-hover:bg-slate-800 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">${name}</td>
+                            <td class="p-2 border-r border-b border-slate-700/50 bg-emerald-900/20 font-bold text-emerald-300 sticky left-[136px] group-hover:bg-emerald-900/40 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">${attCount}</td>
                             ${rowCells}
                         </tr>
                     `;
                 });
                 
                 modalHtml += `</tbody></table></div>
-                    <button onclick="this.parentElement.parentElement.remove()" class="mt-6 bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-xl w-full transition shadow-lg text-lg">닫기</button>
+                    <button onclick="this.parentElement.parentElement.remove()" class="mt-6 bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-xl w-full sm:w-64 mx-auto transition shadow-lg text-lg">닫기</button>
                 </div>`;
                 
                 const modal = document.createElement('div'); modal.className = "fixed inset-0 z-[400] flex items-center justify-center bg-black/90 px-2 sm:px-4 backdrop-blur-sm"; modal.innerHTML = modalHtml; document.body.appendChild(modal);
