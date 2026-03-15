@@ -36,7 +36,6 @@
         body { background-color: #0a1912; color: #f8fafc; overflow-x: hidden; background-image: radial-gradient(circle at 50% 0%, #15452d, #0a1912); }
         h1, h2, h3, .font-display { font-family: 'Black Han Sans', sans-serif; letter-spacing: 1px; }
         
-        /* 스크롤바 커스텀 */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #0a1912; }
         ::-webkit-scrollbar-thumb { background: #1f422e; border-radius: 4px; }
@@ -52,7 +51,6 @@
         .glass-panel { background: rgba(17, 41, 29, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(232, 194, 113, 0.2); }
         .locker-panel { background: linear-gradient(180deg, #2a2a35 0%, #1a1a24 100%); box-shadow: inset 0 10px 30px rgba(0,0,0,0.5); border: 2px solid #3f3f5a; }
 
-        /* 티어별 등급 컬러 */
         .tier-badge-rookie { background: linear-gradient(135deg, #cd7f32, #8b4513); color: white; border-color: #e5b083; } 
         .tier-badge-semipro { background: linear-gradient(135deg, #e5e4e2, #a9a9a9); color: black; border-color: #ffffff; } 
         .tier-badge-pro { background: linear-gradient(135deg, #ffd700, #daa520); color: black; border-color: #fffacd; } 
@@ -61,7 +59,6 @@
 
         @keyframes rainbow-bg { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
 
-        /* 티어별 카드 CSS */
         .fut-card {
             clip-path: polygon(10% 0, 90% 0, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0 90%, 0 10%);
             box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 0 10px rgba(255,255,255,0.5);
@@ -82,7 +79,6 @@
         .card-challenger::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: conic-gradient(transparent, rgba(255,215,0,0.3), transparent 30%); animation: rotate 4s linear infinite; z-index: -1; pointer-events: none; }
         @keyframes rotate { 100% { transform: rotate(1turn); } }
 
-        /* 아바타 주변 펜타곤 미니 인벤토리 슬롯 */
         .item-slot-mini {
             width: 36px; height: 36px;
             background-color: rgba(0,0,0,0.3);
@@ -92,16 +88,26 @@
             position: absolute; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 20; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
         }
-        .item-slot-mini.equipped {
-            background-color: rgba(255,255,255,0.25);
-            border-color: rgba(255,255,255,0.8);
-            box-shadow: 0 0 12px rgba(255,255,255,0.4);
-        }
-        .item-slot-mini .item-icon { font-size: 1.1rem; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5)); }
+        
+        /* 💎 강화 단계별 시각적 이펙트 (CSS) */
+        .eff-0.equipped { background-color: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.8); box-shadow: 0 0 12px rgba(255,255,255,0.4); }
+        .eff-1 { border-color: #ffffff !important; box-shadow: 0 0 8px rgba(255,255,255,0.9) !important; animation: effPulse 2s infinite; }
+        .eff-2 { border-color: #3b82f6 !important; box-shadow: 0 0 15px rgba(59,130,246,0.9) !important; animation: effSpin 3s linear infinite; }
+        .eff-3 { border-color: #a855f7 !important; box-shadow: 0 0 20px rgba(168,85,247,1) !important; animation: effFlame 1.5s alternate infinite; }
+        .eff-4 { border-color: #eab308 !important; box-shadow: 0 0 25px rgba(234,179,8,1) !important; animation: effLightning 0.5s ease-in-out infinite alternate; }
+        .eff-5 { border-color: #ef4444 !important; box-shadow: 0 0 35px rgba(239,68,68,1) !important; animation: rainbow-bg 2s infinite, effShake 0.1s infinite; background: linear-gradient(135deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #8b00ff); background-size: 200% 200%; }
+        
+        @keyframes effPulse { 0%, 100% { box-shadow: 0 0 5px #fff; } 50% { box-shadow: 0 0 15px #fff; } }
+        @keyframes effSpin { 0% { box-shadow: 5px 5px 15px rgba(59,130,246,0.8), -5px -5px 15px rgba(59,130,246,0.8); } 50% { box-shadow: -5px 5px 15px rgba(59,130,246,0.8), 5px -5px 15px rgba(59,130,246,0.8); } 100% { box-shadow: 5px 5px 15px rgba(59,130,246,0.8), -5px -5px 15px rgba(59,130,246,0.8); } }
+        @keyframes effFlame { 0% { box-shadow: 0 0 10px #a855f7, 0 -5px 10px #d946ef; } 100% { box-shadow: 0 0 20px #a855f7, 0 -15px 20px #d946ef; } }
+        @keyframes effLightning { 0% { box-shadow: 0 0 10px #eab308, inset 0 0 5px #eab308; } 100% { box-shadow: 0 0 30px #fde047, inset 0 0 15px #fde047; } }
+        @keyframes effShake { 0%, 100% { transform: translateX(0) translateY(0); } 25% { transform: translateX(-1px) translateY(1px); } 50% { transform: translateX(1px) translateY(-1px); } 75% { transform: translateX(-1px) translateY(-1px); } }
+
+        .item-slot-mini .item-icon { font-size: 1.1rem; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5)); z-index: 2; position: relative; }
         .item-slot-mini .item-label {
             position: absolute; bottom: -14px; font-size: 10px; font-weight: 900;
             color: inherit; opacity: 0.9; text-shadow: 0 1px 2px rgba(0,0,0,0.8);
-            white-space: nowrap;
+            white-space: nowrap; z-index: 2;
         }
 
         .mini-card { position: relative; transition: all 0.2s; overflow: hidden; }
@@ -128,7 +134,6 @@
         .nav-tab:hover { color: #e2e8f0; border-bottom-color: #475569; }
         .nav-tab.active { color: #38ff8e; border-bottom-color: #38ff8e; font-weight: bold; text-shadow: 0 0 10px rgba(56,255,142,0.4); }
 
-        /* 업적 카드 필터 (미달성 흑백 효과) */
         .achieved-card { border-color: #e8c271; background-color: rgba(232, 194, 113, 0.1); box-shadow: 0 0 15px rgba(232, 194, 113, 0.2); }
         .unachieved-card { opacity: 0.6; filter: grayscale(80%); border-color: rgba(255,255,255,0.1); }
         .unachieved-card:hover { opacity: 0.9; filter: grayscale(40%); }
@@ -136,7 +141,6 @@
 </head>
 <body class="antialiased">
 
-    <!-- 전술 도식용 화살표 마커 정의 (공통 사용) -->
     <svg width="0" height="0" class="hidden">
         <defs>
             <marker id="arrowYellow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto-start-reverse">
@@ -147,6 +151,11 @@
             </marker>
         </defs>
     </svg>
+
+    <!-- 글로벌 전광판 (Marquee) -->
+    <div id="globalMarqueeContainer" class="hidden w-full bg-gradient-to-r from-red-600 via-yellow-500 to-purple-600 text-white font-display text-lg py-1.5 z-[200] relative shadow-[0_0_15px_rgba(255,215,0,0.8)] overflow-hidden">
+        <marquee id="globalMarqueeText" scrollamount="12" class="tracking-widest drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]"></marquee>
+    </div>
 
     <!-- 로그인 오버레이 -->
     <div id="loginOverlay" class="fixed inset-0 bg-pitch-bg z-[100] flex flex-col items-center justify-center px-4 transition-opacity duration-500">
@@ -192,7 +201,7 @@
     </div>
 
     <!-- 네비게이션 -->
-    <nav class="relative lg:sticky top-0 w-full z-[100] bg-pitch-bg/95 backdrop-blur-lg border-b border-emerald-900/50">
+    <nav class="relative lg:sticky top-0 w-full z-[90] bg-pitch-bg/95 backdrop-blur-lg border-b border-emerald-900/50">
         <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16 gap-2 sm:gap-4">
                 <div class="flex items-center gap-2 pr-2 border-r border-slate-700/50 flex-shrink-0">
@@ -200,14 +209,13 @@
                     <span class="font-display text-lg sm:text-xl text-white tracking-wider pt-1 hidden md:block">SAMBONG</span>
                 </div>
                 
-                <!-- 탭 메뉴 리스트 (꿀팁이 두번째로 이동됨) -->
                 <div class="flex items-center space-x-1 sm:space-x-3 text-xs sm:text-sm flex-grow overflow-x-auto hide-scrollbar whitespace-nowrap scroll-smooth">
                     <button onclick="window.switchTab('tabWorkspace')" id="btnTabWorkspace" class="nav-tab active pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-person-booth mr-1"></i>라커룸</button>
                     <button onclick="window.switchTab('tabTips')" id="btnTabTips" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-lightbulb mr-1 text-orange-400"></i>꿀팁&공지</button>
+                    <button onclick="window.switchTab('tabShop')" id="btnTabShop" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-hammer mr-1 text-purple-400"></i>상점&강화소</button>
                     <button onclick="window.switchTab('tabAchievements')" id="btnTabAchievements" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-medal mr-1 text-yellow-300"></i>도전과제</button>
                     <button onclick="window.switchTab('tabRank')" id="btnTabRank" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-trophy mr-1 text-yellow-400"></i>명예의전당</button>
                     <button onclick="window.switchTab('tabCompare')" id="btnTabCompare" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-code-compare mr-1 text-pink-400"></i>선수비교</button>
-                    <button onclick="window.switchTab('tabShop')" id="btnTabShop" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-store mr-1 text-purple-400"></i>상점</button>
                     <button onclick="window.switchTab('tabGuide')" id="btnTabGuide" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-circle-info mr-1 text-cyan-400"></i>이용안내</button>
                     <button onclick="window.switchTab('tabMaster')" id="btnTabMaster" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 hidden flex-shrink-0"><i class="fa-solid fa-chart-line mr-1 text-fut-rare"></i>현황판(마스터)</button>
                     <button onclick="window.switchTab('tabMasterStats')" id="btnTabMasterStats" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 hidden flex-shrink-0"><i class="fa-solid fa-list-ol mr-1 text-emerald-400"></i>스탯현황</button>
@@ -229,10 +237,9 @@
     <!-- 메인 컨텐츠 영역 -->
     <div class="pt-6 pb-12 px-4 max-w-7xl mx-auto min-h-screen">
         
-        <!-- 레이아웃 확장/축소를 위한 메인 그리드 래퍼 -->
         <div class="grid lg:grid-cols-12 gap-8 items-start relative w-full transition-all duration-500">
             
-            <!-- 좌측: 상세 정보 패널 (다른 탭 이동 시 통째로 숨김 처리됨) -->
+            <!-- 좌측: 상세 정보 패널 -->
             <div id="leftCardPanel" class="lg:col-span-4 space-y-6 lg:sticky lg:top-24 z-10 transition-all duration-500">
                 
                 <div class="glass-panel p-6 rounded-3xl border-t-4 border-fut-gold shadow-2xl relative overflow-hidden">
@@ -241,7 +248,6 @@
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="font-display text-xl text-white" id="detailPanelTitle">내 선수 정보</h2>
                         <div class="flex gap-2 items-center">
-                            <!-- 티어 뱃지 -->
                             <div id="detailTierBadge" class="px-2 py-1 rounded border text-[10px] font-bold shadow-md whitespace-nowrap">루키</div>
                             <div class="bg-slate-800 px-3 py-1 rounded-full border border-slate-600 flex items-center gap-2 shadow-inner">
                                 <span class="text-xs text-slate-400 font-bold">LV.</span>
@@ -250,28 +256,21 @@
                         </div>
                     </div>
 
-                    <!-- 👑 새로운 디자인의 FUT 카드 -->
                     <div id="cardAuraWrapper" class="mx-auto w-fit transition-all duration-500 z-10 relative">
                         <div id="detailFutCard" class="fut-card w-[300px] h-[460px] p-5 flex flex-col relative shadow-2xl z-10 mx-auto transition-all duration-300">
                             
-                            <!-- 상단 영역: OVR/포지션/태극기 & 우측 아바타 펜타곤 -->
                             <div class="flex justify-between items-start z-10 w-full h-[155px]">
-                                <!-- 좌측 (오버롤, 포지션, 국적) -->
                                 <div class="flex flex-col items-center justify-start relative text-current mt-2 w-1/3">
                                     <span class="font-oswald text-[4.2rem] font-bold leading-none -ml-1 drop-shadow-md" id="detailOvr">86</span>
                                     <div class="flex flex-col items-center gap-1 hover:opacity-70 transition cursor-pointer mt-1 w-full" id="btnChangePos">
                                         <span class="font-bold text-sm tracking-widest leading-none text-center" id="detailPos">미정</span>
                                         <i class="fa-solid fa-pen text-[10px] opacity-70" id="iconEditPos"></i>
                                     </div>
-                                    <!-- 실제 태극기 이미지 적용 -->
                                     <img src="https://flagcdn.com/w40/kr.png" alt="KR" class="w-8 h-auto mt-2 shadow-sm border border-black/20 rounded-sm">
                                 </div>
                                 
-                                <!-- 우측 (아바타 & 오각형 5슬롯) -->
                                 <div class="relative w-2/3 h-full flex items-center justify-center -mt-2 pr-2">
                                     <div class="text-[5rem] drop-shadow-xl relative z-10 mb-2" id="detailAvatar">👦</div>
-                                    
-                                    <!-- 펜타곤 5슬롯 비율 완벽 조정 -->
                                     <div class="item-slot-mini" id="slotHead" style="top: -5px; left: 50%; transform: translateX(-50%);"></div>
                                     <div class="item-slot-mini" id="slotHandL" style="top: 35px; left: 10px;"></div>
                                     <div class="item-slot-mini" id="slotHandR" style="top: 35px; right: 10px;"></div>
@@ -280,28 +279,21 @@
                                 </div>
                             </div>
 
-                            <!-- 중앙 (선수 이름 구분선) -->
                             <div class="w-full flex flex-col items-center z-10 text-current mt-1 mb-2">
                                 <div class="font-display text-[1.7rem] tracking-widest uppercase drop-shadow-md" id="detailName">선수 이름</div>
                                 <div class="w-11/12 border-b-2 border-current opacity-30 mt-1 mb-2"></div>
                             </div>
 
-                            <!-- 하단 (스탯 그리드 & 레이더 차트) -->
                             <div class="relative w-full flex-grow flex items-center justify-center z-10 text-current">
-                                <!-- 은은한 배경 레이더 차트 -->
                                 <div class="absolute inset-0 flex items-center justify-center opacity-15 pointer-events-none">
                                     <canvas id="statRadar" width="160" height="160"></canvas>
                                 </div>
-                                
-                                <!-- EA FC 스타일 3x2 스탯 그리드 -->
                                 <div class="w-full grid grid-cols-3 gap-y-1 gap-x-1 z-10 px-2" id="detailStatsGrid">
-                                    <!-- 자바스크립트로 스탯 렌더링 됨 -->
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 경험치 바 -->
                     <div class="mt-8 mb-2 px-2 relative z-30">
                         <div class="flex justify-between text-xs font-bold text-slate-400 mb-1">
                             <span>EXP</span>
@@ -312,7 +304,6 @@
                         </div>
                     </div>
 
-                    <!-- 감독 전용 패널 -->
                     <div id="gmWalletManager" class="hidden mt-4 bg-slate-900/90 p-3 rounded-xl border border-fut-gold shadow-lg flex justify-between items-center relative z-30">
                         <span class="text-xs font-bold text-slate-300 flex items-center">자산 관리: <span id="gmViewBong" class="ml-1"></span><span class="text-fut-gold ml-1">B</span></span>
                         <div class="flex gap-1">
@@ -343,15 +334,12 @@
                                 <button onclick="window.giveAll('bong', 10)" class="flex-1 bg-gradient-to-r from-fut-gold-dark to-fut-gold hover:from-fut-gold hover:to-yellow-200 text-slate-900 text-xs py-2.5 rounded shadow font-bold transition">전체 +10 B 지급</button>
                             </div>
                         </div>
-
-                        <!-- 전체 학생 레벨 0 초기화 버튼 영역 추가 -->
                         <div class="mt-3 pt-3 border-t border-red-800/50">
                             <h4 class="text-[11px] font-bold text-red-400 mb-2 flex items-center gap-1"><i class="fa-solid fa-rotate-left"></i> 전체 레벨 초기화</h4>
                             <button onclick="window.resetAllLevels()" class="w-full bg-red-900/40 hover:bg-red-800 text-red-200 text-xs py-2.5 rounded shadow font-bold transition border border-red-700/50">전체 학생 레벨 0으로 초기화</button>
                         </div>
                     </div>
 
-                    <!-- 누적 기록 요약 -->
                     <div class="mt-6 bg-pitch-bg p-4 rounded-xl border border-emerald-900/50 relative z-30">
                         <div class="grid grid-cols-3 gap-y-3 gap-x-2 text-center text-sm">
                             <div><div class="text-[10px] text-slate-500">경기</div><div class="font-bold text-white text-lg" id="recMatches">0</div></div>
@@ -363,7 +351,6 @@
                         </div>
                     </div>
 
-                    <!-- 본인 전용 양심 기록소 및 주급 (게스트에게는 숨겨짐) -->
                     <div id="playerTrainingPanel" class="mt-4 flex flex-col gap-3 relative z-30">
                         <div class="flex justify-between items-center bg-slate-800 p-3 rounded-xl border border-fut-gold/30 shadow-inner">
                             <span class="text-sm font-bold text-slate-300">내 지갑 (자산)</span>
@@ -410,12 +397,10 @@
                 </div>
             </div>
 
-            <!-- 우측 영역 (탭 메뉴에 따라 전체 확장됨) -->
+            <!-- 우측 영역 -->
             <div id="rightContentPanel" class="lg:col-span-8 space-y-8 pb-10 transition-all duration-500 w-full">
                 
-                <!-- 탭 1: 라커룸 및 밸런서 -->
                 <div id="tabWorkspace" class="space-y-8">
-                    <!-- 🏟️ 라커룸 -->
                     <div class="locker-panel rounded-3xl p-6 sm:p-8">
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                             <div>
@@ -442,7 +427,6 @@
                         </div>
                     </div>
 
-                    <!-- ⚖️ AI 매치메이킹 -->
                     <div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-blue-500">
                         <h3 class="text-2xl font-display text-white mb-2 flex items-center gap-2">
                             <i class="fa-solid fa-scale-balanced text-blue-400"></i> AI 매치메이킹 시스템
@@ -471,17 +455,13 @@
                     </div>
                 </div>
 
-                <!-- 탭 2: 꿀팁 & 공지 -->
                 <div id="tabTips" class="hidden space-y-8">
-                    <!-- 📢 공지사항 패널 -->
                     <div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-red-500 relative">
                         <h3 class="text-2xl sm:text-3xl font-display text-red-400 mb-4 flex items-center gap-3">
                             <i class="fa-solid fa-bullhorn text-red-500 animate-pulse"></i> 감독님 공지사항
                         </h3>
-                        <!-- 공지사항 표시 영역 -->
                         <div id="announcementContent" class="bg-slate-900/80 rounded-2xl p-5 border border-slate-700 text-white whitespace-pre-wrap min-h-[100px] leading-relaxed break-keep font-medium text-sm sm:text-base shadow-inner">등록된 공지사항이 없습니다. 불러오는 중...</div>
                         
-                        <!-- 감독용 글쓰기 에디터 (GM에게만 보임) -->
                         <div id="gmAnnouncementEditor" class="hidden mt-4 pt-4 border-t border-slate-700">
                             <h4 class="text-xs font-bold text-slate-400 mb-2 flex items-center gap-1"><i class="fa-solid fa-pen-to-square"></i> 공지사항 작성 (감독 전용)</h4>
                             <textarea id="announcementInput" class="w-full bg-slate-800 border border-slate-600 rounded-xl p-4 text-white focus:border-red-400 focus:outline-none mb-3 resize-y custom-scrollbar" rows="4" placeholder="대회 일정, 훈련 안내 등 풋살부 공지사항을 자유롭게 입력하세요..."></textarea>
@@ -491,7 +471,6 @@
                         </div>
                     </div>
 
-                    <!-- 💡 오늘의 꿀팁 패널 -->
                     <div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-orange-500">
                         <h3 class="text-2xl sm:text-3xl font-display text-orange-400 mb-6 flex items-center gap-3">
                             <i class="fa-solid fa-book-open"></i> 오늘의 풋살 꿀팁 <span class="text-[10px] font-sans text-slate-400 font-normal ml-2 border border-slate-600 px-2 py-1 rounded bg-slate-800">3일마다 갱신</span>
@@ -500,7 +479,6 @@
                     </div>
                 </div>
 
-                <!-- 탭: 도전 과제 (Achievements) -->
                 <div id="tabAchievements" class="hidden space-y-6">
                     <div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-yellow-300">
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 border-b border-slate-700 pb-4 gap-4">
@@ -516,18 +494,15 @@
                             </div>
                         </div>
                         
-                        <!-- 전체 프로그레스 바 -->
                         <div class="w-full bg-slate-800 rounded-full h-4 border border-slate-600 overflow-hidden mb-8 shadow-inner relative">
                             <div id="achievementProgressBar" class="bg-gradient-to-r from-yellow-600 via-yellow-400 to-yellow-200 h-4 rounded-full shadow-[0_0_15px_#e8c271] transition-all duration-1000 ease-out" style="width: 0%"></div>
                         </div>
                         
                         <div id="achievementsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- JS에서 렌더링 -->
                         </div>
                     </div>
                 </div>
 
-                <!-- 탭: 기록실 (명예의 전당) -->
                 <div id="tabRank" class="hidden space-y-6">
                     <div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-yellow-400">
                         <h3 class="text-3xl font-display text-yellow-400 mb-6 flex items-center gap-3">
@@ -539,7 +514,6 @@
                     </div>
                 </div>
 
-                <!-- 탭: 선수 비교 화면 컨테이너 -->
                 <div id="tabCompare" class="hidden space-y-6">
                     <div class="glass-panel p-4 sm:p-8 rounded-3xl border-t-4 border-t-pink-500">
                         <h3 class="text-2xl sm:text-3xl font-display text-pink-400 mb-6 flex items-center gap-3">
@@ -562,27 +536,30 @@
                     </div>
                 </div>
 
-                <!-- 탭 3: 꾸미기 상점 -->
+                <!-- 🛠️ 탭 3: 꾸미기 상점 & 제련소 -->
                 <div id="tabShop" class="hidden space-y-6">
-                    <div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-purple-500">
-                        <div class="flex justify-between items-end mb-6 border-b border-slate-700 pb-4">
+                    <div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-purple-500 relative overflow-hidden">
+                        
+                        <!-- 화려한 배경 장식 -->
+                        <div class="absolute -top-20 -right-20 w-64 h-64 bg-purple-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 border-b border-slate-700 pb-4 gap-4 relative z-10">
                             <div>
                                 <h3 class="text-3xl font-display text-purple-400 flex items-center gap-3">
-                                    <i class="fa-solid fa-shirt"></i> 아이템 상점
+                                    <i class="fa-solid fa-hammer text-fuchsia-400"></i> 장비 상점 & 강화소
                                 </h3>
-                                <p class="text-sm text-slate-400 mt-2" id="shopSubTitle">획득한 자산(B)으로 카드 5부위를 멋지게 꾸며보세요!</p>
+                                <p class="text-sm text-slate-300 mt-2 break-keep" id="shopSubTitle">자산(B)으로 장비를 구매하고 강화하세요. (최대 +5강)<br><span class="text-emerald-400 font-bold">💡 아이템 장착 시 레벨업할 때 해당 스탯이 오를 확률이 증가합니다!</span></p>
                             </div>
-                            <div class="text-right">
+                            <div class="text-left sm:text-right w-full sm:w-auto bg-slate-900/60 p-3 rounded-xl border border-purple-500/30">
                                 <p class="text-xs text-slate-400 font-bold mb-1" id="shopWalletLabel">보유 자산</p>
                                 <div class="font-display text-3xl text-fut-gold"><span id="shopBong">0</span> B</div>
                             </div>
                         </div>
                         
-                        <div id="shopGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                        <div id="shopGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10"></div>
                     </div>
                 </div>
 
-                <!-- 탭 5: 이용안내 -->
                 <div id="tabGuide" class="hidden space-y-6">
                     <div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-cyan-400">
                         <h3 class="text-3xl font-display text-cyan-400 mb-6 flex items-center gap-3">
@@ -591,29 +568,24 @@
                         <div class="space-y-4">
                             <div class="bg-slate-900/60 p-5 rounded-xl border border-slate-700 hover:border-cyan-500/50 transition">
                                 <h4 class="text-base sm:text-lg font-bold text-white mb-2 flex items-center gap-2"><i class="fa-solid fa-ranking-star text-yellow-400"></i> 1. OVR(능력치) 기반 티어 시스템</h4>
-                                <p class="text-sm text-slate-300 leading-relaxed break-keep">내 카드의 전체 능력치(OVR) 점수에 따라 <b>루키(동색) → 세미프로(은색) → 프로(금색) → 월드클래스(보라색) → 챌린저(무지개색)</b> 순으로 티어와 카드 색상이 진화합니다!</p>
+                                <p class="text-sm text-slate-300 leading-relaxed break-keep">내 카드의 전체 능력치(OVR) 점수에 따라 <b>루키(동색) → 세미프로(은색) → 프로(금색) → 월드클래스(보라색) → 챌린저(무지개색)</b> 순으로 진화합니다!</p>
                             </div>
                             <div class="bg-slate-900/60 p-5 rounded-xl border border-slate-700 hover:border-cyan-500/50 transition">
                                 <h4 class="text-base sm:text-lg font-bold text-white mb-2 flex items-center gap-2"><i class="fa-solid fa-pen-to-square text-emerald-400"></i> 2. 양심 기록소 (스탯 직접 입력)</h4>
-                                <p class="text-sm text-slate-300 leading-relaxed break-keep">경기가 끝나면 내 카드 화면에서 <b>스스로 골, 어시스트 등을 입력</b>합니다. 취소 시 경험치 1이 페널티로 차감되니 신중하게 눌러주세요.</p>
+                                <p class="text-sm text-slate-300 leading-relaxed break-keep">경기가 끝나면 스스로 골, 어시스트 등을 입력합니다. 실수 취소 시 경험치가 깎이니 신중하세요.</p>
                             </div>
-                            <div class="bg-slate-900/60 p-5 rounded-xl border border-slate-700 hover:border-cyan-500/50 transition">
-                                <h4 class="text-base sm:text-lg font-bold text-white mb-2 flex items-center gap-2"><i class="fa-solid fa-book-open text-orange-400"></i> 3. 꿀팁 게시판 (3일 갱신)</h4>
-                                <p class="text-sm text-slate-300 leading-relaxed break-keep">이해하기 어려운 전술이나 움직임은 <b>도식화된 그림과 함께 3일마다 새로운 꿀팁으로 제공</b>됩니다. 매번 라커룸에 들어올 때 확인하세요!</p>
-                            </div>
-                            <div class="bg-slate-900/60 p-5 rounded-xl border border-slate-700 hover:border-cyan-500/50 transition">
-                                <h4 class="text-base sm:text-lg font-bold text-white mb-2 flex items-center gap-2"><i class="fa-solid fa-shirt text-purple-400"></i> 4. 5부위 전용 꾸미기 상점</h4>
-                                <p class="text-sm text-slate-300 leading-relaxed break-keep">자산(B)으로 <b>[머리, 왼손, 오른손, 왼발, 오른발]</b> 아바타 주위를 감싸는 오각형 5개 슬롯에 장착할 수 있는 아이템을 구매하세요. 장착하는 즉시 보너스 능력치가 추가 적용됩니다.</p>
+                            <div class="bg-gradient-to-r from-purple-900/40 to-slate-900/60 p-5 rounded-xl border border-purple-500/50 hover:border-purple-400 transition">
+                                <h4 class="text-base sm:text-lg font-bold text-purple-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-hammer text-fuchsia-400"></i> 3. 장비 강화 및 확률형 성장</h4>
+                                <p class="text-sm text-purple-100/80 leading-relaxed break-keep">레벨업을 하면 각 스탯마다 기본 10% 확률로 능력치가 상승합니다. 상점에서 장비를 구매해 장착하면 <b>해당 스탯이 오를 확률(최대 +45%)</b>이 엄청나게 증가합니다. 같은 장비를 중복 구매하여 최대 +5강까지 강화해보세요! (실패 시 1단계 하락)</p>
                             </div>
                             <div class="bg-gradient-to-r from-slate-900/60 to-emerald-900/30 p-5 rounded-xl border border-emerald-700/50 hover:border-emerald-500/80 transition">
-                                <h4 class="text-base sm:text-lg font-bold text-emerald-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-bullseye text-red-400"></i> 5. 목표: 30주 만에 레벨 100 달성!</h4>
-                                <p class="text-sm text-emerald-100/80 leading-relaxed break-keep">경험치 시스템이 리밸런싱 되었습니다. 매주 토요스포츠데이(약 10경기)에 꾸준히 참여하고 각종 훈련과 기록을 쌓으면, <b>정확히 30주 후 전설의 100레벨(만렙)</b>에 도달할 수 있습니다. 끈기 있게 도전해보세요!</p>
+                                <h4 class="text-base sm:text-lg font-bold text-emerald-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-bullseye text-red-400"></i> 4. 목표: 30주 만에 레벨 100 달성!</h4>
+                                <p class="text-sm text-emerald-100/80 leading-relaxed break-keep">매주 토요스포츠데이에 꾸준히 참여하고 각종 기록을 쌓으면, 정확히 30주 후 전설의 100레벨(만렙)에 도달할 수 있습니다. 끈기 있게 도전해보세요!</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 탭 6: 마스터 현황판 -->
                 <div id="tabMaster" class="hidden space-y-6">
                     <div class="glass-panel p-4 sm:p-8 rounded-3xl border-t-4 border-t-emerald-400 overflow-hidden">
                         <h3 class="text-2xl sm:text-3xl font-display text-emerald-400 mb-2 flex items-center gap-2 sm:gap-3">
@@ -676,16 +648,12 @@
         };
 
         const POS_KR = { 'Pivo': '피보(FW)', 'Ala': '아라(MF)', 'Fixo': '픽소(DF)', 'Goleiro': '골레이로(GK)', '미정': '포지션 미정' };
+        const STAT_NAMES = { pac:'속력 (PAC)', sho:'슈팅 (SHO)', pas:'패스 (PAS)', dri:'드리블 (DRI)', def:'수비 (DEF)', phy:'피지컬 (PHY)', ref:'반사신경 (REF)', int:'가로채기 (INT)', pst:'위치선정 (PST)', dis:'볼배급 (DIS)', cmp:'평정심 (CMP)', wrk:'활동량 (WRK)' };
 
         const POS_KEY_STATS = {
-            'Pivo': ['sho', 'phy', 'pst'],
-            'Ala': ['pac', 'dri', 'wrk'],
-            'Fixo': ['def', 'int', 'pas'],
-            'Goleiro': ['ref', 'dis', 'cmp'],
-            '미정': []
+            'Pivo': ['sho', 'phy', 'pst'], 'Ala': ['pac', 'dri', 'wrk'], 'Fixo': ['def', 'int', 'pas'], 'Goleiro': ['ref', 'dis', 'cmp'], '미정': []
         };
 
-        // --- 스탯 클릭 시 설명 딕셔너리 ---
         const STAT_DESC = {
             'pac': '🏃‍♂️ 속력 (Pace)\n\n단거리 전력 질주 속도와 순간적인 가속도입니다.\n치고 달리기나 수비 복귀 시 가장 먼저 도착할 수 있게 해줍니다.',
             'sho': '⚽ 슈팅 (Shooting)\n\n슈팅 파워와 정확도입니다.\n골대 구석을 찌르는 강력한 슛을 날리거나 골망을 찢을 듯한 파워가 강해집니다.',
@@ -701,201 +669,91 @@
             'wrk': '🔥 활동량 (Work Rate)\n\n경기장 전 지역을 쉴 새 없이 뛰어다니는 체력과 투지입니다.\n공이 없을 때(오프더볼) 공간을 창출하고 팀을 돕는 헌신적인 능력입니다.'
         };
 
+        window.customAlert = (m) => new Promise(r => {
+            const d = document.createElement('div'); d.className = "fixed inset-0 z-[300] flex items-center justify-center bg-black/80 px-4";
+            d.innerHTML = `<div class="bg-pitch-panel p-6 sm:p-8 rounded-3xl border-2 border-fut-gold max-w-sm w-full text-center space-y-4 shadow-2xl"><h3 class="text-xl font-display text-white">알림</h3><p class="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed break-keep">${m}</p><button id="bOk" class="bg-fut-gold text-slate-900 font-bold py-2.5 px-8 rounded-xl w-full hover:bg-yellow-400 transition mt-4">확인</button></div>`;
+            document.body.appendChild(d); document.getElementById('bOk').onclick = () => { d.remove(); r(true); };
+        });
+
+        window.customConfirm = (m) => new Promise(r => {
+            const d = document.createElement('div'); d.className = "fixed inset-0 z-[300] flex items-center justify-center bg-black/80 px-4";
+            d.innerHTML = `<div class="bg-pitch-panel p-6 sm:p-8 rounded-3xl border-2 border-fut-gold max-w-sm w-full text-center space-y-4 shadow-2xl"><h3 class="text-xl font-display text-white">확인</h3><p class="text-sm text-slate-300 whitespace-pre-wrap">${m}</p><div class="flex gap-3 mt-6"><button id="bNo" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2.5 rounded-xl w-full transition">취소</button><button id="bYes" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl w-full transition">진행</button></div></div>`;
+            document.body.appendChild(d); document.getElementById('bYes').onclick = () => { d.remove(); r(true); }; document.getElementById('bNo').onclick = () => { d.remove(); r(false); };
+        });
+
         window.showStatDesc = (statKey) => {
-            const titleMap = { pac:'속력 (PAC)', sho:'슈팅 (SHO)', pas:'패스 (PAS)', dri:'드리블 (DRI)', def:'수비 (DEF)', phy:'피지컬 (PHY)', ref:'반사신경 (REF)', int:'가로채기 (INT)', pst:'위치선정 (PST)', dis:'볼배급 (DIS)', cmp:'평정심 (CMP)', wrk:'활동량 (WRK)' };
-            window.customAlert(`[${titleMap[statKey]}]\n\n${STAT_DESC[statKey]}`);
+            const pId = window.selectedPlayerId;
+            const p = window.allPlayersData.find(x => x.id === pId);
+            let growthText = '';
+            if(p) {
+                const bonus = getBonusStats(p);
+                const baseChance = 10;
+                const itemGrowth = bonus.growth[statKey] || 0;
+                const totalChance = baseChance + itemGrowth;
+                growthText = `\n\n-----------------------------\n🌱 [현재 스탯 성장 확률: ${totalChance}%]\n(기본 10% ${itemGrowth > 0 ? `+ 장비 보너스 ${itemGrowth}%` : ''})`;
+            }
+            window.customAlert(`[${STAT_NAMES[statKey]}]\n\n${STAT_DESC[statKey]}${growthText}`);
         };
 
         window.addEventListener('DOMContentLoaded', () => {
             const nameSelect = document.getElementById('loginPlayerName');
             if(nameSelect) {
                 ALLOWED_PLAYERS.forEach(name => {
-                    const opt = document.createElement('option');
-                    opt.value = name; opt.innerText = name;
-                    nameSelect.appendChild(opt);
+                    const opt = document.createElement('option'); opt.value = name; opt.innerText = name; nameSelect.appendChild(opt);
                 });
             }
         });
 
-        // --- 100가지 풋살 꿀팁 & SVG 도식 추가 완료 ---
         const DAILY_TIPS = [
-            // 💡 [기본 규정 및 규칙] 1~15
             { title: "풋살과 축구의 가장 큰 차이점?", img: "⚽", category: "기본상식", desc: "풋살은 5인제 실내 축구입니다. 공이 밖으로 나가면 손으로 던지는 스로인이 아닌 '발로 차서 넣는 킥인'을 합니다!" },
-            { title: "풋살공은 왜 잘 안 튈까요?", img: "⬇️", category: "기본상식", desc: "풋살공은 4호공 크기이며 로우 바운스(Low Bounce) 특성이 있습니다. 좁은 경기장에서 공이 너무 튀면 컨트롤하기 어렵기 때문이죠." },
             { title: "가장 중요한 '4초 룰'을 아시나요?", img: "⏱️", category: "기본규칙", desc: "킥인, 코너킥, 프리킥, 골클리어런스(골키퍼가 공을 던질 때)는 모두 공을 잡은 후 '4초' 안에 처리해야 합니다. 속도감이 생명이죠!" },
-            { title: "풋살화(인도어화)와 축구화의 차이", img: "👟", category: "기본상식", desc: "풋살화 바닥은 평평한 고무 재질(IC/IN)이나 잔잔한 돌기(TF)로 되어 있습니다. 좁은 공간에서 발바닥 컨트롤을 쉽게 하기 위함입니다." },
-            { title: "골키퍼(골레이로)에게 다시 패스하기?", img: "🧤", category: "기본규칙", desc: "골레이로가 공을 처리한 후, 상대편 선수가 공을 건드리기 전까지는 우리 편이 골레이로에게 다시 백패스를 할 수 없습니다. (위반 시 간접프리킥)" },
-            { title: "풋살의 전후반 시간은?", img: "⏰", category: "기본상식", desc: "정식 풋살 경기는 전, 후반 각각 20분씩입니다. 공이 라인 밖으로 나가면 시계가 멈추는 '순수 경기 시간'을 적용합니다." },
-            { title: "퇴장(레드카드)을 당하면 어떻게 될까?", img: "🟥", category: "기본규칙", desc: "선수가 퇴장당하면 그 선수는 다시 뛸 수 없지만, 2분이 지나거나 상대 팀이 골을 넣으면 다른 교체 선수가 대신 코트에 들어올 수 있습니다." },
-            { title: "킥인 할 때 주의사항!", img: "🦶", category: "기본규칙", desc: "킥인을 할 때 공은 반드시 라인 위나 바깥에 멈춰 있어야 합니다. 축구의 스로인처럼 라인을 밟고 차도 무방하지만, 공이 굴러가면 반칙입니다." },
-            { title: "반칙도 누적이 된다고?", img: "⚠️", category: "기본규칙", desc: "한 팀이 전반 또는 후반에 파울을 6개째 범하는 순간부터, 상대 팀에게 벽이 없는 '세컨드 페널티 마크 프리킥'이 주어집니다." },
-            { title: "선수 교체는 무제한!", img: "🔄", category: "기본규칙", desc: "축구와 달리 풋살은 선수 교체 횟수에 제한이 없고, 언제든 코치의 지시로 교체 구역을 통해 자유롭게 들어오고 나갈 수 있습니다." },
             { title: "거리 두기 5미터 원칙", img: "📏", category: "기본규칙", desc: "킥인, 코너킥, 프리킥 상황에서 수비수는 공으로부터 무조건 5미터 이상 떨어져 있어야 합니다. 방해하면 경고를 받을 수 있어요." },
-            { title: "작전 타임(Time out)의 활용", img: "⏸️", category: "기본규칙", desc: "각 팀은 전반전에 1번, 후반전에 1번 각각 1분간의 작전 타임을 요청할 수 있습니다. 위기 상황을 끊어내는 마법의 시간이죠." },
-            { title: "어드밴티지(Advantage) 룰", img: "⚖️", category: "기본규칙", desc: "상대가 파울을 했지만 우리 팀에게 계속 유리한 공격 찬스가 이어질 때, 심판은 휘슬을 불지 않고 경기를 진행시킵니다." },
-            { title: "페널티 에어리어(골대 앞 반원)의 비밀", img: "🥅", category: "기본규칙", desc: "풋살에서 골키퍼는 이 반원 안에서만 손을 쓸 수 있습니다. 반원을 벗어나서 공을 손으로 만지면 즉시 프리킥이 주어집니다." },
-            { title: "슬라이딩 태클은 불법?", img: "🚫", category: "기본규칙", desc: "동네 풋살에서는 부상 방지를 위해 슬라이딩 태클을 엄격히 금지하는 경우가 많습니다. 끝까지 서서 따라가는 수비가 진짜 실력입니다!" },
-
-            // 👟 [기본기: 컨트롤, 패스, 슈팅] 16~30
-            { title: "풋살 컨트롤의 꽃, '발바닥 컨트롤'", img: "👣", category: "기본기", desc: "강한 패스를 받을 때 발 안쪽으로 받으면 공이 멀리 튈 수 있습니다. 발바닥으로 공을 위에서 지그시 밟듯이 세워보세요." },
-            { title: "토 킥(Toe Kick)의 위력", img: "⚡", category: "슈팅", desc: "일명 '꼬발슛'. 풋살에서는 공간이 좁아 슛을 때릴 타이밍이 짧습니다. 발끝으로 찌르듯이 차는 토 킥은 템포가 빠르고 강력합니다." },
-            { title: "정확한 인사이드 패스", img: "🎯", category: "기본기", desc: "패스의 기본은 발목을 고정하고 발 안쪽 넓은 면으로 공의 정중앙을 밀어 차는 것입니다. 동료의 '오른발/왼발'을 지정해서 줘보세요." },
-            { title: "디딤발의 방향이 패스의 방향", img: "🦶", category: "기본기", desc: "패스를 하거나 슛을 할 때 공 옆에 두는 디딤발의 발끝 방향이 목표물(동료나 골대)을 향해야 정확도가 높아집니다." },
-            { title: "발바닥 드래그(Drag) 돌파", img: "🪄", category: "개인기", desc: "발바닥으로 공을 밟은 채로 옆이나 뒤로 슥 끌어당겨 수비수의 타이밍을 뺏는 기술입니다. 풋살에서 가장 많이 쓰이는 돌파기입니다." },
-            
-            // 📝 [도식 추가] 패스 앤 무브
-            { 
-                title: "패스 앤 무브(Pass & Move)의 정석", img: "🏃‍♂️", category: "기본기", 
-                diagram: `<div class="my-5 w-full flex justify-center"><svg width="260" height="150" viewBox="0 0 240 140" class="bg-emerald-900/30 border border-emerald-700/50 rounded-xl shadow-inner"><line x1="120" y1="0" x2="120" y2="140" stroke="rgba(255,255,255,0.1)" stroke-width="2"/><circle cx="120" cy="70" r="25" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2"/><circle cx="140" cy="70" r="7" fill="#ef4444"/><text x="140" y="55" fill="#ef4444" font-size="10" text-anchor="middle" font-weight="bold">수비</text><circle cx="60" cy="90" r="7" fill="#38ff8e"/><text x="60" y="108" fill="#38ff8e" font-size="10" text-anchor="middle" font-weight="bold">나</text><circle cx="140" cy="110" r="7" fill="#38ff8e"/><text x="140" y="128" fill="#38ff8e" font-size="10" text-anchor="middle" font-weight="bold">동료</text><path d="M 65 92 L 132 108" fill="none" stroke="#e8c271" stroke-width="2" stroke-dasharray="4" marker-end="url(#arrowYellow)"/><path d="M 65 85 Q 110 40 160 55" fill="none" stroke="#38ff8e" stroke-width="2" marker-end="url(#arrowGreen)"/><text x="100" y="115" fill="#e8c271" font-size="10" font-weight="bold">1. 패스</text><text x="110" y="50" fill="#38ff8e" font-size="10" font-weight="bold">2. 빈공간 침투</text></svg></div>`,
-                desc: "동료에게 패스를 주고 가만히 서 있으면 안 됩니다! 패스를 찔러주고 즉시 다른 빈 공간으로 뛰어들어가야 수비진이 무너집니다." 
-            },
-            
-            { title: "퍼스트 터치의 중요성", img: "✨", category: "기본기", desc: "공을 받을 때 가만히 세워두는 것보다, 내가 다음 동작(슈팅, 패스, 돌파)을 하기 가장 좋은 방향으로 터치해 두는 것이 고수의 비결입니다." },
-            { title: "팬텀 드리블 (라 크로케타)", img: "🕺", category: "개인기", desc: "양발 안쪽을 사용하여 공을 왼쪽 발에서 오른쪽 발로 빠르게 넘기며 돌파하는 기술입니다. 좁은 공간에서 수비수를 제치기 좋습니다." },
-            { title: "수비 등지기 (스크린 플레이)", img: "🛡️", category: "기본기", desc: "등 뒤에 수비수가 바짝 붙었을 때, 엉덩이와 등, 팔을 이용해 수비수가 공에 발을 뻗지 못하게 공간을 차단하는 기술입니다." },
-            
-            // 📝 [도식 추가] 월패스 (2대1)
-            { 
-                title: "월패스(2대1 패스)의 파괴력", img: "🤝", category: "기본기", 
-                diagram: `<div class="my-5 w-full flex justify-center"><svg width="260" height="150" viewBox="0 0 240 140" class="bg-emerald-900/30 border border-emerald-700/50 rounded-xl shadow-inner"><circle cx="120" cy="60" r="7" fill="#ef4444"/><text x="120" y="45" fill="#ef4444" font-size="10" text-anchor="middle" font-weight="bold">수비</text><circle cx="60" cy="80" r="7" fill="#38ff8e"/><circle cx="130" cy="110" r="7" fill="#38ff8e"/><text x="130" y="128" fill="#38ff8e" font-size="10" text-anchor="middle" font-weight="bold">벽(Wall)</text><path d="M 65 85 L 122 108" fill="none" stroke="#e8c271" stroke-width="2" stroke-dasharray="4" marker-end="url(#arrowYellow)"/><path d="M 65 73 L 135 40" fill="none" stroke="#38ff8e" stroke-width="2" marker-end="url(#arrowGreen)"/><path d="M 135 105 L 145 50" fill="none" stroke="#e8c271" stroke-width="2" stroke-dasharray="4" marker-end="url(#arrowYellow)"/></svg></div>`,
-                desc: "나에게 수비수가 붙었을 때 동료에게 패스하고 빈 공간으로 침투하세요. 동료가 벽(Wall)처럼 논스톱으로 내게 다시 공을 내주면 완벽한 찬스가 됩니다." 
-            },
-            
-            { title: "스루패스(Through Pass)의 타이밍", img: "🔪", category: "기본기", desc: "수비수와 수비수 사이의 좁은 틈으로 동료가 뛰는 방향을 예측해 찔러넣는 패스입니다. 너무 강하지 않게 깔아차는 것이 핵심입니다." },
-            { title: "공중볼 트래핑 (가슴, 허벅지)", img: "🤹", category: "기본기", desc: "높이 뜬 공을 받을 때는 당황하지 말고 공이 떨어지는 위치를 파악한 뒤, 가슴이나 허벅지의 넓은 면적으로 쿠션처럼 부드럽게 받아내세요." },
-            { title: "페인트(속임수) 슛 모션", img: "🎩", category: "개인기", desc: "강하게 슛을 할 것처럼 다리를 크게 휘두른 후, 슛 대신 공을 살짝 접어 수비수를 속이는 기술입니다. 태클을 유도하기 아주 좋습니다." },
-            { title: "인스텝(발등) 슈팅의 파워", img: "💥", category: "슈팅", desc: "먼 거리에서 골키퍼를 뚫기 위해서는 발등의 단단한 부분(인스텝)으로 공의 정중앙을 강하게 타격하는 연습이 필요합니다." },
-            { title: "시야 넓히기 연습", img: "👀", category: "기본기", desc: "공을 몰고 갈 때 시선을 공에만 꽂지 마세요. 턱을 살짝 들고 전방과 좌우의 빈 공간, 동료의 위치를 끊임없이 확인해야 합니다." },
-
-            // 🧠 [포지션 및 전술] 31~45
-            
-            // 📝 [도식 추가] 피보 플레이
-            { 
-                title: "피보(Pivo)의 핵심 역할", img: "👑", category: "전술", 
-                diagram: `<div class="my-5 w-full flex justify-center"><svg width="260" height="150" viewBox="0 0 240 140" class="bg-emerald-900/30 border border-emerald-700/50 rounded-xl shadow-inner"><path d="M 240 40 A 40 40 0 0 0 240 100" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2"/><circle cx="195" cy="70" r="7" fill="#ef4444"/><circle cx="180" cy="70" r="7" fill="#38ff8e"/><text x="180" y="90" fill="#38ff8e" font-size="10" text-anchor="middle" font-weight="bold">피보</text><circle cx="80" cy="70" r="7" fill="#38ff8e"/><text x="80" y="90" fill="#38ff8e" font-size="10" text-anchor="middle" font-weight="bold">아라/픽소</text><path d="M 87 68 L 170 68" fill="none" stroke="#e8c271" stroke-width="2" stroke-dasharray="4" marker-end="url(#arrowYellow)"/><path d="M 175 63 Q 190 40 210 50" fill="none" stroke="#38ff8e" stroke-width="2" marker-end="url(#arrowGreen)"/><text x="215" y="45" fill="#38ff8e" font-size="10" font-weight="bold">터닝 슛</text></svg></div>`,
-                desc: "피보는 최전방 타겟맨입니다. 상대 수비수를 등지고 버티면서 동료에게 공을 내어주거나, 틈이 보이면 직접 돌아서서 슛을 때립니다." 
-            },
-            
-            { title: "아라(Ala)의 움직임", img: "🦅", category: "전술", desc: "아라는 양 측면 윙어입니다. 공수 양면을 쉴 새 없이 오가며 공격의 활로를 뚫어주는 팀의 엔진 역할을 합니다." },
-            { title: "픽소(Fixo)는 사령관", img: "👁️", category: "전술", desc: "최후방 수비수인 픽소는 수비 라인을 지휘하고 빌드업의 시발점이 됩니다. 침착함과 넓은 시야가 필수입니다." },
-            { title: "골레이로(Goleiro)의 빌드업", img: "🧤", category: "전술", desc: "현대 풋살에서 골키퍼는 '손을 쓸 수 있는 마지막 필드 플레이어'입니다. 정확한 스로인과 발밑 패스로 공격의 첫 단추를 꿰어주세요." },
-            { title: "로테이션(Rotation)이란?", img: "🔄", category: "전술", desc: "풋살은 정해진 자리에만 있지 않습니다. 패스를 한 선수가 빈 공간으로 빠지고, 다른 선수가 그 자리를 채워주는 순환 움직임을 로테이션이라고 합니다." },
-            { title: "세트피스(코너킥) 전술", img: "⛳", category: "전술", desc: "코너킥 시 골대 앞에는 항상 상대 수비가 많습니다. 오히려 뒤쪽에서 달려오는 동료에게 컷백 패스를 내주어 중거리 슛을 노려보세요." },
-            
-            // 📝 [도식 추가] 다이애그널 런
-            { 
-                title: "다이애그널 런(대각선 침투)", img: "↗️", category: "전술", 
-                diagram: `<div class="my-5 w-full flex justify-center"><svg width="260" height="150" viewBox="0 0 240 140" class="bg-emerald-900/30 border border-emerald-700/50 rounded-xl shadow-inner"><line x1="120" y1="0" x2="120" y2="140" stroke="rgba(255,255,255,0.1)" stroke-width="2"/><circle cx="140" cy="40" r="7" fill="#ef4444"/><circle cx="140" cy="100" r="7" fill="#ef4444"/><circle cx="80" cy="40" r="7" fill="#38ff8e"/><circle cx="60" cy="100" r="7" fill="#38ff8e"/><path d="M 87 45 L 160 85" fill="none" stroke="#38ff8e" stroke-width="2" marker-end="url(#arrowGreen)"/><path d="M 67 98 L 155 88" fill="none" stroke="#e8c271" stroke-width="2" stroke-dasharray="4" marker-end="url(#arrowYellow)"/><text x="175" y="85" fill="#38ff8e" font-size="10" font-weight="bold">수비사이 침투</text></svg></div>`,
-                desc: "직선으로 뛰는 것보다, 수비수와 수비수 사이 공간으로 대각선 침투를 하면 패스를 받기도 쉽고 수비진을 흔들 수 있습니다." 
-            },
-            
-            { title: "압박(Pressing)의 타이밍", img: "🔥", category: "전술", desc: "수비 시 상대가 공을 잡는 순간, 터치가 길었을 때, 구석에 몰렸을 때가 강하게 압박해서 공을 빼앗을 수 있는 황금 타이밍입니다." },
-            
-            // 📝 [도식 추가] L자 달리기
-            { 
-                title: "L자 달리기 (페이크 무브)", img: "📏", category: "전술", 
-                diagram: `<div class="my-5 w-full flex justify-center"><svg width="260" height="150" viewBox="0 0 240 140" class="bg-emerald-900/30 border border-emerald-700/50 rounded-xl shadow-inner"><line x1="120" y1="0" x2="120" y2="140" stroke="rgba(255,255,255,0.1)" stroke-width="2"/><circle cx="160" cy="70" r="7" fill="#ef4444"/><text x="160" y="90" fill="#ef4444" font-size="10" text-anchor="middle" font-weight="bold">수비</text><circle cx="140" cy="70" r="7" fill="#38ff8e"/><path d="M 140 63 L 140 30 L 180 30" fill="none" stroke="#38ff8e" stroke-width="2" marker-end="url(#arrowGreen)"/><text x="145" y="45" fill="#38ff8e" font-size="10" font-weight="bold">수비 유인 후 이탈</text></svg></div>`,
-                desc: "마크맨을 떼어낼 때 직선으로 달리지 말고, 앞이나 옆으로 살짝 뛰다가 'L'자 형태로 갑자기 꺾어 달리면 수비를 완벽히 속일 수 있습니다." 
-            },
-            
-            { title: "존 디펜스(지역 방어) vs 맨투맨", img: "🛡️", category: "전술", desc: "특정 선수를 끝까지 따라다니는 맨투맨과 달리, 자신이 맡은 '구역'에 들어오는 선수를 방어하는 것이 지역 방어입니다. 상황에 맞게 섞어 쓰는 게 좋습니다." },
-            { title: "가짜 공격수 (False 9) 전략", img: "🎭", category: "전술", desc: "최전방 공격수(피보)가 골대 앞이 아닌 미드필드 지역까지 깊게 내려와 공을 받아주면 상대 수비가 끌려나와 뒷공간이 텅 비게 됩니다." },
-            { title: "오버래핑(Overlapping)의 정석", img: "🚀", category: "전술", desc: "동료가 공을 잡고 있을 때, 동료의 뒤쪽에서 시작해 바깥쪽으로 빠르게 추월하며 달려나가 공간을 만드는 전술적 움직임입니다." },
-            { title: "아이솔레이션(Isolation) 1대1", img: "🏝️", category: "전술", desc: "우리 팀에서 드리블을 가장 잘하는 선수에게 공을 주고, 나머지 선수들은 반대편으로 빠져주어 완벽한 1:1 상황을 만들어주는 전술입니다." },
-            { title: "블로킹(Blocking) 스크린", img: "🧱", category: "전술", desc: "농구의 스크린처럼, 우리 편이 편하게 슛이나 패스를 할 수 있도록 내가 상대 수비수의 진로를 합법적인 위치에서 가로막아주는 플레이입니다." },
-            { title: "수비 간격 유지하기", img: "🔗", category: "전술", desc: "수비할 때는 우리 팀끼리 너무 멀리 떨어져 있으면 그 사이로 패스가 뚫립니다. 끈으로 묶여있는 것처럼 일정한 간격을 유지하며 같이 움직여야 합니다." },
-
-            // 🏃‍♂️ [혼자 & 친구와 연습] 46~65
-            { title: "벽 치기 (Wall Pass) 연습", img: "🧱", category: "혼자연습", desc: "단단한 벽을 향해 1~2m 떨어져서 인사이드로 패스하고 튀어나오는 공을 발바닥으로 잡는 연습을 매일 100번씩 해보세요." },
-            { title: "리프팅(저글링) 연습의 효과", img: "⚽", category: "혼자연습", desc: "공을 떨어뜨리지 않고 계속 차올리는 리프팅은 공에 대한 감각(터치감)과 집중력을 길러주는 최고의 기본 훈련입니다." },
-            { title: "콘(Cone) 드리블 지그재그", img: "🦺", category: "혼자연습", desc: "물병이나 콘을 5개 일렬로 세우고 양발 안쪽과 바깥쪽을 번갈아 쓰며 지그재그로 통과하는 연습을 해보세요." },
-            { title: "친구와 2인 1조 롱패스", img: "👟", category: "친구와연습", desc: "친구와 10m 정도 거리를 두고, 서로 발등(인스텝)으로 공을 강하고 낮게 차서 정확하게 연결하는 훈련을 해보세요." },
-            { title: "가운데 공 뺏기 (론도)", img: "⭕", category: "팀연습", desc: "3~4명이 원을 만들고 1명이 술래가 되어 공을 뺏는 놀이입니다. 원 안의 사람들은 원터치나 투터치로만 패스하며 반응 속도를 기릅니다." },
-            { title: "양발 사용의 중요성 연습", img: "⚖️", category: "혼자연습", desc: "풋살에서는 한쪽 발만 쓰면 수비수에게 패턴을 읽히기 쉽습니다. 평소 안 쓰는 약한 발로 벽 치기 연습을 꾸준히 해보세요." },
-            { title: "골키퍼 캐칭 연습", img: "🧤", category: "혼자연습", desc: "벽에 공을 세게 던지고 튀어나오는 공을 가슴 쪽으로 'W'자 모양의 손 모양을 만들어 안전하게 품에 안는 연습을 반복하세요." },
-            { title: "스텝오버(헛다리 짚기) 훈련", img: "✂️", category: "개인기", desc: "공을 건드리지 않고 발이 공 위를 안에서 밖으로 넘나드는 연습을 제자리에서 빠르게 반복해 보세요. 하체 밸런스에 좋습니다." },
-            { title: "방향 전환(Turn) 달리기", img: "↩️", category: "혼자연습", desc: "공 없이도 할 수 있습니다. 앞으로 전력 질주하다가 휘슬(또는 타이머) 소리에 맞춰 급격히 뒤로 돌아서 뛰는 연습으로 민첩성을 기르세요." },
-            { title: "2:1 패스 타이밍 연습", img: "🤝", category: "친구와연습", desc: "수비수 역할의 콘을 세워두고, 친구에게 패스한 뒤 콘을 돌아 뛰어 들어가며 다시 리턴 패스를 받는 연습을 반복하세요." },
-            { title: "발바닥 롤링(Rolling) 연습", img: "🛹", category: "혼자연습", desc: "오른발 발바닥으로 공을 왼쪽으로 굴리고, 바로 왼발 발바닥으로 공을 잡아 오른쪽으로 굴리는 동작을 좌우로 반복하세요." },
-            { title: "타겟 슈팅 연습", img: "🎯", category: "혼자연습", desc: "빈 골대에 수건이나 조끼를 매달아 놓고, 오직 그 표적만 맞추겠다는 생각으로 정확도 위주의 슈팅 연습을 해보세요." },
-            { title: "등지고 돌아서기 훈련", img: "🌪️", category: "친구와연습", desc: "친구가 내 등 뒤에서 가볍게 밀고 있을 때, 공을 발바닥으로 잡고 한 번에 몸을 돌려 슈팅까지 이어가는 '피보 턴'을 연습하세요." },
-            { title: "스피드 사다리(Ladder) 스텝", img: "🪜", category: "혼자연습", desc: "바닥에 그려진 사다리 칸을 빠르게 밟고 지나가는 스텝 훈련은 풋살의 생명인 '잔발 치기'와 민첩성을 극대화해 줍니다." },
-            { title: "공중볼 트래핑 내기", img: "🎾", category: "친구와연습", desc: "친구와 높게 공을 차올려 준 뒤, 떨어지는 공을 원 바운드 안에 발이나 가슴으로 완벽하게 컨트롤하는 내기를 해보세요." },
-
-            // 🌟 [멘탈리티 및 팀워크] 66~80
-            { title: "최고의 기술은 '콜 플레이'", img: "🗣️", category: "팀워크", desc: "'나한테 줘!', '뒤에 수비 있다!', '돌아뛰어!' 경기장 안에서는 부끄러워하지 말고 끊임없이 소리쳐서 서로 정보를 공유해야 합니다." },
-            { title: "실수에 대한 태도", img: "💪", category: "멘탈리티", desc: "내가 패스 미스를 해서 골을 먹혔다고 고개 숙이지 마세요. 손을 들어 미안함을 표시하고, '다음엔 막자!'하며 바로 수비로 뛰어가는 것이 진짜 에이스입니다." },
-            { title: "득점보다 멋진 어시스트", img: "🤝", category: "팀워크", desc: "내가 무리해서 슛을 쏘는 것보다, 더 좋은 위치에 있는 동료에게 완벽한 패스를 밀어넣어 줄 때의 쾌감은 골 이상입니다." },
-            { title: "수비 가담은 필수", img: "🛡️", category: "멘탈리티", desc: "아무리 공격을 잘하는 에이스라도, 우리 팀이 공을 뺏겼을 때는 전속력으로 뛰어 내려와 수비 진영을 갖추어야 합니다. 풋살은 전원 공격, 전원 수비!" },
-            { title: "상대방을 존중하는 스포츠맨십", img: "🤝", category: "매너", desc: "파울을 했을 때는 먼저 다가가서 손을 내밀어 일으켜 주세요. 승리보다 중요한 것은 멋진 매너와 존중하는 마음입니다." },
-            { title: "경기가 안 풀릴 때는 심호흡", img: "🧘", category: "멘탈리티", desc: "계속 슛이 빗나가거나 뺏길 때는 흥분하기 쉽습니다. 그럴 땐 평정심(CMP)을 잃지 말고 깊게 심호흡하며 기본에 집중하세요." },
-            { title: "심판의 판정에 승복하기", img: "👨‍⚖️", category: "매너", desc: "내가 보기엔 파울이 아니더라도 심판의 휘슬이 울렸다면 바로 인정하고 다음 플레이를 준비하세요. 불평은 흐름만 깰 뿐입니다." },
-            { title: "잘하는 동료에게 배우기", img: "👀", category: "멘탈리티", desc: "나보다 축구를 잘하는 친구를 질투하기보다, 그 친구가 공을 어떻게 잡고 패스하는지 유심히 관찰하고 따라 해보세요." },
-            { title: "팀의 분위기 메이커", img: "🔥", category: "팀워크", desc: "팀이 지고 있을 때 가장 필요한 선수는 화를 내는 선수가 아니라, 박수를 치며 '할 수 있어! 파이팅!'을 외치는 선수입니다." },
-            { title: "다치지 않는 것이 1순위", img: "🏥", category: "상식", desc: "무리한 태클이나 공중볼 경합은 큰 부상으로 이어집니다. 공보다 상대의 발이 먼저 보인다면 무리하지 말고 양보하는 것도 실력입니다." },
-            { title: "골키퍼(골레이로) 격려하기", img: "👏", category: "팀워크", desc: "실점을 했을 때 가장 마음이 무거운 사람은 골키퍼입니다. 탓하지 말고 다가가 '괜찮아, 막을 수 없는 슛이었어'라고 격려해주세요." },
-            { title: "교체 멤버의 역할", img: "벤치", category: "팀워크", desc: "벤치에 앉아있을 때도 경기는 진행 중입니다. 코트 안의 동료들을 위해 큰 소리로 응원하고 상대방의 약점을 밖에서 분석하세요." },
-            { title: "나쁜 버릇 고치기", img: "🗑️", category: "멘탈리티", desc: "공을 뺏기면 제자리에 서서 심판만 쳐다보는 버릇이 있나요? 뺏기는 즉시 돌아서서 상대를 쫓아가는 습관을 들이세요." },
-            { title: "골 세리머니의 기쁨", img: "🕺", category: "팀워크", desc: "골을 넣은 후 멋진 세리머니도 좋지만, 나에게 완벽한 어시스트를 해준 동료에게 가장 먼저 달려가 하이파이브를 하는 것을 잊지 마세요!" },
-            { title: "즐기는 자가 일류다", img: "😊", category: "멘탈리티", desc: "아무리 중요한 결승전이라도, 결국 우리는 즐겁게 축구하기 위해 모인 것입니다. 얼굴에 미소를 띠고 신나게 코트를 누비세요!" },
-
-            // 📜 [역사 및 재미있는 사실] 81~100
-            { title: "풋살의 탄생지", img: "🇺🇾", category: "역사", desc: "풋살(Futsal)은 1930년 우루과이의 후안 카를로스 세리아니 교사가 청소년들을 위해 농구장 크기에서 즐길 수 있도록 고안한 스포츠입니다." },
-            { title: "Futsal 이라는 이름의 뜻?", img: "📖", category: "역사", desc: "Futsal은 스페인어/포르투갈어의 'Futbol(축구)'과 'Sala/Salão(실내)'라는 두 단어가 합쳐져 만들어진 이름입니다. 즉, 실내 축구라는 뜻이죠!" },
-            { title: "세계 최고의 풋살 전설, 팔캉(Falcão)", img: "🐐", category: "역사", desc: "브라질의 풋살 전설 '팔캉'은 화려한 개인기와 엄청난 득점력으로 풋살의 펠레/메시로 불립니다. 유튜브에서 그의 하이라이트를 검색해보세요!" },
-            { title: "축구 스타들의 풋살 사랑", img: "🌟", category: "상식", desc: "네이마르, 호나우지뉴, 이니에스타 같은 세계적인 축구 스타들은 모두 어린 시절 풋살을 통해 좁은 공간에서의 세밀한 기술을 마스터했습니다." },
-            { title: "FIFA 풋살 월드컵", img: "🏆", category: "역사", desc: "FIFA(국제축구연맹)에서 주관하는 풋살 월드컵은 1989년부터 시작되었으며, 브라질과 스페인이 전통적인 세계 최강국으로 군림하고 있습니다." },
-            { title: "풋살공 안에 무엇이 들었을까?", img: "🤔", category: "상식", desc: "잘 튀지 않는 풋살공의 내부에는 솜이나 특수 폼 재질이 채워져 있어 무게중심을 잡아주고 바운스를 억제하는 과학이 숨어 있습니다." },
-            { title: "골대의 크기 비교", img: "📏", category: "상식", desc: "풋살 골대는 가로 3미터, 세로 2미터 크기입니다. 핸드볼 골대와 크기가 완벽히 똑같다는 사실, 알고 계셨나요?" },
-            { title: "최초의 풋살 규칙책", img: "📘", category: "역사", desc: "1933년에 우루과이에서 발간된 최초의 풋살 규칙책은 축구, 농구(선수 수), 수구(골키퍼 규칙), 핸드볼(경기장 크기)의 규칙을 섞어서 만들어졌습니다." },
-            { title: "대한민국의 풋살 리그, FK리그", img: "🇰🇷", category: "상식", desc: "한국에도 프로 풋살 리그가 있습니다! 바로 'FK리그'인데요, 수준 높은 국가대표 선수들이 화려한 기술을 뽐내며 활약하고 있습니다." },
-            { title: "비 오는 날의 풋살", img: "🌧️", category: "상식", desc: "원래 실내 스포츠로 개발되었기 때문에, 풋살은 날씨에 구애받지 않고 체육관 안에서 365일 쾌적하게 즐길 수 있는 최고의 장점이 있습니다." },
-            { title: "축구보다 볼 터치가 6배?", img: "📊", category: "상식", desc: "통계에 따르면 풋살 선수는 11인제 축구 선수보다 경기당 평균 6배 이상 공을 더 많이 만집니다. 실력이 빨리 느는 이유죠!" },
-            { title: "풋살화의 창시, 인도어화", img: "👟", category: "역사", desc: "나무 바닥이나 우레탄 코트에서 미끄러지지 않기 위해 고무 생고무창(Gum Sole)을 댄 신발이 현대 풋살화의 기원입니다." },
-            { title: "포르투갈의 마법사, 히카르지뉴", img: "🪄", category: "상식", desc: "팔캉의 뒤를 잇는 현대 풋살의 마법사 '히카르지뉴(Ricardinho)'. 발에 본드를 붙인 듯한 그의 화려한 묘기는 보는 이의 탄성을 자아냅니다." },
-            { title: "11인제 전술의 실험장", img: "🔬", category: "상식", desc: "과르디올라 같은 유명 축구 감독들은 좁은 공간에서 빠른 패스를 주고받는 풋살의 '티키타카' 전술을 11인제 축구에 그대로 가져와 성공했습니다." },
-            { title: "여성 풋살의 폭발적 인기", img: "👩‍🦰", category: "상식", desc: "최근 예능 프로그램 '골 때리는 그녀들'의 영향으로 대한민국에서도 여성들의 풋살 인기가 그 어느 때보다 뜨겁게 타오르고 있습니다!" }
+            { title: "선수 교체는 무제한!", img: "🔄", category: "기본규칙", desc: "축구와 달리 풋살은 선수 교체 횟수에 제한이 없고, 언제든 코치의 지시로 교체 구역을 통해 자유롭게 들어오고 나갈 수 있습니다." }
         ];
 
-        // --- 도전 과제 (Achievements) ---
         const ACHIEVEMENTS = [
-            { id: 'goal_1', category: '개인 기록', title: '마수걸이 골', desc: '풋살화 끈을 꽉 묶고 첫 골을 기록하세요. 발바닥 컨트롤 후 빠른 타이밍의 슈팅이 중요합니다!', reqKey: 'goals', reqValue: 1, icon: '⚽', color: 'text-yellow-400', bg: 'bg-yellow-400' },
-            { id: 'goal_10', category: '개인 기록', title: '골잡이의 탄생', desc: '누적 10골 달성! 확실한 팀의 피보(Pivo)나 득점력 있는 아라(Ala)로 인정받기 시작했습니다.', reqKey: 'goals', reqValue: 10, icon: '🔥', color: 'text-orange-500', bg: 'bg-orange-500' },
-            { id: 'goal_50', category: '개인 기록', title: '득점 폭격기', desc: '누적 50골 달성! 상대 팀 픽소(Fixo)들이 가장 두려워하는 선수가 되었습니다.', reqKey: 'goals', reqValue: 50, icon: '🚀', color: 'text-red-500', bg: 'bg-red-500' },
-            { id: 'ast_1', category: '팀 플레이', title: '이타적인 플레이', desc: '첫 어시스트를 기록하세요. 풋살은 좁은 공간에서 이루어지므로 동료를 활용하는 패스가 핵심입니다.', reqKey: 'assists', reqValue: 1, icon: '🤝', color: 'text-emerald-400', bg: 'bg-emerald-400' },
-            { id: 'ast_20', category: '팀 플레이', title: '티키타카 마스터', desc: '누적 20어시스트 달성! 쉴 새 없는 패스 앤 무브로 상대 수비진을 붕괴시키는 패스 마스터입니다.', reqKey: 'assists', reqValue: 20, icon: '🪄', color: 'text-purple-400', bg: 'bg-purple-400' },
-            { id: 'key_10', category: '팀 플레이', title: '공간의 창조자', desc: '킬패스 10회 달성! 밀집 수비를 한 번에 허무는 스루패스는 풋살 경기에서 가장 아름다운 장면입니다.', reqKey: 'keypass', reqValue: 10, icon: '🎯', color: 'text-blue-400', bg: 'bg-blue-400' },
-            { id: 'save_1', category: '수비/헌신', title: '최후의 보루', desc: '첫 세이브를 기록하세요. 골대 앞에서의 헌신적인 수비는 한 골을 넣은 것 이상의 가치가 있습니다.', reqKey: 'saves', reqValue: 1, icon: '🧤', color: 'text-orange-300', bg: 'bg-orange-300' },
-            { id: 'save_30', category: '수비/헌신', title: '통곡의 벽', desc: '누적 30세이브 달성! 1골 밀어내기 매치에서 당신의 수비가 팀을 연승으로 이끌고 있습니다.', reqKey: 'saves', reqValue: 30, icon: '🧱', color: 'text-slate-300', bg: 'bg-slate-300' },
-            { id: 'match_10', category: '꾸준함', title: '풋살장 적응 완료', desc: '10경기 출전. 밀어내기 매치의 빠른 공수 전환과 템포에 완벽히 적응했습니다!', reqKey: 'matches', reqValue: 10, icon: '🏃‍♂️', color: 'text-green-400', bg: 'bg-green-400' },
-            { id: 'match_50', category: '꾸준함', title: '심장 두 개 (강철 체력)', desc: '50경기 출전! 지치지 않는 체력으로 코트를 누비는 팀의 언성 히어로입니다.', reqKey: 'matches', reqValue: 50, icon: '🫀', color: 'text-pink-500', bg: 'bg-pink-500' },
-            { id: 'train_20', category: '꾸준함', title: '연습 벌레', desc: '개인 훈련 20회 달성. 땀방울은 절대 배신하지 않습니다. 기본기가 눈에 띄게 탄탄해졌습니다.', reqKey: 'training', reqValue: 20, icon: '💦', color: 'text-cyan-400', bg: 'bg-cyan-400' },
-            { id: 'lv_5', category: '레벨업', title: '루키 탈출', desc: '레벨 5 달성. 풋살의 기본 룰과 4가지 포지션에 대한 이해도를 모두 갖추었습니다.', reqKey: 'level', reqValue: 5, icon: '🌱', color: 'text-lime-400', bg: 'bg-lime-400' },
-            { id: 'lv_20', category: '레벨업', title: '팀의 에이스', desc: '레벨 20 달성. 이제 어느 팀에 들어가도 1인분 이상을 해내는 믿음직한 에이스입니다!', reqKey: 'level', reqValue: 20, icon: '🌟', color: 'text-yellow-300', bg: 'bg-yellow-300' },
-            { id: 'lv_50', category: '레벨업', title: '레전드의 시작', desc: '레벨 50 달성. 삼봉 FC 명예의 전당에 영원히 기록될 전설적인 선수가 되었습니다.', reqKey: 'level', reqValue: 50, icon: '👑', color: 'text-fut-gold', bg: 'bg-fut-gold' },
+            { id: 'goal_1', category: '개인 기록', title: '마수걸이 골', desc: '풋살화 끈을 꽉 묶고 첫 골을 기록하세요.', reqKey: 'goals', reqValue: 1, icon: '⚽', color: 'text-yellow-400', bg: 'bg-yellow-400' },
+            { id: 'goal_50', category: '개인 기록', title: '득점 폭격기', desc: '누적 50골 달성! 상대 팀이 가장 두려워하는 선수입니다.', reqKey: 'goals', reqValue: 50, icon: '🚀', color: 'text-red-500', bg: 'bg-red-500' },
+            { id: 'ast_1', category: '팀 플레이', title: '이타적인 플레이', desc: '첫 어시스트를 기록하세요.', reqKey: 'assists', reqValue: 1, icon: '🤝', color: 'text-emerald-400', bg: 'bg-emerald-400' },
+            { id: 'save_30', category: '수비/헌신', title: '통곡의 벽', desc: '누적 30세이브 달성!', reqKey: 'saves', reqValue: 30, icon: '🧱', color: 'text-slate-300', bg: 'bg-slate-300' },
+            { id: 'match_50', category: '꾸준함', title: '심장 두 개 (강철 체력)', desc: '50경기 출전! 지치지 않는 체력.', reqKey: 'matches', reqValue: 50, icon: '🫀', color: 'text-pink-500', bg: 'bg-pink-500' },
+            { id: 'lv_50', category: '레벨업', title: '레전드의 시작', desc: '레벨 50 달성. 명예의 전당에 오를 자격이 충분합니다.', reqKey: 'level', reqValue: 50, icon: '👑', color: 'text-fut-gold', bg: 'bg-fut-gold' },
         ];
 
-        // --- 상점 시스템 ---
+        // 💎 강화 단계별 확률 및 효과 정의
+        const ENHANCE_LEVELS = [
+            { level: 0, chance: 100, statPlus: 0, growthMult: 1.0, css: 'eff-0', text: '+0', color: 'text-slate-400' },
+            { level: 1, chance: 100, statPlus: 1, growthMult: 1.1, css: 'eff-1', text: '+1', color: 'text-white' },
+            { level: 2, chance: 80,  statPlus: 2, growthMult: 1.2, css: 'eff-2', text: '+2', color: 'text-blue-400' },
+            { level: 3, chance: 50,  statPlus: 4, growthMult: 1.5, css: 'eff-3', text: '+3', color: 'text-purple-400' },
+            { level: 4, chance: 20,  statPlus: 7, growthMult: 2.0, css: 'eff-4', text: '+4', color: 'text-yellow-400' },
+            { level: 5, chance: 10,  statPlus: 12, growthMult: 3.0, css: 'eff-5', text: '+5 MAX', color: 'text-red-400 drop-shadow-[0_0_5px_red]' }
+        ];
+
+        // 🛍️ 15종 아이템 상세 카탈로그 (성장 보너스 포함)
         const SHOP_ITEMS = [
-            { id: 'head_lion', name: '사자 마스크', type: 'head', price: 300, icon: '🦁', desc: '필드의 지배자 사자 마스크입니다.', bonusText: '피지컬+2', bonusStats: {phy: 2} },
-            { id: 'head_tiger', name: '호랑이 마스크', type: 'head', price: 300, icon: '🐯', desc: '날카로운 공격 본능 호랑이 마스크입니다.', bonusText: '슈팅+2', bonusStats: {sho: 2} },
-            { id: 'head_alien', name: '외계인 헬멧', type: 'head', price: 1000, icon: '👽', desc: '지구 방위대급 외계인 헬멧입니다.', bonusText: '드리블+3', bonusStats: {dri: 3} },
-            { id: 'handL_captain', name: '황금 완장 [좌]', type: 'handL', price: 200, icon: '🟨', desc: '팀을 이끄는 주장의 완장 (왼손 전용).', bonusText: '패스+2', bonusStats: {pas: 2} },
-            { id: 'handL_shield', name: '얼음 방패 [좌]', type: 'handL', price: 400, icon: '🛡️', desc: '철벽 수비를 위한 얼음 방패입니다.', bonusText: '수비+3', bonusStats: {def: 3} },
-            { id: 'handR_whistle', name: '명장의 호루라기 [우]', type: 'handR', price: 200, icon: '🏅', desc: '경기를 지배하는 호루라기 (오른손 전용).', bonusText: '피지컬+2', bonusStats: {phy: 2} },
-            { id: 'handR_fireglove', name: '불꽃 장갑 [우]', type: 'handR', price: 400, icon: '🧤', desc: '뜨거운 투지의 골키퍼 장갑입니다.', bonusText: '수비+3', bonusStats: {def: 3} },
-            { id: 'footL_nike', name: '머큐리얼 [좌]', type: 'footL', price: 150, icon: '👟', desc: '폭발적인 스피드를 상징하는 왼발 축구화.', bonusText: '속력+2', bonusStats: {pac: 2} },
-            { id: 'footL_adidas', name: '프레데터 [좌]', type: 'footL', price: 150, icon: '🥾', desc: '정확한 컨트롤을 위한 왼발 축구화.', bonusText: '패스+2', bonusStats: {pas: 2} },
-            { id: 'footR_nike', name: '머큐리얼 [우]', type: 'footR', price: 150, icon: '👟', desc: '폭발적인 스피드를 상징하는 오른발 축구화.', bonusText: '슈팅+2', bonusStats: {sho: 2} },
-            { id: 'footR_puma', name: '푸마 퓨처 [우]', type: 'footR', price: 150, icon: '🥾', desc: '화려한 드리블러를 위한 오른발 축구화.', bonusText: '드리블+2', bonusStats: {dri: 2} },
+            { id: 'head_tier1', name: '시야 확장 고글', type: 'head', price: 150, icon: '🥽', desc: '[1종 집중형] 공간 지각력을 높입니다.', baseStats: {pst: 1}, baseGrowth: {pst: 15} },
+            { id: 'head_tier2', name: '와이드 비전 헤드밴드', type: 'head', price: 300, icon: '🪢', desc: '[2종 복합형] 패스 길을 읽는 헤드밴드.', baseStats: {pst: 1, pas: 1}, baseGrowth: {pst: 10, pas: 10} },
+            { id: 'head_tier3', name: '삼봉 마스터 헬멧', type: 'head', price: 800, icon: '🪖', desc: '[3종 올라운더] 최상급 수비지휘 헬멧.', baseStats: {cmp: 1, dis: 1, def: 1}, baseGrowth: {cmp: 7, dis: 7, def: 7} },
+            { id: 'handL_tier1', name: '라텍스 그립 장갑 [좌]', type: 'handL', price: 150, icon: '🧤', desc: '[1종 집중형] 반사신경을 극대화.', baseStats: {ref: 1}, baseGrowth: {ref: 15} },
+            { id: 'handL_tier2', name: '테크니컬 암 슬리브 [좌]', type: 'handL', price: 300, icon: '🦾', desc: '[2종 복합형] 거친 몸싸움을 버티는 슬리브.', baseStats: {phy: 1, wrk: 1}, baseGrowth: {phy: 10, wrk: 10} },
+            { id: 'handL_tier3', name: '전설의 황금 완장 [좌]', type: 'handL', price: 800, icon: '🎗️', desc: '[3종 올라운더] 팀을 이끄는 주장의 완장.', baseStats: {pas: 1, cmp: 1, wrk: 1}, baseGrowth: {pas: 7, cmp: 7, wrk: 7} },
+            { id: 'handR_tier1', name: '거미줄 그립 장갑 [우]', type: 'handR', price: 150, icon: '🧤', desc: '[1종 집중형] 펀칭과 캐칭 능력 극대화.', baseStats: {ref: 1}, baseGrowth: {ref: 15} },
+            { id: 'handR_tier2', name: '밸런스 암 슬리브 [우]', type: 'handR', price: 300, icon: '🦾', desc: '[2종 복합형] 흔들림 없는 피지컬 유지.', baseStats: {phy: 1, wrk: 1}, baseGrowth: {phy: 10, wrk: 10} },
+            { id: 'handR_tier3', name: '명장의 호루라기 [우]', type: 'handR', price: 800, icon: '🏅', desc: '[3종 올라운더] 필드의 감독이 되어 조율.', baseStats: {dis: 1, int: 1, def: 1}, baseGrowth: {dis: 7, int: 7, def: 7} },
+            { id: 'footL_tier1', name: '경량화 카본 풋살화 [좌]', type: 'footL', price: 150, icon: '👟', desc: '[1종 집중형] 폭발적인 스피드.', baseStats: {pac: 1}, baseGrowth: {pac: 15} },
+            { id: 'footL_tier1_alt', name: '파워 임팩트 풋살화 [좌]', type: 'footL', price: 150, icon: '🥾', desc: '[1종 집중형] 대포알 슈팅 장착.', baseStats: {sho: 1}, baseGrowth: {sho: 15} },
+            { id: 'footL_tier2', name: '마에스트로 풋살화 [좌]', type: 'footL', price: 300, icon: '👞', desc: '[2종 복합형] 우아한 드리블과 패스.', baseStats: {dri: 1, pas: 1}, baseGrowth: {dri: 10, pas: 10} },
+            { id: 'footR_tier1', name: '강철 발목 보호대 [우]', type: 'footR', price: 150, icon: '🧦', desc: '[1종 집중형] 정확한 가로채기 타이밍.', baseStats: {int: 1}, baseGrowth: {int: 15} },
+            { id: 'footR_tier1_alt', name: '터프 태클 풋살화 [우]', type: 'footR', price: 150, icon: '🥾', desc: '[1종 집중형] 끈질긴 대인 수비 전용.', baseStats: {def: 1}, baseGrowth: {def: 15} },
+            { id: 'footR_tier2', name: '팬텀 드리블러 풋살화 [우]', type: 'footR', price: 300, icon: '👟', desc: '[2종 복합형] 보이지 않는 발놀림.', baseStats: {dri: 1, pac: 1}, baseGrowth: {dri: 10, pac: 10} },
         ];
 
-        window.playerState = { id: '', isGM: false, isGuest: false, name: '', inventory: [], equipHead: null, equipHandL: null, equipHandR: null, equipFootL: null, equipFootR: null };
+        window.playerState = { id: '', isGM: false, isGuest: false, name: '', inventory: [], itemLevels: {}, equipHead: null, equipHandL: null, equipHandR: null, equipFootL: null, equipFootR: null };
         window.allPlayersData = [];
         window.checkedInPlayers = new Set();
         window.selectedPlayerId = null;
         window.targetTeamCount = 2; 
-        
         window.compareTargetId = null;
         window.currentSortKey = 'ovr';
 
@@ -915,19 +773,29 @@
         };
 
         const getBonusStats = (p) => {
-            let bonuses = { pac: 0, sho: 0, pas: 0, dri: 0, def: 0, phy: 0, ref: 0, int: 0, pst: 0, dis: 0, cmp: 0, wrk: 0 };
+            let flat = { pac: 0, sho: 0, pas: 0, dri: 0, def: 0, phy: 0, ref: 0, int: 0, pst: 0, dis: 0, cmp: 0, wrk: 0 };
+            let growth = { pac: 0, sho: 0, pas: 0, dri: 0, def: 0, phy: 0, ref: 0, int: 0, pst: 0, dis: 0, cmp: 0, wrk: 0 };
+            
             const equippedIds = [p.equipHead, p.equipHandL, p.equipHandR, p.equipFootL, p.equipFootR].filter(Boolean);
             equippedIds.forEach(itemId => {
                 const item = SHOP_ITEMS.find(x => x.id === itemId);
-                if (item && item.bonusStats) {
-                    for (const [key, val] of Object.entries(item.bonusStats)) { bonuses[key] += val; }
+                const level = (p.itemLevels && p.itemLevels[itemId]) || 0;
+                const enhData = ENHANCE_LEVELS[level] || ENHANCE_LEVELS[0];
+
+                if (item) {
+                    for (const [key, baseVal] of Object.entries(item.baseStats || {})) { 
+                        flat[key] += baseVal + enhData.statPlus; 
+                    }
+                    for (const [key, baseGrow] of Object.entries(item.baseGrowth || {})) { 
+                        growth[key] += Math.floor(baseGrow * enhData.growthMult); 
+                    }
                 }
             });
-            return bonuses;
+            return { flat, growth };
         };
 
         const getOVR = (p) => {
-            const b = getBonusStats(p);
+            const b = getBonusStats(p).flat;
             const stats = {
                 pac: (p.pac||60)+b.pac, sho: (p.sho||60)+b.sho, pas: (p.pas||60)+b.pas,
                 dri: (p.dri||60)+b.dri, def: (p.def||60)+b.def, phy: (p.phy||60)+b.phy,
@@ -940,20 +808,13 @@
             const keyStats = POS_KEY_STATS[p.pos] || [];
             
             for (const [key, val] of Object.entries(stats)) {
-                if (keyStats.includes(key)) {
-                    weightedSum += val * 1.1; 
-                    totalWeight += 0.1;
-                } else {
-                    weightedSum += val;
-                }
+                if (keyStats.includes(key)) { weightedSum += val * 1.1; totalWeight += 0.1; } 
+                else { weightedSum += val; }
             }
-            
             return Math.min(99, Math.floor(weightedSum / totalWeight));
         };
         
         const getWeeklyWage = (ovr) => { return Math.max(50, Math.min(200, Math.floor(50 + ((ovr - 50) / 49) * 150))); };
-        
-        // 🚨 30주 만렙 (레벨 100) 도달을 위한 경험치 공식 리밸런싱
         const getExpNeeded = (level) => Math.floor(40 + ((level ?? 1) * 3));
 
         function getWeekNumber(d) {
@@ -975,20 +836,12 @@
         };
         const getAvatar = (p) => GENDER_MAP[p.name] === 'F' ? '👧' : '👦';
 
-        window.customAlert = (m) => new Promise(r => {
-            const d = document.createElement('div'); d.className = "fixed inset-0 z-[300] flex items-center justify-center bg-black/80 px-4";
-            d.innerHTML = `<div class="bg-pitch-panel p-6 sm:p-8 rounded-3xl border-2 border-fut-gold max-w-sm w-full text-center space-y-4 shadow-2xl"><h3 class="text-xl font-display text-white">알림</h3><p class="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed break-keep">${m}</p><button id="bOk" class="bg-fut-gold text-slate-900 font-bold py-2.5 px-8 rounded-xl w-full hover:bg-yellow-400 transition mt-4">확인</button></div>`;
-            document.body.appendChild(d); document.getElementById('bOk').onclick = () => { d.remove(); r(true); };
-        });
-
-        window.customConfirm = (m) => new Promise(r => {
-            const d = document.createElement('div'); d.className = "fixed inset-0 z-[300] flex items-center justify-center bg-black/80 px-4";
-            d.innerHTML = `<div class="bg-pitch-panel p-6 sm:p-8 rounded-3xl border-2 border-fut-gold max-w-sm w-full text-center space-y-4 shadow-2xl"><h3 class="text-xl font-display text-white">확인</h3><p class="text-sm text-slate-300 whitespace-pre-wrap">${m}</p><div class="flex gap-3 mt-6"><button id="bNo" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2.5 rounded-xl w-full transition">취소</button><button id="bYes" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl w-full transition">진행</button></div></div>`;
-            document.body.appendChild(d); document.getElementById('bYes').onclick = () => { d.remove(); r(true); }; document.getElementById('bNo').onclick = () => { d.remove(); r(false); };
-        });
-
+        // -------------------------
+        // 🚨 누락되었던 필수 UI 함수들 복구 구역
+        // -------------------------
+        
         window.switchTab = (tabId) => {
-            ['tabWorkspace', 'tabTips', 'tabAchievements', 'tabShop', 'tabRank', 'tabGuide', 'tabMaster', 'tabCompare', 'tabMasterStats'].forEach(id => {
+            ['tabWorkspace', 'tabTips', 'tabShop', 'tabAchievements', 'tabRank', 'tabCompare', 'tabGuide', 'tabMaster', 'tabMasterStats'].forEach(id => {
                 const el = document.getElementById(id); if(el) el.classList.add('hidden');
                 const btn = document.getElementById('btn' + id.charAt(0).toUpperCase() + id.slice(1)); if(btn) btn.classList.remove('active');
             });
@@ -1012,14 +865,13 @@
             if(tabId === 'tabTips') {
                 renderDailyTip();
                 const gmEditor = document.getElementById('gmAnnouncementEditor');
-                if(window.playerState.isGM) gmEditor?.classList.remove('hidden');
-                else gmEditor?.classList.add('hidden');
+                if(window.playerState.isGM) gmEditor?.classList.remove('hidden'); else gmEditor?.classList.add('hidden');
             }
-            if(tabId === 'tabAchievements') window.renderAchievements();
             if(tabId === 'tabShop') renderShop();
+            if(tabId === 'tabAchievements') window.renderAchievements();
             if(tabId === 'tabRank') renderLeaderboard();
-            if(tabId === 'tabMaster') renderMasterDashboard();
             if(tabId === 'tabCompare') window.renderCompareList();
+            if(tabId === 'tabMaster') renderMasterDashboard();
             if(tabId === 'tabMasterStats') window.renderMasterStats();
         };
 
@@ -1035,11 +887,127 @@
                 </div>
                 <div class="p-6">
                     <h4 class="text-2xl font-display text-white mb-4 leading-tight break-keep">${tip.title}</h4>
-                    ${tip.diagram ? tip.diagram : ''}
                     <p class="text-slate-300 text-sm sm:text-base leading-relaxed break-keep font-medium">${tip.desc}</p>
                 </div>
             `;
         }
+
+        window.renderLockerRoom = () => {
+            const grid = document.getElementById('lockerGrid');
+            if(!grid) return;
+            let html = '';
+            ALLOWED_PLAYERS.forEach(name => {
+                const safeDocId = getSafeDocId(name);
+                const p = window.allPlayersData.find(x => x.id === safeDocId);
+                
+                if(p) {
+                    const isChecked = window.checkedInPlayers.has(p.id);
+                    const isSelected = window.selectedPlayerId === p.id;
+                    const ovr = getOVR(p);
+                    const tier = getTierInfo(ovr);
+                    let borderClass = 'border-slate-700';
+                    if(ovr >= 90) borderClass = 'border-purple-500';
+                    else if (ovr >= 80) borderClass = 'border-fut-gold';
+                    else if (ovr >= 70) borderClass = 'border-gray-300';
+
+                    const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
+
+                    html += `
+                        <div class="mini-card flex flex-col items-center p-2 rounded-xl bg-pitch-panel border-2 ${borderClass} cursor-pointer ${isSelected ? 'selected' : ''} ${isChecked ? 'checked-in' : 'checked-out'}" onclick="window.selectPlayer('${p.id}')">
+                            <input type="checkbox" class="locker-checkbox absolute top-1.5 left-1.5 w-5 h-5 shadow-lg z-10" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); window.toggleCheck('${p.id}')">
+                            <div class="absolute top-1 right-1 ${tier.class} text-[9px] font-bold px-1.5 py-0.5 rounded shadow whitespace-nowrap">${tier.name.split(' ')[0]}</div>
+                            <div class="text-3xl mt-4 mb-1 drop-shadow-md">${getAvatar(p)}</div>
+                            <div class="font-oswald text-xl font-bold leading-none text-white">${ovr}</div>
+                            <div class="flex items-center gap-1 mt-1"><span class="text-[10px] font-bold ${getPosColor(p.pos)}">${posText}</span><span class="text-xs font-bold text-slate-300 truncate max-w-[50px]">${p.name}</span></div>
+                        </div>`;
+                } else {
+                    html += `<div class="flex flex-col items-center justify-center p-2 rounded-xl border border-slate-800 bg-slate-900/50 opacity-50"><i class="fa-solid fa-user-lock text-xl text-slate-700 mb-2"></i><span class="text-[10px] text-slate-600">${name}</span></div>`;
+                }
+            });
+            grid.innerHTML = html;
+        };
+
+        window.toggleCheck = (pId) => {
+            if(window.playerState.isGuest) return window.customAlert("게스트 모드에서는 출석 체크를 할 수 없습니다.");
+            if(window.checkedInPlayers.has(pId)) window.checkedInPlayers.delete(pId);
+            else window.checkedInPlayers.add(pId);
+            window.renderLockerRoom(); renderActivePool();
+        };
+
+        window.selectPlayer = (pId) => {
+            window.selectedPlayerId = pId;
+            window.renderLockerRoom(); renderSelectedCard(pId);
+            if(isVisible('tabAchievements')) window.renderAchievements();
+            if(isVisible('tabShop')) renderShop();
+            if(isVisible('tabCompare')) window.renderCompareList();
+            
+            const detailPanelTitle = document.getElementById('detailPanelTitle');
+            if(window.innerWidth < 1024 && detailPanelTitle) detailPanelTitle.scrollIntoView();
+        };
+
+        function renderActivePool() {
+            const container = document.getElementById('activePool'); 
+            if(!container) return;
+            const activeCountEl = document.getElementById('activeCount');
+            if(activeCountEl) activeCountEl.innerText = `${window.checkedInPlayers.size} 명`;
+            
+            if(window.checkedInPlayers.size === 0) { container.innerHTML = `<span class="text-xs text-slate-600 italic">라커룸에서 선수를 체크해주세요.</span>`; return; }
+            let html = '';
+            window.checkedInPlayers.forEach(id => {
+                const p = window.allPlayersData.find(x => x.id === id);
+                if(p) html += `<div class="bg-slate-800 border border-slate-600 rounded px-2 py-1 text-xs font-bold text-white flex items-center gap-1 shadow-sm"><span class="w-2 h-2 rounded-full ${getPosBg(p.pos||'Ala')}"></span>${p.name}</div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        window.changeTeamCount = (delta) => { 
+            window.targetTeamCount = Math.max(2, Math.min(6, window.targetTeamCount + delta)); 
+            const el = document.getElementById('targetTeamCount');
+            if(el) el.innerText = window.targetTeamCount; 
+        };
+
+        window.generateBalancedTeams = () => {
+            const numTeams = window.targetTeamCount;
+            if(window.checkedInPlayers.size < numTeams) return window.customAlert(`팀을 ${numTeams}개로 나누려면 최소 ${numTeams}명 이상 출석 체크를 해주세요!`);
+            
+            const players = []; window.checkedInPlayers.forEach(id => { const p = window.allPlayersData.find(x => x.id === id); if(p) players.push(p); });
+            const roleMap = { 'Pivo':'FW', 'Ala':'MF', 'Fixo':'DF', 'Goleiro':'GK', '미정':'MF' };
+            const pools = { FW: [], MF: [], DF: [], GK: [] };
+            players.forEach(p => pools[roleMap[p.pos] || 'MF'].push(p));
+            for(let r in pools) pools[r].sort((a,b) => getOVR(b) - getOVR(a));
+
+            const teams = Array.from({length: numTeams}, (_, i) => ({ id: i, players: [], sumOvr: 0 }));
+
+            ['GK', 'DF', 'MF', 'FW'].forEach(role => {
+                pools[role].forEach(p => { teams.sort((a,b) => a.sumOvr - b.sumOvr); teams[0].players.push(p); teams[0].sumOvr += getOVR(p); });
+            });
+            teams.sort((a,b) => a.id - b.id);
+
+            const resultContainer = document.getElementById('teamResult'); 
+            if(!resultContainer) return;
+            
+            resultContainer.classList.remove('hidden');
+            resultContainer.className = `mt-8 grid grid-cols-1 sm:grid-cols-2 ${numTeams > 2 ? 'lg:grid-cols-3' : ''} gap-4 sm:gap-6`;
+
+            const colors = [
+                { name: 'BLUE', border: 'border-blue-500/50', bg: 'from-blue-900/40', text: 'text-blue-400', borderSub: 'border-blue-500/30' }, { name: 'RED', border: 'border-red-500/50', bg: 'from-red-900/40', text: 'text-red-400', borderSub: 'border-red-500/30' },
+                { name: 'GREEN', border: 'border-emerald-500/50', bg: 'from-emerald-900/40', text: 'text-emerald-400', borderSub: 'border-emerald-500/30' }, { name: 'PURPLE', border: 'border-purple-500/50', bg: 'from-purple-900/40', text: 'text-purple-400', borderSub: 'border-purple-500/30' },
+                { name: 'ORANGE', border: 'border-orange-500/50', bg: 'from-orange-900/40', text: 'text-orange-400', borderSub: 'border-orange-500/30' }, { name: 'YELLOW', border: 'border-yellow-500/50', bg: 'from-yellow-900/40', text: 'text-yellow-400', borderSub: 'border-yellow-500/30' },
+            ];
+
+            let html = '';
+            teams.forEach((t, i) => {
+                const c = colors[i % colors.length]; const avgOvr = t.players.length > 0 ? (t.sumOvr / t.players.length).toFixed(1) : 0;
+                let listHtml = t.players.map(p => {
+                    const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
+                    return `<li class="flex justify-between items-center bg-slate-900/60 p-2 rounded border border-slate-700/50 mb-1"><div class="flex items-center gap-2"><span class="w-8 text-center text-[10px] font-bold text-white ${getPosBg(p.pos)} rounded py-0.5">${posText}</span><span class="text-sm font-bold text-white">${p.name}</span></div><span class="font-oswald text-xs text-fut-gold border border-fut-gold/30 px-1.5 rounded bg-black/40">${getOVR(p)}</span></li>`;
+                }).join('');
+
+                html += `<div class="bg-gradient-to-b ${c.bg} to-slate-900/40 border-2 ${c.border} p-5 rounded-2xl relative shadow-lg"><h4 class="font-display text-2xl ${c.text} mb-1 text-center">TEAM ${c.name}</h4><p class="text-center text-xs font-bold text-slate-300 mb-4 pb-3 border-b ${c.borderSub} tracking-widest">TEAM OVR: <span class="text-white font-oswald text-lg">${avgOvr}</span> <span class="ml-2 text-[10px] text-slate-500">(${t.players.length}명)</span></p><ul class="space-y-2">${listHtml}</ul></div>`;
+            });
+
+            resultContainer.innerHTML = html; resultContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        };
 
         window.renderAchievements = () => {
             const targetId = window.playerState.isGM ? window.selectedPlayerId : window.playerState.id;
@@ -1094,130 +1062,6 @@
             const totalPercent = Math.floor((completedCount / ACHIEVEMENTS.length) * 100);
             document.getElementById('achievementProgressText').innerText = `${totalPercent}%`;
             document.getElementById('achievementProgressBar').style.width = `${totalPercent}%`;
-            
-            if (totalPercent === 100) {
-                document.getElementById('achievementProgressText').classList.add('animate-pulse');
-            } else {
-                document.getElementById('achievementProgressText').classList.remove('animate-pulse');
-            }
-        };
-
-        window.renderShop = () => {
-            const targetId = window.playerState.isGM ? window.selectedPlayerId : window.playerState.id;
-            const p = window.allPlayersData.find(x => x.id === targetId) || null;
-            const bong = p ? (p.bong || 0) : 0;
-            const inventory = p ? (p.inventory || []) : [];
-            
-            document.getElementById('shopBong').innerText = bong;
-            document.getElementById('shopWalletLabel').innerText = window.playerState.isGM ? (p ? `[${p.name}] 선수의 자산` : `학생 미등록`) : (window.playerState.isGuest ? `게스트 자산 없음` : `내 보유 자산`);
-
-            let html = '';
-            SHOP_ITEMS.forEach(item => {
-                const isOwned = inventory.includes(item.id);
-                const isEquipped = p ? (p.equipHead === item.id || p.equipHandL === item.id || p.equipHandR === item.id || p.equipFootL === item.id || p.equipFootR === item.id) : false;
-                
-                let btnHtml = '';
-                if(window.playerState.isGM) {
-                    if (!p) { btnHtml = `<button disabled class="w-full mt-2 bg-slate-800 text-slate-500 text-xs font-bold py-1.5 rounded">데이터 없음</button>`; } 
-                    else if(isEquipped) { btnHtml = `<div class="flex gap-1 mt-2"><button onclick="window.equipItem('${item.id}', '${item.type}')" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white text-[10px] font-bold py-1.5 rounded shadow">장착 해제</button><button onclick="window.revokeItem('${item.id}')" class="flex-1 bg-red-800 hover:bg-red-700 text-white text-[10px] font-bold py-1.5 rounded shadow">🗑️ 회수</button></div>`; } 
-                    else if(isOwned) { btnHtml = `<div class="flex gap-1 mt-2"><button onclick="window.equipItem('${item.id}', '${item.type}')" class="flex-1 bg-emerald-700 hover:bg-emerald-600 text-white text-[10px] font-bold py-1.5 rounded shadow">대리 장착</button><button onclick="window.revokeItem('${item.id}')" class="flex-1 bg-red-800 hover:bg-red-700 text-white text-[10px] font-bold py-1.5 rounded shadow">🗑️ 회수</button></div>`; } 
-                    else { btnHtml = `<button onclick="window.purchaseItem('${item.id}')" class="w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-1.5 rounded shadow"><i class="fa-solid fa-gift mr-1"></i> 무료 선물하기</button>`; }
-                } else if(window.playerState.isGuest) {
-                    btnHtml = `<button onclick="window.customAlert('게스트는 아이템을 구매할 수 없습니다.')" class="w-full mt-2 bg-slate-800 hover:bg-slate-700 text-slate-500 text-xs font-bold py-1.5 rounded shadow cursor-not-allowed">구매 (${item.price} B)</button>`;
-                } else {
-                    if(isEquipped) { btnHtml = `<button onclick="window.equipItem('${item.id}', '${item.type}')" class="w-full mt-2 bg-slate-700 text-white text-xs font-bold py-1.5 rounded border border-slate-500 shadow">장착 해제</button>`; } 
-                    else if(isOwned) { btnHtml = `<button onclick="window.equipItem('${item.id}', '${item.type}')" class="w-full mt-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-1.5 rounded shadow">장착하기</button>`; } 
-                    else {
-                        const canAfford = bong >= item.price;
-                        btnHtml = `<button onclick="window.purchaseItem('${item.id}')" class="w-full mt-2 ${canAfford ? 'bg-purple-600 hover:bg-purple-500 text-white' : 'bg-slate-800 text-slate-500 cursor-not-allowed'} text-xs font-bold py-1.5 rounded shadow">구매 (${item.price} B)</button>`;
-                    }
-                }
-
-                const slotKo = { 'head':'머리', 'handL':'왼손', 'handR':'오른손', 'footL':'왼발', 'footR':'오른발' }[item.type];
-
-                html += `
-                    <div class="bg-slate-900/60 border border-slate-700 rounded-xl p-4 flex items-center gap-4 hover:border-purple-500/50 transition duration-300">
-                        <div class="text-4xl w-16 h-16 bg-slate-800 flex items-center justify-center rounded-lg shadow-inner flex-shrink-0 relative border border-slate-600">
-                            ${item.icon}
-                            <div class="absolute -top-2 -left-2 bg-slate-700 text-white text-[8px] px-1.5 py-0.5 rounded border border-slate-500">${slotKo}</div>
-                            ${item.bonusText ? `<div class="absolute bottom-0 w-full bg-black/60 text-emerald-400 text-[8px] font-bold text-center py-0.5 rounded-b-lg border-t border-slate-600">${item.bonusText}</div>` : ''}
-                        </div>
-                        <div class="flex-grow">
-                            <h5 class="font-bold text-white text-sm mb-1">${item.name}</h5>
-                            <p class="text-[10px] text-slate-400 mb-1 line-clamp-2">${item.desc}</p>
-                            ${btnHtml}
-                        </div>
-                    </div>
-                `;
-            });
-            document.getElementById('shopGrid').innerHTML = html;
-        };
-
-        window.purchaseItem = async (itemId) => {
-            if(window.playerState.isGuest) return window.customAlert("게스트는 이용할 수 없는 기능입니다.");
-            
-            const targetId = window.playerState.isGM ? window.selectedPlayerId : window.playerState.id;
-            const p = window.allPlayersData.find(x => x.id === targetId);
-            const item = SHOP_ITEMS.find(x => x.id === itemId);
-            if(!p || !item) return;
-
-            let updates = {};
-            if(window.playerState.isGM) {
-                if(!await window.customConfirm(`감독 권한으로 [${p.name}] 선수에게 [${item.name}]을 선물하시겠습니까?`)) return;
-            } else {
-                if((p.bong || 0) < item.price) return window.customAlert("자산(B)이 부족합니다!");
-                if(!await window.customConfirm(`[${item.name}] 아이템을 ${item.price} B에 구매하시겠습니까?`)) return;
-                updates.bong = (p.bong || 0) - item.price;
-            }
-
-            updates.inventory = [...(p.inventory || []), itemId];
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
-            await setDoc(docRef, updates, { merge: true });
-            
-            triggerConfetti();
-            window.customAlert(window.playerState.isGM ? `🎁 [${item.name}] 선물 완료!` : `🎉 [${item.name}] 구매 완료! 장착하기를 눌러보세요.`);
-            renderShop();
-        };
-
-        window.revokeItem = async (itemId) => {
-            if(!window.playerState.isGM) return;
-            const targetId = window.selectedPlayerId;
-            const p = window.allPlayersData.find(x => x.id === targetId);
-            const item = SHOP_ITEMS.find(x => x.id === itemId);
-            if(!p || !item) return;
-
-            if(!await window.customConfirm(`[${p.name}] 선수의 [${item.name}] 아이템을 회수하시겠습니까?`)) return;
-
-            let updates = { inventory: (p.inventory || []).filter(id => id !== itemId) };
-            if(p.equipHead === itemId) updates.equipHead = null;
-            if(p.equipHandL === itemId) updates.equipHandL = null;
-            if(p.equipHandR === itemId) updates.equipHandR = null;
-            if(p.equipFootL === itemId) updates.equipFootL = null;
-            if(p.equipFootR === itemId) updates.equipFootR = null;
-
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
-            await setDoc(docRef, updates, { merge: true });
-            
-            window.customAlert(`🗑️ 아이템이 회수되었습니다.`);
-            renderShop(); renderLockerRoom(); renderSelectedCard(targetId);
-        };
-
-        window.equipItem = async (itemId, type) => {
-            if(window.playerState.isGuest) return window.customAlert("게스트는 이용할 수 없는 기능입니다.");
-            const targetId = window.playerState.isGM ? window.selectedPlayerId : window.playerState.id;
-            const p = window.allPlayersData.find(x => x.id === targetId);
-            if(!p) return;
-
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
-            let updates = {};
-            const fieldMap = { 'head':'equipHead', 'handL':'equipHandL', 'handR':'equipHandR', 'footL':'equipFootL', 'footR':'equipFootR' };
-            const field = fieldMap[type];
-            if(field) {
-                updates[field] = p[field] === itemId ? null : itemId;
-            }
-
-            await setDoc(docRef, updates, { merge: true });
-            renderShop(); renderLockerRoom(); renderSelectedCard(targetId);
         };
 
         function renderLeaderboard() {
@@ -1282,6 +1126,7 @@
         function renderMasterDashboard() {
             if(!window.playerState.isGM) return;
             const tbody = document.getElementById('masterTableBody');
+            if(!tbody) return;
             let html = '';
             
             const players = [...window.allPlayersData].sort((a,b) => getOVR(b) - getOVR(a));
@@ -1323,7 +1168,7 @@
             
             const players = [...window.allPlayersData].sort((a,b) => {
                 if(window.currentSortKey === 'ovr') return getOVR(b) - getOVR(a);
-                const bBonus = getBonusStats(b); const aBonus = getBonusStats(a);
+                const bBonus = getBonusStats(b).flat; const aBonus = getBonusStats(a).flat;
                 const bVal = (b[window.currentSortKey]||60) + (bBonus[window.currentSortKey]||0);
                 const aVal = (a[window.currentSortKey]||60) + (aBonus[window.currentSortKey]||0);
                 if (bVal !== aVal) return bVal - aVal;
@@ -1333,7 +1178,7 @@
             players.forEach(p => {
                 const ovr = getOVR(p);
                 const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
-                const b = getBonusStats(p);
+                const b = getBonusStats(p).flat;
                 
                 const getCell = (key) => {
                     const base = p[key]||60; const bonus = b[key]||0; const total = Math.min(99, base + bonus);
@@ -1410,7 +1255,7 @@
             }
 
             const myOvr = getOVR(myP); const tgOvr = getOVR(tgP);
-            const myBonus = getBonusStats(myP); const tgBonus = getBonusStats(tgP);
+            const myBonus = getBonusStats(myP).flat; const tgBonus = getBonusStats(tgP).flat;
 
             const stats = [
                 { id: 'pac', label: '속력 (PAC)' }, { id: 'sho', label: '슈팅 (SHO)' },
@@ -1471,454 +1316,182 @@
             `;
         };
 
-        async function initApp() {
+        window.saveAttendance = async () => {
+            if (!window.playerState.isGM) return;
+            if (window.checkedInPlayers.size === 0) return window.customAlert("체크된 선수가 없습니다.");
+            
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const dateStr = `${year}-${month}-${day}`;
+            const attendees = Array.from(window.checkedInPlayers);
+            
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'attendance', dateStr);
+            await setDoc(docRef, { date: dateStr, count: attendees.length, players: attendees, timestamp: new Date().toISOString() }, { merge: true });
+            
+            triggerConfetti(); window.customAlert(`✅ ${dateStr}\n총 ${attendees.length}명의 출석부가 저장되었습니다!`);
+        };
+
+        window.viewAttendance = async () => {
+            if (!window.playerState.isGM) return;
+            const attRef = collection(db, 'artifacts', appId, 'public', 'data', 'attendance');
+            
             try {
-                const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "AIzaSyAsih-sfnIZ_gX_1l7SAVZHCAhk3KzmiP8", authDomain: "sambong-world-2026.firebaseapp.com", projectId: "sambong-world-2026" };
-                const app = initializeApp(firebaseConfig);
-                auth = getAuth(app); db = getFirestore(app);
+                const snap = await getDocs(attRef);
+                let logs = []; snap.forEach(doc => logs.push(doc.data()));
                 
-                const initAuth = async () => {
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) { await signInWithCustomToken(auth, __initial_auth_token); } 
-                    else { await signInAnonymously(auth); }
-                };
-                await initAuth();
+                const dates = [];
+                let d = new Date(2026, 2, 7); 
+                for(let i=0; i<30; i++) {
+                    const y = d.getFullYear(); const m = String(d.getMonth() + 1).padStart(2, '0'); const day = String(d.getDate()).padStart(2, '0');
+                    dates.push(`${y}-${m}-${day}`); d.setDate(d.getDate() + 7);
+                }
 
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        // 플레이어 목록 리스너
-                        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'players'), (snapshot) => {
-                            const players = [];
-                            snapshot.forEach(d => { 
-                                try {
-                                    if(!d.id.includes('gm')) {
-                                        const data = d.data();
-                                        const cleanId = d.id.replace('player_', '');
-                                        players.push({ id: cleanId, name: data.name || cleanId, ...data }); 
-                                    }
-                                } catch(e) { console.error("Parse err", e); }
-                            });
-                            
-                            window.allPlayersData = players.sort((a,b) => {
-                                const lvDiff = (b.level ?? 1) - (a.level ?? 1);
-                                if(lvDiff !== 0) return lvDiff;
-                                return getOVR(b) - getOVR(a);
-                            });
-                            
-                            renderLockerRoom();
-                            if(window.selectedPlayerId) renderSelectedCard(window.selectedPlayerId);
-                            renderActivePool();
-                            
-                            if(isVisible('tabAchievements')) window.renderAchievements();
-                            if(isVisible('tabShop')) renderShop();
-                            if(isVisible('tabRank')) renderLeaderboard();
-                            if(isVisible('tabMaster')) renderMasterDashboard();
-                            if(isVisible('tabCompare')) window.renderCompareList();
-                            if(isVisible('tabMasterStats')) window.renderMasterStats();
-                        }, (error) => { console.error("데이터 로드 에러:", error); renderLockerRoom(); });
-
-                        // 공지사항 리스너 추가
-                        onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'announcement'), (docSnap) => {
-                            const el = document.getElementById('announcementContent');
-                            const input = document.getElementById('announcementInput');
-                            if(docSnap.exists() && docSnap.data().text) {
-                                const text = docSnap.data().text;
-                                if(el) el.innerText = text;
-                                if(input) input.value = text;
-                            } else {
-                                if(el) el.innerText = "현재 등록된 공지사항이 없습니다.\n라커룸에 입장해서 친구들과 즐겁게 축구해요!";
-                                if(input) input.value = "";
-                            }
-                        }, (error) => { console.error("공지사항 로드 에러:", error); });
-
-                        const savedId = localStorage.getItem('sfc_pid');
-                        const savedPin = localStorage.getItem('sfc_pin');
-                        if (savedId && savedPin) attemptLogin(savedId, savedPin, true);
-                        else document.getElementById('loginOverlay')?.classList.remove('hidden');
-                    }
+                let modalHtml = `<div class="bg-pitch-panel p-4 sm:p-6 rounded-3xl border-2 border-emerald-500 w-full sm:w-[95vw] max-w-7xl shadow-2xl max-h-[90vh] flex flex-col font-sans text-white relative">
+                    <h2 class="text-2xl sm:text-3xl font-display text-center text-emerald-400 mb-2 tracking-widest drop-shadow-lg flex items-center justify-center gap-3"><i class="fa-solid fa-calendar-check"></i> 삼봉 풋살클럽 출석부 (2026)</h2>
+                    <p class="text-xs text-emerald-200 mb-4 mt-2 text-center">토요스포츠데이 (3~6학년) / 9:20~12:30 / 좌우로 스크롤하여 30주차 전체 일정을 확인하세요!</p>
+                    
+                    <div class="overflow-x-auto overflow-y-auto custom-scrollbar flex-1 border border-emerald-800/50 rounded-xl bg-slate-900/80">
+                        <table class="w-full text-center whitespace-nowrap text-xs border-collapse">
+                            <thead>
+                                <tr class="bg-slate-800 border-b border-emerald-800 sticky top-0 z-20 shadow-md">
+                                    <th rowspan="2" class="p-2 border-r border-slate-700 w-10 sticky left-0 bg-slate-800 z-30">연번</th>
+                                    <th rowspan="2" class="p-2 border-r border-slate-700 w-24 sticky left-10 bg-slate-800 z-30 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">성명</th>
+                                    <th class="p-2 border-r border-slate-700 bg-emerald-900/80 text-emerald-300 w-12 sticky left-[136px] z-30 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">누계</th>
+                                    ${dates.map((_, i) => `<th class="p-1 border-r border-slate-700 font-normal text-[10px] text-slate-400 w-12">${i+1}주차</th>`).join('')}
+                                </tr>
+                                <tr class="bg-slate-800 border-b border-emerald-800 sticky top-8 z-10 shadow-md">
+                                    <th class="p-1 border-r border-slate-700 text-[10px] bg-emerald-900/80 sticky left-[136px] z-30 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">출석</th>
+                                    ${dates.map(d => `<th class="p-1 border-r border-slate-700 text-[10px]"><div class="text-emerald-400 font-bold">${d.substring(5).replace('-','/')}</div><div class="text-emerald-500/70 mt-0.5 font-bold">(토)</div></th>`).join('')}
+                                </tr>
+                            </thead>
+                            <tbody>`;
+                
+                ALLOWED_PLAYERS.forEach((name, idx) => {
+                    const safeDocId = getSafeDocId(name);
+                    const p = window.allPlayersData.find(x => x.id === safeDocId);
+                    const pId = p ? p.id : null;
+                    let attCount = 0;
+                    
+                    let rowCells = dates.map(targetDate => {
+                        const log = logs.find(l => l.date === targetDate);
+                        if(log && pId && log.players.includes(pId)) {
+                            attCount++; 
+                            return `<td class="p-1 border-r border-b border-slate-700/50"><div class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500 flex items-center justify-center mx-auto text-[10px] font-bold shadow-[0_0_5px_rgba(56,255,142,0.5)]">O</div></td>`;
+                        }
+                        return `<td class="p-1 border-r border-b border-slate-700/50 text-slate-700">-</td>`;
+                    }).join('');
+                    
+                    modalHtml += `
+                        <tr class="hover:bg-slate-800/60 transition group">
+                            <td class="p-2 border-r border-b border-slate-700/50 text-slate-500 sticky left-0 bg-slate-900 group-hover:bg-slate-800">${idx+1}</td>
+                            <td class="p-2 border-r border-b border-slate-700/50 font-bold text-white tracking-widest sticky left-10 bg-slate-900 group-hover:bg-slate-800 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">${name}</td>
+                            <td class="p-2 border-r border-b border-slate-700/50 bg-emerald-900/20 font-bold text-emerald-300 sticky left-[136px] group-hover:bg-emerald-900/40 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">${attCount}</td>
+                            ${rowCells}
+                        </tr>
+                    `;
                 });
-            } catch(e) { console.error("Firebase Init Error:", e); renderLockerRoom(); }
-        }
+                
+                modalHtml += `</tbody></table></div>
+                    <button onclick="this.parentElement.parentElement.remove()" class="mt-6 bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-xl w-full sm:w-64 mx-auto transition shadow-lg text-lg">닫기</button>
+                </div>`;
+                
+                const modal = document.createElement('div'); modal.className = "fixed inset-0 z-[400] flex items-center justify-center bg-black/90 px-2 sm:px-4 backdrop-blur-sm"; modal.innerHTML = modalHtml; document.body.appendChild(modal);
+            } catch (e) { console.error("조회 에러:", e); window.customAlert("데이터를 불러오는데 실패했습니다."); }
+        };
 
-        // 공지사항 저장 (GM 전용)
-        window.saveAnnouncement = async () => {
+        window.purchaseItem = async (itemId) => {
+            if(window.playerState.isGuest) return window.customAlert("게스트는 이용할 수 없는 기능입니다.");
+            
+            const targetId = window.playerState.isGM ? window.selectedPlayerId : window.playerState.id;
+            const p = window.allPlayersData.find(x => x.id === targetId);
+            const item = SHOP_ITEMS.find(x => x.id === itemId);
+            if(!p || !item) return;
+
+            let updates = {};
+            if(window.playerState.isGM) {
+                if(!await window.customConfirm(`감독 권한으로 [${p.name}] 선수에게 [${item.name}]을 선물하시겠습니까?`)) return;
+            } else {
+                if((p.bong || 0) < item.price) return window.customAlert("자산(B)이 부족합니다!");
+                if(!await window.customConfirm(`[${item.name}] 아이템을 ${item.price} B에 구매하시겠습니까?`)) return;
+                updates.bong = (p.bong || 0) - item.price;
+            }
+
+            updates.inventory = [...(p.inventory || []), itemId];
+            // 구매 시 아이템 레벨 0으로 초기화
+            updates.itemLevels = { ...(p.itemLevels || {}), [itemId]: 0 };
+
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
+            await setDoc(docRef, updates, { merge: true });
+            
+            triggerConfetti();
+            window.customAlert(window.playerState.isGM ? `🎁 [${item.name}] 선물 완료!` : `🎉 [${item.name}] 구매 완료! 장착하기를 눌러보세요.`);
+            window.renderShop();
+        };
+
+        window.revokeItem = async (itemId) => {
             if(!window.playerState.isGM) return;
-            const text = document.getElementById('announcementInput').value;
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'announcement');
-            await setDoc(docRef, { text: text, updatedAt: new Date().toISOString() }, { merge: true });
-            window.customAlert("공지사항이 모든 학생들에게 성공적으로 전송되었습니다!");
+            const targetId = window.selectedPlayerId;
+            const p = window.allPlayersData.find(x => x.id === targetId);
+            const item = SHOP_ITEMS.find(x => x.id === itemId);
+            if(!p || !item) return;
+
+            if(!await window.customConfirm(`[${p.name}] 선수의 [${item.name}] 아이템을 회수하시겠습니까?`)) return;
+
+            let updates = { inventory: (p.inventory || []).filter(id => id !== itemId) };
+            const newItemLevels = { ...(p.itemLevels || {}) };
+            delete newItemLevels[itemId];
+            updates.itemLevels = newItemLevels;
+
+            if(p.equipHead === itemId) updates.equipHead = null;
+            if(p.equipHandL === itemId) updates.equipHandL = null;
+            if(p.equipHandR === itemId) updates.equipHandR = null;
+            if(p.equipFootL === itemId) updates.equipFootL = null;
+            if(p.equipFootR === itemId) updates.equipFootR = null;
+
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
+            await setDoc(docRef, updates, { merge: true });
+            
+            window.customAlert(`🗑️ 아이템이 회수되었습니다.`);
+            window.renderShop(); window.renderLockerRoom(); renderSelectedCard(targetId);
         };
 
-        // UI 이벤트 처리 (게스트 선택 시 PIN 감추기 등)
-        document.getElementById('loginId')?.addEventListener('change', (e) => {
-            const nameContainer = document.getElementById('playerNameInputContainer');
-            const nameInput = document.getElementById('loginPlayerName');
-            const pinContainer = document.getElementById('pinContainer');
-            const pinInput = document.getElementById('loginPin');
-
-            if (e.target.value === 'player') { 
-                nameContainer?.classList.remove('hidden'); 
-                setTimeout(() => nameInput?.focus(), 100); 
-                pinContainer?.classList.remove('hidden');
-            } else if (e.target.value === 'guest') {
-                nameContainer?.classList.add('hidden'); 
-                if(nameInput) nameInput.value = ''; 
-                pinContainer?.classList.add('hidden'); // 게스트는 PIN 컨테이너 숨김
-                if(pinInput) pinInput.value = '';
-            } else { 
-                nameContainer?.classList.add('hidden'); 
-                if(nameInput) nameInput.value = ''; 
-                pinContainer?.classList.remove('hidden');
-            }
-            if(pinInput && e.target.value !== 'guest') pinInput.value = '';
-        });
-
-        document.getElementById('btnLogin')?.addEventListener('click', async () => {
-            const btn = document.getElementById('btnLogin');
-            const originalText = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 처리 중...';
-
-            let pId = document.getElementById('loginId')?.value;
-            const pin = document.getElementById('loginPin')?.value.trim();
-            
-            if(!pId) { btn.disabled = false; btn.innerHTML = originalText; return window.customAlert("입장 자격(선수/코칭스태프)을 선택하세요."); }
-            if(pId === 'player') {
-                pId = document.getElementById('loginPlayerName')?.value;
-                if(!pId) { btn.disabled = false; btn.innerHTML = originalText; return window.customAlert("자신의 이름을 선택하세요."); }
-            }
-            
-            // 게스트가 아닌 경우에만 PIN 체크
-            if(pId !== 'guest' && (!pin || pin.length !== 4)) { 
-                btn.disabled = false; btn.innerHTML = originalText; return window.customAlert("4자리 비밀번호(PIN)를 입력하세요."); 
-            }
-            
-            await attemptLogin(pId, pin, false);
-            
-            btn.disabled = false;
-            btn.innerHTML = originalText;
-        });
-
-        window.logout = async () => {
-            if(await window.customConfirm("라커룸을 나가시겠습니까?")) {
-                localStorage.removeItem('sfc_pid'); localStorage.removeItem('sfc_pin');
-                location.reload();
-            }
-        };
-
-        async function attemptLogin(pId, pin, isAuto) {
-            if(!auth.currentUser) {
-                if(!isAuto) window.customAlert("서버 연결 대기 중입니다. 새로고침 후 다시 시도해주세요.");
-                return;
-            }
-            
-            // 🚨 게스트 로그인 처리
-            if(pId === 'guest') {
-                window.playerState = { id: 'guest', isGM: false, isGuest: true, name: '게스트', inventory: [] };
-                localStorage.setItem('sfc_pid', 'guest'); 
-                localStorage.setItem('sfc_pin', '0000'); // 게스트용 더미 PIN
-                
-                document.getElementById('loginOverlay')?.classList.add('hidden');
-                document.getElementById('saveStatus')?.classList.remove('hidden');
-                document.getElementById('saveStatus')?.classList.add('flex');
-                
-                const nameDisplay = document.getElementById('playerNameDisplay');
-                if(nameDisplay) nameDisplay.innerText = '게스트';
-                
-                const roleDisplay = document.getElementById('playerRoleDisplay');
-                if(roleDisplay) roleDisplay.innerText = 'GUEST (보기 전용)';
-                
-                window.selectedPlayerId = getSafeDocId(ALLOWED_PLAYERS[0]);
-                if(window.selectedPlayerId) renderSelectedCard(window.selectedPlayerId);
-                return;
-            }
-
-            const isGM = pId === 'gm1' || pId === 'gm2';
-            const safeDocId = getSafeDocId(pId);
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + safeDocId);
-            
-            try {
-                const snap = await getDoc(docRef);
-                const r = () => Math.floor(Math.random() * 6) + 55;
-                
-                if(snap.exists()) {
-                    const data = snap.data();
-                    if(!data.pin) {
-                        if(isAuto) { localStorage.clear(); location.reload(); return; }
-                        if(!await window.customConfirm(`PIN [${pin}]으로 초기 등록하시겠습니까?`)) return;
-                        await setDoc(docRef, { pin, updatedAt: new Date().toISOString() }, { merge: true });
-                        window.playerState = { id: safeDocId, isGM, isGuest: false, ...data };
-                    } else if(data.pin !== pin) {
-                        if(isAuto) { localStorage.clear(); location.reload(); return; }
-                        return window.customAlert("❌ 비밀번호가 틀렸습니다.");
-                    } else { window.playerState = { id: safeDocId, isGM, isGuest: false, ...data }; }
-                } else {
-                    if(isAuto) { localStorage.clear(); location.reload(); return; }
-                    if(!await window.customConfirm(`신규 카드 발급! PIN [${pin}]으로 등록하시겠습니까?`)) return;
-                    const baseData = { 
-                        name: isGM ? (pId==='gm1'?'감독 J':'수석코치 J') : pId, pin, pos: isGM ? 'Fixo' : '미정', 
-                        pac: r(), sho: r(), pas: r(), dri: r(), def: r(), phy: r(),
-                        ref: r(), int: r(), pst: r(), dis: r(), cmp: r(), wrk: r(),
-                        level: 1, exp: 0, goals: 0, assists: 0, matches: 0, training: 0, saves: 0, keypass: 0, bong: 0, lastWageWeek: '',
-                        inventory: [], equipHead: null, equipHandL: null, equipHandR: null, equipFootL: null, equipFootR: null,
-                        updatedAt: new Date().toISOString()
-                    };
-                    await setDoc(docRef, baseData, { merge: true });
-                    window.playerState = { id: safeDocId, isGM, isGuest: false, ...baseData };
-                }
-
-                localStorage.setItem('sfc_pid', pId); localStorage.setItem('sfc_pin', pin);
-                
-                document.getElementById('loginOverlay')?.classList.add('hidden');
-                document.getElementById('saveStatus')?.classList.remove('hidden');
-                document.getElementById('saveStatus')?.classList.add('flex');
-                
-                const nameDisplay = document.getElementById('playerNameDisplay');
-                if(nameDisplay) nameDisplay.innerText = window.playerState.name;
-                
-                const roleDisplay = document.getElementById('playerRoleDisplay');
-                if(roleDisplay) roleDisplay.innerText = isGM ? 'MASTER' : 'PLAYER';
-                
-                if(isGM) {
-                    const gmAttTools = document.getElementById('gmAttendanceTools');
-                    if(gmAttTools) { gmAttTools.classList.remove('hidden'); gmAttTools.classList.add('flex'); }
-                    document.getElementById('btnTabMaster')?.classList.remove('hidden');
-                    document.getElementById('btnTabMasterStats')?.classList.remove('hidden');
-                    document.getElementById('gmAnnouncementEditor')?.classList.remove('hidden');
-                }
-
-                window.selectedPlayerId = isGM ? getSafeDocId(ALLOWED_PLAYERS[0]) : safeDocId;
-                if(window.selectedPlayerId) renderSelectedCard(window.selectedPlayerId);
-
-            } catch(e) { 
-                console.error("Login Error:", e);
-                if(!isAuto) window.customAlert(`서버 통신 오류가 발생했습니다. (방화벽 차단 등)\n에러코드: ${e.message}`);
-            }
-        }
-
-        function renderLockerRoom() {
-            const grid = document.getElementById('lockerGrid');
-            if(!grid) return;
-            let html = '';
-            ALLOWED_PLAYERS.forEach(name => {
-                const safeDocId = getSafeDocId(name);
-                const p = window.allPlayersData.find(x => x.id === safeDocId);
-                
-                if(p) {
-                    const isChecked = window.checkedInPlayers.has(p.id);
-                    const isSelected = window.selectedPlayerId === p.id;
-                    const ovr = getOVR(p);
-                    const tier = getTierInfo(ovr);
-                    let borderClass = 'border-slate-700';
-                    if(ovr >= 90) borderClass = 'border-purple-500';
-                    else if (ovr >= 80) borderClass = 'border-fut-gold';
-                    else if (ovr >= 70) borderClass = 'border-gray-300';
-
-                    const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
-
-                    html += `
-                        <div class="mini-card flex flex-col items-center p-2 rounded-xl bg-pitch-panel border-2 ${borderClass} cursor-pointer ${isSelected ? 'selected' : ''} ${isChecked ? 'checked-in' : 'checked-out'}" onclick="window.selectPlayer('${p.id}')">
-                            <input type="checkbox" class="locker-checkbox absolute top-1.5 left-1.5 w-5 h-5 shadow-lg z-10" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); window.toggleCheck('${p.id}')">
-                            <div class="absolute top-1 right-1 ${tier.class} text-[9px] font-bold px-1.5 py-0.5 rounded shadow whitespace-nowrap">${tier.name.split(' ')[0]}</div>
-                            <div class="text-3xl mt-4 mb-1 drop-shadow-md">${getAvatar(p)}</div>
-                            <div class="font-oswald text-xl font-bold leading-none text-white">${ovr}</div>
-                            <div class="flex items-center gap-1 mt-1"><span class="text-[10px] font-bold ${getPosColor(p.pos)}">${posText}</span><span class="text-xs font-bold text-slate-300 truncate max-w-[50px]">${p.name}</span></div>
-                        </div>`;
-                } else {
-                    html += `<div class="flex flex-col items-center justify-center p-2 rounded-xl border border-slate-800 bg-slate-900/50 opacity-50"><i class="fa-solid fa-user-lock text-xl text-slate-700 mb-2"></i><span class="text-[10px] text-slate-600">${name}</span></div>`;
-                }
-            });
-            grid.innerHTML = html;
-        }
-
-        window.toggleCheck = (pId) => {
-            // 게스트 차단
-            if(window.playerState.isGuest) return window.customAlert("게스트 모드에서는 출석 체크를 할 수 없습니다.");
-            
-            if(window.checkedInPlayers.has(pId)) window.checkedInPlayers.delete(pId);
-            else window.checkedInPlayers.add(pId);
-            renderLockerRoom(); renderActivePool();
-        };
-
-        window.selectPlayer = (pId) => {
-            window.selectedPlayerId = pId;
-            renderLockerRoom(); renderSelectedCard(pId);
-            if(isVisible('tabAchievements')) window.renderAchievements();
-            if(isVisible('tabShop')) renderShop();
-            if(isVisible('tabCompare')) window.renderCompareList();
-            
-            const detailPanelTitle = document.getElementById('detailPanelTitle');
-            if(window.innerWidth < 1024 && detailPanelTitle) detailPanelTitle.scrollIntoView();
-        };
-
-        function renderSelectedCard(pId) {
-            const p = window.allPlayersData.find(x => x.id === pId);
+        window.equipItem = async (itemId, type) => {
+            if(window.playerState.isGuest) return window.customAlert("게스트는 이용할 수 없는 기능입니다.");
+            const targetId = window.playerState.isGM ? window.selectedPlayerId : window.playerState.id;
+            const p = window.allPlayersData.find(x => x.id === targetId);
             if(!p) return;
 
-            const isMe = window.playerState.id === pId;
-            const isGM = window.playerState.isGM;
-            const ovr = getOVR(p);
-            const lv = p.level ?? 1;
-            const exp = p.exp || 0;
-            const expNeeded = getExpNeeded(lv);
-            const expPercent = Math.min(100, Math.floor((exp / expNeeded) * 100));
-            const bonus = getBonusStats(p);
-            const tier = getTierInfo(ovr);
-
-            const titleEl = document.getElementById('detailPanelTitle');
-            if(titleEl) titleEl.innerText = isMe ? '내 선수 정보' : `${p.name} 선수의 정보`;
-            
-            const levelEl = document.getElementById('detailLevel');
-            if(levelEl) levelEl.innerText = lv;
-            
-            const badge = document.getElementById('detailTierBadge');
-            if(badge) {
-                badge.innerText = tier.name;
-                badge.className = `px-2 py-1 rounded border text-[10px] font-bold shadow-md whitespace-nowrap ${tier.class}`;
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
+            let updates = {};
+            const fieldMap = { 'head':'equipHead', 'handL':'equipHandL', 'handR':'equipHandR', 'footL':'equipFootL', 'footR':'equipFootR' };
+            const field = fieldMap[type];
+            if(field) {
+                updates[field] = p[field] === itemId ? null : itemId;
             }
 
-            const card = document.getElementById('detailFutCard');
-            if(card) {
-                card.className = `fut-card w-[300px] h-[460px] p-5 flex flex-col relative shadow-2xl z-10 mx-auto transition-all duration-300 ${tier.cardClass}`;
-            }
+            await setDoc(docRef, updates, { merge: true });
+            window.renderShop(); window.renderLockerRoom(); renderSelectedCard(targetId);
+        };
 
-            const avatarEl = document.getElementById('detailAvatar');
-            if(avatarEl) avatarEl.innerText = getAvatar(p);
-            
-            const nameEl = document.getElementById('detailName');
-            if(nameEl) nameEl.innerText = p.name;
-            
-            const ovrEl = document.getElementById('detailOvr');
-            if(ovrEl) ovrEl.innerText = ovr;
-            
-            const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
-            const posEl = document.getElementById('detailPos');
-            if(posEl) posEl.innerText = posText;
-            
-            const expTextEl = document.getElementById('detailExpText');
-            if(expTextEl) expTextEl.innerText = `${exp} / ${expNeeded}`;
-            
-            const expBarEl = document.getElementById('detailExpBar');
-            if(expBarEl) expBarEl.style.width = `${expPercent}%`;
-
-            const renderRecord = (id, key, val) => {
-                const el = document.getElementById(id);
-                if(!el) return;
-                if (isGM) {
-                    el.innerHTML = `<input type="number" value="${val}" class="w-full max-w-[50px] bg-transparent text-center border-b border-slate-600 focus:border-emerald-500 focus:outline-none transition-colors m-0 p-0 text-white font-bold text-lg" onchange="window.setRecord('${p.id}', '${key}', this.value)">`;
-                } else {
-                    el.innerText = val;
-                }
-            };
-
-            renderRecord('recMatches', 'matches', p.matches || 0);
-            renderRecord('recTraining', 'training', p.training || 0);
-            renderRecord('recGoals', 'goals', p.goals || 0);
-            renderRecord('recAssists', 'assists', p.assists || 0);
-            renderRecord('recKeypass', 'keypass', p.keypass || 0);
-            renderRecord('recSaves', 'saves', p.saves || 0);
-
-            const stats = [
-                { id: 'pac', label: '속력' }, { id: 'sho', label: '슈팅' }, { id: 'pas', label: '패스' },
-                { id: 'dri', label: '드리블' }, { id: 'def', label: '수비' }, { id: 'phy', label: '피지컬' },
-                { id: 'ref', label: '반사' }, { id: 'int', label: '가로채기' }, { id: 'pst', label: '위치' },
-                { id: 'dis', label: '볼배급' }, { id: 'cmp', label: '평정심' }, { id: 'wrk', label: '활동량' }
-            ];
-            
-            let gridHtml = '';
-            stats.forEach(s => {
-                const baseVal = p[s.id] || 60; const bVal = bonus[s.id] || 0; const totalVal = Math.min(99, baseVal + bVal);
-                let bonusBadge = bVal > 0 ? `<span class="text-[9px] text-emerald-400 font-bold leading-none absolute -top-1 -right-1">+${bVal}</span>` : '';
-                
-                if(isGM) {
-                    gridHtml += `
-                        <div class="flex items-center justify-center gap-0.5 text-current w-full group relative">
-                            <button onclick="window.modStat('${p.id}', '${s.id}', -1)" class="w-3 h-3 rounded bg-black/30 hover:bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-minus text-[6px]"></i></button>
-                            <div class="relative flex flex-col items-center justify-center w-6">
-                                <input type="number" min="1" max="99" value="${baseVal}" class="font-oswald text-lg font-bold w-full text-center bg-transparent border-b border-transparent hover:border-current focus:outline-none transition cursor-text leading-none p-0 m-0 text-current" onchange="window.setStat('${p.id}', '${s.id}', this.value)">
-                                ${bonusBadge}
-                            </div>
-                            <span class="font-bold text-[9px] tracking-tighter whitespace-nowrap opacity-90 cursor-pointer hover:text-emerald-400" onclick="window.showStatDesc('${s.id}')">${s.label} <i class="fa-solid fa-circle-question opacity-70 text-[7px]"></i></span>
-                            <button onclick="window.modStat('${p.id}', '${s.id}', 1)" class="w-3 h-3 rounded bg-black/30 hover:bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-plus text-[6px]"></i></button>
-                        </div>`;
-                } else {
-                    gridHtml += `
-                        <div class="flex items-center justify-start gap-1 text-current w-full pl-1.5">
-                            <div class="relative flex items-center justify-center w-6">
-                                <span class="font-oswald text-lg font-bold leading-none tracking-tight">${totalVal}</span>
-                                ${bonusBadge}
-                            </div>
-                            <span class="font-bold text-[10px] opacity-90 tracking-tighter whitespace-nowrap cursor-pointer hover:text-emerald-400 transition" onclick="window.showStatDesc('${s.id}')">${s.label} <i class="fa-solid fa-circle-question opacity-70 text-[8px]"></i></span>
-                        </div>`;
-                }
-            });
-            const statsGridEl = document.getElementById('detailStatsGrid');
-            if(statsGridEl) statsGridEl.innerHTML = gridHtml;
-            
-            drawRadarChart(p, bonus);
-
-            const equipSlots = [
-                { id: 'slotHead', equip: p.equipHead, empty: '🧢', label: '머리' },
-                { id: 'slotHandL', equip: p.equipHandL, empty: '🧤', label: '왼손' },
-                { id: 'slotHandR', equip: p.equipHandR, empty: '📿', label: '오른손' },
-                { id: 'slotFootL', equip: p.equipFootL, empty: '👟', label: '왼발' },
-                { id: 'slotFootR', equip: p.equipFootR, empty: '🥾', label: '오른발' }
-            ];
-
-            equipSlots.forEach(slot => {
-                const el = document.getElementById(slot.id);
-                if(el) {
-                    if(slot.equip) {
-                        const item = SHOP_ITEMS.find(x => x.id === slot.equip);
-                        if(item) {
-                            el.innerHTML = `<span class="item-icon">${item.icon}</span><span class="item-label">${slot.label}</span>`;
-                            el.classList.add('equipped');
-                        }
-                    } else {
-                        el.innerHTML = `<span class="opacity-30 text-lg">${slot.empty}</span><span class="item-label">${slot.label}</span>`;
-                        el.classList.remove('equipped');
-                    }
-                }
-            });
-
-            const playerTrainingPanel = document.getElementById('playerTrainingPanel');
-            const iconEditPos = document.getElementById('iconEditPos');
-            const btnChangePos = document.getElementById('btnChangePos');
-            
-            // 🚨 본인 전용 (게스트는 당연히 isMe가 false이므로 여기서 막힘)
-            if(isMe && !isGM && !window.playerState.isGuest) {
-                playerTrainingPanel?.classList.remove('hidden');
-                
-                const recBongEl = document.getElementById('recBong');
-                if(recBongEl) recBongEl.innerText = p.bong || 0;
-                
-                const expWageEl = document.getElementById('expectedWageDisplay');
-                if(expWageEl) expWageEl.innerText = `OVR 주급: ${getWeeklyWage(ovr)} B`;
-                
-                iconEditPos?.classList.remove('hidden');
-                if(btnChangePos) btnChangePos.onclick = () => window.changePositionModal(p.id);
-            } else {
-                playerTrainingPanel?.classList.add('hidden');
-                iconEditPos?.classList.add('hidden');
-                if(btnChangePos) btnChangePos.onclick = null;
-            }
-            
-            const gmControls = document.getElementById('gmControls');
-            const gmWalletManager = document.getElementById('gmWalletManager');
-            const gmViewBong = document.getElementById('gmViewBong');
-            
-            if(isGM) {
-                gmControls?.classList.remove('hidden');
-                gmWalletManager?.classList.remove('hidden');
-                if(gmViewBong) {
-                    gmViewBong.innerHTML = `<input type="number" value="${p.bong || 0}" class="w-16 bg-transparent text-center border-b border-slate-600 focus:border-emerald-500 focus:outline-none transition-colors m-0 p-0 text-fut-gold font-display text-xl leading-none" onchange="window.setRecord('${p.id}', 'bong', this.value)">`;
-                }
-            } else {
-                gmControls?.classList.add('hidden');
-                gmWalletManager?.classList.add('hidden');
-            }
+        function animateFloatText(text, colorClass, parentId) {
+            const parent = document.getElementById(parentId); if(!parent) return;
+            const f = document.createElement('div'); f.className = `absolute left-1/2 transform -translate-x-1/2 text-3xl font-display ${colorClass} z-50 whitespace-nowrap drop-shadow-xl`;
+            f.innerText = text; f.style.animation = 'floatUpFade 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards';
+            parent.appendChild(f); setTimeout(() => f.remove(), 1200);
         }
 
-        function drawRadarChart(p, bonus) {
+        function triggerConfetti() {
+            var duration = 2000, end = Date.now() + duration;
+            (function frame() {
+                confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#38ff8e', '#e8c271'] });
+                confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#38ff8e', '#e8c271'] });
+                if (Date.now() < end) requestAnimationFrame(frame);
+            }());
+        }
+
+        function drawRadarChart(p, bonusFlat) {
             const canvas = document.getElementById('statRadar'); if(!canvas) return;
             const ctx = canvas.getContext('2d');
             const cw = canvas.width; const ch = canvas.height; const cx = cw / 2; const cy = ch / 2; const r = cw * 0.45;
@@ -1932,10 +1505,10 @@
             ctx.closePath(); ctx.fillStyle = 'rgba(0, 0, 0, 0.2)'; ctx.fill(); ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)'; ctx.lineWidth = 1; ctx.stroke();
 
             const statVals = [
-                (p.pac||60)+bonus.pac, (p.sho||60)+bonus.sho, (p.pas||60)+bonus.pas, 
-                (p.dri||60)+bonus.dri, (p.def||60)+bonus.def, (p.phy||60)+bonus.phy,
-                (p.ref||60)+bonus.ref, (p.int||60)+bonus.int, (p.pst||60)+bonus.pst, 
-                (p.dis||60)+bonus.dis, (p.cmp||60)+bonus.cmp, (p.wrk||60)+bonus.wrk
+                (p.pac||60)+bonusFlat.pac, (p.sho||60)+bonusFlat.sho, (p.pas||60)+bonusFlat.pas, 
+                (p.dri||60)+bonusFlat.dri, (p.def||60)+bonusFlat.def, (p.phy||60)+bonusFlat.phy,
+                (p.ref||60)+bonusFlat.ref, (p.int||60)+bonusFlat.int, (p.pst||60)+bonusFlat.pst, 
+                (p.dis||60)+bonusFlat.dis, (p.cmp||60)+bonusFlat.cmp, (p.wrk||60)+bonusFlat.wrk
             ];
             
             ctx.beginPath();
@@ -1979,13 +1552,11 @@
             await setDoc(docRef, { [statKey]: newVal }, { merge: true });
         };
 
-        // 🚨 본인이 스스로 기록하는 함수 (안전장치 추가)
         window.addActivity = async (type) => {
             if(!window.selectedPlayerId) return;
             if(window.playerState.isGuest) return window.customAlert("게스트는 이용할 수 없는 기능입니다.");
             
             const pId = window.selectedPlayerId;
-            // 본인 카드인지 체크 (GM은 제외)
             if(!window.playerState.isGM && pId !== window.playerState.id) return window.customAlert("❌ 자신의 기록만 추가할 수 있습니다!");
             
             const p = window.allPlayersData.find(x => x.id === pId);
@@ -2003,7 +1574,6 @@
             await processExp(p, expGained, docRef, updates);
         };
 
-        // 🚨 본인이 스스로 기록 취소하는 함수
         window.undoActivity = async (type) => {
             if(!window.selectedPlayerId) return;
             if(window.playerState.isGuest) return window.customAlert("게스트는 이용할 수 없는 기능입니다.");
@@ -2072,18 +1642,6 @@
             } catch (error) { window.customAlert("초기화 중 오류가 발생했습니다."); }
         };
 
-        async function processExp(p, expGained, docRef, updatesObj) {
-            let currentLv = p.level ?? 1, currentExp = (p.exp || 0) + expGained, leveledUp = false;
-            while(currentExp >= getExpNeeded(currentLv)) { currentExp -= getExpNeeded(currentLv); currentLv++; leveledUp = true; }
-            updatesObj.exp = currentExp;
-            if(leveledUp) {
-                updatesObj.level = currentLv;
-                if(currentLv % 3 === 0) { ['pac', 'sho', 'pas', 'dri', 'def', 'phy', 'ref', 'int', 'pst', 'dis', 'cmp', 'wrk'].forEach(s => updatesObj[s] = Math.min(99, (p[s]||60) + 1)); }
-                triggerConfetti(); setTimeout(() => window.customAlert(`🎉 축하합니다!\n[${p.name}] 선수가 레벨 ${currentLv} (으)로 올랐습니다!`), 500);
-            }
-            await setDoc(docRef, updatesObj, { merge: true });
-        }
-
         window.manualAddBong = async (amount) => {
             if(!window.playerState.isGM || !window.selectedPlayerId) return;
             const p = window.allPlayersData.find(x => x.id === window.selectedPlayerId);
@@ -2125,196 +1683,6 @@
             window.customAlert(`포지션이 [${POS_KR[newPos]}] (으)로 변경되었습니다.`);
         };
 
-        function renderActivePool() {
-            const container = document.getElementById('activePool'); 
-            if(!container) return;
-            const activeCountEl = document.getElementById('activeCount');
-            if(activeCountEl) activeCountEl.innerText = `${window.checkedInPlayers.size} 명`;
-            
-            if(window.checkedInPlayers.size === 0) { container.innerHTML = `<span class="text-xs text-slate-600 italic">라커룸에서 선수를 체크해주세요.</span>`; return; }
-            let html = '';
-            window.checkedInPlayers.forEach(id => {
-                const p = window.allPlayersData.find(x => x.id === id);
-                if(p) html += `<div class="bg-slate-800 border border-slate-600 rounded px-2 py-1 text-xs font-bold text-white flex items-center gap-1 shadow-sm"><span class="w-2 h-2 rounded-full ${getPosBg(p.pos||'Ala')}"></span>${p.name}</div>`;
-            });
-            container.innerHTML = html;
-        }
-
-        window.changeTeamCount = (delta) => { 
-            window.targetTeamCount = Math.max(2, Math.min(6, window.targetTeamCount + delta)); 
-            const el = document.getElementById('targetTeamCount');
-            if(el) el.innerText = window.targetTeamCount; 
-        };
-
-        window.generateBalancedTeams = () => {
-            const numTeams = window.targetTeamCount;
-            if(window.checkedInPlayers.size < numTeams) return window.customAlert(`팀을 ${numTeams}개로 나누려면 최소 ${numTeams}명 이상 출석 체크를 해주세요!`);
-            
-            const players = []; window.checkedInPlayers.forEach(id => { const p = window.allPlayersData.find(x => x.id === id); if(p) players.push(p); });
-            const roleMap = { 'Pivo':'FW', 'Ala':'MF', 'Fixo':'DF', 'Goleiro':'GK', '미정':'MF' };
-            const pools = { FW: [], MF: [], DF: [], GK: [] };
-            players.forEach(p => pools[roleMap[p.pos] || 'MF'].push(p));
-            for(let r in pools) pools[r].sort((a,b) => getOVR(b) - getOVR(a));
-
-            const teams = Array.from({length: numTeams}, (_, i) => ({ id: i, players: [], sumOvr: 0 }));
-
-            ['GK', 'DF', 'MF', 'FW'].forEach(role => {
-                pools[role].forEach(p => { teams.sort((a,b) => a.sumOvr - b.sumOvr); teams[0].players.push(p); teams[0].sumOvr += getOVR(p); });
-            });
-            teams.sort((a,b) => a.id - b.id);
-
-            const resultContainer = document.getElementById('teamResult'); 
-            if(!resultContainer) return;
-            
-            resultContainer.classList.remove('hidden');
-            resultContainer.className = `mt-8 grid grid-cols-1 sm:grid-cols-2 ${numTeams > 2 ? 'lg:grid-cols-3' : ''} gap-4 sm:gap-6`;
-
-            const colors = [
-                { name: 'BLUE', border: 'border-blue-500/50', bg: 'from-blue-900/40', text: 'text-blue-400', borderSub: 'border-blue-500/30' }, { name: 'RED', border: 'border-red-500/50', bg: 'from-red-900/40', text: 'text-red-400', borderSub: 'border-red-500/30' },
-                { name: 'GREEN', border: 'border-emerald-500/50', bg: 'from-emerald-900/40', text: 'text-emerald-400', borderSub: 'border-emerald-500/30' }, { name: 'PURPLE', border: 'border-purple-500/50', bg: 'from-purple-900/40', text: 'text-purple-400', borderSub: 'border-purple-500/30' },
-                { name: 'ORANGE', border: 'border-orange-500/50', bg: 'from-orange-900/40', text: 'text-orange-400', borderSub: 'border-orange-500/30' }, { name: 'YELLOW', border: 'border-yellow-500/50', bg: 'from-yellow-900/40', text: 'text-yellow-400', borderSub: 'border-yellow-500/30' },
-            ];
-
-            let html = '';
-            teams.forEach((t, i) => {
-                const c = colors[i % colors.length]; const avgOvr = t.players.length > 0 ? (t.sumOvr / t.players.length).toFixed(1) : 0;
-                let listHtml = t.players.map(p => {
-                    const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
-                    return `<li class="flex justify-between items-center bg-slate-900/60 p-2 rounded border border-slate-700/50 mb-1"><div class="flex items-center gap-2"><span class="w-8 text-center text-[10px] font-bold text-white ${getPosBg(p.pos)} rounded py-0.5">${posText}</span><span class="text-sm font-bold text-white">${p.name}</span></div><span class="font-oswald text-xs text-fut-gold border border-fut-gold/30 px-1.5 rounded bg-black/40">${getOVR(p)}</span></li>`;
-                }).join('');
-
-                html += `<div class="bg-gradient-to-b ${c.bg} to-slate-900/40 border-2 ${c.border} p-5 rounded-2xl relative shadow-lg"><h4 class="font-display text-2xl ${c.text} mb-1 text-center">TEAM ${c.name}</h4><p class="text-center text-xs font-bold text-slate-300 mb-4 pb-3 border-b ${c.borderSub} tracking-widest">TEAM OVR: <span class="text-white font-oswald text-lg">${avgOvr}</span> <span class="ml-2 text-[10px] text-slate-500">(${t.players.length}명)</span></p><ul class="space-y-2">${listHtml}</ul></div>`;
-            });
-
-            resultContainer.innerHTML = html; resultContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        };
-
-        function animateFloatText(text, colorClass, parentId) {
-            const parent = document.getElementById(parentId); if(!parent) return;
-            const f = document.createElement('div'); f.className = `absolute left-1/2 transform -translate-x-1/2 text-3xl font-display ${colorClass} z-50 whitespace-nowrap drop-shadow-xl`;
-            f.innerText = text; f.style.animation = 'floatUpFade 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards';
-            parent.appendChild(f); setTimeout(() => f.remove(), 1200);
-        }
-
-        function triggerConfetti() {
-            var duration = 2000, end = Date.now() + duration;
-            (function frame() {
-                confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#38ff8e', '#e8c271'] });
-                confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#38ff8e', '#e8c271'] });
-                if (Date.now() < end) requestAnimationFrame(frame);
-            }());
-        }
-
-        window.saveAttendance = async () => {
-            if (!window.playerState.isGM) return;
-            if (window.checkedInPlayers.size === 0) return window.customAlert("체크된 선수가 없습니다.");
-            
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const day = String(today.getDate()).padStart(2, '0');
-            const dateStr = `${year}-${month}-${day}`;
-            const attendees = Array.from(window.checkedInPlayers);
-            
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'attendance', dateStr);
-            await setDoc(docRef, { date: dateStr, count: attendees.length, players: attendees, timestamp: new Date().toISOString() }, { merge: true });
-            
-            triggerConfetti(); window.customAlert(`✅ ${dateStr}\n총 ${attendees.length}명의 출석부가 저장되었습니다!`);
-        };
-
-        // 🚨 출석부 모달 복구 및 30주 스크롤 확장 적용
-        window.viewAttendance = async () => {
-            if (!window.playerState.isGM) return;
-            const attRef = collection(db, 'artifacts', appId, 'public', 'data', 'attendance');
-            
-            try {
-                const snap = await getDocs(attRef);
-                let logs = []; snap.forEach(doc => logs.push(doc.data()));
-                
-                const dates = [];
-                let d = new Date(2026, 2, 7); 
-                // 30주로 확장
-                for(let i=0; i<30; i++) {
-                    const y = d.getFullYear();
-                    const m = String(d.getMonth() + 1).padStart(2, '0');
-                    const day = String(d.getDate()).padStart(2, '0');
-                    dates.push(`${y}-${m}-${day}`);
-                    d.setDate(d.getDate() + 7);
-                }
-
-                let modalHtml = `<div class="bg-pitch-panel p-4 sm:p-6 rounded-3xl border-2 border-emerald-500 w-full sm:w-[95vw] max-w-7xl shadow-2xl max-h-[90vh] flex flex-col font-sans text-white relative">
-                    <h2 class="text-2xl sm:text-3xl font-display text-center text-emerald-400 mb-2 tracking-widest drop-shadow-lg flex items-center justify-center gap-3"><i class="fa-solid fa-calendar-check"></i> 삼봉 풋살클럽 출석부 (2026)</h2>
-                    <p class="text-xs text-emerald-200 mb-4 mt-2 text-center">토요스포츠데이 (3~6학년) / 9:20~12:30 / 좌우로 스크롤하여 30주차 전체 일정을 확인하세요!</p>
-                    
-                    <div class="overflow-x-auto overflow-y-auto custom-scrollbar flex-1 border border-emerald-800/50 rounded-xl bg-slate-900/80">
-                        <table class="w-full text-center whitespace-nowrap text-xs border-collapse">
-                            <thead>
-                                <tr class="bg-slate-800 border-b border-emerald-800 sticky top-0 z-20 shadow-md">
-                                    <th rowspan="2" class="p-2 border-r border-slate-700 w-10 sticky left-0 bg-slate-800 z-30">연번</th>
-                                    <th rowspan="2" class="p-2 border-r border-slate-700 w-24 sticky left-10 bg-slate-800 z-30 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">성명</th>
-                                    <th class="p-2 border-r border-slate-700 bg-emerald-900/80 text-emerald-300 w-12 sticky left-[136px] z-30 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">누계</th>
-                                    ${dates.map((_, i) => `<th class="p-1 border-r border-slate-700 font-normal text-[10px] text-slate-400 w-12">${i+1}주차</th>`).join('')}
-                                </tr>
-                                <tr class="bg-slate-800 border-b border-emerald-800 sticky top-8 z-10 shadow-md">
-                                    <th class="p-1 border-r border-slate-700 text-[10px] bg-emerald-900/80 sticky left-[136px] z-30 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">출석</th>
-                                    ${dates.map(d => `<th class="p-1 border-r border-slate-700 text-[10px]"><div class="text-emerald-400 font-bold">${d.substring(5).replace('-','/')}</div><div class="text-emerald-500/70 mt-0.5 font-bold">(토)</div></th>`).join('')}
-                                </tr>
-                            </thead>
-                            <tbody>`;
-                
-                ALLOWED_PLAYERS.forEach((name, idx) => {
-                    const safeDocId = getSafeDocId(name);
-                    const p = window.allPlayersData.find(x => x.id === safeDocId);
-                    const pId = p ? p.id : null;
-                    let attCount = 0;
-                    
-                    let rowCells = dates.map(targetDate => {
-                        const log = logs.find(l => l.date === targetDate);
-                        if(log && pId && log.players.includes(pId)) {
-                            attCount++; 
-                            return `<td class="p-1 border-r border-b border-slate-700/50"><div class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500 flex items-center justify-center mx-auto text-[10px] font-bold shadow-[0_0_5px_rgba(56,255,142,0.5)]">O</div></td>`;
-                        }
-                        return `<td class="p-1 border-r border-b border-slate-700/50 text-slate-700">-</td>`;
-                    }).join('');
-                    
-                    modalHtml += `
-                        <tr class="hover:bg-slate-800/60 transition group">
-                            <td class="p-2 border-r border-b border-slate-700/50 text-slate-500 sticky left-0 bg-slate-900 group-hover:bg-slate-800">${idx+1}</td>
-                            <td class="p-2 border-r border-b border-slate-700/50 font-bold text-white tracking-widest sticky left-10 bg-slate-900 group-hover:bg-slate-800 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">${name}</td>
-                            <td class="p-2 border-r border-b border-slate-700/50 bg-emerald-900/20 font-bold text-emerald-300 sticky left-[136px] group-hover:bg-emerald-900/40 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">${attCount}</td>
-                            ${rowCells}
-                        </tr>
-                    `;
-                });
-                
-                modalHtml += `</tbody></table></div>
-                    <button onclick="this.parentElement.parentElement.remove()" class="mt-6 bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-xl w-full sm:w-64 mx-auto transition shadow-lg text-lg">닫기</button>
-                </div>`;
-                
-                const modal = document.createElement('div'); modal.className = "fixed inset-0 z-[400] flex items-center justify-center bg-black/90 px-2 sm:px-4 backdrop-blur-sm"; modal.innerHTML = modalHtml; document.body.appendChild(modal);
-            } catch (e) { console.error("조회 에러:", e); window.customAlert("데이터를 불러오는데 실패했습니다."); }
-        };
-
-        let touchstartX = 0; let touchstartY = 0;
-        document.addEventListener('touchstart', e => { touchstartX = e.changedTouches[0].screenX; touchstartY = e.changedTouches[0].screenY; }, {passive: true});
-        document.addEventListener('touchend', e => {
-            const distX = e.changedTouches[0].screenX - touchstartX; const distY = e.changedTouches[0].screenY - touchstartY;
-            if (Math.abs(distX) > 60 && Math.abs(distY) < 60) {
-                if(e.target.closest('nav') || e.target.closest('.overflow-x-auto') || e.target.closest('.custom-scrollbar') || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-                let availableTabs = ['tabWorkspace', 'tabTips', 'tabAchievements', 'tabRank', 'tabCompare', 'tabShop', 'tabGuide'];
-                if(window.playerState && window.playerState.isGM) {
-                    availableTabs.push('tabMaster');
-                    availableTabs.push('tabMasterStats');
-                }
-                let currentTab = availableTabs.find(id => { const el = document.getElementById(id); return el && !el.classList.contains('hidden'); }) || 'tabWorkspace';
-                let currentIndex = availableTabs.indexOf(currentTab);
-
-                if (distX < 0 && currentIndex < availableTabs.length - 1) { window.switchTab(availableTabs[currentIndex + 1]); window.scrollTo({top: 0, behavior: 'smooth'}); } 
-                else if (distX > 0 && currentIndex > 0) { window.switchTab(availableTabs[currentIndex - 1]); window.scrollTo({top: 0, behavior: 'smooth'}); }
-            }
-        }, {passive: true});
-
-        initApp();
     </script>
 </body>
 </html>
