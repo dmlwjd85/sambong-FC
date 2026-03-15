@@ -185,13 +185,11 @@
                 <div class="flex items-center space-x-1 sm:space-x-3 text-xs sm:text-sm flex-grow overflow-x-auto hide-scrollbar whitespace-nowrap scroll-smooth">
                     <button onclick="window.switchTab('tabWorkspace')" id="btnTabWorkspace" class="nav-tab active pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-person-booth mr-1"></i>라커룸</button>
                     <button onclick="window.switchTab('tabRank')" id="btnTabRank" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-trophy mr-1 text-yellow-400"></i>명예의전당</button>
-                    <!-- 선수 비교 탭 추가 -->
                     <button onclick="window.switchTab('tabCompare')" id="btnTabCompare" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-code-compare mr-1 text-pink-400"></i>선수비교</button>
                     <button onclick="window.switchTab('tabShop')" id="btnTabShop" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-store mr-1 text-purple-400"></i>상점</button>
                     <button onclick="window.switchTab('tabTips')" id="btnTabTips" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-lightbulb mr-1 text-orange-400"></i>꿀팁</button>
                     <button onclick="window.switchTab('tabGuide')" id="btnTabGuide" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-circle-info mr-1 text-cyan-400"></i>이용안내</button>
                     <button onclick="window.switchTab('tabMaster')" id="btnTabMaster" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 hidden flex-shrink-0"><i class="fa-solid fa-chart-line mr-1 text-fut-rare"></i>현황판(마스터)</button>
-                    <!-- 마스터 전용 스탯현황 탭 추가 -->
                     <button onclick="window.switchTab('tabMasterStats')" id="btnTabMasterStats" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 hidden flex-shrink-0"><i class="fa-solid fa-list-ol mr-1 text-emerald-400"></i>스탯현황</button>
                 </div>
 
@@ -276,7 +274,7 @@
                                 </div>
                                 
                                 <!-- EA FC 스타일 3x2 스탯 그리드 복구 및 정렬 -->
-                                <div class="w-full grid grid-cols-2 gap-y-2 gap-x-6 z-10 px-4" id="detailStatsGrid">
+                                <div class="w-full grid grid-cols-3 gap-y-1 gap-x-1 z-10 px-2" id="detailStatsGrid">
                                     <!-- 자바스크립트로 스탯 렌더링 됨 -->
                                 </div>
                             </div>
@@ -550,38 +548,7 @@
                         <p class="text-xs sm:text-sm text-slate-400 mb-4 sm:mb-6">모든 학생의 능력치, 티어, 보상을 한눈에 파악합니다. (표를 좌우로 스크롤하세요)</p>
                         
                         <div class="overflow-x-auto custom-scrollbar rounded-xl border border-slate-700 shadow-inner bg-slate-900">
-                            <table class="w-full text-center text-xs sm:text-sm text-slate-300 min-w-[1100px]">
-                                <thead class="bg-slate-800 text-slate-400 font-bold border-b border-slate-600 whitespace-nowrap">
-                                    <tr>
-                                        <th class="py-3 pl-4 text-left">이름</th>
-                                        <th class="py-3 px-2">포지션</th>
-                                        <th class="py-3 px-2">티어</th>
-                                        <th class="py-3 px-2 text-fut-gold">OVR</th>
-                                        <th class="py-3 px-2">경기</th>
-                                        <th class="py-3 px-2">골</th>
-                                        <th class="py-3 px-2">어시</th>
-                                        <th class="py-3 px-2">세이브</th>
-                                        <th class="py-3 px-2">훈련</th>
-                                        <th class="py-3 px-2 text-orange-400">EXP</th>
-                                        <th class="py-3 pr-4 text-emerald-400 text-right">자산(B)</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="masterTableBody" class="bg-slate-900/50 divide-y divide-slate-700/50 whitespace-nowrap"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 탭: 스탯 현황판(마스터 전용) 화면 컨테이너 추가 -->
-                <div id="tabMasterStats" class="hidden space-y-6">
-                    <div class="glass-panel p-4 sm:p-8 rounded-3xl border-t-4 border-t-emerald-400 overflow-hidden">
-                        <h3 class="text-2xl sm:text-3xl font-display text-emerald-400 mb-2 flex items-center gap-2 sm:gap-3">
-                            <i class="fa-solid fa-list-ol"></i> 선수 스탯 현황판 (마스터)
-                        </h3>
-                        <p class="text-xs sm:text-sm text-slate-400 mb-4 sm:mb-6">능력치 이름을 클릭하면 내림차순으로 정렬됩니다. (스마트폰에서는 표를 좌우로 스크롤하세요)</p>
-                        
-                        <div class="overflow-x-auto custom-scrollbar rounded-xl border border-slate-700 shadow-inner bg-slate-900">
-                            <table class="w-full text-center text-[11px] sm:text-sm text-slate-300 min-w-[700px] sm:min-w-[900px]">
+                            <table class="w-full text-center text-[11px] sm:text-sm text-slate-300 min-w-[700px] sm:min-w-[1200px]">
                                 <thead class="bg-slate-800 text-slate-400 font-bold border-b border-slate-600 whitespace-nowrap select-none">
                                     <tr>
                                         <th class="py-3 pl-4 text-left">이름</th>
@@ -593,6 +560,12 @@
                                         <th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('dri')">DRI <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
                                         <th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('def')">DEF <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
                                         <th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('phy')">PHY <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+                                        <th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-200" onclick="window.sortMasterStats('ref')">REF <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+                                        <th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-200" onclick="window.sortMasterStats('int')">INT <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+                                        <th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-200" onclick="window.sortMasterStats('pst')">PST <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+                                        <th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-200" onclick="window.sortMasterStats('dis')">DIS <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+                                        <th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-200" onclick="window.sortMasterStats('cmp')">CMP <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+                                        <th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-200" onclick="window.sortMasterStats('wrk')">WRK <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
                                     </tr>
                                 </thead>
                                 <tbody id="masterStatsTableBodyOnly" class="bg-slate-900/50 divide-y divide-slate-700/50 whitespace-nowrap"></tbody>
@@ -677,6 +650,12 @@
 
         let db, auth;
 
+        // UI 요소의 존재 유무를 확인하는 안전 함수
+        const isVisible = (id) => {
+            const el = document.getElementById(id);
+            return el && !el.classList.contains('hidden');
+        };
+
         // --- 티어 계산 함수 ---
         const getTierInfo = (ovr) => {
             if(ovr < 70) return { name: '루키 (Rookie)', class: 'tier-badge-rookie', cardClass: 'card-rookie' };
@@ -687,7 +666,7 @@
         };
 
         const getBonusStats = (p) => {
-            let bonuses = { pac: 0, sho: 0, pas: 0, dri: 0, def: 0, phy: 0 };
+            let bonuses = { pac: 0, sho: 0, pas: 0, dri: 0, def: 0, phy: 0, ref: 0, int: 0, pst: 0, dis: 0, cmp: 0, wrk: 0 };
             const equippedIds = [p.equipHead, p.equipHandL, p.equipHandR, p.equipFootL, p.equipFootR].filter(Boolean);
             equippedIds.forEach(itemId => {
                 const item = SHOP_ITEMS.find(x => x.id === itemId);
@@ -700,7 +679,9 @@
 
         const getOVR = (p) => {
             const b = getBonusStats(p);
-            return Math.floor(((p.pac||60)+b.pac + (p.sho||60)+b.sho + (p.pas||60)+b.pas + (p.dri||60)+b.dri + (p.def||60)+b.def + (p.phy||60)+b.phy) / 6);
+            const sum = (p.pac||60)+b.pac + (p.sho||60)+b.sho + (p.pas||60)+b.pas + (p.dri||60)+b.dri + (p.def||60)+b.def + (p.phy||60)+b.phy +
+                        (p.ref||60)+b.ref + (p.int||60)+b.int + (p.pst||60)+b.pst + (p.dis||60)+b.dis + (p.cmp||60)+b.cmp + (p.wrk||60)+b.wrk;
+            return Math.floor(sum / 12);
         };
         
         const getWeeklyWage = (ovr) => { return Math.max(50, Math.min(200, Math.floor(50 + ((ovr - 50) / 49) * 150))); };
@@ -750,13 +731,13 @@
             const rightPanel = document.getElementById('rightContentPanel');
             
             if (tabId === 'tabWorkspace') {
-                leftPanel.classList.remove('hidden', 'lg:hidden');
-                rightPanel.classList.remove('lg:col-span-12');
-                rightPanel.classList.add('lg:col-span-8');
+                leftPanel?.classList.remove('hidden', 'lg:hidden');
+                rightPanel?.classList.remove('lg:col-span-12');
+                rightPanel?.classList.add('lg:col-span-8');
             } else {
-                leftPanel.classList.add('hidden', 'lg:hidden');
-                rightPanel.classList.remove('lg:col-span-8');
-                rightPanel.classList.add('lg:col-span-12');
+                leftPanel?.classList.add('hidden', 'lg:hidden');
+                rightPanel?.classList.remove('lg:col-span-8');
+                rightPanel?.classList.add('lg:col-span-12');
             }
 
             if(tabId === 'tabTips') renderDailyTip();
@@ -1027,6 +1008,12 @@
                         ${getCell('dri')}
                         ${getCell('def')}
                         ${getCell('phy')}
+                        ${getCell('ref')}
+                        ${getCell('int')}
+                        ${getCell('pst')}
+                        ${getCell('dis')}
+                        ${getCell('cmp')}
+                        ${getCell('wrk')}
                     </tr>
                 `;
             });
@@ -1084,7 +1071,10 @@
             const stats = [
                 { id: 'pac', label: '속력 (PAC)' }, { id: 'sho', label: '슈팅 (SHO)' },
                 { id: 'pas', label: '패스 (PAS)' }, { id: 'dri', label: '드리블 (DRI)' },
-                { id: 'def', label: '수비 (DEF)' }, { id: 'phy', label: '피지컬 (PHY)' }
+                { id: 'def', label: '수비 (DEF)' }, { id: 'phy', label: '피지컬 (PHY)' },
+                { id: 'ref', label: '반사신경 (REF)' }, { id: 'int', label: '가로채기 (INT)' },
+                { id: 'pst', label: '위치선정 (PST)' }, { id: 'dis', label: '볼배급 (DIS)' },
+                { id: 'cmp', label: '평정심 (CMP)' }, { id: 'wrk', label: '활동량 (WRK)' }
             ];
 
             let statRows = '';
@@ -1098,18 +1088,18 @@
                 const myW = (myVal / 99) * 100; const tgW = (tgVal / 99) * 100;
 
                 statRows += `
-                    <div class="mb-4">
-                        <div class="flex justify-between items-center text-xs font-bold mb-1.5 px-1">
-                            <span class="${myColor} font-oswald text-lg w-10 text-right drop-shadow-md">${myVal}</span>
-                            <span class="text-slate-400 w-24 text-center tracking-widest text-[10px] sm:text-xs">${s.label}</span>
-                            <span class="${tgColor} font-oswald text-lg w-10 text-left drop-shadow-md">${tgVal}</span>
+                    <div class="mb-2.5">
+                        <div class="flex justify-between items-center text-[10px] sm:text-xs font-bold mb-1 px-1">
+                            <span class="${myColor} font-oswald text-sm sm:text-base w-8 text-right drop-shadow-md">${myVal}</span>
+                            <span class="text-slate-400 w-28 text-center tracking-widest text-[9px] sm:text-[10px]">${s.label}</span>
+                            <span class="${tgColor} font-oswald text-sm sm:text-base w-8 text-left drop-shadow-md">${tgVal}</span>
                         </div>
                         <div class="flex gap-1 items-center justify-center">
-                            <div class="flex-1 bg-slate-800 h-2.5 sm:h-3 rounded-l-full flex justify-end overflow-hidden shadow-inner">
+                            <div class="flex-1 bg-slate-800 h-1.5 sm:h-2 rounded-l-full flex justify-end overflow-hidden shadow-inner">
                                 <div class="${myVal > tgVal ? 'bg-emerald-500' : 'bg-emerald-500/50'} h-full rounded-l-full transition-all duration-500" style="width: ${myW}%"></div>
                             </div>
-                            <div class="w-1 h-3 bg-slate-700 flex-shrink-0"></div>
-                            <div class="flex-1 bg-slate-800 h-2.5 sm:h-3 rounded-r-full flex justify-start overflow-hidden shadow-inner">
+                            <div class="w-0.5 h-2 bg-slate-700 flex-shrink-0"></div>
+                            <div class="flex-1 bg-slate-800 h-1.5 sm:h-2 rounded-r-full flex justify-start overflow-hidden shadow-inner">
                                 <div class="${tgVal > myVal ? 'bg-pink-500' : 'bg-pink-500/50'} h-full rounded-r-full transition-all duration-500" style="width: ${tgW}%"></div>
                             </div>
                         </div>
@@ -1173,44 +1163,44 @@
                             if(window.selectedPlayerId) renderSelectedCard(window.selectedPlayerId);
                             renderActivePool();
                             
-                            if(!document.getElementById('tabShop').classList.contains('hidden')) renderShop();
-                            if(!document.getElementById('tabRank').classList.contains('hidden')) renderLeaderboard();
-                            if(!document.getElementById('tabMaster').classList.contains('hidden')) renderMasterDashboard();
-                            if(!document.getElementById('tabCompare').classList.contains('hidden')) window.renderCompareList();
-                            if(!document.getElementById('tabMasterStats').classList.contains('hidden')) window.renderMasterStats();
+                            if(isVisible('tabShop')) renderShop();
+                            if(isVisible('tabRank')) renderLeaderboard();
+                            if(isVisible('tabMaster')) renderMasterDashboard();
+                            if(isVisible('tabCompare')) window.renderCompareList();
+                            if(isVisible('tabMasterStats')) window.renderMasterStats();
                         }, (error) => { console.error("데이터 로드 에러:", error); renderLockerRoom(); });
 
                         const savedId = localStorage.getItem('sfc_pid');
                         const savedPin = localStorage.getItem('sfc_pin');
                         if (savedId && savedPin) attemptLogin(savedId, savedPin, true);
-                        else document.getElementById('loginOverlay').classList.remove('hidden');
+                        else document.getElementById('loginOverlay')?.classList.remove('hidden');
                     }
                 });
             } catch(e) { console.error("Firebase Init Error:", e); renderLockerRoom(); }
         }
 
-        document.getElementById('loginId').addEventListener('change', (e) => {
+        document.getElementById('loginId')?.addEventListener('change', (e) => {
             const nameContainer = document.getElementById('playerNameInputContainer');
             const nameInput = document.getElementById('loginPlayerName');
             const pinInput = document.getElementById('loginPin');
 
-            if (e.target.value === 'player') { nameContainer.classList.remove('hidden'); setTimeout(() => nameInput.focus(), 100); } 
-            else { nameContainer.classList.add('hidden'); nameInput.value = ''; }
-            pinInput.value = '';
+            if (e.target.value === 'player') { nameContainer?.classList.remove('hidden'); setTimeout(() => nameInput?.focus(), 100); } 
+            else { nameContainer?.classList.add('hidden'); if(nameInput) nameInput.value = ''; }
+            if(pinInput) pinInput.value = '';
         });
 
-        document.getElementById('btnLogin').addEventListener('click', async () => {
+        document.getElementById('btnLogin')?.addEventListener('click', async () => {
             const btn = document.getElementById('btnLogin');
             const originalText = btn.innerHTML;
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 처리 중...';
 
-            let pId = document.getElementById('loginId').value;
-            const pin = document.getElementById('loginPin').value.trim();
+            let pId = document.getElementById('loginId')?.value;
+            const pin = document.getElementById('loginPin')?.value.trim();
             
             if(!pId) { btn.disabled = false; btn.innerHTML = originalText; return window.customAlert("입장 자격(선수/코칭스태프)을 선택하세요."); }
             if(pId === 'player') {
-                pId = document.getElementById('loginPlayerName').value;
+                pId = document.getElementById('loginPlayerName')?.value;
                 if(!pId) { btn.disabled = false; btn.innerHTML = originalText; return window.customAlert("자신의 이름을 선택하세요."); }
             }
             if(!pin || pin.length !== 4) { btn.disabled = false; btn.innerHTML = originalText; return window.customAlert("4자리 비밀번호(PIN)를 입력하세요."); }
@@ -1259,6 +1249,7 @@
                     const baseData = { 
                         name: isGM ? (pId==='gm1'?'감독 J':'수석코치 J') : pId, pin, pos: isGM ? 'Fixo' : '미정', 
                         pac: r(), sho: r(), pas: r(), dri: r(), def: r(), phy: r(),
+                        ref: r(), int: r(), pst: r(), dis: r(), cmp: r(), wrk: r(),
                         level: 1, exp: 0, goals: 0, assists: 0, matches: 0, training: 0, saves: 0, keypass: 0, bong: 0, lastWageWeek: '',
                         inventory: [], equipHead: null, equipHandL: null, equipHandR: null, equipFootL: null, equipFootR: null,
                         updatedAt: new Date().toISOString()
@@ -1269,16 +1260,20 @@
 
                 localStorage.setItem('sfc_pid', pId); localStorage.setItem('sfc_pin', pin);
                 
-                document.getElementById('loginOverlay').classList.add('hidden');
-                document.getElementById('saveStatus').classList.remove('hidden');
-                document.getElementById('saveStatus').classList.add('flex');
-                document.getElementById('playerNameDisplay').innerText = window.playerState.name;
-                document.getElementById('playerRoleDisplay').innerText = isGM ? 'MASTER' : 'PLAYER';
+                document.getElementById('loginOverlay')?.classList.add('hidden');
+                document.getElementById('saveStatus')?.classList.remove('hidden');
+                document.getElementById('saveStatus')?.classList.add('flex');
+                
+                const nameDisplay = document.getElementById('playerNameDisplay');
+                if(nameDisplay) nameDisplay.innerText = window.playerState.name;
+                
+                const roleDisplay = document.getElementById('playerRoleDisplay');
+                if(roleDisplay) roleDisplay.innerText = isGM ? 'MASTER' : 'PLAYER';
                 
                 if(isGM) {
-                    document.getElementById('gmAttendanceTools').classList.remove('hidden');
-                    document.getElementById('btnTabMaster').classList.remove('hidden');
-                    document.getElementById('btnTabMasterStats').classList.remove('hidden');
+                    document.getElementById('gmAttendanceTools')?.classList.remove('hidden');
+                    document.getElementById('btnTabMaster')?.classList.remove('hidden');
+                    document.getElementById('btnTabMasterStats')?.classList.remove('hidden');
                 }
 
                 window.selectedPlayerId = isGM ? getSafeDocId(ALLOWED_PLAYERS[0]) : safeDocId;
@@ -1292,6 +1287,7 @@
 
         function renderLockerRoom() {
             const grid = document.getElementById('lockerGrid');
+            if(!grid) return;
             let html = '';
             ALLOWED_PLAYERS.forEach(name => {
                 const safeDocId = getSafeDocId(name);
@@ -1333,9 +1329,11 @@
         window.selectPlayer = (pId) => {
             window.selectedPlayerId = pId;
             renderLockerRoom(); renderSelectedCard(pId);
-            if(!document.getElementById('tabShop').classList.contains('hidden')) renderShop();
-            if(!document.getElementById('tabCompare').classList.contains('hidden')) window.renderCompareList();
-            if(window.innerWidth < 1024) document.getElementById('detailPanelTitle').scrollIntoView();
+            if(isVisible('tabShop')) renderShop();
+            if(isVisible('tabCompare')) window.renderCompareList();
+            
+            const detailPanelTitle = document.getElementById('detailPanelTitle');
+            if(window.innerWidth < 1024 && detailPanelTitle) detailPanelTitle.scrollIntoView();
         };
 
         function renderSelectedCard(pId) {
@@ -1352,34 +1350,45 @@
             const bonus = getBonusStats(p);
             const tier = getTierInfo(ovr);
 
-            document.getElementById('detailPanelTitle').innerText = isMe ? '내 선수 정보' : `${p.name} 선수의 정보`;
-            document.getElementById('detailLevel').innerText = lv;
+            const titleEl = document.getElementById('detailPanelTitle');
+            if(titleEl) titleEl.innerText = isMe ? '내 선수 정보' : `${p.name} 선수의 정보`;
+            
+            const levelEl = document.getElementById('detailLevel');
+            if(levelEl) levelEl.innerText = lv;
             
             const badge = document.getElementById('detailTierBadge');
-            badge.innerText = tier.name;
-            badge.className = `px-2 py-1 rounded border text-[10px] font-bold shadow-md whitespace-nowrap ${tier.class}`;
+            if(badge) {
+                badge.innerText = tier.name;
+                badge.className = `px-2 py-1 rounded border text-[10px] font-bold shadow-md whitespace-nowrap ${tier.class}`;
+            }
 
             const card = document.getElementById('detailFutCard');
-            card.className = `fut-card w-[300px] h-[460px] p-5 flex flex-col relative shadow-2xl z-10 mx-auto transition-all duration-300 ${tier.cardClass}`;
+            if(card) {
+                card.className = `fut-card w-[300px] h-[460px] p-5 flex flex-col relative shadow-2xl z-10 mx-auto transition-all duration-300 ${tier.cardClass}`;
+            }
 
-            document.getElementById('detailAvatar').innerText = getAvatar(p);
-            document.getElementById('detailName').innerText = p.name;
-            document.getElementById('detailOvr').innerText = ovr;
+            const avatarEl = document.getElementById('detailAvatar');
+            if(avatarEl) avatarEl.innerText = getAvatar(p);
+            
+            const nameEl = document.getElementById('detailName');
+            if(nameEl) nameEl.innerText = p.name;
+            
+            const ovrEl = document.getElementById('detailOvr');
+            if(ovrEl) ovrEl.innerText = ovr;
             
             const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
-            document.getElementById('detailPos').innerText = posText;
+            const posEl = document.getElementById('detailPos');
+            if(posEl) posEl.innerText = posText;
             
-            const guideOverlay = document.getElementById('posGuideOverlay');
-            if (guideOverlay) {
-                if (isMe && (p.pos === '미정' || !p.pos)) guideOverlay.classList.remove('hidden');
-                else guideOverlay.classList.add('hidden');
-            }
+            const expTextEl = document.getElementById('detailExpText');
+            if(expTextEl) expTextEl.innerText = `${exp} / ${expNeeded}`;
             
-            document.getElementById('detailExpText').innerText = `${exp} / ${expNeeded}`;
-            document.getElementById('detailExpBar').style.width = `${expPercent}%`;
+            const expBarEl = document.getElementById('detailExpBar');
+            if(expBarEl) expBarEl.style.width = `${expPercent}%`;
 
             const renderRecord = (id, key, val) => {
                 const el = document.getElementById(id);
+                if(!el) return;
                 if (isGM) {
                     el.innerHTML = `<input type="number" value="${val}" class="w-full max-w-[50px] bg-transparent text-center border-b border-slate-600 focus:border-emerald-500 focus:outline-none transition-colors m-0 p-0 text-white font-bold text-lg" onchange="window.setRecord('${p.id}', '${key}', this.value)">`;
                 } else {
@@ -1395,39 +1404,42 @@
             renderRecord('recSaves', 'saves', p.saves || 0);
 
             const stats = [
-                { id: 'pac', label: '속력' }, { id: 'dri', label: '드리블' },
-                { id: 'sho', label: '슈팅' }, { id: 'def', label: '수비' },
-                { id: 'pas', label: '패스' }, { id: 'phy', label: '피지컬' }
+                { id: 'pac', label: '속력' }, { id: 'sho', label: '슈팅' }, { id: 'pas', label: '패스' },
+                { id: 'dri', label: '드리블' }, { id: 'def', label: '수비' }, { id: 'phy', label: '피지컬' },
+                { id: 'ref', label: '반사' }, { id: 'int', label: '가로채기' }, { id: 'pst', label: '위치' },
+                { id: 'dis', label: '볼배급' }, { id: 'cmp', label: '평정심' }, { id: 'wrk', label: '활동량' }
             ];
             
             let gridHtml = '';
             stats.forEach(s => {
                 const baseVal = p[s.id] || 60; const bVal = bonus[s.id] || 0; const totalVal = Math.min(99, baseVal + bVal);
-                let bonusBadge = bVal > 0 ? `<span class="text-[10px] text-emerald-400 font-bold leading-none absolute -top-1.5 right-1">+${bVal}</span>` : '';
+                let bonusBadge = bVal > 0 ? `<span class="text-[9px] text-emerald-400 font-bold leading-none absolute -top-1 -right-1">+${bVal}</span>` : '';
                 
                 if(isGM) {
                     gridHtml += `
-                        <div class="flex items-center justify-start gap-1 text-current w-full group relative pl-1">
-                            <button onclick="window.modStat('${p.id}', '${s.id}', -1)" class="w-4 h-4 rounded bg-black/30 hover:bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-minus text-[8px]"></i></button>
+                        <div class="flex items-center justify-center gap-0.5 text-current w-full group relative">
+                            <button onclick="window.modStat('${p.id}', '${s.id}', -1)" class="w-3 h-3 rounded bg-black/30 hover:bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-minus text-[6px]"></i></button>
                             <div class="relative flex flex-col items-center justify-center">
-                                <input type="number" min="1" max="99" value="${baseVal}" class="font-oswald text-2xl font-bold w-9 text-center bg-transparent border-b border-transparent hover:border-current focus:outline-none transition cursor-text leading-none p-0 m-0 text-current" onchange="window.setStat('${p.id}', '${s.id}', this.value)">
+                                <input type="number" min="1" max="99" value="${baseVal}" class="font-oswald text-lg font-bold w-6 text-center bg-transparent border-b border-transparent hover:border-current focus:outline-none transition cursor-text leading-none p-0 m-0 text-current" onchange="window.setStat('${p.id}', '${s.id}', this.value)">
                                 ${bonusBadge}
                             </div>
-                            <span class="font-bold text-sm tracking-widest opacity-90">${s.label}</span>
-                            <button onclick="window.modStat('${p.id}', '${s.id}', 1)" class="w-4 h-4 rounded bg-black/30 hover:bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-plus text-[8px]"></i></button>
+                            <span class="font-bold text-[9px] tracking-tighter whitespace-nowrap opacity-90">${s.label}</span>
+                            <button onclick="window.modStat('${p.id}', '${s.id}', 1)" class="w-3 h-3 rounded bg-black/30 hover:bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-plus text-[6px]"></i></button>
                         </div>`;
                 } else {
                     gridHtml += `
-                        <div class="flex items-center justify-start gap-3 text-current w-full pl-3">
-                            <div class="relative flex items-center justify-center w-8">
-                                <span class="font-oswald text-2xl font-bold leading-none tracking-tight">${totalVal}</span>
+                        <div class="flex items-center justify-start gap-1 text-current w-full pl-1.5">
+                            <div class="relative flex items-center justify-center w-6">
+                                <span class="font-oswald text-lg font-bold leading-none tracking-tight">${totalVal}</span>
                                 ${bonusBadge}
                             </div>
-                            <span class="font-bold text-[15px] opacity-90">${s.label}</span>
+                            <span class="font-bold text-[10px] opacity-90 tracking-tighter whitespace-nowrap">${s.label}</span>
                         </div>`;
                 }
             });
-            document.getElementById('detailStatsGrid').innerHTML = gridHtml;
+            const statsGridEl = document.getElementById('detailStatsGrid');
+            if(statsGridEl) statsGridEl.innerHTML = gridHtml;
+            
             drawRadarChart(p, bonus);
 
             const equipSlots = [
@@ -1440,36 +1452,54 @@
 
             equipSlots.forEach(slot => {
                 const el = document.getElementById(slot.id);
-                if(slot.equip) {
-                    const item = SHOP_ITEMS.find(x => x.id === slot.equip);
-                    if(item) {
-                        el.innerHTML = `<span class="item-icon">${item.icon}</span><span class="item-label">${slot.label}</span>`;
-                        el.classList.add('equipped');
+                if(el) {
+                    if(slot.equip) {
+                        const item = SHOP_ITEMS.find(x => x.id === slot.equip);
+                        if(item) {
+                            el.innerHTML = `<span class="item-icon">${item.icon}</span><span class="item-label">${slot.label}</span>`;
+                            el.classList.add('equipped');
+                        }
+                    } else {
+                        el.innerHTML = `<span class="opacity-30 text-lg">${slot.empty}</span><span class="item-label">${slot.label}</span>`;
+                        el.classList.remove('equipped');
                     }
-                } else {
-                    el.innerHTML = `<span class="opacity-30 text-lg">${slot.empty}</span><span class="item-label">${slot.label}</span>`;
-                    el.classList.remove('equipped');
                 }
             });
 
+            const playerTrainingPanel = document.getElementById('playerTrainingPanel');
+            const iconEditPos = document.getElementById('iconEditPos');
+            const btnChangePos = document.getElementById('btnChangePos');
+            
             if(isMe && !isGM) {
-                document.getElementById('playerTrainingPanel').classList.remove('hidden');
-                document.getElementById('recBong').innerText = p.bong || 0;
-                document.getElementById('expectedWageDisplay').innerText = `OVR 주급: ${getWeeklyWage(ovr)} B`;
-                document.getElementById('iconEditPos').classList.remove('hidden');
-                document.getElementById('btnChangePos').onclick = () => window.changePositionModal(p.id);
+                playerTrainingPanel?.classList.remove('hidden');
+                
+                const recBongEl = document.getElementById('recBong');
+                if(recBongEl) recBongEl.innerText = p.bong || 0;
+                
+                const expWageEl = document.getElementById('expectedWageDisplay');
+                if(expWageEl) expWageEl.innerText = `OVR 주급: ${getWeeklyWage(ovr)} B`;
+                
+                iconEditPos?.classList.remove('hidden');
+                if(btnChangePos) btnChangePos.onclick = () => window.changePositionModal(p.id);
             } else {
-                document.getElementById('playerTrainingPanel').classList.add('hidden');
-                document.getElementById('iconEditPos').classList.add('hidden');
-                document.getElementById('btnChangePos').onclick = null;
+                playerTrainingPanel?.classList.add('hidden');
+                iconEditPos?.classList.add('hidden');
+                if(btnChangePos) btnChangePos.onclick = null;
             }
+            
+            const gmControls = document.getElementById('gmControls');
+            const gmWalletManager = document.getElementById('gmWalletManager');
+            const gmViewBong = document.getElementById('gmViewBong');
+            
             if(isGM) {
-                document.getElementById('gmControls').classList.remove('hidden');
-                document.getElementById('gmWalletManager').classList.remove('hidden');
-                document.getElementById('gmViewBong').innerHTML = `<input type="number" value="${p.bong || 0}" class="w-16 bg-transparent text-center border-b border-slate-600 focus:border-emerald-500 focus:outline-none transition-colors m-0 p-0 text-fut-gold font-display text-xl leading-none" onchange="window.setRecord('${p.id}', 'bong', this.value)">`;
+                gmControls?.classList.remove('hidden');
+                gmWalletManager?.classList.remove('hidden');
+                if(gmViewBong) {
+                    gmViewBong.innerHTML = `<input type="number" value="${p.bong || 0}" class="w-16 bg-transparent text-center border-b border-slate-600 focus:border-emerald-500 focus:outline-none transition-colors m-0 p-0 text-fut-gold font-display text-xl leading-none" onchange="window.setRecord('${p.id}', 'bong', this.value)">`;
+                }
             } else {
-                document.getElementById('gmControls').classList.add('hidden');
-                document.getElementById('gmWalletManager').classList.add('hidden');
+                gmControls?.classList.add('hidden');
+                gmWalletManager?.classList.add('hidden');
             }
         }
 
@@ -1480,18 +1510,23 @@
             
             ctx.clearRect(0,0,cw,ch);
             ctx.beginPath();
-            for(let i=0; i<6; i++) {
-                const angle = (Math.PI / 3) * i - (Math.PI / 2);
+            for(let i=0; i<12; i++) {
+                const angle = (Math.PI * 2 / 12) * i - (Math.PI / 2);
                 ctx.lineTo(cx + r * Math.cos(angle), cy + r * Math.sin(angle));
             }
             ctx.closePath(); ctx.fillStyle = 'rgba(0, 0, 0, 0.2)'; ctx.fill(); ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)'; ctx.lineWidth = 1; ctx.stroke();
 
-            const statVals = [(p.pac||60)+bonus.pac, (p.sho||60)+bonus.sho, (p.pas||60)+bonus.pas, (p.phy||60)+bonus.phy, (p.def||60)+bonus.def, (p.dri||60)+bonus.dri];
+            const statVals = [
+                (p.pac||60)+bonus.pac, (p.sho||60)+bonus.sho, (p.pas||60)+bonus.pas, 
+                (p.dri||60)+bonus.dri, (p.def||60)+bonus.def, (p.phy||60)+bonus.phy,
+                (p.ref||60)+bonus.ref, (p.int||60)+bonus.int, (p.pst||60)+bonus.pst, 
+                (p.dis||60)+bonus.dis, (p.cmp||60)+bonus.cmp, (p.wrk||60)+bonus.wrk
+            ];
             
             ctx.beginPath();
-            for(let i=0; i<6; i++) {
+            for(let i=0; i<12; i++) {
                 const val = Math.max(1, Math.min(99, statVals[i])) / 99;
-                const angle = (Math.PI / 3) * i - (Math.PI / 2);
+                const angle = (Math.PI * 2 / 12) * i - (Math.PI / 2);
                 ctx.lineTo(cx + (r * val) * Math.cos(angle), cy + (r * val) * Math.sin(angle));
             }
             ctx.closePath();
@@ -1588,7 +1623,7 @@
                         if(leveledUp) {
                             updatesObj.level = currentLv;
                             if(currentLv % 3 === 0) {
-                                ['pac', 'sho', 'pas', 'dri', 'def', 'phy'].forEach(s => updatesObj[s] = Math.min(99, (p[s]||60) + 1));
+                                ['pac', 'sho', 'pas', 'dri', 'def', 'phy', 'ref', 'int', 'pst', 'dis', 'cmp', 'wrk'].forEach(s => updatesObj[s] = Math.min(99, (p[s]||60) + 1));
                             }
                         }
                         batch.set(docRef, updatesObj, { merge: true });
@@ -1620,7 +1655,7 @@
             updatesObj.exp = currentExp;
             if(leveledUp) {
                 updatesObj.level = currentLv;
-                if(currentLv % 3 === 0) { ['pac', 'sho', 'pas', 'dri', 'def', 'phy'].forEach(s => updatesObj[s] = Math.min(99, (p[s]||60) + 1)); }
+                if(currentLv % 3 === 0) { ['pac', 'sho', 'pas', 'dri', 'def', 'phy', 'ref', 'int', 'pst', 'dis', 'cmp', 'wrk'].forEach(s => updatesObj[s] = Math.min(99, (p[s]||60) + 1)); }
                 triggerConfetti(); setTimeout(() => window.customAlert(`🎉 축하합니다!\n[${p.name}] 선수가 레벨 ${currentLv} (으)로 올랐습니다!`), 500);
             }
             await setDoc(docRef, updatesObj, { merge: true });
@@ -1659,7 +1694,7 @@
             else if(type === 'stat') {
                 if((p.bong||0) < 50) return window.customAlert("자산(B)이 부족합니다! 열심히 모아보세요.");
                 if(!await window.customConfirm(`[포지션 특훈]을 50 B에 진행하시겠습니까?\n(임의의 스탯 1개가 1상승합니다)`)) return;
-                const stats = ['pac', 'sho', 'pas', 'dri', 'def', 'phy'];
+                const stats = ['pac', 'sho', 'pas', 'dri', 'def', 'phy', 'ref', 'int', 'pst', 'dis', 'cmp', 'wrk'];
                 const targetStat = stats[Math.floor(Math.random()*stats.length)];
                 let updates = { bong: p.bong - 50 }; updates[targetStat] = Math.min(99, (p[targetStat]||60) + 1);
                 await setDoc(docRef, updates, { merge: true });
@@ -1688,7 +1723,11 @@
         };
 
         function renderActivePool() {
-            const container = document.getElementById('activePool'); document.getElementById('activeCount').innerText = `${window.checkedInPlayers.size} 명`;
+            const container = document.getElementById('activePool'); 
+            if(!container) return;
+            const activeCountEl = document.getElementById('activeCount');
+            if(activeCountEl) activeCountEl.innerText = `${window.checkedInPlayers.size} 명`;
+            
             if(window.checkedInPlayers.size === 0) { container.innerHTML = `<span class="text-xs text-slate-600 italic">라커룸에서 선수를 체크해주세요.</span>`; return; }
             let html = '';
             window.checkedInPlayers.forEach(id => {
@@ -1698,7 +1737,11 @@
             container.innerHTML = html;
         }
 
-        window.changeTeamCount = (delta) => { window.targetTeamCount = Math.max(2, Math.min(6, window.targetTeamCount + delta)); document.getElementById('targetTeamCount').innerText = window.targetTeamCount; };
+        window.changeTeamCount = (delta) => { 
+            window.targetTeamCount = Math.max(2, Math.min(6, window.targetTeamCount + delta)); 
+            const el = document.getElementById('targetTeamCount');
+            if(el) el.innerText = window.targetTeamCount; 
+        };
 
         window.generateBalancedTeams = () => {
             const numTeams = window.targetTeamCount;
@@ -1717,7 +1760,10 @@
             });
             teams.sort((a,b) => a.id - b.id);
 
-            const resultContainer = document.getElementById('teamResult'); resultContainer.classList.remove('hidden');
+            const resultContainer = document.getElementById('teamResult'); 
+            if(!resultContainer) return;
+            
+            resultContainer.classList.remove('hidden');
             resultContainer.className = `mt-8 grid grid-cols-1 sm:grid-cols-2 ${numTeams > 2 ? 'lg:grid-cols-3' : ''} gap-4 sm:gap-6`;
 
             const colors = [
