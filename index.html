@@ -2003,7 +2003,10 @@ if(nameEl) nameEl.innerText = window.playerState.name;
 }
 
 if(isGM) window.switchTab('tabMaster');
-else window.switchTab('tabWorkspace');
+else {
+    window.switchTab('tabWorkspace');
+    if(window.selectedPlayerId) window.selectPlayer(window.selectedPlayerId);
+}
 };
 
 const initApp = async () => {
