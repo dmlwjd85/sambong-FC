@@ -1926,14 +1926,16 @@ else window.switchTab('tabWorkspace');
 
 const initApp = async () => {
 try {
-let firebaseConfig;
-try {
-firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-} catch(e) { firebaseConfig = __firebase_config || {}; } // 파싱 에러 방지
-
-if (!firebaseConfig || Object.keys(firebaseConfig).length === 0) {
-firebaseConfig = { apiKey: "local", projectId: "local", appId: "1:1:web:1" };
-}
+// 🚨 [수정된 부분] AI 테스트용 환경변수를 지우고, 선생님의 진짜 파이어베이스 설정으로 고정합니다.
+// 아래 값들을 이전 버전에서 사용하시던 선생님의 진짜 파이어베이스 설정값으로 교체해 주세요!
+const firebaseConfig = {
+  apiKey: "선생님의_API_KEY",
+  authDomain: "선생님의_PROJECT_ID.firebaseapp.com",
+  projectId: "선생님의_PROJECT_ID",
+  storageBucket: "선생님의_PROJECT_ID.appspot.com",
+  messagingSenderId: "선생님의_MESSAGING_SENDER_ID",
+  appId: "선생님의_APP_ID"
+};
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 auth = getAuth(app);
@@ -1941,11 +1943,8 @@ db = getFirestore(app);
 
 const initAuth = async () => {
 try {
-if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) { 
-await signInWithCustomToken(auth, __initial_auth_token); 
-} else { 
+// 깃허브 외부 환경이므로 익명 로그인을 최우선으로 실행하도록 변경합니다.
 await signInAnonymously(auth); 
-}
 } catch (authErr) {
 console.warn("권한 토큰 만료. 익명 로그인으로 전환합니다.", authErr);
 try {
