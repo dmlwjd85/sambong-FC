@@ -1739,6 +1739,17 @@ const statsTbody = document.getElementById('masterStatsTableBodyOnly'); if(!stat
 let statsHtml = '';
 
 const players = [...window.allPlayersData].sort((a,b) => {
+if(window.currentSortKey === 'grade') {
+    const getGradeNum = (p) => {
+        const g = getGrade(p);
+        if(g==='초4') return 4; if(g==='초5') return 5; if(g==='초6') return 6;
+        if(g==='중1') return 7; if(g==='중2') return 8;
+        if(g==='코치') return 90; if(g==='감독') return 99; return 999;
+    };
+    const diff = getGradeNum(a) - getGradeNum(b); // 오름차순 (초4 -> 중2 -> 코치 -> 감독)
+    if (diff !== 0) return diff;
+    return getOVR(b) - getOVR(a); // 같은 학년이면 OVR 높은 순
+}
 if(window.currentSortKey === 'ovr') return getOVR(b) - getOVR(a);
 const bBonus = getBonusStats(b).flat; const aBonus = getBonusStats(a).flat;
 const bVal = (Number(b[window.currentSortKey])||60) + (bBonus[window.currentSortKey]||0);
@@ -1749,12 +1760,13 @@ return getOVR(b) - getOVR(a);
 
 players.forEach(p => {
 const ovr = getOVR(p); const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정'; const b = getBonusStats(p).flat;
+const gradeText = getGrade(p); let gradeColor = gradeText.includes('초') ? 'text-emerald-400' : (gradeText.includes('중') ? 'text-blue-400' : 'text-purple-400');
 const getCell = (key) => {
 const base = Number(p[key])||60; const bonus = b[key]||0; const total = Math.min(99, base + bonus);
 const isHighlight = window.currentSortKey === key;
 return `<td class="py-3 text-center font-oswald text-sm sm:text-base ${isHighlight ? 'text-white font-bold bg-slate-800/50' : 'text-slate-300'}">${total} ${bonus>0 ? `<span class="text-[9px] text-emerald-400 ml-0.5 absolute mt-0.5">+${bonus}</span>`:''}</td>`;
 };
-statsHtml += `<tr class="hover:bg-slate-800/80 transition cursor-pointer" onclick="window.switchTab('tabWorkspace'); window.selectPlayer('${p.id}')"><td class="py-3 pl-4 text-left font-bold text-white flex items-center gap-2 whitespace-nowrap"><span class="text-base sm:text-lg">${getAvatar(p)}</span><span>${p.name}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[10px] font-bold ${getPosColor(p.pos)} border border-slate-600 px-1.5 py-0.5 rounded leading-none">${posText}</span></td><td class="py-3 text-center font-oswald text-base sm:text-lg ${window.currentSortKey==='ovr' ? 'text-white bg-slate-800/50' : 'text-fut-gold'} font-bold">${ovr}</td>${getCell('pac')}${getCell('sho')}${getCell('pas')}${getCell('dri')}${getCell('def')}${getCell('phy')}${getCell('ref')}${getCell('int')}${getCell('pst')}${getCell('dis')}${getCell('cmp')}${getCell('wrk')}</tr>`;
+statsHtml += `<tr class="hover:bg-slate-800/80 transition cursor-pointer" onclick="window.switchTab('tabWorkspace'); window.selectPlayer('${p.id}')"><td class="py-3 pl-4 text-left font-bold text-white flex items-center gap-2 whitespace-nowrap"><span class="text-base sm:text-lg">${getAvatar(p)}</span><span>${p.name}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[10px] font-bold ${gradeColor} border border-slate-600 px-1.5 py-0.5 rounded leading-none">${gradeText}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[10px] font-bold ${getPosColor(p.pos)} border border-slate-600 px-1.5 py-0.5 rounded leading-none">${posText}</span></td><td class="py-3 text-center font-oswald text-base sm:text-lg ${window.currentSortKey==='ovr' ? 'text-white bg-slate-800/50' : 'text-fut-gold'} font-bold">${ovr}</td>${getCell('pac')}${getCell('sho')}${getCell('pas')}${getCell('dri')}${getCell('def')}${getCell('phy')}${getCell('ref')}${getCell('int')}${getCell('pst')}${getCell('dis')}${getCell('cmp')}${getCell('wrk')}</tr>`;
 });
 statsTbody.innerHTML = statsHtml;
 };
