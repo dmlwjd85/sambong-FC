@@ -669,7 +669,7 @@ input[type="number"] { -moz-appearance: textfield; }
 </div> <!-- 🚨 mainUI 바구니 닫기 -->
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, writeBatch, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
@@ -1897,9 +1897,13 @@ try {
 let firebaseConfig;
 try {
 firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-} catch(e) { firebaseConfig = __firebase_config; } // 파싱 에러 방지
+} catch(e) { firebaseConfig = __firebase_config || {}; } // 파싱 에러 방지
 
-const app = initializeApp(firebaseConfig);
+if (!firebaseConfig || Object.keys(firebaseConfig).length === 0) {
+firebaseConfig = { apiKey: "local", projectId: "local", appId: "1:1:web:1" };
+}
+
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 auth = getAuth(app);
 db = getFirestore(app);
 
@@ -1912,7 +1916,11 @@ await signInAnonymously(auth);
 }
 } catch (authErr) {
 console.warn("권한 토큰 만료. 익명 로그인으로 전환합니다.", authErr);
+try {
 await signInAnonymously(auth);
+} catch(anonErr) {
+console.error("익명 로그인 최종 실패:", anonErr);
+}
 }
 };
 await initAuth();
@@ -2007,7 +2015,7 @@ document.getElementById('loginOverlay')?.classList.remove('hidden');
 
 } catch (error) {
 console.error("Init Error:", error);
-window.customAlert("앱 초기화 중 오류가 발생했습니다. 새로고침 해주세요.");
+window.customAlert("앱 초기화 중 오류가 발생했습니다. 새로고침 해주세요.\n(에러 상세: " + error.message + ")");
 document.getElementById('loadingOverlay')?.classList.add('hidden');
 document.getElementById('loginOverlay')?.classList.remove('hidden');
 }
