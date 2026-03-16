@@ -929,7 +929,7 @@ if(targetBtn) { targetBtn.classList.add('active'); targetBtn.scrollIntoView({ be
 const leftPanel = document.getElementById('leftCardPanel');
 const rightPanel = document.getElementById('rightContentPanel');
 
-if (tabId === 'tabWorkspace' || tabId === 'tabAchievements' || tabId === 'tabTips') {
+if (tabId === 'tabWorkspace' || tabId === 'tabAchievements') {
 leftPanel?.classList.remove('hidden', 'lg:hidden'); rightPanel?.classList.remove('lg:col-span-12'); rightPanel?.classList.add('lg:col-span-8');
 } else {
 leftPanel?.classList.add('hidden', 'lg:hidden'); rightPanel?.classList.remove('lg:col-span-8'); rightPanel?.classList.add('lg:col-span-12');
