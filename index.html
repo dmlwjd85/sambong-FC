@@ -1125,6 +1125,7 @@ if(card) { card.className = `fut-card w-[300px] h-[460px] p-5 flex flex-col rela
 
 document.getElementById('detailAvatar') && (document.getElementById('detailAvatar').innerText = getAvatar(p));
 document.getElementById('detailName') && (document.getElementById('detailName').innerText = p.name);
+document.getElementById('detailGrade') && (document.getElementById('detailGrade').innerText = getGrade(p));
 document.getElementById('detailOvr') && (document.getElementById('detailOvr').innerText = ovr);
 document.getElementById('detailPos') && (document.getElementById('detailPos').innerText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정');
 document.getElementById('detailExpText') && (document.getElementById('detailExpText').innerText = `${exp} / ${expNeeded}`);
