@@ -751,6 +751,18 @@ ALLOWED_PLAYERS.forEach(name => {
 const opt = document.createElement('option'); opt.value = name; opt.innerText = name; nameSelect.appendChild(opt);
 });
 }
+
+const loginIdSelect = document.getElementById('loginId');
+const nameInputContainer = document.getElementById('playerNameInputContainer');
+if(loginIdSelect && nameInputContainer) {
+loginIdSelect.addEventListener('change', (e) => {
+if(e.target.value === 'player') {
+nameInputContainer.classList.remove('hidden');
+} else {
+nameInputContainer.classList.add('hidden');
+}
+});
+}
 });
 
 const DAILY_TIPS = [
@@ -1815,6 +1827,15 @@ if(isAuto) { localStorage.clear(); location.reload(); return; }
 return window.customAlert("4자리 숫자로 된 PIN 번호를 입력하세요.");
 }
 
+if (!auth.currentUser) {
+try {
+console.log("인증 정보가 없어 재접속을 시도합니다...");
+await signInAnonymously(auth);
+} catch(e) {
+return window.customAlert(`서버와 연결할 수 없습니다.\n\n💡 팁: 학교 와이파이(교육망) 환경에서는 방화벽으로 차단될 수 있습니다. 스마트폰 핫스팟이나 데이터를 이용해주세요!\n(상세: ${e.message})`);
+}
+}
+
 if(isGuest) {
 window.playerState = { id: 'guest', isGM: false, isGuest: true, name: '게스트' };
 window.selectedPlayerId = ALLOWED_PLAYERS[0];
@@ -1859,7 +1880,14 @@ await setDoc(docRef, baseData, { merge: true });
 window.playerState = { id: safeDocId, isGM, isGuest: false, ...baseData };
 }
 localStorage.setItem('sfc_pid', pId); localStorage.setItem('sfc_pin', pin);
-} catch(e) { console.error("Login err:", e); return window.customAlert("로그인 처리 중 서버 통신 에러가 발생했습니다."); }
+} catch(e) { 
+console.error("Login err:", e); 
+let errMsg = e.message || "원인 불명";
+if(errMsg.includes("offline") || errMsg.includes("permissions") || errMsg.includes("Failed to get")) {
+return window.customAlert(`서버 접속이 차단되었습니다.\n\n💡 팁: 학교 와이파이(교육망) 환경에서는 보안 방화벽으로 인해 접속이 막힐 수 있습니다. 스마트폰 핫스팟으로 잠시 연결해 보세요!\n(상세: ${errMsg})`);
+}
+return window.customAlert(`로그인 처리 중 에러가 발생했습니다.\n(상세: ${errMsg})`); 
+}
 }
 
 if(!isGuest && !isGM) { window.selectedPlayerId = getSafeDocId(pId); }
