@@ -1746,7 +1746,7 @@ if(window.currentSortKey === 'grade') {
         if(g==='중1') return 7; if(g==='중2') return 8;
         if(g==='코치') return 90; if(g==='감독') return 99; return 999;
     };
-    const diff = getGradeNum(a) - getGradeNum(b); // 오름차순 (초4 -> 중2 -> 코치 -> 감독)
+    const diff = getGradeNum(a) - getGradeNum(b); // 오름차순 정렬 (초4 -> 중2 -> 코치 -> 감독)
     if (diff !== 0) return diff;
     return getOVR(b) - getOVR(a); // 같은 학년이면 OVR 높은 순
 }
