@@ -1926,6 +1926,8 @@ console.error("익명 로그인 최종 실패:", anonErr);
 await initAuth();
 
 onAuthStateChanged(auth, (user) => {
+document.getElementById('loadingOverlay')?.classList.add('hidden');
+
 if (user) {
 onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'players'), (snapshot) => {
 const dbPlayers = new Map();
@@ -2009,6 +2011,7 @@ console.warn("자동로그인 확인 불가:", lsErr);
 document.getElementById('loginOverlay')?.classList.remove('hidden');
 }
 } else {
+document.getElementById('loadingOverlay')?.classList.add('hidden');
 document.getElementById('loginOverlay')?.classList.remove('hidden');
 }
 });
