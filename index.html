@@ -673,6 +673,7 @@ import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebase
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, writeBatch, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+// AI 캔버스 환경과 깃허브 등 외부 환경을 자동 감지
 const appId = typeof __app_id !== 'undefined' ? __app_id : 'sambong-futsal-ultimate'; 
 
 const getSafeDocId = (name) => {
@@ -857,7 +858,6 @@ else { weightedSum += val; }
 return Math.min(99, Math.floor(weightedSum / totalWeight));
 };
 
-// 💡 누락되었던 getTierInfo 함수 추가 (완벽 복구)
 const getTierInfo = (ovr) => {
     if(ovr < 70) return { name: '루키 (ROOKIE)', class: 'tier-badge-rookie', cardClass: 'card-rookie' };
     if(ovr < 80) return { name: '세미프로 (SEMI-PRO)', class: 'tier-badge-semipro', cardClass: 'card-semipro' };
@@ -1814,7 +1814,7 @@ el.appendChild(floatEl); setTimeout(() => floatEl.remove(), 1200);
 window.logout = () => { localStorage.removeItem('sfc_pid'); localStorage.removeItem('sfc_pin'); location.reload(); };
 
 // ==============================================
-// 🚀 앱 코어 인증 및 초기화 (수정 완료)
+// 🚀 앱 코어 인증 및 초기화
 // ==============================================
 window.handleLogin = async (pId, pin, isAuto = false) => {
 if(!pId) return window.customAlert("입장 권한을 선택하세요.");
@@ -1926,33 +1926,48 @@ else window.switchTab('tabWorkspace');
 
 const initApp = async () => {
 try {
-// 🚨 [수정된 부분] AI 테스트용 환경변수를 지우고, 선생님의 진짜 파이어베이스 설정으로 고정합니다.
-// 아래 값들을 이전 버전에서 사용하시던 선생님의 진짜 파이어베이스 설정값으로 교체해 주세요!
-const firebaseConfig = {
-  apiKey: "선생님의_API_KEY",
-  authDomain: "선생님의_PROJECT_ID.firebaseapp.com",
-  projectId: "선생님의_PROJECT_ID",
-  storageBucket: "선생님의_PROJECT_ID.appspot.com",
-  messagingSenderId: "선생님의_MESSAGING_SENDER_ID",
-  appId: "선생님의_APP_ID"
-};
+// 🚨 환경 하이브리드 자동 감지 코드 (Canvas & GitHub 동시 완벽 지원)
+let firebaseConfig;
+
+if (typeof __firebase_config !== 'undefined') {
+  // 1. AI 캔버스 환경: 자동 주입된 키를 사용합니다.
+  firebaseConfig = typeof __firebase_config === 'string' ? JSON.parse(__firebase_config) : __firebase_config;
+} else {
+  // 2. 외부 환경 (깃허브 등): 선생님의 진짜 프로젝트 정보를 사용합니다.
+  // 👉 깃허브에 배포하실 때만 아래 "선생님의_API_KEY" 등을 진짜 파이어베이스 설정값으로 덮어쓰시면 됩니다.
+  firebaseConfig = {
+    apiKey: "선생님의_API_KEY",
+    authDomain: "선생님의_PROJECT_ID.firebaseapp.com",
+    projectId: "선생님의_PROJECT_ID",
+    storageBucket: "선생님의_PROJECT_ID.appspot.com",
+    messagingSenderId: "선생님의_MESSAGING_SENDER_ID",
+    appId: "선생님의_APP_ID"
+  };
+}
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 auth = getAuth(app);
 db = getFirestore(app);
 
 const initAuth = async () => {
-try {
-// 깃허브 외부 환경이므로 익명 로그인을 최우선으로 실행하도록 변경합니다.
-await signInAnonymously(auth); 
-} catch (authErr) {
-console.warn("권한 토큰 만료. 익명 로그인으로 전환합니다.", authErr);
-try {
-await signInAnonymously(auth);
-} catch(anonErr) {
-console.error("익명 로그인 최종 실패:", anonErr);
-}
-}
+  try {
+    // 캔버스 환경 전용 인증 토큰이 있으면 최우선 사용
+    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+      await signInWithCustomToken(auth, __initial_auth_token);
+    } else {
+      // 깃허브 환경이거나 토큰이 없으면 익명 로그인 시도
+      await signInAnonymously(auth);
+    }
+  } catch (authErr) {
+    console.warn("권한 토큰 만료. 익명 로그인으로 전환합니다.", authErr);
+    try {
+      await signInAnonymously(auth);
+    } catch(anonErr) {
+      console.error("익명 로그인 최종 실패:", anonErr);
+      // 🔥 여기가 핵심입니다! 깃허브에서 이 에러가 난다면 파이어베이스 콘솔에서 '익명 로그인'을 켜주셔야 합니다.
+      window.customAlert(`서버 인증에 실패했습니다.\n\n💡 깃허브 환경이라면 파이어베이스 콘솔에서 [Authentication] -> [Sign-in method] -> [익명(Anonymous)] 로그인이 '사용 설정' 되어있는지 꼭 확인해주세요!\n(에러: ${anonErr.message})`);
+    }
+  }
 };
 await initAuth();
 
