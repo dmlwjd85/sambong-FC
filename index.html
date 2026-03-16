@@ -1276,12 +1276,34 @@ const ctx = canvas.getContext('2d');
 const cw = canvas.width; const ch = canvas.height; const cx = cw / 2; const cy = ch / 2; const r = cw * 0.45;
 
 ctx.clearRect(0,0,cw,ch);
+
+// 배경 채우기
 ctx.beginPath();
 for(let i=0; i<12; i++) {
 const angle = (Math.PI * 2 / 12) * i - (Math.PI / 2);
 ctx.lineTo(cx + r * Math.cos(angle), cy + r * Math.sin(angle));
 }
-ctx.closePath(); ctx.fillStyle = 'rgba(0, 0, 0, 0.2)'; ctx.fill(); ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)'; ctx.lineWidth = 1; ctx.stroke();
+ctx.closePath(); 
+ctx.fillStyle = 'rgba(10, 25, 15, 0.8)'; ctx.fill(); 
+
+// 12각형 거미줄 선 그리기 (가독성 대폭 개선)
+ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)'; ctx.lineWidth = 1;
+for(let j=1; j<=3; j++) {
+    ctx.beginPath();
+    let ringR = r * (j/3);
+    for(let i=0; i<12; i++) {
+        const angle = (Math.PI * 2 / 12) * i - (Math.PI / 2);
+        ctx.lineTo(cx + ringR * Math.cos(angle), cy + ringR * Math.sin(angle));
+    }
+    ctx.closePath(); ctx.stroke();
+}
+ctx.beginPath();
+for(let i=0; i<12; i++) {
+    const angle = (Math.PI * 2 / 12) * i - (Math.PI / 2);
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + r * Math.cos(angle), cy + r * Math.sin(angle));
+}
+ctx.stroke();
 
 const statVals = [
 (Number(p.pac)||60)+bonusFlat.pac, (Number(p.sho)||60)+bonusFlat.sho, (Number(p.pas)||60)+bonusFlat.pas, 
