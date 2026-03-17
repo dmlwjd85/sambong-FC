@@ -488,6 +488,29 @@ input[type="number"] { -moz-appearance: textfield; }
 </div>
 </div>
 
+<div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-blue-500">
+    <h3 class="text-2xl sm:text-3xl font-display text-blue-400 mb-6 flex items-center gap-3">
+        <i class="fa-brands fa-youtube text-red-500"></i> 감독님의 추천 쇼츠
+    </h3>
+    <div class="flex flex-col md:flex-row gap-6 items-start">
+        <div class="w-full max-w-[280px] mx-auto md:mx-0 aspect-[9/16] bg-slate-900 rounded-2xl border border-slate-700 shadow-2xl relative overflow-hidden flex-shrink-0" id="shortsPlayerContainer">
+            <div class="absolute inset-0 flex items-center justify-center text-slate-500 flex-col">
+                <i class="fa-brands fa-youtube text-4xl mb-2 opacity-30"></i>
+                <span class="text-xs">감독님이 영상을 준비 중입니다.</span>
+            </div>
+        </div>
+
+        <div id="gmShortsEditor" class="hidden flex-1 w-full bg-slate-900/60 p-5 rounded-2xl border border-blue-500/30 mt-4 md:mt-0">
+            <h4 class="text-sm font-bold text-blue-300 mb-3 flex items-center gap-2"><i class="fa-solid fa-link"></i> 쇼츠 주소 등록 (감독 전용)</h4>
+            <p class="text-xs text-slate-400 mb-3 break-keep">유튜브 쇼츠 주소를 복사해서 붙여넣으세요.<br>(PC/모바일 유튜브의 '공유' 버튼을 눌러 링크 복사)</p>
+            <input type="text" id="shortsInput" class="w-full bg-slate-800 border border-slate-600 rounded-xl p-3 text-white focus:border-blue-400 focus:outline-none mb-3 text-sm" placeholder="https://youtube.com/shorts/...">
+            <button onclick="window.saveShorts()" class="w-full sm:w-auto bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-500 text-white font-bold py-3 px-6 rounded-xl transition shadow-lg flex items-center justify-center gap-2 text-sm">
+                <i class="fa-solid fa-satellite-dish"></i> 전송! (모든 학생 화면에 재생)
+            </button>
+        </div>
+    </div>
+</div>
+
 <div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-orange-500">
 <h3 class="text-2xl sm:text-3xl font-display text-orange-400 mb-6 flex items-center gap-3">
 <i class="fa-solid fa-book-open"></i> 오늘의 풋살 꿀팁 <span class="text-[10px] font-sans text-slate-400 font-normal ml-2 border border-slate-600 px-2 py-1 rounded bg-slate-800">3일마다 갱신</span>
@@ -941,8 +964,16 @@ leftPanel?.classList.add('hidden', 'lg:hidden'); rightPanel?.classList.remove('l
 }
 
 if(tabId === 'tabTips') {
-renderDailyTip(); const gmEditor = document.getElementById('gmAnnouncementEditor');
-if(window.playerState.isGM) gmEditor?.classList.remove('hidden'); else gmEditor?.classList.add('hidden');
+    renderDailyTip(); 
+    const gmEditor = document.getElementById('gmAnnouncementEditor');
+    const gmShortsEditor = document.getElementById('gmShortsEditor');
+    if(window.playerState.isGM) { 
+        gmEditor?.classList.remove('hidden'); 
+        gmShortsEditor?.classList.remove('hidden');
+    } else { 
+        gmEditor?.classList.add('hidden');
+        gmShortsEditor?.classList.add('hidden');
+    }
 }
 if(tabId === 'tabShop') window.renderShop();
 if(tabId === 'tabAchievements') window.renderAchievements();
@@ -1920,6 +1951,33 @@ const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'announce
 await setDoc(docRef, { text, updatedAt: new Date().toISOString() }, { merge: true });
 window.customAlert('공지사항이 등록되었습니다.');
 } catch(e) { console.error(e); window.customAlert('공지사항 저장 실패'); }
+};
+
+window.saveShorts = async () => {
+    try {
+        checkAuthReady();
+        if(!window.playerState.isGM) return;
+        const url = document.getElementById('shortsInput')?.value.trim();
+        if(!url) return window.customAlert('유튜브 쇼츠 링크를 입력하세요.');
+        
+        // 유튜브 주소에서 고유 비디오 ID만 깔끔하게 추출하는 마법의 정규식!
+        let videoId = "";
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|\/shorts\/)([^#&?]*).*/;
+        const match = url.match(regExp);
+
+        if (match && match[2].length === 11) {
+            videoId = match[2];
+        } else {
+            return window.customAlert('올바른 유튜브 영상 링크가 아닙니다.\n(11자리 영상 ID를 찾을 수 없습니다.)');
+        }
+
+        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'shorts');
+        await setDoc(docRef, { videoId, updatedAt: new Date().toISOString() }, { merge: true });
+        window.customAlert('⚽ 쇼츠 영상이 성공적으로 세팅되었습니다!\n모든 학생의 화면에서 자동 재생됩니다.');
+    } catch(e) { 
+        console.error(e); 
+        window.customAlert(`쇼츠 등록 에러:\n${e.message}`); 
+    }
 };
 
 const triggerConfetti = () => {
