@@ -2168,6 +2168,16 @@ const input = document.getElementById('announcementInput');
 if(input && data?.text) input.value = data.text;
 }, (error) => console.error("Announcement Listen Error:", error));
 
+onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'shorts'), (docSnap) => {
+const data = docSnap.data();
+const container = document.getElementById('shortsPlayerContainer');
+if(container && data?.videoId) {
+container.innerHTML = `<iframe class="w-full h-full rounded-2xl" src="https://www.youtube.com/embed/${data.videoId}?autoplay=1&mute=1&loop=1&playlist=${data.videoId}&controls=0&modestbranding=1&rel=0" title="YouTube shorts" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
+}
+const input = document.getElementById('shortsInput');
+if(input && data?.videoId) input.value = `https://youtube.com/shorts/${data.videoId}`;
+}, (error) => console.error("Shorts Listen Error:", error));
+
 onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'latest_event'), (docSnap) => {
 const data = docSnap.data();
 const marqueeContainer = document.getElementById('globalMarqueeContainer');
