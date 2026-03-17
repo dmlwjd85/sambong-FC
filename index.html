@@ -297,7 +297,7 @@ input[type="number"] { -moz-appearance: textfield; }
 <div class="absolute inset-0 flex items-center justify-center opacity-15 pointer-events-none">
 <canvas id="statRadar" width="160" height="160"></canvas>
 </div>
-<div class="w-full grid grid-cols-3 gap-y-2 gap-x-0 z-10 px-1" id="detailStatsGrid">
+<div class="w-full grid grid-cols-3 gap-y-1.5 gap-x-0 z-10 px-1" id="detailStatsGrid">
 </div>
 </div>
 </div>
@@ -1157,7 +1157,7 @@ const stats = [
 let gridHtml = '';
 stats.forEach(s => {
 const baseVal = Number(p[s.id]) || 60; const bVal = bonus.flat[s.id] || 0; const totalVal = Math.min(99, baseVal + bVal);
-let bonusBadge = bVal > 0 ? `<span class="text-[10px] text-emerald-400 font-bold leading-none absolute -top-1 -right-2">+${bVal}</span>` : '';
+let bonusBadge = bVal > 0 ? `<span class="text-[9px] text-emerald-400 font-bold leading-none absolute -top-0.5 -right-3.5">+${bVal}</span>` : '';
 
 const posConfig = POS_WEIGHTS[p.pos];
 let highlightClass = '';
@@ -1174,23 +1174,25 @@ if (posConfig) {
 
 if(isGM) {
 gridHtml += `
-                       <div class="flex items-center justify-center gap-1 text-current w-full group relative">
-                           <button onclick="window.modStat('${p.id}', '${s.id}', -1)" class="w-3.5 h-3.5 rounded bg-black/40 hover:bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-minus text-[7px]"></i></button>
-                           <div class="relative flex flex-col items-center justify-center w-7">
-                               <input type="number" min="1" max="99" value="${baseVal}" class="font-oswald text-xl font-bold w-full text-center bg-transparent border-b border-transparent hover:border-current focus:outline-none transition cursor-text leading-none p-0 m-0 text-current ${highlightClass}" onchange="window.setStat('${p.id}', '${s.id}', this.value)">
-                               ${bonusBadge}
+                       <div class="flex flex-col items-center justify-center text-current w-full group relative">
+                           <div class="flex items-center justify-center gap-1 mb-0.5">
+                               <button onclick="window.modStat('${p.id}', '${s.id}', -1)" class="w-3.5 h-3.5 rounded bg-black/40 hover:bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-minus text-[7px]"></i></button>
+                               <div class="relative flex items-center justify-center w-7">
+                                   <input type="number" min="1" max="99" value="${baseVal}" class="font-oswald text-xl font-bold w-full text-center bg-transparent border-b border-transparent hover:border-current focus:outline-none transition cursor-text leading-none p-0 m-0 text-current ${highlightClass}" onchange="window.setStat('${p.id}', '${s.id}', this.value)">
+                                   ${bonusBadge}
+                               </div>
+                               <button onclick="window.modStat('${p.id}', '${s.id}', 1)" class="w-3.5 h-3.5 rounded bg-black/40 hover:bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-plus text-[7px]"></i></button>
                            </div>
-                           <span class="font-bold text-[10px] tracking-tight whitespace-nowrap opacity-95 cursor-pointer hover:text-emerald-400" onclick="window.showStatDesc('${s.id}')">${s.label} ${labelIcon}</span>
-                           <button onclick="window.modStat('${p.id}', '${s.id}', 1)" class="w-3.5 h-3.5 rounded bg-black/40 hover:bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-plus text-[7px]"></i></button>
+                           <span class="font-bold text-[10px] tracking-tight whitespace-nowrap opacity-95 cursor-pointer hover:text-emerald-400 leading-none" onclick="window.showStatDesc('${s.id}')">${s.label} ${labelIcon}</span>
                        </div>`;
 } else {
 gridHtml += `
-                       <div class="flex items-center justify-start gap-1.5 text-current w-full pl-1 sm:pl-2">
-                           <div class="relative flex items-center justify-center w-7 ${highlightClass}">
+                       <div class="flex flex-col items-center justify-center text-current w-full">
+                           <div class="relative flex items-center justify-center mb-0.5 ${highlightClass}">
                                <span class="font-oswald text-xl font-bold leading-none tracking-tight">${totalVal}</span>
                                ${bonusBadge}
                            </div>
-                           <span class="font-bold text-[11px] sm:text-xs opacity-95 tracking-tight whitespace-nowrap cursor-pointer hover:text-emerald-400 transition" onclick="window.showStatDesc('${s.id}')">${s.label} ${labelIcon}</span>
+                           <span class="font-bold text-[10px] sm:text-[11px] opacity-95 tracking-tight whitespace-nowrap cursor-pointer hover:text-emerald-400 transition leading-none" onclick="window.showStatDesc('${s.id}')">${s.label} ${labelIcon}</span>
                        </div>`;
 }
 });
