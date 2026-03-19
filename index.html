@@ -1944,7 +1944,7 @@ window.claimAchievement = async (achId) => {
         triggerConfetti();
         window.customAlert(`🎉 [${ach.title}] 트로피 달성!\n보상으로 ${ach.reward} B가 지급되었습니다.`);
         window.renderAchievements();
-        window.renderSelectedCard(pId); // 좌측 프로필 자산 즉시 갱신
+        window.renderSelectedCard(pId);
     } catch(e) {
         console.error("claimAch err:", e);
         window.customAlert(`보상 수령 에러:\n${e.message}`);
@@ -2106,8 +2106,8 @@ const baseData = {
 name: isGM ? (pId==='gm1'?'감독 J':'수석코치 J') : pId, pin, pos: isGM ? 'Fixo' : '미정', 
 pac: r(), sho: r(), pas: r(), dri: r(), def: r(), phy: r(), ref: r(), int: r(), pst: r(), dis: r(), cmp: r(), wrk: r(),
 level: 1, exp: 0, goals: 0, assists: 0, matches: 0, training: 0, saves: 0, keypass: 0, bong: 0, lastWageWeek: '',
-age: 13,
-inventory: [], itemLevels: {}, equipHead: null, equipHandL: null, equipHandR: null, equipFootL: null, equipFootR: null,
+age: (pId === '신무호' || pId === '신무호') ? 12 : 13,
+inventory: [], itemLevels: {}, equipHead: null, equipHandL: null, equipHandR: null, equipFootL: null, equipFootR: null, equipAvatar: null,
 updatedAt: new Date().toISOString()
 };
 await setDoc(docRef, baseData, { merge: true });
@@ -2154,6 +2154,19 @@ if(isGM) window.switchTab('tabMaster');
 else {
     window.switchTab('tabWorkspace');
     if(window.selectedPlayerId && window.allPlayersData.length > 0) window.selectPlayer(window.selectedPlayerId);
+}
+
+// 🔔 초기 공지사항 팝업 띄우기 로직 추가
+if(!isGuest && !window.hasShownAnnouncement) {
+    const annRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'announcement');
+    getDoc(annRef).then(snap => {
+        if(snap.exists() && snap.data().text) {
+            setTimeout(() => {
+                window.customAlert(`📢 [감독님 공지사항]\n\n${snap.data().text}`);
+            }, 800);
+            window.hasShownAnnouncement = true;
+        }
+    });
 }
 };
 
