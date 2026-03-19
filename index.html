@@ -1895,17 +1895,60 @@ const pId = window.selectedPlayerId; const p = window.allPlayersData.find(x => x
 if(!p) { grid.innerHTML = '<div class="col-span-full text-center text-slate-500 py-10">라커룸에서 선수를 선택해주세요.</div>'; return; }
 document.getElementById('achievementTargetName') && (document.getElementById('achievementTargetName').innerText = `${p.name} 달성률`);
 
+const claimedAchievements = Array.isArray(p.claimedAchievements) ? p.claimedAchievements : [];
 let achievedCount = 0; let html = '';
+
 ACHIEVEMENTS.forEach(ach => {
 const currentVal = Number(p[ach.reqKey]) || 0; const isAchieved = currentVal >= ach.reqValue;
+const isClaimed = claimedAchievements.includes(ach.id);
 if(isAchieved) achievedCount++; const percent = Math.min(100, Math.floor((currentVal / ach.reqValue) * 100));
 
-html += `<div class="bg-slate-900/80 rounded-xl p-4 border transition duration-300 ${isAchieved ? 'achieved-card' : 'unachieved-card'} flex gap-4 items-center relative overflow-hidden">${isAchieved ? '<div class="absolute -right-4 -top-4 bg-fut-gold text-black text-[10px] font-bold py-1 px-8 rotate-45 shadow-md">CLEARED</div>' : ''}<div class="text-4xl w-14 flex-shrink-0 text-center drop-shadow-md ${isAchieved ? '' : 'opacity-50 grayscale'}">${ach.icon}</div><div class="flex-grow"><div class="flex justify-between items-start mb-1"><div><span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600 ${ach.color}">${ach.category}</span><h5 class="font-bold text-white text-sm sm:text-base mt-1 ${isAchieved ? 'text-fut-gold' : ''}">${ach.title}</h5></div></div><p class="text-[10px] sm:text-xs text-slate-400 mb-2 leading-tight break-keep">${ach.desc}</p><div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1"><span>진행도</span><span class="${isAchieved ? 'text-fut-gold' : 'text-slate-400'}">${currentVal} / ${ach.reqValue}</span></div><div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden"><div class="h-1.5 rounded-full transition-all duration-1000 ${isAchieved ? ach.bg : 'bg-slate-500'}" style="width: ${percent}%"></div></div></div></div>`;
+let claimBtnHtml = '';
+if (isAchieved && !isClaimed) {
+    claimBtnHtml = `<button onclick="window.claimAchievement('${ach.id}')" class="mt-3 w-full bg-gradient-to-r from-fut-gold-dark to-fut-gold hover:from-fut-gold hover:to-yellow-200 text-slate-900 font-bold py-1.5 rounded-lg shadow-md transition text-xs flex items-center justify-center gap-1.5 active:scale-95"><i class="fa-solid fa-gift text-sm"></i> 보상 받기 (${ach.reward} B)</button>`;
+} else if (isClaimed) {
+    claimBtnHtml = `<div class="mt-3 w-full bg-slate-800 text-slate-500 font-bold py-1.5 rounded-lg border border-slate-700 text-xs flex items-center justify-center gap-1.5"><i class="fa-solid fa-check text-sm"></i> 보상 수령 완료</div>`;
+} else {
+    claimBtnHtml = `<div class="mt-3 w-full bg-slate-800/40 text-slate-600 py-1.5 rounded-lg border border-slate-700/50 text-xs flex items-center justify-center gap-1.5"><i class="fa-solid fa-lock text-[10px]"></i> 달성 시 ${ach.reward} B 지급</div>`;
+}
+
+html += `<div class="bg-slate-900/80 rounded-xl p-4 border transition duration-300 ${isAchieved ? 'achieved-card' : 'unachieved-card'} flex gap-4 items-center relative overflow-hidden">${isAchieved ? '<div class="absolute -right-4 -top-4 bg-fut-gold text-black text-[10px] font-bold py-1 px-8 rotate-45 shadow-md z-10">CLEARED</div>' : ''}<div class="text-4xl w-14 flex-shrink-0 text-center drop-shadow-md ${isAchieved ? '' : 'opacity-50 grayscale'}">${ach.icon}</div><div class="flex-grow flex flex-col justify-between"><div class="flex justify-between items-start mb-1"><div><span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600 ${ach.color}">${ach.category}</span><h5 class="font-bold text-white text-sm sm:text-base mt-1 ${isAchieved ? 'text-fut-gold' : ''}">${ach.title}</h5></div></div><p class="text-[10px] sm:text-xs text-slate-400 mb-2 leading-tight break-keep">${ach.desc}</p><div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1"><span>진행도</span><span class="${isAchieved ? 'text-fut-gold' : 'text-slate-400'}">${currentVal} / ${ach.reqValue}</span></div><div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden"><div class="h-1.5 rounded-full transition-all duration-1000 ${isAchieved ? ach.bg : 'bg-slate-500'}" style="width: ${percent}%"></div></div>${claimBtnHtml}</div></div>`;
 });
 grid.innerHTML = html;
 const progressPercent = Math.floor((achievedCount / ACHIEVEMENTS.length) * 100);
 document.getElementById('achievementProgressText') && (document.getElementById('achievementProgressText').innerText = `${progressPercent}%`);
 document.getElementById('achievementProgressBar') && (document.getElementById('achievementProgressBar').style.width = `${progressPercent}%`);
+};
+
+window.claimAchievement = async (achId) => {
+    try {
+        checkAuthReady();
+        if(window.playerState.isGuest) return window.customAlert("게스트는 이용할 수 없는 기능입니다.");
+        
+        const pId = window.selectedPlayerId;
+        if(!window.playerState.isGM && pId !== window.playerState.id) return window.customAlert("❌ 자신의 보상만 받을 수 있습니다.");
+
+        const p = window.allPlayersData.find(x => x.id === pId);
+        const ach = ACHIEVEMENTS.find(x => x.id === achId);
+        if(!p || !ach) return;
+
+        const claimedAchievements = Array.isArray(p.claimedAchievements) ? p.claimedAchievements : [];
+        if (claimedAchievements.includes(achId)) return window.customAlert("이미 수령한 보상입니다.");
+
+        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
+        const newBong = (Number(p.bong) || 0) + ach.reward;
+        const newClaimed = [...claimedAchievements, achId];
+
+        await setDoc(docRef, { bong: newBong, claimedAchievements: newClaimed }, { merge: true });
+        
+        triggerConfetti();
+        window.customAlert(`🎉 [${ach.title}] 트로피 달성!\n보상으로 ${ach.reward} B가 지급되었습니다.`);
+        window.renderAchievements();
+        window.renderSelectedCard(pId); // 좌측 프로필 자산 즉시 갱신
+    } catch(e) {
+        console.error("claimAch err:", e);
+        window.customAlert(`보상 수령 에러:\n${e.message}`);
+    }
 };
 
 window.changeTeamCount = (change) => {
