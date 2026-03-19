@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>삼봉 FC: 얼티밋 라커룸</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
@@ -812,12 +815,28 @@ const DAILY_TIPS = [
 ];
 
 const ACHIEVEMENTS = [
-{ id: 'goal_1', category: '개인 기록', title: '마수걸이 골', desc: '풋살화 끈을 꽉 묶고 첫 골을 기록하세요.', reqKey: 'goals', reqValue: 1, icon: '⚽', color: 'text-yellow-400', bg: 'bg-yellow-400' },
-{ id: 'goal_50', category: '개인 기록', title: '득점 폭격기', desc: '누적 50골 달성! 상대 팀이 가장 두려워하는 선수입니다.', reqKey: 'goals', reqValue: 50, icon: '🚀', color: 'text-red-500', bg: 'bg-red-500' },
-{ id: 'ast_1', category: '팀 플레이', title: '이타적인 플레이', desc: '첫 어시스트를 기록하세요.', reqKey: 'assists', reqValue: 1, icon: '🤝', color: 'text-emerald-400', bg: 'bg-emerald-400' },
-{ id: 'save_30', category: '수비/헌신', title: '통곡의 벽', desc: '누적 30세이브 달성!', reqKey: 'saves', reqValue: 30, icon: '🧱', color: 'text-slate-300', bg: 'bg-slate-300' },
-{ id: 'match_50', category: '꾸준함', title: '심장 두 개 (강철 체력)', desc: '50경기 출전! 지치지 않는 체력.', reqKey: 'matches', reqValue: 50, icon: '🫀', color: 'text-pink-500', bg: 'bg-pink-500' },
-{ id: 'lv_50', category: '레벨업', title: '레전드의 시작', desc: '레벨 50 달성. 명예의 전당에 오를 자격이 충분합니다.', reqKey: 'level', reqValue: 50, icon: '👑', color: 'text-fut-gold', bg: 'bg-fut-gold' },
+{ id: 'goal_1', category: '득점', title: '마수걸이 골', desc: '풋살화 끈을 꽉 묶고 첫 골을 기록하세요.', reqKey: 'goals', reqValue: 1, reward: 10, icon: '⚽', color: 'text-yellow-400', bg: 'bg-yellow-400' },
+{ id: 'goal_50', category: '득점', title: '득점 폭격기', desc: '누적 50골 달성! 상대 팀이 두려워하는 선수입니다.', reqKey: 'goals', reqValue: 50, reward: 100, icon: '🚀', color: 'text-orange-500', bg: 'bg-orange-500' },
+{ id: 'goal_100', category: '득점', title: '득점 기계', desc: '누적 100골 달성! 전설적인 득점왕.', reqKey: 'goals', reqValue: 100, reward: 300, icon: '🔥', color: 'text-red-500', bg: 'bg-red-500' },
+
+{ id: 'ast_1', category: '팀 플레이', title: '이타적인 플레이', desc: '첫 어시스트를 기록하세요.', reqKey: 'assists', reqValue: 1, reward: 10, icon: '🤝', color: 'text-emerald-400', bg: 'bg-emerald-400' },
+{ id: 'ast_50', category: '팀 플레이', title: '택배 기사', desc: '누적 50어시스트! 발밑에 정확히 배달합니다.', reqKey: 'assists', reqValue: 50, reward: 100, icon: '📦', color: 'text-green-400', bg: 'bg-green-400' },
+{ id: 'ast_100', category: '팀 플레이', title: '패스 마스터', desc: '누적 100어시스트! 완벽한 플레이메이커.', reqKey: 'assists', reqValue: 100, reward: 300, icon: '🪄', color: 'text-teal-400', bg: 'bg-teal-400' },
+
+{ id: 'key_30', category: '전개/빌드업', title: '킬러 패스', desc: '누적 30킬패스! 수비를 찢는 패스.', reqKey: 'keypass', reqValue: 30, reward: 50, icon: '🎯', color: 'text-purple-400', bg: 'bg-purple-400' },
+{ id: 'key_100', category: '전개/빌드업', title: '황금 발', desc: '누적 100킬패스! 경기를 지배하는 시야.', reqKey: 'keypass', reqValue: 100, reward: 300, icon: '👁️', color: 'text-purple-600', bg: 'bg-purple-600' },
+
+{ id: 'save_30', category: '수비/헌신', title: '통곡의 벽', desc: '누적 30세이브 달성! 골문을 든든히 지킵니다.', reqKey: 'saves', reqValue: 30, reward: 50, icon: '🧱', color: 'text-slate-300', bg: 'bg-slate-300' },
+{ id: 'save_100', category: '수비/헌신', title: '거미손', desc: '누적 100세이브! 절대 뚫리지 않는 방패.', reqKey: 'saves', reqValue: 100, reward: 300, icon: '🕷️', color: 'text-gray-400', bg: 'bg-gray-400' },
+
+{ id: 'train_30', category: '성실함', title: '연습벌레', desc: '개인 훈련 30회 완료! 땀방울은 배신하지 않습니다.', reqKey: 'training', reqValue: 30, reward: 50, icon: '💦', color: 'text-blue-400', bg: 'bg-blue-400' },
+{ id: 'train_100', category: '성실함', title: '훈련 중독', desc: '개인 훈련 100회 완료! 엄청난 노력가.', reqKey: 'training', reqValue: 100, reward: 300, icon: '🏋️‍♂️', color: 'text-blue-600', bg: 'bg-blue-600' },
+
+{ id: 'match_50', category: '꾸준함', title: '심장 두 개', desc: '50경기 출전! 지치지 않는 강철 체력.', reqKey: 'matches', reqValue: 50, reward: 100, icon: '🫀', color: 'text-pink-400', bg: 'bg-pink-400' },
+{ id: 'match_100', category: '꾸준함', title: '철강왕', desc: '100경기 출전! 삼봉 FC의 살아있는 전설.', reqKey: 'matches', reqValue: 100, reward: 400, icon: '🤖', color: 'text-pink-600', bg: 'bg-pink-600' },
+
+{ id: 'lv_50', category: '레벨업', title: '레전드의 시작', desc: '레벨 50 달성. 명예의 전당에 오를 자격이 충분합니다.', reqKey: 'level', reqValue: 50, reward: 500, icon: '👑', color: 'text-fut-gold', bg: 'bg-fut-gold' },
+{ id: 'lv_100', category: '레벨업', title: '얼티밋 마스터', desc: '최종 레벨 100 달성! 모든 것을 이룬 완벽한 선수.', reqKey: 'level', reqValue: 100, reward: 2000, icon: '🌟', color: 'text-fut-gold-dark', bg: 'bg-gradient-to-r from-yellow-400 to-yellow-600' },
 ];
 
 const ENHANCE_LEVELS = [
