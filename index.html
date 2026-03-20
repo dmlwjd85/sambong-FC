@@ -2141,6 +2141,11 @@ window.deletePlayer = async (pId, pName) => {
         delete GENDER_MAP[pName];
 
         window.customAlert(`🗑️ [${pName}] 선수의 정보가 삭제되었습니다.`);
+        
+        if (window.selectedPlayerId === pId) {
+            window.selectedPlayerId = ALLOWED_PLAYERS.length > 0 ? getSafeDocId(ALLOWED_PLAYERS[0]) : null;
+            if(window.selectedPlayerId) window.selectPlayer(window.selectedPlayerId);
+        }
     } catch (e) {
         console.error("삭제 에러:", e);
         window.customAlert(`삭제 에러:\n${e.message}`);
