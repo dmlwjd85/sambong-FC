@@ -92,6 +92,7 @@ position: absolute; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 z-index: 20; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
 }
 
+/* 💎 강화 단계별 시각적 이펙트 (CSS) */
 .eff-0.equipped { background-color: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.8); box-shadow: 0 0 12px rgba(255,255,255,0.4); }
 .eff-1 { border-color: #ffffff !important; box-shadow: 0 0 8px rgba(255,255,255,0.9) !important; animation: effPulse 2s infinite; }
 .eff-2 { border-color: #3b82f6 !important; box-shadow: 0 0 15px rgba(59,130,246,0.9) !important; animation: effSpin 3s linear infinite; }
@@ -143,9 +144,10 @@ input[type="number"] { -moz-appearance: textfield; }
 </head>
 <body class="antialiased">
 
+<!-- 로딩 오버레이 -->
 <div id="loadingOverlay" class="fixed inset-0 z-[6000] bg-pitch-bg flex flex-col items-center justify-center">
-    <i class="fa-solid fa-spinner fa-spin text-5xl text-fut-rare mb-4"></i>
-    <h2 class="font-display text-white text-xl tracking-widest">데이터 동기화 중...</h2>
+<i class="fa-solid fa-spinner fa-spin text-5xl text-fut-rare mb-4"></i>
+<h2 class="font-display text-white text-xl tracking-widest">데이터 동기화 중...</h2>
 </div>
 
 <svg width="0" height="0" class="hidden">
@@ -159,10 +161,12 @@ input[type="number"] { -moz-appearance: textfield; }
 </defs>
 </svg>
 
+<!-- 글로벌 전광판 (Marquee) -->
 <div id="globalMarqueeContainer" class="hidden w-full bg-gradient-to-r from-red-600 via-yellow-500 to-purple-600 text-white font-display text-lg py-1.5 z-[200] relative shadow-[0_0_15px_rgba(255,215,0,0.8)] overflow-hidden">
 <marquee id="globalMarqueeText" scrollamount="12" class="tracking-widest drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]"></marquee>
 </div>
 
+<!-- 로그인 오버레이 (z-index 5000 최상단) -->
 <div id="loginOverlay" class="fixed inset-0 bg-pitch-bg z-[5000] flex flex-col items-center justify-center px-4 transition-opacity duration-500 hidden">
 <div class="text-center mb-8">
 <i class="fa-regular fa-futbol text-5xl text-fut-rare mb-4 animate-bounce"></i>
@@ -205,7 +209,9 @@ input[type="number"] { -moz-appearance: textfield; }
 </div>
 </div>
 
+<!-- 메인 UI 바구니 -->
 <div id="mainUI" class="hidden transition-opacity duration-500">
+<!-- 네비게이션 -->
 <nav class="relative lg:sticky top-0 w-full z-[90] bg-pitch-bg/95 backdrop-blur-lg border-b border-emerald-900/50">
 <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
 <div class="flex items-center justify-between h-16 gap-2 sm:gap-4">
@@ -224,7 +230,6 @@ input[type="number"] { -moz-appearance: textfield; }
 <button onclick="window.switchTab('tabGuide')" id="btnTabGuide" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-circle-info mr-1 text-cyan-400"></i>이용안내</button>
 <button onclick="window.switchTab('tabMaster')" id="btnTabMaster" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 hidden flex-shrink-0"><i class="fa-solid fa-chart-line mr-1 text-fut-rare"></i>현황판(마스터)</button>
 <button onclick="window.switchTab('tabMasterStats')" id="btnTabMasterStats" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 hidden flex-shrink-0"><i class="fa-solid fa-list-ol mr-1 text-emerald-400"></i>스탯현황</button>
-<button onclick="window.switchTab('tabRoster')" id="btnTabRoster" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 hidden flex-shrink-0"><i class="fa-solid fa-address-book mr-1 text-orange-300"></i>명단관리</button>
 </div>
 
 <div class="flex items-center space-x-2 pl-2 border-l border-slate-700/50 flex-shrink-0">
@@ -240,10 +245,12 @@ input[type="number"] { -moz-appearance: textfield; }
 </div>
 </nav>
 
+<!-- 메인 컨텐츠 영역 -->
 <div class="pt-6 pb-12 px-4 max-w-7xl mx-auto min-h-screen">
 
 <div class="grid lg:grid-cols-12 gap-8 items-start relative w-full transition-all duration-500">
 
+<!-- 좌측: 상세 정보 패널 -->
 <div id="leftCardPanel" class="lg:col-span-4 space-y-6 lg:sticky lg:top-24 z-10 transition-all duration-500">
 
 <div class="glass-panel p-6 rounded-3xl border-t-4 border-fut-gold shadow-2xl relative overflow-hidden">
@@ -410,6 +417,7 @@ input[type="number"] { -moz-appearance: textfield; }
 </div>
 </div>
 
+<!-- 우측 영역 -->
 <div id="rightContentPanel" class="lg:col-span-8 space-y-8 pb-10 transition-all duration-500 w-full">
 
 <div id="tabWorkspace" class="space-y-8">
@@ -484,26 +492,26 @@ input[type="number"] { -moz-appearance: textfield; }
 </div>
 
 <div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-blue-500">
-    <h3 class="text-2xl sm:text-3xl font-display text-blue-400 mb-6 flex items-center gap-3">
-        <i class="fa-brands fa-youtube text-red-500"></i> 감독님의 추천 쇼츠
-    </h3>
-    <div class="flex flex-col md:flex-row gap-6 items-start">
-        <div class="w-full max-w-[280px] mx-auto md:mx-0 aspect-[9/16] bg-slate-900 rounded-2xl border border-slate-700 shadow-2xl relative overflow-hidden flex-shrink-0" id="shortsPlayerContainer">
-            <div class="absolute inset-0 flex items-center justify-center text-slate-500 flex-col">
-                <i class="fa-brands fa-youtube text-4xl mb-2 opacity-30"></i>
-                <span class="text-xs">감독님이 영상을 준비 중입니다.</span>
-            </div>
-        </div>
+<h3 class="text-2xl sm:text-3xl font-display text-blue-400 mb-6 flex items-center gap-3">
+<i class="fa-brands fa-youtube text-red-500"></i> 감독님의 추천 쇼츠
+</h3>
+<div class="flex flex-col md:flex-row gap-6 items-start">
+<div class="w-full max-w-[280px] mx-auto md:mx-0 aspect-[9/16] bg-slate-900 rounded-2xl border border-slate-700 shadow-2xl relative overflow-hidden flex-shrink-0" id="shortsPlayerContainer">
+<div class="absolute inset-0 flex items-center justify-center text-slate-500 flex-col">
+<i class="fa-brands fa-youtube text-4xl mb-2 opacity-30"></i>
+<span class="text-xs">감독님이 영상을 준비 중입니다.</span>
+</div>
+</div>
 
-        <div id="gmShortsEditor" class="hidden flex-1 w-full bg-slate-900/60 p-5 rounded-2xl border border-blue-500/30 mt-4 md:mt-0">
-            <h4 class="text-sm font-bold text-blue-300 mb-3 flex items-center gap-2"><i class="fa-solid fa-link"></i> 쇼츠 주소 등록 (감독 전용)</h4>
-            <p class="text-xs text-slate-400 mb-3 break-keep">유튜브 쇼츠 주소를 복사해서 붙여넣으세요.<br>(PC/모바일 유튜브의 '공유' 버튼을 눌러 링크 복사)</p>
-            <input type="text" id="shortsInput" class="w-full bg-slate-800 border border-slate-600 rounded-xl p-3 text-white focus:border-blue-400 focus:outline-none mb-3 text-sm" placeholder="https://youtube.com/shorts/...">
-            <button onclick="window.saveShorts()" class="w-full sm:w-auto bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-500 text-white font-bold py-3 px-6 rounded-xl transition shadow-lg flex items-center justify-center gap-2 text-sm">
-                <i class="fa-solid fa-satellite-dish"></i> 전송! (모든 학생 화면에 재생)
-            </button>
-        </div>
-    </div>
+<div id="gmShortsEditor" class="hidden flex-1 w-full bg-slate-900/60 p-5 rounded-2xl border border-blue-500/30 mt-4 md:mt-0">
+<h4 class="text-sm font-bold text-blue-300 mb-3 flex items-center gap-2"><i class="fa-solid fa-link"></i> 쇼츠 주소 등록 (감독 전용)</h4>
+<p class="text-xs text-slate-400 mb-3 break-keep">유튜브 쇼츠 주소를 복사해서 붙여넣으세요.<br>(PC/모바일 유튜브의 '공유' 버튼을 눌러 링크 복사)</p>
+<input type="text" id="shortsInput" class="w-full bg-slate-800 border border-slate-600 rounded-xl p-3 text-white focus:border-blue-400 focus:outline-none mb-3 text-sm" placeholder="https://youtube.com/shorts/...">
+<button onclick="window.saveShorts()" class="w-full sm:w-auto bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-500 text-white font-bold py-3 px-6 rounded-xl transition shadow-lg flex items-center justify-center gap-2 text-sm">
+<i class="fa-solid fa-satellite-dish"></i> 전송! (모든 학생 화면에 재생)
+</button>
+</div>
+</div>
 </div>
 
 <div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-orange-500">
@@ -543,6 +551,7 @@ input[type="number"] { -moz-appearance: textfield; }
 <h3 class="text-3xl font-display text-yellow-400 mb-6 flex items-center gap-3">
 <i class="fa-solid fa-trophy"></i> 삼봉 FC 명예의 전당
 </h3>
+<p class="text-sm text-slate-300 mb-6">시즌 누적 스탯을 기준으로 각 부문별 TOP 3 선수를 보여줍니다.</p>
 <p class="text-sm text-slate-300 mb-6">시즌 누적 스탯을 기준으로 각 부문별 TOP 3 선션을 보여줍니다.</p>
 
 <div id="leaderboardGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
@@ -691,44 +700,18 @@ input[type="number"] { -moz-appearance: textfield; }
 </div>
 </div>
 
-<div id="tabRoster" class="hidden space-y-6">
-<div class="glass-panel p-4 sm:p-8 rounded-3xl border-t-4 border-t-orange-400 overflow-hidden">
-<h3 class="text-2xl sm:text-3xl font-display text-orange-400 mb-2 flex items-center gap-2 sm:gap-3">
-<i class="fa-solid fa-address-book"></i> 선수 명단 관리 (마스터)
-</h3>
-<p class="text-xs sm:text-sm text-slate-400 mb-6">라커룸에 표시될 선수 명단을 추가하거나 삭제합니다. <span id="rosterCount" class="text-white font-bold ml-2"></span></p>
-
-<div class="bg-slate-900/60 p-5 rounded-xl border border-slate-700 mb-6 shadow-inner">
-    <h4 class="text-sm font-bold text-orange-300 mb-3"><i class="fa-solid fa-user-plus mr-1"></i> 신규 선수 추가</h4>
-    <div class="flex flex-col sm:flex-row gap-3">
-        <input type="text" id="rosterNameInput" class="flex-1 bg-slate-800 border border-slate-600 rounded-xl p-3 text-white focus:border-orange-400 focus:outline-none text-sm" placeholder="학생 이름 입력">
-        <select id="rosterGenderSelect" class="bg-slate-800 border border-slate-600 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-orange-400 text-sm appearance-none min-w-[100px] text-center">
-            <option value="M">남자 (M)</option>
-            <option value="F">여자 (F)</option>
-        </select>
-        <button onclick="window.addRoster()" class="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white font-bold py-3 px-6 rounded-xl transition shadow-lg text-sm whitespace-nowrap">추가하기</button>
-    </div>
-</div>
-
-<div class="bg-slate-900/40 p-5 rounded-xl border border-slate-700 shadow-inner min-h-[300px]">
-    <h4 class="text-sm font-bold text-slate-300 mb-4 border-b border-slate-700 pb-2"><i class="fa-solid fa-users mr-1"></i> 현재 등록된 명단</h4>
-    <div id="rosterListContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-    </div>
-</div>
 </div>
 </div>
 
 </div>
-</div>
-
-</div>
-</div> 
+</div> <!-- 🚨 mainUI 바구니 닫기 -->
 
 <script type="module">
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, writeBatch, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+// AI 캔버스 환경과 깃허브 등 외부 환경을 자동 감지
 const appId = typeof __app_id !== 'undefined' ? __app_id : 'sambong-futsal-ultimate'; 
 
 const getSafeDocId = (name) => {
@@ -736,13 +719,17 @@ if(name === 'gm1' || name === 'gm2') return name;
 return name.replace(/[^가-힣a-zA-Z0-9]/g, ''); 
 };
 
-let ALLOWED_PLAYERS = [
+// 🌟 추가사항: 신무호 학생 배열 추가 완료
+const ALLOWED_PLAYERS = [
 '김단엘', '김다래', '김라희', '김민지', '김사랑비', '김지훈', '노승희', '박소담', '박소윤', '박준수', '박하율', '박현수', '백시율', 
+'석서영', '이가온', '이동해', '이시형', '이예주', '이준용', '이지안', '인시진', '임은영', '정의영', '정의정', '조이담', '최윤희', '함인솔', '황주하', '황훈태', '황혜민', '황혜윤'
 '석서영', '신무호', '이가온', '이동해', '이시형', '이예주', '이준용', '이지안', '인시진', '임은영', '정의영', '정의정', '조이담', '최윤희', '함인솔', '황주하', '황훈태', '황혜민', '황혜윤'
 ];
 
-let GENDER_MAP = {
+// 🌟 추가사항: 신무호 성별 설정 완료
+const GENDER_MAP = {
 '김단엘': 'M', '김다래': 'F', '김라희': 'F', '김민지': 'F', '김사랑비': 'F', '김지훈': 'M', '노승희': 'F', '박소담': 'M', '박소윤': 'F', '박준수': 'M', '박하율': 'F', '박현수': 'M', '백시율': 'M', 
+'석서영': 'F', '이가온': 'F', '이동해': 'M', '이시형': 'M', '이예주': 'F', '이준용': 'M', '이지안': 'F', '인시진': 'M', '임은영': 'F', '정의영': 'M', '정의정': 'M', '조이담': 'M', '최윤희': 'F', '함인솔': 'F', '황주하': 'M', '황훈태': 'M', '황혜민': 'F', '황혜윤': 'F'
 '석서영': 'F', '신무호': 'M', '이가온': 'F', '이동해': 'M', '이시형': 'M', '이예주': 'F', '이준용': 'M', '이지안': 'F', '인시진': 'M', '임은영': 'F', '정의영': 'M', '정의정': 'M', '조이담': 'M', '최윤희': 'F', '함인솔': 'F', '황주하': 'M', '황훈태': 'M', '황혜민': 'F', '황혜윤': 'F'
 };
 
@@ -836,17 +823,23 @@ const ACHIEVEMENTS = [
 { id: 'goal_1', category: '득점', title: '마수걸이 골', desc: '풋살화 끈을 꽉 묶고 첫 골을 기록하세요.', reqKey: 'goals', reqValue: 1, reward: 10, icon: '⚽', color: 'text-yellow-400', bg: 'bg-yellow-400' },
 { id: 'goal_50', category: '득점', title: '득점 폭격기', desc: '누적 50골 달성! 상대 팀이 두려워하는 선수입니다.', reqKey: 'goals', reqValue: 50, reward: 100, icon: '🚀', color: 'text-orange-500', bg: 'bg-orange-500' },
 { id: 'goal_100', category: '득점', title: '득점 기계', desc: '누적 100골 달성! 전설적인 득점왕.', reqKey: 'goals', reqValue: 100, reward: 300, icon: '🔥', color: 'text-red-500', bg: 'bg-red-500' },
+
 { id: 'ast_1', category: '팀 플레이', title: '이타적인 플레이', desc: '첫 어시스트를 기록하세요.', reqKey: 'assists', reqValue: 1, reward: 10, icon: '🤝', color: 'text-emerald-400', bg: 'bg-emerald-400' },
 { id: 'ast_50', category: '팀 플레이', title: '택배 기사', desc: '누적 50어시스트! 발밑에 정확히 배달합니다.', reqKey: 'assists', reqValue: 50, reward: 100, icon: '📦', color: 'text-green-400', bg: 'bg-green-400' },
 { id: 'ast_100', category: '팀 플레이', title: '패스 마스터', desc: '누적 100어시스트! 완벽한 플레이메이커.', reqKey: 'assists', reqValue: 100, reward: 300, icon: '🪄', color: 'text-teal-400', bg: 'bg-teal-400' },
+
 { id: 'key_30', category: '전개/빌드업', title: '킬러 패스', desc: '누적 30킬패스! 수비를 찢는 패스.', reqKey: 'keypass', reqValue: 30, reward: 50, icon: '🎯', color: 'text-purple-400', bg: 'bg-purple-400' },
 { id: 'key_100', category: '전개/빌드업', title: '황금 발', desc: '누적 100킬패스! 경기를 지배하는 시야.', reqKey: 'keypass', reqValue: 100, reward: 300, icon: '👁️', color: 'text-purple-600', bg: 'bg-purple-600' },
+
 { id: 'save_30', category: '수비/헌신', title: '통곡의 벽', desc: '누적 30세이브 달성! 골문을 든든히 지킵니다.', reqKey: 'saves', reqValue: 30, reward: 50, icon: '🧱', color: 'text-slate-300', bg: 'bg-slate-300' },
 { id: 'save_100', category: '수비/헌신', title: '거미손', desc: '누적 100세이브! 절대 뚫리지 않는 방패.', reqKey: 'saves', reqValue: 100, reward: 300, icon: '🕷️', color: 'text-gray-400', bg: 'bg-gray-400' },
+
 { id: 'train_30', category: '성실함', title: '연습벌레', desc: '개인 훈련 30회 완료! 땀방울은 배신하지 않습니다.', reqKey: 'training', reqValue: 30, reward: 50, icon: '💦', color: 'text-blue-400', bg: 'bg-blue-400' },
 { id: 'train_100', category: '성실함', title: '훈련 중독', desc: '개인 훈련 100회 완료! 엄청난 노력가.', reqKey: 'training', reqValue: 100, reward: 300, icon: '🏋️‍♂️', color: 'text-blue-600', bg: 'bg-blue-600' },
+
 { id: 'match_50', category: '꾸준함', title: '심장 두 개', desc: '50경기 출전! 지치지 않는 강철 체력.', reqKey: 'matches', reqValue: 50, reward: 100, icon: '🫀', color: 'text-pink-400', bg: 'bg-pink-400' },
 { id: 'match_100', category: '꾸준함', title: '철강왕', desc: '100경기 출전! 삼봉 FC의 살아있는 전설.', reqKey: 'matches', reqValue: 100, reward: 400, icon: '🤖', color: 'text-pink-600', bg: 'bg-pink-600' },
+
 { id: 'lv_50', category: '레벨업', title: '레전드의 시작', desc: '레벨 50 달성. 명예의 전당에 오를 자격이 충분합니다.', reqKey: 'level', reqValue: 50, reward: 500, icon: '👑', color: 'text-fut-gold', bg: 'bg-fut-gold' },
 { id: 'lv_100', category: '레벨업', title: '얼티밋 마스터', desc: '최종 레벨 100 달성! 모든 것을 이룬 완벽한 선수.', reqKey: 'level', reqValue: 100, reward: 2000, icon: '🌟', color: 'text-fut-gold-dark', bg: 'bg-gradient-to-r from-yellow-400 to-yellow-600' },
 ];
@@ -860,6 +853,7 @@ const ENHANCE_LEVELS = [
 { level: 5, chance: 10,  statPlus: 12, growthMult: 3.0, css: 'eff-5', text: '+5 MAX', color: 'text-red-400 drop-shadow-[0_0_5px_red]' }
 ];
 
+// 🌟 추가사항: 5명 유명선수 패러디 아바타 추가 (isUnique 속성으로 전체 1장 한정 제어)
 const SHOP_ITEMS = [
 { id: 'head_tier1', name: '시야 확장 고글', type: 'head', price: 150, icon: '🥽', desc: '[1종 집중형] 공간 지각력을 높입니다.', baseStats: {pst: 1}, baseGrowth: {pst: 15} },
 { id: 'head_tier2', name: '와이드 비전 헤드밴드', type: 'head', price: 300, icon: '🪢', desc: '[2종 복합형] 패스 길을 읽는 헤드밴드.', baseStats: {pst: 1, pas: 1}, baseGrowth: {pst: 10, pas: 10} },
@@ -883,6 +877,8 @@ const SHOP_ITEMS = [
 { id: 'avatar_buffon', name: '수호신 폰부 장갑', type: 'avatar', price: 1500, icon: '🧤', desc: '[외형 변경/전체 1장 한정] 이탈리아의 수호신.', baseStats: {}, baseGrowth: {}, avatarShape: '🧤', isUnique: true }
 ];
 
+window.playerState = { id: '', isGM: false, isGuest: false, name: '', inventory: [], itemLevels: {}, equipHead: null, equipHandL: null, equipHandR: null, equipFootL: null, equipFootR: null };
+// 🌟 추가사항: equipAvatar 필드 기본값 추가
 window.playerState = { id: '', isGM: false, isGuest: false, name: '', inventory: [], itemLevels: {}, equipHead: null, equipHandL: null, equipHandR: null, equipFootL: null, equipFootR: null, equipAvatar: null };
 window.allPlayersData = [];
 window.checkedInPlayers = new Set();
@@ -902,6 +898,7 @@ const getBonusStats = (p) => {
 let flat = { pac: 0, sho: 0, pas: 0, dri: 0, def: 0, phy: 0, ref: 0, int: 0, pst: 0, dis: 0, cmp: 0, wrk: 0 };
 let growth = { pac: 0, sho: 0, pas: 0, dri: 0, def: 0, phy: 0, ref: 0, int: 0, pst: 0, dis: 0, cmp: 0, wrk: 0 };
 
+const equippedIds = [p.equipHead, p.equipHandL, p.equipHandR, p.equipFootL, p.equipFootR].filter(Boolean);
 const equippedIds = [p.equipHead, p.equipHandL, p.equipHandR, p.equipFootL, p.equipFootR, p.equipAvatar].filter(Boolean);
 equippedIds.forEach(itemId => {
 const item = SHOP_ITEMS.find(x => x.id === itemId);
@@ -917,46 +914,46 @@ return { flat, growth };
 };
 
 const getOVRForPos = (stats, pos) => {
-  if (pos === '미정' || !POS_WEIGHTS[pos]) {
-     let sum = 0;
-     Object.values(stats).forEach(v => sum += v);
-     return Math.min(99, Math.floor(sum / 12));
-  }
-  const w = POS_WEIGHTS[pos];
-  let coreSum = 0, subSum = 0, etcSum = 0;
-  let coreCount = w.core.length, subCount = w.sub.length, etcCount = 12 - coreCount - subCount;
+if (pos === '미정' || !POS_WEIGHTS[pos]) {
+let sum = 0;
+Object.values(stats).forEach(v => sum += v);
+return Math.min(99, Math.floor(sum / 12));
+}
+const w = POS_WEIGHTS[pos];
+let coreSum = 0, subSum = 0, etcSum = 0;
+let coreCount = w.core.length, subCount = w.sub.length, etcCount = 12 - coreCount - subCount;
 
-  for (const [key, val] of Object.entries(stats)) {
-    if (w.core.includes(key)) coreSum += val;
-    else if (w.sub.includes(key)) subSum += val;
-    else etcSum += val;
-  }
+for (const [key, val] of Object.entries(stats)) {
+if (w.core.includes(key)) coreSum += val;
+else if (w.sub.includes(key)) subSum += val;
+else etcSum += val;
+}
 
-  const coreAvg = coreCount > 0 ? coreSum / coreCount : 0;
-  const subAvg = subCount > 0 ? subSum / subCount : 0;
-  const etcAvg = etcCount > 0 ? etcSum / etcCount : 0;
+const coreAvg = coreCount > 0 ? coreSum / coreCount : 0;
+const subAvg = subCount > 0 ? subSum / subCount : 0;
+const etcAvg = etcCount > 0 ? etcSum / etcCount : 0;
 
-  const totalOVR = (coreAvg * w.coreW) + (subAvg * w.subW) + (etcAvg * w.etcW);
-  return Math.min(99, Math.floor(totalOVR));
+const totalOVR = (coreAvg * w.coreW) + (subAvg * w.subW) + (etcAvg * w.etcW);
+return Math.min(99, Math.floor(totalOVR));
 };
 
 const getOVR = (p) => {
-  const b = getBonusStats(p).flat;
-  const stats = {
-    pac: (Number(p.pac)||60)+b.pac, sho: (Number(p.sho)||60)+b.sho, pas: (Number(p.pas)||60)+b.pas,
-    dri: (Number(p.dri)||60)+b.dri, def: (Number(p.def)||60)+b.def, phy: (Number(p.phy)||60)+b.phy,
-    ref: (Number(p.ref)||60)+b.ref, int: (Number(p.int)||60)+b.int, pst: (Number(p.pst)||60)+b.pst,
-    dis: (Number(p.dis)||60)+b.dis, cmp: (Number(p.cmp)||60)+b.cmp, wrk: (Number(p.wrk)||60)+b.wrk
-  };
-  return getOVRForPos(stats, p.pos);
+const b = getBonusStats(p).flat;
+const stats = {
+pac: (Number(p.pac)||60)+b.pac, sho: (Number(p.sho)||60)+b.sho, pas: (Number(p.pas)||60)+b.pas,
+dri: (Number(p.dri)||60)+b.dri, def: (Number(p.def)||60)+b.def, phy: (Number(p.phy)||60)+b.phy,
+ref: (Number(p.ref)||60)+b.ref, int: (Number(p.int)||60)+b.int, pst: (Number(p.pst)||60)+b.pst,
+dis: (Number(p.dis)||60)+b.dis, cmp: (Number(p.cmp)||60)+b.cmp, wrk: (Number(p.wrk)||60)+b.wrk
+};
+return getOVRForPos(stats, p.pos);
 };
 
 const getTierInfo = (ovr) => {
-    if(ovr < 70) return { name: '루키 (ROOKIE)', class: 'tier-badge-rookie', cardClass: 'card-rookie' };
-    if(ovr < 80) return { name: '세미프로 (SEMI-PRO)', class: 'tier-badge-semipro', cardClass: 'card-semipro' };
-    if(ovr < 90) return { name: '프로 (PRO)', class: 'tier-badge-pro', cardClass: 'card-pro' };
-    if(ovr < 95) return { name: '월드클래스 (WORLD CLASS)', class: 'tier-badge-worldclass', cardClass: 'card-worldclass' };
-    return { name: '챌린저 (CHALLENGER)', class: 'tier-badge-challenger', cardClass: 'card-challenger' };
+if(ovr < 70) return { name: '루키 (ROOKIE)', class: 'tier-badge-rookie', cardClass: 'card-rookie' };
+if(ovr < 80) return { name: '세미프로 (SEMI-PRO)', class: 'tier-badge-semipro', cardClass: 'card-semipro' };
+if(ovr < 90) return { name: '프로 (PRO)', class: 'tier-badge-pro', cardClass: 'card-pro' };
+if(ovr < 95) return { name: '월드클래스 (WORLD CLASS)', class: 'tier-badge-worldclass', cardClass: 'card-worldclass' };
+return { name: '챌린저 (CHALLENGER)', class: 'tier-badge-challenger', cardClass: 'card-challenger' };
 };
 
 const getWeeklyWage = (ovr) => { return Math.max(50, Math.min(200, Math.floor(50 + ((ovr - 50) / 49) * 150))); };
@@ -979,7 +976,9 @@ if(pos === 'Pivo') return 'bg-red-500'; if(pos === 'Ala') return 'bg-emerald-500
 if(pos === 'Fixo') return 'bg-blue-500'; if(pos === 'Goleiro') return 'bg-orange-500'; 
 return 'bg-yellow-500';
 };
+const getAvatar = (p) => GENDER_MAP[p.name] === 'F' ? '👧' : '👦';
 
+// 🌟 추가사항: 장착한 아바타 외형(아이콘) 적용 로직 추가
 const getAvatar = (p) => {
     if (p.equipAvatar) {
         const avatarItem = SHOP_ITEMS.find(x => x.id === p.equipAvatar);
@@ -989,7 +988,7 @@ const getAvatar = (p) => {
 };
 
 window.switchTab = (tabId) => {
-['tabWorkspace', 'tabTips', 'tabShop', 'tabAchievements', 'tabRank', 'tabCompare', 'tabGuide', 'tabMaster', 'tabMasterStats', 'tabRoster'].forEach(id => {
+['tabWorkspace', 'tabTips', 'tabShop', 'tabAchievements', 'tabRank', 'tabCompare', 'tabGuide', 'tabMaster', 'tabMasterStats'].forEach(id => {
 document.getElementById(id)?.classList.add('hidden');
 document.getElementById('btn' + id.charAt(0).toUpperCase() + id.slice(1))?.classList.remove('active');
 });
@@ -1007,16 +1006,16 @@ leftPanel?.classList.add('hidden', 'lg:hidden'); rightPanel?.classList.remove('l
 }
 
 if(tabId === 'tabTips') {
-    renderDailyTip(); 
-    const gmEditor = document.getElementById('gmAnnouncementEditor');
-    const gmShortsEditor = document.getElementById('gmShortsEditor');
-    if(window.playerState.isGM) { 
-        gmEditor?.classList.remove('hidden'); 
-        gmShortsEditor?.classList.remove('hidden');
-    } else { 
-        gmEditor?.classList.add('hidden');
-        gmShortsEditor?.classList.add('hidden');
-    }
+renderDailyTip(); 
+const gmEditor = document.getElementById('gmAnnouncementEditor');
+const gmShortsEditor = document.getElementById('gmShortsEditor');
+if(window.playerState.isGM) { 
+gmEditor?.classList.remove('hidden'); 
+gmShortsEditor?.classList.remove('hidden');
+} else { 
+gmEditor?.classList.add('hidden');
+gmShortsEditor?.classList.add('hidden');
+}
 }
 if(tabId === 'tabShop') window.renderShop();
 if(tabId === 'tabAchievements') window.renderAchievements();
@@ -1024,7 +1023,6 @@ if(tabId === 'tabRank') renderLeaderboard();
 if(tabId === 'tabCompare') window.renderCompareList();
 if(tabId === 'tabMaster') renderMasterDashboard();
 if(tabId === 'tabMasterStats') window.renderMasterStats();
-if(tabId === 'tabRoster') window.renderRosterTab();
 };
 
 function renderDailyTip() {
@@ -1035,15 +1033,15 @@ const tip = DAILY_TIPS[tipIndex];
 const container = document.getElementById('dailyTipContainer');
 if(container) {
 container.innerHTML = `
-               <div class="h-64 bg-slate-800 flex items-center justify-center border-b border-slate-700 relative overflow-hidden group">
-                   <p class="text-[6rem] z-0 absolute drop-shadow-lg transition-transform duration-700 group-hover:scale-125">${tip.img}</p>
-                   <span class="absolute top-4 left-4 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded z-20 shadow-md">${tip.category}</span>
-               </div>
-               <div class="p-6">
-                   <h4 class="text-2xl font-display text-white mb-4 leading-tight break-keep">${tip.title}</h4>
-                   <p class="text-slate-300 text-sm sm:text-base leading-relaxed break-keep font-medium">${tip.desc}</p>
-               </div>
-           `;
+              <div class="h-64 bg-slate-800 flex items-center justify-center border-b border-slate-700 relative overflow-hidden group">
+                  <p class="text-[6rem] z-0 absolute drop-shadow-lg transition-transform duration-700 group-hover:scale-125">${tip.img}</p>
+                  <span class="absolute top-4 left-4 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded z-20 shadow-md">${tip.category}</span>
+              </div>
+              <div class="p-6">
+                  <h4 class="text-2xl font-display text-white mb-4 leading-tight break-keep">${tip.title}</h4>
+                  <p class="text-slate-300 text-sm sm:text-base leading-relaxed break-keep font-medium">${tip.desc}</p>
+              </div>
+          `;
 }
 }
 
@@ -1064,13 +1062,13 @@ if(ovr >= 90) borderClass = 'border-purple-500'; else if (ovr >= 80) borderClass
 const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
 
 html += `
-                       <div class="mini-card flex flex-col items-center p-2 rounded-xl bg-pitch-panel border-2 ${borderClass} cursor-pointer ${isSelected ? 'selected' : ''} ${isChecked ? 'checked-in' : 'checked-out'}" onclick="window.selectPlayer('${p.id}')">
-                           <input type="checkbox" class="locker-checkbox absolute top-1.5 left-1.5 w-5 h-5 shadow-lg z-10" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); window.toggleCheck('${p.id}')">
-                           <div class="absolute top-1 right-1 ${tier.class} text-[9px] font-bold px-1.5 py-0.5 rounded shadow whitespace-nowrap">${tier.name.split(' ')[0]}</div>
-                           <div class="text-3xl mt-4 mb-1 drop-shadow-md">${getAvatar(p)}</div>
-                           <div class="font-oswald text-xl font-bold leading-none text-white">${ovr}</div>
-                           <div class="flex items-center gap-1 mt-1"><span class="text-[10px] font-bold ${getPosColor(p.pos)}">${posText}</span><span class="text-xs font-bold text-slate-300 truncate max-w-[50px]">${p.name}</span></div>
-                       </div>`;
+                      <div class="mini-card flex flex-col items-center p-2 rounded-xl bg-pitch-panel border-2 ${borderClass} cursor-pointer ${isSelected ? 'selected' : ''} ${isChecked ? 'checked-in' : 'checked-out'}" onclick="window.selectPlayer('${p.id}')">
+                          <input type="checkbox" class="locker-checkbox absolute top-1.5 left-1.5 w-5 h-5 shadow-lg z-10" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); window.toggleCheck('${p.id}')">
+                          <div class="absolute top-1 right-1 ${tier.class} text-[9px] font-bold px-1.5 py-0.5 rounded shadow whitespace-nowrap">${tier.name.split(' ')[0]}</div>
+                          <div class="text-3xl mt-4 mb-1 drop-shadow-md">${getAvatar(p)}</div>
+                          <div class="font-oswald text-xl font-bold leading-none text-white">${ovr}</div>
+                          <div class="flex items-center gap-1 mt-1"><span class="text-[10px] font-bold ${getPosColor(p.pos)}">${posText}</span><span class="text-xs font-bold text-slate-300 truncate max-w-[50px]">${p.name}</span></div>
+                      </div>`;
 } else {
 html += `<div class="flex flex-col items-center justify-center p-2 rounded-xl border border-slate-800 bg-slate-900/50 opacity-50"><i class="fa-solid fa-user-lock text-xl text-slate-700 mb-2"></i><span class="text-[10px] text-slate-600">${name}</span></div>`;
 }
@@ -1119,20 +1117,50 @@ document.getElementById('shopWalletLabel') && (document.getElementById('shopWall
 let html = '';
 SHOP_ITEMS.forEach(item => {
 const isOwned = inventory.includes(item.id);
+const isEquipped = p ? (p.equipHead === item.id || p.equipHandL === item.id || p.equipHandR === item.id || p.equipFootL === item.id || p.equipFootR === item.id) : false;
 const isEquipped = p ? (p.equipHead === item.id || p.equipHandL === item.id || p.equipHandR === item.id || p.equipFootL === item.id || p.equipFootR === item.id || p.equipAvatar === item.id) : false;
 const level = Number(itemLevels[item.id]) || 0;
 const enhData = ENHANCE_LEVELS[level] || ENHANCE_LEVELS[0];
 const nextEnhData = ENHANCE_LEVELS[level + 1];
 
+// 🌟 추가사항: 해당 아이템이 전체 1장 한정판(isUnique)인지, 누군가 이미 샀는지 체크
 const isSoldOut = item.isUnique && window.allPlayersData.some(player => Array.isArray(player.inventory) && player.inventory.includes(item.id) && player.id !== targetId);
 
 let statsHtml = '';
+for (const [k, v] of Object.entries(item.baseStats || {})) { statsHtml += `<span class="inline-block bg-emerald-900/50 text-emerald-300 border border-emerald-500/50 text-[9px] px-1 rounded mr-1 mb-1">${STAT_NAMES[k].split(' ')[0]} +${v + enhData.statPlus}</span>`; }
 for (const [k, v] of Object.entries(item.baseStats || {})) { statsHtml += `<span class="inline-block bg-emerald-900/50 text-emerald-300 border border-emerald-500/50 text-[9px] px-1 rounded mr-1 mb-1">${STAT_NAMES[k].split(' ')[0]} +${v + (item.type==='avatar'?0:enhData.statPlus)}</span>`; }
 let growthHtml = '';
+for (const [k, v] of Object.entries(item.baseGrowth || {})) { growthHtml += `<span class="inline-block bg-purple-900/50 text-purple-300 border border-purple-500/50 text-[9px] px-1 rounded mr-1 mb-1">성장 +${Math.floor(v * enhData.growthMult)}%</span>`; }
 for (const [k, v] of Object.entries(item.baseGrowth || {})) { growthHtml += `<span class="inline-block bg-purple-900/50 text-purple-300 border border-purple-500/50 text-[9px] px-1 rounded mr-1 mb-1">성장 +${Math.floor(v * (item.type==='avatar'?1:enhData.growthMult))}%</span>`; }
 
 let btnHtml = ''; let enhanceBtnHtml = '';
+if(isOwned && nextEnhData && !window.playerState.isGuest) {
+const canEnhance = bong >= item.price;
+enhanceBtnHtml = `
+                       <div class="mt-2 pt-2 border-t border-slate-700 w-full">
+                           <button onclick="window.enhanceItem('${item.id}')" class="w-full relative overflow-hidden group ${canEnhance ? 'bg-gradient-to-r from-purple-700 to-indigo-600 hover:from-purple-600 hover:to-indigo-500 text-white shadow-[0_0_10px_rgba(168,85,247,0.5)]' : 'bg-slate-800 text-slate-500 cursor-not-allowed'} text-xs font-bold py-2 rounded transition-all">
+                               <span class="relative z-10 flex items-center justify-center gap-2"><i class="fa-solid fa-hammer ${canEnhance ? 'animate-bounce' : ''}"></i> 강화 도전 (${item.price} B) - 성공률 ${nextEnhData.chance}%</span>
+                           </button>
+                       </div>`;
+} else if (isOwned && !nextEnhData) {
+enhanceBtnHtml = `<div class="mt-2 pt-2 border-t border-slate-700 w-full text-center text-[10px] font-bold text-red-400">MAX LEVEL 도달</div>`;
+}
 
+if(window.playerState.isGM) {
+if (!p) { btnHtml = `<button disabled class="w-full mt-2 bg-slate-800 text-slate-500 text-xs font-bold py-1.5 rounded">데이터 없음</button>`; } 
+else if(isOwned) { 
+btnHtml = `
+                           <div class="flex gap-1 mt-2">
+                               <button onclick="window.equipItem('${item.id}', '${item.type}')" class="flex-1 ${isEquipped ? 'bg-slate-700 hover:bg-slate-600' : 'bg-emerald-700 hover:bg-emerald-600'} text-white text-[10px] font-bold py-1.5 rounded shadow">${isEquipped ? '장착 해제' : '대리 장착'}</button>
+                               <button onclick="window.revokeItem('${item.id}')" class="flex-1 bg-red-800 hover:bg-red-700 text-white text-[10px] font-bold py-1.5 rounded shadow">🗑️ 회수</button>
+                           </div>${enhanceBtnHtml}`; 
+} else { btnHtml = `<button onclick="window.purchaseItem('${item.id}')" class="w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-1.5 rounded shadow"><i class="fa-solid fa-gift mr-1"></i> 무료 선물하기</button>`; }
+} else if(window.playerState.isGuest) {
+btnHtml = `<button onclick="window.customAlert('게스트는 구매할 수 없습니다.')" class="w-full mt-2 bg-slate-800 hover:bg-slate-700 text-slate-500 text-xs font-bold py-1.5 rounded shadow cursor-not-allowed">구매 (${item.price} B)</button>`;
+} else {
+if(isOwned) { 
+btnHtml = `<button onclick="window.equipItem('${item.id}', '${item.type}')" class="w-full mt-2 ${isEquipped ? 'bg-slate-700 border border-slate-500' : 'bg-emerald-600 hover:bg-emerald-500'} text-white text-xs font-bold py-1.5 rounded shadow">${isEquipped ? '장착 해제' : '장착하기'}</button>${enhanceBtnHtml}`; 
+// 🌟 추가사항: avatar 전용 렌더링 + 품절 표시
 if (item.type === 'avatar') {
     if(window.playerState.isGM) {
         if (!p) { btnHtml = `<button disabled class="w-full mt-2 bg-slate-800 text-slate-500 text-xs font-bold py-1.5 rounded">데이터 없음</button>`; } 
@@ -1147,6 +1175,8 @@ if (item.type === 'avatar') {
         else { btnHtml = `<button onclick="window.purchaseItem('${item.id}')" class="w-full mt-2 ${bong >= item.price ? 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white shadow-lg' : 'bg-slate-800 text-slate-500 cursor-not-allowed'} text-xs font-bold py-1.5 rounded">구매 (${item.price} B)</button>`; }
     }
 } else {
+btnHtml = `<button onclick="window.purchaseItem('${item.id}')" class="w-full mt-2 ${bong >= item.price ? 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white shadow-lg' : 'bg-slate-800 text-slate-500 cursor-not-allowed'} text-xs font-bold py-1.5 rounded">구매 (${item.price} B)</button>`;
+}
     if(isOwned && nextEnhData && !window.playerState.isGuest) {
     const canEnhance = bong >= item.price;
     enhanceBtnHtml = `
@@ -1179,28 +1209,33 @@ if (item.type === 'avatar') {
     }
 }
 
+const slotKo = { 'head':'머리', 'handL':'왼손', 'handR':'오른손', 'footL':'왼발', 'footR':'오른발' }[item.type];
+// 🌟 추가사항: slotKo에 'avatar':'외형' 추가 완료
 const slotKo = { 'head':'머리', 'handL':'왼손', 'handR':'오른손', 'footL':'왼발', 'footR':'오른발', 'avatar':'외형' }[item.type];
 
 html += `
-                   <div class="bg-slate-900/80 border ${isOwned ? 'border-purple-500/50 shadow-[0_0_10px_rgba(168,85,247,0.2)]' : 'border-slate-700'} rounded-xl p-4 flex flex-col justify-between hover:border-purple-400 transition duration-300">
-                       <div class="flex items-start gap-4">
+                  <div class="bg-slate-900/80 border ${isOwned ? 'border-purple-500/50 shadow-[0_0_10px_rgba(168,85,247,0.2)]' : 'border-slate-700'} rounded-xl p-4 flex flex-col justify-between hover:border-purple-400 transition duration-300">
+                      <div class="flex items-start gap-4">
+                           <div class="text-4xl w-16 h-16 bg-slate-800 flex items-center justify-center rounded-lg shadow-inner flex-shrink-0 relative border ${isOwned ? 'border-purple-500' : 'border-slate-600'} ${isOwned ? enhData.css : ''}">
                            <div class="text-4xl w-16 h-16 bg-slate-800 flex items-center justify-center rounded-lg shadow-inner flex-shrink-0 relative border ${isOwned && item.type!=='avatar' ? 'border-purple-500' : 'border-slate-600'} ${isOwned && item.type!=='avatar' ? enhData.css : ''}">
-                               <span class="z-10 relative drop-shadow-md">${item.icon}</span>
-                               <div class="absolute -top-2 -left-2 bg-slate-700 text-white text-[8px] px-1.5 py-0.5 rounded border border-slate-500 z-20">${slotKo}</div>
+                              <span class="z-10 relative drop-shadow-md">${item.icon}</span>
+                              <div class="absolute -top-2 -left-2 bg-slate-700 text-white text-[8px] px-1.5 py-0.5 rounded border border-slate-500 z-20">${slotKo}</div>
+                               ${isOwned && level > 0 ? `<div class="absolute -bottom-2 -right-2 bg-black text-[9px] font-bold px-1.5 py-0.5 rounded border border-current z-20 ${enhData.color}">${enhData.text}</div>` : ''}
                                ${isOwned && level > 0 && item.type !== 'avatar' ? `<div class="absolute -bottom-2 -right-2 bg-black text-[9px] font-bold px-1.5 py-0.5 rounded border border-current z-20 ${enhData.color}">${enhData.text}</div>` : ''}
-                           </div>
-                           <div class="flex-grow">
+                          </div>
+                          <div class="flex-grow">
+                               <h5 class="font-bold text-white text-sm mb-1 line-clamp-1">${item.name}</h5>
                                <h5 class="font-bold text-white text-sm mb-1 line-clamp-1 flex items-center justify-between">
                                    ${item.name}
                                    ${item.isUnique ? '<span class="text-[8px] bg-red-900/80 text-white px-1.5 rounded border border-red-500/50 ml-2 shadow-[0_0_3px_red] animate-pulse">전체1장 한정</span>' : ''}
                                </h5>
-                               <p class="text-[9px] sm:text-[10px] text-slate-400 mb-2 line-clamp-2 leading-tight">${item.desc}</p>
-                               <div class="flex flex-wrap">${statsHtml}${growthHtml}</div>
-                           </div>
-                       </div>
-                       <div class="mt-3">${btnHtml}</div>
-                   </div>
-               `;
+                              <p class="text-[9px] sm:text-[10px] text-slate-400 mb-2 line-clamp-2 leading-tight">${item.desc}</p>
+                              <div class="flex flex-wrap">${statsHtml}${growthHtml}</div>
+                          </div>
+                      </div>
+                      <div class="mt-3">${btnHtml}</div>
+                  </div>
+              `;
 });
 const shopGrid = document.getElementById('shopGrid');
 if(shopGrid) shopGrid.innerHTML = html;
@@ -1259,37 +1294,37 @@ const posConfig = POS_WEIGHTS[p.pos];
 let highlightClass = '';
 let labelIcon = '';
 if (posConfig) {
-   if (posConfig.core.includes(s.id)) {
-       highlightClass = 'text-red-400 font-black scale-110 drop-shadow-[0_0_8px_rgba(248,113,113,0.8)] z-10';
-       labelIcon = '<i class="fa-solid fa-fire text-red-500 text-[9px] ml-0.5 animate-pulse"></i>';
-   } else if (posConfig.sub.includes(s.id)) {
-       highlightClass = 'text-yellow-300 font-bold drop-shadow-md';
-       labelIcon = '<i class="fa-solid fa-star text-yellow-400 text-[8px] ml-0.5"></i>';
-   }
+if (posConfig.core.includes(s.id)) {
+highlightClass = 'text-red-400 font-black scale-110 drop-shadow-[0_0_8px_rgba(248,113,113,0.8)] z-10';
+labelIcon = '<i class="fa-solid fa-fire text-red-500 text-[9px] ml-0.5 animate-pulse"></i>';
+} else if (posConfig.sub.includes(s.id)) {
+highlightClass = 'text-yellow-300 font-bold drop-shadow-md';
+labelIcon = '<i class="fa-solid fa-star text-yellow-400 text-[8px] ml-0.5"></i>';
+}
 }
 
 if(isGM) {
 gridHtml += `
-                       <div class="flex flex-col items-center justify-center text-current w-full group relative">
-                           <div class="flex items-center justify-center gap-1 mb-0.5">
-                               <button onclick="window.modStat('${p.id}', '${s.id}', -1)" class="w-3.5 h-3.5 rounded bg-black/40 hover:bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-minus text-[7px]"></i></button>
-                               <div class="relative flex items-center justify-center w-7">
-                                   <input type="number" min="1" max="99" value="${baseVal}" class="font-oswald text-xl font-bold w-full text-center bg-transparent border-b border-transparent hover:border-current focus:outline-none transition cursor-text leading-none p-0 m-0 text-current ${highlightClass}" onchange="window.setStat('${p.id}', '${s.id}', this.value)">
-                                   ${bonusBadge}
-                               </div>
-                               <button onclick="window.modStat('${p.id}', '${s.id}', 1)" class="w-3.5 h-3.5 rounded bg-black/40 hover:bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-plus text-[7px]"></i></button>
-                           </div>
-                           <span class="font-bold text-[10px] tracking-tight whitespace-nowrap opacity-95 cursor-pointer hover:text-emerald-400 leading-none" onclick="window.showStatDesc('${s.id}')">${s.label} ${labelIcon}</span>
-                       </div>`;
+                      <div class="flex flex-col items-center justify-center text-current w-full group relative">
+                          <div class="flex items-center justify-center gap-1 mb-0.5">
+                              <button onclick="window.modStat('${p.id}', '${s.id}', -1)" class="w-3.5 h-3.5 rounded bg-black/40 hover:bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-minus text-[7px]"></i></button>
+                              <div class="relative flex items-center justify-center w-7">
+                                  <input type="number" min="1" max="99" value="${baseVal}" class="font-oswald text-xl font-bold w-full text-center bg-transparent border-b border-transparent hover:border-current focus:outline-none transition cursor-text leading-none p-0 m-0 text-current ${highlightClass}" onchange="window.setStat('${p.id}', '${s.id}', this.value)">
+                                  ${bonusBadge}
+                              </div>
+                              <button onclick="window.modStat('${p.id}', '${s.id}', 1)" class="w-3.5 h-3.5 rounded bg-black/40 hover:bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-plus text-[7px]"></i></button>
+                          </div>
+                          <span class="font-bold text-[10px] tracking-tight whitespace-nowrap opacity-95 cursor-pointer hover:text-emerald-400 leading-none" onclick="window.showStatDesc('${s.id}')">${s.label} ${labelIcon}</span>
+                      </div>`;
 } else {
 gridHtml += `
-                       <div class="flex flex-col items-center justify-center text-current w-full">
-                           <div class="relative flex items-center justify-center mb-0.5 ${highlightClass}">
-                               <span class="font-oswald text-xl font-bold leading-none tracking-tight">${totalVal}</span>
-                               ${bonusBadge}
-                           </div>
-                           <span class="font-bold text-[10px] sm:text-[11px] opacity-95 tracking-tight whitespace-nowrap cursor-pointer hover:text-emerald-400 transition leading-none" onclick="window.showStatDesc('${s.id}')">${s.label} ${labelIcon}</span>
-                       </div>`;
+                      <div class="flex flex-col items-center justify-center text-current w-full">
+                          <div class="relative flex items-center justify-center mb-0.5 ${highlightClass}">
+                              <span class="font-oswald text-xl font-bold leading-none tracking-tight">${totalVal}</span>
+                              ${bonusBadge}
+                          </div>
+                          <span class="font-bold text-[10px] sm:text-[11px] opacity-95 tracking-tight whitespace-nowrap cursor-pointer hover:text-emerald-400 transition leading-none" onclick="window.showStatDesc('${s.id}')">${s.label} ${labelIcon}</span>
+                      </div>`;
 }
 });
 const statsGridEl = document.getElementById('detailStatsGrid');
@@ -1393,19 +1428,19 @@ ctx.fillStyle = 'rgba(10, 25, 15, 0.8)'; ctx.fill();
 
 ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)'; ctx.lineWidth = 1;
 for(let j=1; j<=3; j++) {
-    ctx.beginPath();
-    let ringR = r * (j/3);
-    for(let i=0; i<12; i++) {
-        const angle = (Math.PI * 2 / 12) * i - (Math.PI / 2);
-        ctx.lineTo(cx + ringR * Math.cos(angle), cy + ringR * Math.sin(angle));
-    }
-    ctx.closePath(); ctx.stroke();
+ctx.beginPath();
+let ringR = r * (j/3);
+for(let i=0; i<12; i++) {
+const angle = (Math.PI * 2 / 12) * i - (Math.PI / 2);
+ctx.lineTo(cx + ringR * Math.cos(angle), cy + ringR * Math.sin(angle));
+}
+ctx.closePath(); ctx.stroke();
 }
 ctx.beginPath();
 for(let i=0; i<12; i++) {
-    const angle = (Math.PI * 2 / 12) * i - (Math.PI / 2);
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx + r * Math.cos(angle), cy + r * Math.sin(angle));
+const angle = (Math.PI * 2 / 12) * i - (Math.PI / 2);
+ctx.moveTo(cx, cy);
+ctx.lineTo(cx + r * Math.cos(angle), cy + r * Math.sin(angle));
 }
 ctx.stroke();
 
@@ -1494,6 +1529,7 @@ const p = window.allPlayersData.find(x => x.id === targetId);
 const item = SHOP_ITEMS.find(x => x.id === itemId);
 if(!p || !item) return;
 
+// 🌟 추가사항: 품절(Sold Out) 더블 체크 보호 로직
 if (item.isUnique) {
     const alreadyOwned = window.allPlayersData.some(player => Array.isArray(player.inventory) && player.inventory.includes(item.id));
     if (alreadyOwned) return window.customAlert("😭 앗! 방금 전 누군가 먼저 이 한정판 아이템을 사갔습니다.\n(품절되었습니다)");
@@ -1512,6 +1548,8 @@ const currentInventory = Array.isArray(p.inventory) ? p.inventory : [];
 const currentItemLevels = (typeof p.itemLevels === 'object' && !Array.isArray(p.itemLevels)) ? p.itemLevels : {};
 
 updates.inventory = [...currentInventory, itemId];
+updates.itemLevels = { ...currentItemLevels, [itemId]: 0 };
+// 🌟 추가사항: 아바타(외형) 아이템은 레벨 강화가 없으므로 itemLevels에 추가하지 않음
 if (item.type !== 'avatar') {
     updates.itemLevels = { ...currentItemLevels, [itemId]: 0 };
 }
@@ -1584,6 +1622,8 @@ if(!p) return;
 
 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
 let updates = {};
+const fieldMap = { 'head':'equipHead', 'handL':'equipHandL', 'handR':'equipHandR', 'footL':'equipFootL', 'footR':'equipFootR' };
+// 🌟 추가사항: 'avatar' 필드 매핑 추가
 const fieldMap = { 'head':'equipHead', 'handL':'equipHandL', 'handR':'equipHandR', 'footL':'equipFootL', 'footR':'equipFootR', 'avatar':'equipAvatar' };
 const field = fieldMap[type];
 if(field) { updates[field] = p[field] === itemId ? null : itemId; }
@@ -1610,6 +1650,7 @@ let updates = { inventory: currentInventory.filter(id => id !== itemId) };
 const safeItemLevels = (typeof p.itemLevels === 'object' && !Array.isArray(p.itemLevels)) ? p.itemLevels : {};
 const newItemLevels = { ...safeItemLevels }; delete newItemLevels[itemId]; updates.itemLevels = newItemLevels;
 
+// 🌟 추가사항: equipAvatar 회수 조건 추가
 if(p.equipHead === itemId) updates.equipHead = null; if(p.equipHandL === itemId) updates.equipHandL = null;
 if(p.equipHandR === itemId) updates.equipHandR = null; if(p.equipFootL === itemId) updates.equipFootL = null; if(p.equipFootR === itemId) updates.equipFootR = null;
 if(p.equipAvatar === itemId) updates.equipAvatar = null;
@@ -1748,22 +1789,22 @@ dates.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${St
 }
 
 let modalHtml = `<div class="bg-pitch-panel p-4 sm:p-6 rounded-3xl border-2 border-emerald-500 w-full sm:w-[95vw] max-w-7xl shadow-2xl max-h-[90vh] flex flex-col font-sans text-white relative">
-                   <h2 class="text-2xl sm:text-3xl font-display text-center text-emerald-400 mb-2 tracking-widest drop-shadow-lg flex items-center justify-center gap-3"><i class="fa-solid fa-calendar-check"></i> 삼봉 풋살클럽 출석부 (2026)</h2>
-                   <p class="text-xs text-emerald-200 mb-4 mt-2 text-center">토요스포츠데이 (3~6학년) / 9:20~12:30 / 좌우로 스크롤하여 30주차 전체 일정을 확인하세요!</p>
-                   <div class="overflow-x-auto overflow-y-auto custom-scrollbar flex-1 border border-emerald-800/50 rounded-xl bg-slate-900/80">
-                       <table class="w-full text-center whitespace-nowrap text-xs border-collapse">
-                           <thead>
-                               <tr class="bg-slate-800 border-b border-emerald-800 sticky top-0 z-20 shadow-md">
-                                   <th rowspan="2" class="p-2 border-r border-slate-700 w-10 sticky left-0 bg-slate-800 z-30">연번</th>
-                                   <th rowspan="2" class="p-2 border-r border-slate-700 w-24 sticky left-10 bg-slate-800 z-30 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">성명</th>
-                                   <th class="p-2 border-r border-slate-700 bg-emerald-900/80 text-emerald-300 w-12 sticky left-[136px] z-30 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">누계</th>
-                                   ${dates.map((_, i) => `<th class="p-1 border-r border-slate-700 font-normal text-[10px] text-slate-400 w-12">${i+1}주차</th>`).join('')}
-                               </tr>
-                               <tr class="bg-slate-800 border-b border-emerald-800 sticky top-8 z-10 shadow-md">
-                                   <th class="p-1 border-r border-slate-700 text-[10px] bg-emerald-900/80 sticky left-[136px] z-30 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">출석</th>
-                                   ${dates.map(d => `<th class="p-1 border-r border-slate-700 text-[10px]"><div class="text-emerald-400 font-bold">${d.substring(5).replace('-','/')}</div><div class="text-emerald-500/70 mt-0.5 font-bold">(토)</div></th>`).join('')}
-                               </tr>
-                           </thead><tbody>`;
+                  <h2 class="text-2xl sm:text-3xl font-display text-center text-emerald-400 mb-2 tracking-widest drop-shadow-lg flex items-center justify-center gap-3"><i class="fa-solid fa-calendar-check"></i> 삼봉 풋살클럽 출석부 (2026)</h2>
+                  <p class="text-xs text-emerald-200 mb-4 mt-2 text-center">토요스포츠데이 (3~6학년) / 9:20~12:30 / 좌우로 스크롤하여 30주차 전체 일정을 확인하세요!</p>
+                  <div class="overflow-x-auto overflow-y-auto custom-scrollbar flex-1 border border-emerald-800/50 rounded-xl bg-slate-900/80">
+                      <table class="w-full text-center whitespace-nowrap text-xs border-collapse">
+                          <thead>
+                              <tr class="bg-slate-800 border-b border-emerald-800 sticky top-0 z-20 shadow-md">
+                                  <th rowspan="2" class="p-2 border-r border-slate-700 w-10 sticky left-0 bg-slate-800 z-30">연번</th>
+                                  <th rowspan="2" class="p-2 border-r border-slate-700 w-24 sticky left-10 bg-slate-800 z-30 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">성명</th>
+                                  <th class="p-2 border-r border-slate-700 bg-emerald-900/80 text-emerald-300 w-12 sticky left-[136px] z-30 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">누계</th>
+                                  ${dates.map((_, i) => `<th class="p-1 border-r border-slate-700 font-normal text-[10px] text-slate-400 w-12">${i+1}주차</th>`).join('')}
+                              </tr>
+                              <tr class="bg-slate-800 border-b border-emerald-800 sticky top-8 z-10 shadow-md">
+                                  <th class="p-1 border-r border-slate-700 text-[10px] bg-emerald-900/80 sticky left-[136px] z-30 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">출석</th>
+                                  ${dates.map(d => `<th class="p-1 border-r border-slate-700 text-[10px]"><div class="text-emerald-400 font-bold">${d.substring(5).replace('-','/')}</div><div class="text-emerald-500/70 mt-0.5 font-bold">(토)</div></th>`).join('')}
+                              </tr>
+                          </thead><tbody>`;
 
 ALLOWED_PLAYERS.forEach((name, idx) => {
 const safeDocId = getSafeDocId(name); const p = window.allPlayersData.find(x => x.id === safeDocId); const pId = p ? p.id : null; let attCount = 0;
@@ -1785,10 +1826,10 @@ window.changePositionModal = (pId) => {
 const p = window.allPlayersData.find(x => x.id === pId);
 const b = getBonusStats(p).flat;
 const stats = {
-    pac: (Number(p.pac)||60)+b.pac, sho: (Number(p.sho)||60)+b.sho, pas: (Number(p.pas)||60)+b.pas,
-    dri: (Number(p.dri)||60)+b.dri, def: (Number(p.def)||60)+b.def, phy: (Number(p.phy)||60)+b.phy,
-    ref: (Number(p.ref)||60)+b.ref, int: (Number(p.int)||60)+b.int, pst: (Number(p.pst)||60)+b.pst,
-    dis: (Number(p.dis)||60)+b.dis, cmp: (Number(p.cmp)||60)+b.cmp, wrk: (Number(p.wrk)||60)+b.wrk
+pac: (Number(p.pac)||60)+b.pac, sho: (Number(p.sho)||60)+b.sho, pas: (Number(p.pas)||60)+b.pas,
+dri: (Number(p.dri)||60)+b.dri, def: (Number(p.def)||60)+b.def, phy: (Number(p.phy)||60)+b.phy,
+ref: (Number(p.ref)||60)+b.ref, int: (Number(p.int)||60)+b.int, pst: (Number(p.pst)||60)+b.pst,
+dis: (Number(p.dis)||60)+b.dis, cmp: (Number(p.cmp)||60)+b.cmp, wrk: (Number(p.wrk)||60)+b.wrk
 };
 const currentOvr = getOVRForPos(stats, p.pos);
 
@@ -1801,33 +1842,33 @@ const posList = [
 ];
 
 const btns = posList.map(pos => {
-    const potentialOvr = getOVRForPos(stats, pos.id);
-    const ovrDiff = potentialOvr - currentOvr;
-    const diffStr = ovrDiff > 0 ? `<span class="text-emerald-400 animate-pulse drop-shadow-md">▲ +${ovrDiff}</span>` : (ovrDiff < 0 ? `<span class="text-red-400 drop-shadow-md">▼ ${ovrDiff}</span>` : `<span class="text-slate-500">-</span>`);
-    const ovrColor = potentialOvr >= 90 ? 'text-purple-400' : (potentialOvr >= 80 ? 'text-fut-gold' : 'text-white');
+const potentialOvr = getOVRForPos(stats, pos.id);
+const ovrDiff = potentialOvr - currentOvr;
+const diffStr = ovrDiff > 0 ? `<span class="text-emerald-400 animate-pulse drop-shadow-md">▲ +${ovrDiff}</span>` : (ovrDiff < 0 ? `<span class="text-red-400 drop-shadow-md">▼ ${ovrDiff}</span>` : `<span class="text-slate-500">-</span>`);
+const ovrColor = potentialOvr >= 90 ? 'text-purple-400' : (potentialOvr >= 80 ? 'text-fut-gold' : 'text-white');
 
-    return `<button onclick="window.confirmChangePos('${pId}', '${pos.id}')" class="bg-slate-800 hover:bg-emerald-900 border border-slate-600 hover:border-emerald-500 p-3 rounded-xl text-left transition group flex flex-col gap-1 relative overflow-hidden">
-        <div class="flex justify-between items-center w-full relative z-10">
-            <div class="font-bold text-lg text-emerald-400 group-hover:text-white">${pos.name}</div>
-            <div class="flex flex-col items-end">
-                <div class="text-[10px] text-slate-400 mb-0.5">선택 시 예상 OVR</div>
-                <div class="font-oswald text-2xl ${ovrColor} leading-none flex items-center gap-2">${potentialOvr} <span class="text-sm">${diffStr}</span></div>
-            </div>
-        </div>
-        <div class="text-[11px] text-slate-400 mt-1 relative z-10">${pos.desc}</div>
-        <div class="text-[9px] text-red-300 mt-1 bg-red-900/30 w-fit px-1.5 py-0.5 rounded border border-red-800/50">🔥 핵심 스탯: ${pos.core} (70% 반영)</div>
-    </button>`;
+return `<button onclick="window.confirmChangePos('${pId}', '${pos.id}')" class="bg-slate-800 hover:bg-emerald-900 border border-slate-600 hover:border-emerald-500 p-3 rounded-xl text-left transition group flex flex-col gap-1 relative overflow-hidden">
+       <div class="flex justify-between items-center w-full relative z-10">
+           <div class="font-bold text-lg text-emerald-400 group-hover:text-white">${pos.name}</div>
+           <div class="flex flex-col items-end">
+               <div class="text-[10px] text-slate-400 mb-0.5">선택 시 예상 OVR</div>
+               <div class="font-oswald text-2xl ${ovrColor} leading-none flex items-center gap-2">${potentialOvr} <span class="text-sm">${diffStr}</span></div>
+           </div>
+       </div>
+       <div class="text-[11px] text-slate-400 mt-1 relative z-10">${pos.desc}</div>
+       <div class="text-[9px] text-red-300 mt-1 bg-red-900/30 w-fit px-1.5 py-0.5 rounded border border-red-800/50">🔥 핵심 스탯: ${pos.core} (70% 반영)</div>
+   </button>`;
 }).join('');
 
 modal.innerHTML = `<div class="bg-pitch-bg p-6 rounded-3xl border-2 border-emerald-500 max-w-sm w-full sm:max-w-md shadow-2xl">
-    <h3 class="text-xl font-display text-white mb-2 text-center">선호 포지션 변경</h3>
-    <p class="text-[10px] text-emerald-400 mb-4 text-center leading-relaxed">포지션별로 요구하는 <b>핵심 스탯(70%), 보조 스탯(25%)</b>이 다릅니다.<br>나의 강점을 극대화할 수 있는 포지션을 찾아보세요!</p>
-    <div class="bg-slate-900 p-3 rounded-xl mb-4 border border-slate-700 flex justify-between items-center shadow-inner">
-        <span class="text-sm text-slate-300 font-bold">현재 내 OVR (${POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정'})</span>
-        <span class="font-oswald text-2xl text-fut-gold">${currentOvr}</span>
-    </div>
-    <div class="grid grid-cols-1 gap-3 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">${btns}</div>
-    <button onclick="this.parentElement.parentElement.remove()" class="mt-4 bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-6 rounded-xl w-full transition shadow-md">닫기</button>
+   <h3 class="text-xl font-display text-white mb-2 text-center">선호 포지션 변경</h3>
+   <p class="text-[10px] text-emerald-400 mb-4 text-center leading-relaxed">포지션별로 요구하는 <b>핵심 스탯(70%), 보조 스탯(25%)</b>이 다릅니다.<br>나의 강점을 극대화할 수 있는 포지션을 찾아보세요!</p>
+   <div class="bg-slate-900 p-3 rounded-xl mb-4 border border-slate-700 flex justify-between items-center shadow-inner">
+       <span class="text-sm text-slate-300 font-bold">현재 내 OVR (${POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정'})</span>
+       <span class="font-oswald text-2xl text-fut-gold">${currentOvr}</span>
+   </div>
+   <div class="grid grid-cols-1 gap-3 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">${btns}</div>
+   <button onclick="this.parentElement.parentElement.remove()" class="mt-4 bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-6 rounded-xl w-full transition shadow-md">닫기</button>
 </div>`;
 document.body.appendChild(modal); window.posModalInstance = modal;
 };
@@ -1851,10 +1892,10 @@ let statsHtml = '';
 
 const players = [...window.allPlayersData].sort((a,b) => {
 if(window.currentSortKey === 'age') {
-    const ageA = Number(a.age) || 13;
-    const ageB = Number(b.age) || 13;
-    if (ageB !== ageA) return ageB - ageA; 
-    return getOVR(b) - getOVR(a);
+const ageA = Number(a.age) || 13;
+const ageB = Number(b.age) || 13;
+if (ageB !== ageA) return ageB - ageA; // 나이 많은 순 (내림차순)
+return getOVR(b) - getOVR(a);
 }
 if(window.currentSortKey === 'ovr') return getOVR(b) - getOVR(a);
 const bBonus = getBonusStats(b).flat; const aBonus = getBonusStats(a).flat;
@@ -1907,12 +1948,12 @@ if(!window.playerState.isGM) return;
 const tbody = document.getElementById('masterTableBody'); if(!tbody) return;
 let html = '';
 const players = [...window.allPlayersData].sort((a,b) => {
-    if(window.currentSortKey === 'age') {
-        const ageA = Number(a.age) || 13;
-        const ageB = Number(b.age) || 13;
-        if (ageB !== ageA) return ageB - ageA;
-    }
-    return getOVR(b) - getOVR(a);
+if(window.currentSortKey === 'age') {
+const ageA = Number(a.age) || 13;
+const ageB = Number(b.age) || 13;
+if (ageB !== ageA) return ageB - ageA;
+}
+return getOVR(b) - getOVR(a);
 });
 
 players.forEach(p => {
@@ -1978,11 +2019,11 @@ if(isAchieved) achievedCount++; const percent = Math.min(100, Math.floor((curren
 
 let claimBtnHtml = '';
 if (isAchieved && !isClaimed) {
-    claimBtnHtml = `<button onclick="window.claimAchievement('${ach.id}')" class="mt-3 w-full bg-gradient-to-r from-fut-gold-dark to-fut-gold hover:from-fut-gold hover:to-yellow-200 text-slate-900 font-bold py-1.5 rounded-lg shadow-md transition text-xs flex items-center justify-center gap-1.5 active:scale-95"><i class="fa-solid fa-gift text-sm"></i> 보상 받기 (${ach.reward} B)</button>`;
+claimBtnHtml = `<button onclick="window.claimAchievement('${ach.id}')" class="mt-3 w-full bg-gradient-to-r from-fut-gold-dark to-fut-gold hover:from-fut-gold hover:to-yellow-200 text-slate-900 font-bold py-1.5 rounded-lg shadow-md transition text-xs flex items-center justify-center gap-1.5 active:scale-95"><i class="fa-solid fa-gift text-sm"></i> 보상 받기 (${ach.reward} B)</button>`;
 } else if (isClaimed) {
-    claimBtnHtml = `<div class="mt-3 w-full bg-slate-800 text-slate-500 font-bold py-1.5 rounded-lg border border-slate-700 text-xs flex items-center justify-center gap-1.5"><i class="fa-solid fa-check text-sm"></i> 보상 수령 완료</div>`;
+claimBtnHtml = `<div class="mt-3 w-full bg-slate-800 text-slate-500 font-bold py-1.5 rounded-lg border border-slate-700 text-xs flex items-center justify-center gap-1.5"><i class="fa-solid fa-check text-sm"></i> 보상 수령 완료</div>`;
 } else {
-    claimBtnHtml = `<div class="mt-3 w-full bg-slate-800/40 text-slate-600 py-1.5 rounded-lg border border-slate-700/50 text-xs flex items-center justify-center gap-1.5"><i class="fa-solid fa-lock text-[10px]"></i> 달성 시 ${ach.reward} B 지급</div>`;
+claimBtnHtml = `<div class="mt-3 w-full bg-slate-800/40 text-slate-600 py-1.5 rounded-lg border border-slate-700/50 text-xs flex items-center justify-center gap-1.5"><i class="fa-solid fa-lock text-[10px]"></i> 달성 시 ${ach.reward} B 지급</div>`;
 }
 
 html += `<div class="bg-slate-900/80 rounded-xl p-4 border transition duration-300 ${isAchieved ? 'achieved-card' : 'unachieved-card'} flex gap-4 items-center relative overflow-hidden">${isAchieved ? '<div class="absolute -right-4 -top-4 bg-fut-gold text-black text-[10px] font-bold py-1 px-8 rotate-45 shadow-md z-10">CLEARED</div>' : ''}<div class="text-4xl w-14 flex-shrink-0 text-center drop-shadow-md ${isAchieved ? '' : 'opacity-50 grayscale'}">${ach.icon}</div><div class="flex-grow flex flex-col justify-between"><div class="flex justify-between items-start mb-1"><div><span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600 ${ach.color}">${ach.category}</span><h5 class="font-bold text-white text-sm sm:text-base mt-1 ${isAchieved ? 'text-fut-gold' : ''}">${ach.title}</h5></div></div><p class="text-[10px] sm:text-xs text-slate-400 mb-2 leading-tight break-keep">${ach.desc}</p><div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1"><span>진행도</span><span class="${isAchieved ? 'text-fut-gold' : 'text-slate-400'}">${currentVal} / ${ach.reqValue}</span></div><div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden"><div class="h-1.5 rounded-full transition-all duration-1000 ${isAchieved ? ach.bg : 'bg-slate-500'}" style="width: ${percent}%"></div></div>${claimBtnHtml}</div></div>`;
@@ -1994,80 +2035,34 @@ document.getElementById('achievementProgressBar') && (document.getElementById('a
 };
 
 window.claimAchievement = async (achId) => {
-    try {
-        checkAuthReady();
-        if(window.playerState.isGuest) return window.customAlert("게스트는 이용할 수 없는 기능입니다.");
-        
-        const pId = window.selectedPlayerId;
-        if(!window.playerState.isGM && pId !== window.playerState.id) return window.customAlert("❌ 자신의 보상만 받을 수 있습니다.");
+try {
+checkAuthReady();
+if(window.playerState.isGuest) return window.customAlert("게스트는 이용할 수 없는 기능입니다.");
 
-        const p = window.allPlayersData.find(x => x.id === pId);
-        const ach = ACHIEVEMENTS.find(x => x.id === achId);
-        if(!p || !ach) return;
+const pId = window.selectedPlayerId;
+if(!window.playerState.isGM && pId !== window.playerState.id) return window.customAlert("❌ 자신의 보상만 받을 수 있습니다.");
 
-        const claimedAchievements = Array.isArray(p.claimedAchievements) ? p.claimedAchievements : [];
-        if (claimedAchievements.includes(achId)) return window.customAlert("이미 수령한 보상입니다.");
+const p = window.allPlayersData.find(x => x.id === pId);
+const ach = ACHIEVEMENTS.find(x => x.id === achId);
+if(!p || !ach) return;
 
-        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
-        const newBong = (Number(p.bong) || 0) + ach.reward;
-        const newClaimed = [...claimedAchievements, achId];
+const claimedAchievements = Array.isArray(p.claimedAchievements) ? p.claimedAchievements : [];
+if (claimedAchievements.includes(achId)) return window.customAlert("이미 수령한 보상입니다.");
 
-        await setDoc(docRef, { bong: newBong, claimedAchievements: newClaimed }, { merge: true });
-        
-        triggerConfetti();
-        window.customAlert(`🎉 [${ach.title}] 트로피 달성!\n보상으로 ${ach.reward} B가 지급되었습니다.`);
-        window.renderAchievements();
-        window.renderSelectedCard(pId);
-    } catch(e) {
-        console.error("claimAch err:", e);
-        window.customAlert(`보상 수령 에러:\n${e.message}`);
-    }
-};
+const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
+const newBong = (Number(p.bong) || 0) + ach.reward;
+const newClaimed = [...claimedAchievements, achId];
 
-window.renderRosterTab = () => {
-    if (!window.playerState.isGM) return;
-    const container = document.getElementById('rosterListContainer');
-    if (!container) return;
-    let html = '';
-    ALLOWED_PLAYERS.forEach(name => {
-        const gender = GENDER_MAP[name] === 'F' ? '여 (F)' : '남 (M)';
-        const avatar = GENDER_MAP[name] === 'F' ? '👧' : '👦';
-        html += `<div class="flex justify-between items-center bg-slate-800 p-3 rounded-lg border border-slate-700 shadow-sm">
-            <span class="text-white font-bold flex items-center gap-2"><span class="text-xl">${avatar}</span> ${name} <span class="text-[10px] text-slate-400 font-normal">(${gender})</span></span>
-            <button onclick="window.deleteRoster('${name}')" class="bg-red-900/60 hover:bg-red-800 border border-red-700/50 text-red-200 px-3 py-1.5 rounded text-xs transition shadow"><i class="fa-solid fa-trash-can"></i> 삭제</button>
-        </div>`;
-    });
-    container.innerHTML = html;
-    document.getElementById('rosterCount') && (document.getElementById('rosterCount').innerText = `(현재 총 ${ALLOWED_PLAYERS.length}명)`);
-};
+await setDoc(docRef, { bong: newBong, claimedAchievements: newClaimed }, { merge: true });
 
-window.addRoster = async () => {
-    const nameInput = document.getElementById('rosterNameInput').value.trim();
-    const genderInput = document.getElementById('rosterGenderSelect').value;
-    if (!nameInput) return window.customAlert('이름을 입력하세요.');
-    if (nameInput.includes('gm') || nameInput === 'guest' || nameInput === 'player') return window.customAlert('사용할 수 없는 이름입니다.');
-    if (ALLOWED_PLAYERS.includes(nameInput)) return window.customAlert('이미 등록된 이름입니다.');
-
-    const newPlayers = [...ALLOWED_PLAYERS, nameInput].sort();
-    const newGenderMap = { ...GENDER_MAP, [nameInput]: genderInput };
-    
-    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'roster');
-    await setDoc(docRef, { players: newPlayers, genderMap: newGenderMap }, { merge: true });
-    
-    document.getElementById('rosterNameInput').value = '';
-    window.customAlert(`[${nameInput}] 학생이 명단에 추가되었습니다.\n\n⚠️ 추가된 학생은 초기 접속 시 핀 번호를 생성해야 카드 데이터가 활성화됩니다.`);
-};
-
-window.deleteRoster = async (name) => {
-    if (!await window.customConfirm(`정말 [${name}] 학생을 명단에서 제외하시겠습니까?\n(기존 기록은 DB에 보존되지만 화면 명단에서 사라집니다)`)) return;
-    
-    const newPlayers = ALLOWED_PLAYERS.filter(p => p !== name);
-    const newGenderMap = { ...GENDER_MAP };
-    delete newGenderMap[name];
-
-    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'roster');
-    await setDoc(docRef, { players: newPlayers, genderMap: newGenderMap }, { merge: true });
-    window.customAlert(`[${name}] 학생이 명단에서 제외되었습니다.`);
+triggerConfetti();
+window.customAlert(`🎉 [${ach.title}] 트로피 달성!\n보상으로 ${ach.reward} B가 지급되었습니다.`);
+window.renderAchievements();
+window.renderSelectedCard(pId);
+} catch(e) {
+console.error("claimAch err:", e);
+window.customAlert(`보상 수령 에러:\n${e.message}`);
+}
 };
 
 window.changeTeamCount = (change) => {
@@ -2116,29 +2111,30 @@ window.customAlert('공지사항이 등록되었습니다.');
 };
 
 window.saveShorts = async () => {
-    try {
-        checkAuthReady();
-        if(!window.playerState.isGM) return;
-        const url = document.getElementById('shortsInput')?.value.trim();
-        if(!url) return window.customAlert('유튜브 쇼츠 링크를 입력하세요.');
-        
-        let videoId = "";
-        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|\/shorts\/)([^#&?]*).*/;
-        const match = url.match(regExp);
+try {
+checkAuthReady();
+if(!window.playerState.isGM) return;
+const url = document.getElementById('shortsInput')?.value.trim();
+if(!url) return window.customAlert('유튜브 쇼츠 링크를 입력하세요.');
 
-        if (match && match[2].length === 11) {
-            videoId = match[2];
-        } else {
-            return window.customAlert('올바른 유튜브 영상 링크가 아닙니다.\n(11자리 영상 ID를 찾을 수 없습니다.)');
-        }
+// 유튜브 주소에서 고유 비디오 ID만 깔끔하게 추출하는 마법의 정규식!
+let videoId = "";
+const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|\/shorts\/)([^#&?]*).*/;
+const match = url.match(regExp);
 
-        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'shorts');
-        await setDoc(docRef, { videoId, updatedAt: new Date().toISOString() }, { merge: true });
-        window.customAlert('⚽ 쇼츠 영상이 성공적으로 세팅되었습니다!\n모든 학생의 화면에서 자동 재생됩니다.');
-    } catch(e) { 
-        console.error(e); 
-        window.customAlert(`쇼츠 등록 에러:\n${e.message}`); 
-    }
+if (match && match[2].length === 11) {
+videoId = match[2];
+} else {
+return window.customAlert('올바른 유튜브 영상 링크가 아닙니다.\n(11자리 영상 ID를 찾을 수 없습니다.)');
+}
+
+const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'shorts');
+await setDoc(docRef, { videoId, updatedAt: new Date().toISOString() }, { merge: true });
+window.customAlert('⚽ 쇼츠 영상이 성공적으로 세팅되었습니다!\n모든 학생의 화면에서 자동 재생됩니다.');
+} catch(e) { 
+console.error(e); 
+window.customAlert(`쇼츠 등록 에러:\n${e.message}`); 
+}
 };
 
 const triggerConfetti = () => {
@@ -2159,6 +2155,9 @@ el.appendChild(floatEl); setTimeout(() => floatEl.remove(), 1200);
 
 window.logout = () => { localStorage.removeItem('sfc_pid'); localStorage.removeItem('sfc_pin'); location.reload(); };
 
+// ==============================================
+// 🚀 앱 코어 인증 및 초기화
+// ==============================================
 window.handleLogin = async (pId, pin, isAuto = false) => {
 if(!pId) return window.customAlert("입장 권한을 선택하세요.");
 
@@ -2188,198 +2187,287 @@ window.playerState = { id: 'guest', isGM: false, isGuest: true, name: '게스트
 window.selectedPlayerId = ALLOWED_PLAYERS[0];
 } else {
 const safeDocId = getSafeDocId(pId);
-const p = window.allPlayersData.find(x => x.id === safeDocId);
-if(!p) return window.customAlert("선수 데이터가 존재하지 않습니다.");
+const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + safeDocId);
 
-const dbPin = typeof p.pin === 'string' ? p.pin : String(p.pin || '');
-if(!dbPin) {
-    if(!await window.customConfirm(`[${p.name}] 선수의 초기 비밀번호가 설정되지 않았습니다.\n입력하신 [${pin}]으로 새 비밀번호를 설정하시겠습니까?`)) return;
-    try {
-        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + safeDocId);
-        await setDoc(docRef, { pin: pin }, { merge: true });
-        window.customAlert("새 비밀번호가 설정되었습니다. 다시 로그인해주세요.");
-        return;
-    } catch(e) { return window.customAlert(`비밀번호 설정 에러:\n${e.message}`); }
-}
+try {
+const snap = await getDoc(docRef);
+const r = () => Math.floor(Math.random() * 6) + 55;
 
-if(pin !== dbPin && !isAuto) return window.customAlert("비밀번호가 일치하지 않습니다.");
+if(snap.exists()) {
+const data = snap.data();
+if(!data.pin) {
+if(isAuto) { localStorage.clear(); location.reload(); return; }
+if(!await window.customConfirm(`PIN [${pin}]으로 초기 등록하시겠습니까?`)) return;
 
-window.playerState = {
-    id: safeDocId, isGM, isGuest: false, name: p.name,
-    inventory: p.inventory || [], itemLevels: p.itemLevels || {},
-    equipHead: p.equipHead || null, equipHandL: p.equipHandL || null, equipHandR: p.equipHandR || null,
-    equipFootL: p.equipFootL || null, equipFootR: p.equipFootR || null, equipAvatar: p.equipAvatar || null
+const updateData = {
+pin, pos: data.pos || '미정', pac: data.pac || r(), sho: data.sho || r(), pas: data.pas || r(),
+dri: data.dri || r(), def: data.def || r(), phy: data.phy || r(), ref: data.ref || r(), int: data.int || r(), pst: data.pst || r(),
+dis: data.dis || r(), cmp: data.cmp || r(), wrk: data.wrk || r(), level: data.level || 1, exp: data.exp || 0, goals: data.goals || 0,
+assists: data.assists || 0, matches: data.matches || 0, training: data.training || 0, saves: data.saves || 0, keypass: data.keypass || 0, bong: data.bong || 0,
+age: data.age || 13,
+// 🌟 추가사항: 초기 등록 시 신무호 나이 자동 12세 적용, 나머지 13세
+age: data.age || (pId === '신무호' ? 12 : 13),
+inventory: data.inventory || [], itemLevels: data.itemLevels || {}
 };
-window.selectedPlayerId = safeDocId;
-
-if(!isAuto) {
-    localStorage.setItem('sfc_pid', pId);
-    localStorage.setItem('sfc_pin', pin);
+await setDoc(docRef, { ...updateData, updatedAt: new Date().toISOString() }, { merge: true });
+window.playerState = { id: safeDocId, isGM, isGuest: false, ...data, ...updateData };
+} else if(data.pin !== pin) {
+if(isAuto) { localStorage.clear(); location.reload(); return; }
+return window.customAlert("❌ 비밀번호가 틀렸습니다.");
+} else { window.playerState = { id: safeDocId, isGM, isGuest: false, ...data }; }
+} else {
+if(isAuto) { localStorage.clear(); location.reload(); return; }
+if(!await window.customConfirm(`신규 카드 발급! PIN [${pin}]으로 등록하시겠습니까?`)) return;
+const baseData = { 
+name: isGM ? (pId==='gm1'?'감독 J':'수석코치 J') : pId, pin, pos: isGM ? 'Fixo' : '미정', 
+pac: r(), sho: r(), pas: r(), dri: r(), def: r(), phy: r(), ref: r(), int: r(), pst: r(), dis: r(), cmp: r(), wrk: r(),
+level: 1, exp: 0, goals: 0, assists: 0, matches: 0, training: 0, saves: 0, keypass: 0, bong: 0, lastWageWeek: '',
+age: (pId === '신무호' || pId === '신무호') ? 12 : 13,
+// 🌟 추가사항: 최초 생성 시 신무호 나이 자동 12세 적용
+age: (pId === '신무호') ? 12 : 13,
+inventory: [], itemLevels: {}, equipHead: null, equipHandL: null, equipHandR: null, equipFootL: null, equipFootR: null, equipAvatar: null,
+updatedAt: new Date().toISOString()
+};
+await setDoc(docRef, baseData, { merge: true });
+window.playerState = { id: safeDocId, isGM, isGuest: false, ...baseData };
+}
+localStorage.setItem('sfc_pid', pId); localStorage.setItem('sfc_pin', pin);
+} catch(e) { 
+console.error("Login err:", e); 
+let errMsg = e.message || "원인 불명";
+if(errMsg.includes("offline") || errMsg.includes("permissions") || errMsg.includes("Failed to get")) {
+return window.customAlert(`서버 접속이 차단되었습니다.\n\n💡 팁: 학교 와이파이(교육망) 환경에서는 보안 방화벽으로 인해 접속이 막힐 수 있습니다. 스마트폰 핫스팟으로 잠시 연결해 보세요!\n(상세: ${errMsg})`);
+}
+return window.customAlert(`로그인 처리 중 에러가 발생했습니다.\n(상세: ${errMsg})`); 
 }
 }
 
-document.getElementById('loginOverlay')?.classList.add('hidden');
+if(!isGuest && !isGM) { window.selectedPlayerId = getSafeDocId(pId); }
+else if (isGM && !window.selectedPlayerId) { window.selectedPlayerId = getSafeDocId(ALLOWED_PLAYERS[0]); }
+
+document.getElementById('loginOverlay')?.style.setProperty('opacity', '0');
+setTimeout(() => { document.getElementById('loginOverlay')?.classList.add('hidden'); }, 500);
 document.getElementById('mainUI')?.classList.remove('hidden');
-document.getElementById('globalMarqueeContainer')?.classList.remove('hidden');
 
-const nameEl = document.getElementById('playerNameDisplay');
-const roleEl = document.getElementById('playerRoleDisplay');
 document.getElementById('saveStatus')?.classList.remove('hidden');
-document.getElementById('saveStatus')?.classList.add('flex');
+const roleEl = document.getElementById('playerRoleDisplay');
+const nameEl = document.getElementById('playerNameDisplay');
 
 if(isGuest) {
-    if(roleEl) { roleEl.innerText = "👀 게스트 모드 (관전 전용)"; roleEl.className = "text-slate-400 font-bold"; }
-    if(nameEl) nameEl.innerText = "손님";
+if(roleEl) { roleEl.innerText = "👀 게스트 모드 (관전 전용)"; roleEl.className = "text-slate-400 font-bold"; }
+if(nameEl) nameEl.innerText = "손님";
 } else if(isGM) {
-    if(roleEl) { roleEl.innerText = "👑 코칭 스태프 권한 활성화"; roleEl.className = "text-fut-gold font-bold"; }
-    if(nameEl) nameEl.innerText = window.playerState.name;
-    document.getElementById('btnTabMaster')?.classList.remove('hidden');
-    document.getElementById('btnTabMasterStats')?.classList.remove('hidden');
-    document.getElementById('btnTabRoster')?.classList.remove('hidden');
-    document.getElementById('gmAttendanceTools')?.classList.remove('hidden');
-    document.getElementById('gmAttendanceTools')?.classList.add('flex');
+if(roleEl) { roleEl.innerText = "👑 코칭 스태프 권한 활성화"; roleEl.className = "text-fut-gold font-bold"; }
+if(nameEl) nameEl.innerText = window.playerState.name;
+document.getElementById('btnTabMaster')?.classList.remove('hidden');
+document.getElementById('btnTabMasterStats')?.classList.remove('hidden');
+document.getElementById('gmAttendanceTools')?.classList.remove('hidden');
+document.getElementById('gmAttendanceTools')?.classList.add('flex');
 } else {
-    if(roleEl) { roleEl.innerText = "🔥 라커룸 입장 완료"; roleEl.className = "text-fut-rare font-bold"; }
-    if(nameEl) nameEl.innerText = window.playerState.name;
+if(roleEl) { roleEl.innerText = "✅ 선수 등록 완료"; roleEl.className = "text-emerald-400 font-bold"; }
+if(nameEl) nameEl.innerText = window.playerState.name;
 }
 
-window.renderLockerRoom();
-window.renderSelectedCard(window.selectedPlayerId);
-if(isGM) { window.renderMasterDashboard(); window.renderMasterStats(); window.renderRosterTab(); }
+if(isGM) window.switchTab('tabMaster');
+else {
+window.switchTab('tabWorkspace');
+if(window.selectedPlayerId && window.allPlayersData.length > 0) window.selectPlayer(window.selectedPlayerId);
+}
+
+// 🔔 초기 공지사항 팝업 띄우기 로직 추가
+if(!isGuest && !window.hasShownAnnouncement) {
+const annRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'announcement');
+getDoc(annRef).then(snap => {
+if(snap.exists() && snap.data().text) {
+setTimeout(() => {
+window.customAlert(`📢 [감독님 공지사항]\n\n${snap.data().text}`);
+}, 800);
+window.hasShownAnnouncement = true;
+}
+});
+}
 };
 
 const initApp = async () => {
 try {
-    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-        apiKey: "dummy", projectId: appId
-    };
-    
-    const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-    db = getFirestore(app);
-    auth = getAuth(app);
+// 🚨 환경 하이브리드 자동 감지 코드 (Canvas & GitHub 동시 완벽 지원)
+let firebaseConfig;
 
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            console.log("인증 완료. 데이터 동기화를 시작합니다.");
-            
-            onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'roster'), async (docSnap) => {
-                if(docSnap.exists()) {
-                    const data = docSnap.data();
-                    if(data.players && data.genderMap) {
-                        ALLOWED_PLAYERS = data.players;
-                        GENDER_MAP = data.genderMap;
-                        
-                        const nameSelect = document.getElementById('loginPlayerName');
-                        if(nameSelect && (!window.playerState || !window.playerState.id)) {
-                            nameSelect.innerHTML = '<option value="" disabled selected>내 이름 선택하기</option>';
-                            ALLOWED_PLAYERS.forEach(n => {
-                                const opt = document.createElement('option'); opt.value = n; opt.innerText = n; nameSelect.appendChild(opt);
-                            });
-                        }
-                    }
-                }
+if (typeof __firebase_config !== 'undefined') {
+// 1. AI 캔버스 환경: 자동 주입된 키를 사용합니다.
+firebaseConfig = typeof __firebase_config === 'string' ? JSON.parse(__firebase_config) : __firebase_config;
+} else {
+// 2. 외부 환경 (깃허브 등): 선생님의 진짜 프로젝트 정보를 사용합니다.
+// 👉 깃허브에 배포하실 때만 아래 "선생님의_API_KEY" 등을 진짜 파이어베이스 설정값으로 덮어쓰시면 됩니다.
+firebaseConfig = {
+apiKey: "AIzaSyAsih-sfnIZ_gX_1l7SAVZHCAhk3KzmiP8",
+authDomain: "sambong-world-2026.firebaseapp.com",
+projectId: "sambong-world-2026",
+storageBucket: "sambong-world-2026.firebasestorage.app",
+messagingSenderId: "728320769100",
+appId: "1:728320769100:web:7510c9a77cca6b87a788e9",
+measurementId: "G-H1RGMJHGTV"
+};
+}
 
-                onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'players'), (snap) => {
-                    const dbPlayers = new Map();
-                    snap.forEach(d => {
-                        if(!d.id.includes('gm')) dbPlayers.set(d.id.replace('player_', ''), { id: d.id.replace('player_', ''), ...d.data() });
-                    });
-                    
-                    const players = [];
-                    ALLOWED_PLAYERS.forEach(name => {
-                        const safeId = getSafeDocId(name);
-                        if(dbPlayers.has(safeId)) { players.push(dbPlayers.get(safeId)); } 
-                        else {
-                            players.push({
-                                id: safeId, name: name, pos: '미정', pac: 60, sho: 60, pas: 60, dri: 60, def: 60, phy: 60, ref: 60, int: 60, pst: 60, dis: 60, cmp: 60, wrk: 60,
-                                level: 1, exp: 0, goals: 0, assists: 0, matches: 0, training: 0, saves: 0, keypass: 0, bong: 0, age: 13, inventory: [], itemLevels: {}
-                            });
-                        }
-                    });
-                    
-                    window.allPlayersData = players.sort((a,b) => {
-                        if(window.currentSortKey === 'age') {
-                            const ageA = Number(a.age) || 13;
-                            const ageB = Number(b.age) || 13;
-                            if (ageB !== ageA) return ageB - ageA;
-                        }
-                        const lvDiff = (b.level ?? 1) - (a.level ?? 1);
-                        if(lvDiff !== 0) return lvDiff; return getOVR(b) - getOVR(a);
-                    });
-                    
-                    document.getElementById('loadingOverlay')?.classList.add('hidden');
-                    document.getElementById('loginOverlay')?.classList.remove('hidden');
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+auth = getAuth(app);
+db = getFirestore(app);
 
-                    if(window.playerState && window.playerState.id) {
-                        if(isVisible('tabWorkspace')) window.renderLockerRoom();
-                        if(isVisible('tabMaster')) window.renderMasterDashboard();
-                        if(isVisible('tabMasterStats')) window.renderMasterStats();
-                        if(isVisible('tabRoster')) window.renderRosterTab();
-                        if(isVisible('tabCompare')) window.renderCompareList();
-                        if(window.selectedPlayerId) window.renderSelectedCard(window.selectedPlayerId);
-                    } else {
-                        const savedId = localStorage.getItem('sfc_pid');
-                        const savedPin = localStorage.getItem('sfc_pin');
-                        if(savedId && savedPin) {
-                            window.handleLogin(savedId, savedPin, true);
-                        }
-                    }
-                }, (err) => { console.error("선수 데이터 수신 에러:", err); });
-            });
+const initAuth = async () => {
+try {
+// 캔버스 환경 전용 인증 토큰이 있으면 최우선 사용
+if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+await signInWithCustomToken(auth, __initial_auth_token);
+} else {
+// 깃허브 환경이거나 토큰이 없으면 익명 로그인 시도
+await signInAnonymously(auth);
+}
+} catch (authErr) {
+console.warn("권한 토큰 만료. 익명 로그인으로 전환합니다.", authErr);
+try {
+await signInAnonymously(auth);
+} catch(anonErr) {
+console.error("익명 로그인 최종 실패:", anonErr);
+// 🔥 여기가 핵심입니다! 깃허브에서 이 에러가 난다면 파이어베이스 콘솔에서 '익명 로그인'을 켜주셔야 합니다.
+window.customAlert(`서버 인증에 실패했습니다.\n\n💡 깃허브 환경이라면 파이어베이스 콘솔에서 [Authentication] -> [Sign-in method] -> [익명(Anonymous)] 로그인이 '사용 설정' 되어있는지 꼭 확인해주세요!\n(에러: ${anonErr.message})`);
+}
+}
+};
+await initAuth();
 
-            onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'announcement'), (docSnap) => {
-                const data = docSnap.data();
-                const contentEl = document.getElementById('announcementContent');
-                if(contentEl) {
-                    contentEl.innerText = data?.text || '등록된 공지사항이 없습니다.';
-                }
-            }, (error) => console.error("공지사항 Listen Error:", error));
+onAuthStateChanged(auth, (user) => {
+document.getElementById('loadingOverlay')?.classList.add('hidden');
 
-            onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'shorts'), (docSnap) => {
-                const data = docSnap.data();
-                const container = document.getElementById('shortsPlayerContainer');
-                if(container && data?.videoId) {
-                    container.innerHTML = `<iframe class="w-full h-full rounded-2xl pointer-events-none" src="https://www.youtube.com/embed/${data.videoId}?autoplay=1&mute=1&loop=1&playlist=${data.videoId}&controls=0&modestbranding=1&rel=0&playsinline=1" title="YouTube shorts" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
-                }
-                const input = document.getElementById('shortsInput');
-                if(input && data?.videoId) input.value = `https://youtube.com/shorts/${data.videoId}`;
-            }, (error) => console.error("Shorts Listen Error:", error));
+if (user) {
+onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'players'), (snapshot) => {
+const dbPlayers = new Map();
+snapshot.forEach(d => { 
+try {
+if(!d.id.includes('gm')) {
+const data = d.data();
+const cleanId = d.id.replace('player_', '');
+dbPlayers.set(cleanId, { id: cleanId, name: data.name || cleanId, ...data }); 
+}
+} catch(e) { console.error("Parse err", e); }
+});
 
-            onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'latest_event'), (docSnap) => {
-                const data = docSnap.data();
-                const marqueeContainer = document.getElementById('globalMarqueeContainer');
-                const marqueeText = document.getElementById('globalMarqueeText');
-                
-                if(data && data.text && marqueeContainer && marqueeText) {
-                    marqueeText.innerHTML = `⚽ <strong>[삼봉 FC 속보]</strong> ${data.text} ⚽`;
-                    marqueeContainer.classList.remove('hidden');
-                }
-            }, (error) => console.error("전광판 Listen Error:", error));
+const players = [];
+ALLOWED_PLAYERS.forEach(name => {
+const safeId = getSafeDocId(name);
+if(dbPlayers.has(safeId)) { players.push(dbPlayers.get(safeId)); } 
+else {
+players.push({
+id: safeId, name: name, pos: '미정', pac: 60, sho: 60, pas: 60, dri: 60, def: 60, phy: 60, ref: 60, int: 60, pst: 60, dis: 60, cmp: 60, wrk: 60,
+level: 1, exp: 0, goals: 0, assists: 0, matches: 0, training: 0, saves: 0, keypass: 0, bong: 0, age: 13, inventory: [], itemLevels: {}
+});
+}
+});
 
-        }
-    });
+window.allPlayersData = players.sort((a,b) => {
+if(window.currentSortKey === 'age') {
+const ageA = Number(a.age) || 13;
+const ageB = Number(b.age) || 13;
+if (ageB !== ageA) return ageB - ageA;
+}
+const lvDiff = (b.level ?? 1) - (a.level ?? 1);
+if(lvDiff !== 0) return lvDiff; return getOVR(b) - getOVR(a);
+});
 
-    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-        await signInWithCustomToken(auth, __initial_auth_token);
-    } else {
-        await signInAnonymously(auth);
-    }
+// 로그인 상태에 따른 자동 선택 로직
+if(window.playerState.id && !window.playerState.isGuest) {
+if(!window.selectedPlayerId) {
+window.selectedPlayerId = window.playerState.isGM ? getSafeDocId(ALLOWED_PLAYERS[0]) : window.playerState.id;
+}
+}
+
+window.renderLockerRoom();
+if(window.selectedPlayerId) window.renderSelectedCard(window.selectedPlayerId);
+renderActivePool();
+
+if(isVisible('tabAchievements')) window.renderAchievements();
+if(isVisible('tabRank')) renderLeaderboard();
+if(isVisible('tabMaster')) renderMasterDashboard();
+if(isVisible('tabCompare')) window.renderCompareList();
+if(isVisible('tabMasterStats')) window.renderMasterStats();
+}, (error) => console.error("Players Listen Error:", error));
+
+onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'announcement'), (docSnap) => {
+const data = docSnap.data();
+const el = document.getElementById('announcementContent');
+if(el) el.innerText = data?.text || '새로운 공지사항이 없습니다.';
+const input = document.getElementById('announcementInput');
+if(input && data?.text) input.value = data.text;
+}, (error) => console.error("Announcement Listen Error:", error));
+
+onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'shorts'), (docSnap) => {
+const data = docSnap.data();
+const container = document.getElementById('shortsPlayerContainer');
+if(container && data?.videoId) {
+container.innerHTML = `<iframe class="w-full h-full rounded-2xl pointer-events-none" src="https://www.youtube.com/embed/${data.videoId}?autoplay=1&mute=1&loop=1&playlist=${data.videoId}&controls=0&modestbranding=1&rel=0&playsinline=1" title="YouTube shorts" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
+}
+const input = document.getElementById('shortsInput');
+if(input && data?.videoId) input.value = `https://youtube.com/shorts/${data.videoId}`;
+}, (error) => console.error("Shorts Listen Error:", error));
+
+onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'latest_event'), (docSnap) => {
+const data = docSnap.data();
+const marqueeContainer = document.getElementById('globalMarqueeContainer');
+const marqueeText = document.getElementById('globalMarqueeText');
+if(data && data.text && marqueeContainer && marqueeText) {
+const isRecent = (Date.now() - (data.timestamp || 0)) < 1000 * 60 * 60 * 24; 
+if(isRecent) {
+marqueeText.innerText = `[긴급 속보] ${data.text}`;
+marqueeContainer.classList.remove('hidden');
+} else { marqueeContainer.classList.add('hidden'); }
+}
+}, (error) => console.error("Event Listen Error:", error));
+
+document.getElementById('loadingOverlay')?.classList.add('hidden');
+
+try {
+const savedPid = localStorage.getItem('sfc_pid');
+const savedPin = localStorage.getItem('sfc_pin');
+if(savedPid && savedPin) {
+setTimeout(() => { 
+const loginIdEl = document.getElementById('loginId');
+const loginPinEl = document.getElementById('loginPin');
+if(loginIdEl) loginIdEl.value = savedPid.includes('gm') ? savedPid : 'player'; 
+if(loginPinEl) loginPinEl.value = savedPin; 
+window.handleLogin(savedPid, savedPin, true); 
+}, 100);
+} else {
+document.getElementById('loginOverlay')?.classList.remove('hidden');
+}
+} catch(lsErr) { 
+console.warn("자동로그인 확인 불가:", lsErr); 
+document.getElementById('loginOverlay')?.classList.remove('hidden');
+}
+} else {
+document.getElementById('loadingOverlay')?.classList.add('hidden');
+document.getElementById('loginOverlay')?.classList.remove('hidden');
+}
+});
 
 } catch (error) {
-    console.error("Firebase 초기화 에러:", error);
-    document.getElementById('loadingOverlay').innerHTML = `<h2 class="text-red-500 text-xl font-bold text-center">초기화 실패<br><span class="text-sm text-slate-400 font-normal">네트워크를 확인하고 새로고침 해주세요.</span></h2>`;
+console.error("Init Error:", error);
+window.customAlert("앱 초기화 중 오류가 발생했습니다. 새로고침 해주세요.\n(에러 상세: " + error.message + ")");
+document.getElementById('loadingOverlay')?.classList.add('hidden');
+document.getElementById('loginOverlay')?.classList.remove('hidden');
 }
 };
 
 document.getElementById('btnLogin')?.addEventListener('click', () => {
-const idVal = document.getElementById('loginId').value;
-const isPlayer = idVal === 'player';
-const pId = isPlayer ? document.getElementById('loginPlayerName').value : idVal;
+const role = document.getElementById('loginId').value;
+let pId = role;
+if(role === 'player') pId = document.getElementById('loginPlayerName').value;
 const pin = document.getElementById('loginPin').value;
 window.handleLogin(pId, pin);
 });
 
+// 이벤트 리스너 세팅 등 모든 준비가 끝난 후 마지막에 시동
 initApp();
+
 </script>
 </body>
 </html>
