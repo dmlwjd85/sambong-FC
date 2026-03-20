@@ -627,6 +627,30 @@ input[type="number"] { -moz-appearance: textfield; }
 </div>
 
 <div id="tabMaster" class="hidden space-y-6">
+
+<!-- 🌟 신규 선수 등록 패널 추가 -->
+<div class="glass-panel p-4 sm:p-6 rounded-3xl border-t-4 border-t-emerald-500 overflow-hidden mb-6">
+    <h4 class="text-emerald-400 font-bold mb-3 flex items-center gap-2"><i class="fa-solid fa-user-plus"></i> 신규 선수 등록</h4>
+    <div class="flex flex-col sm:flex-row gap-3 items-end">
+        <div class="flex-1 w-full">
+            <label class="block text-[10px] text-slate-400 mb-1">이름</label>
+            <input type="text" id="newPlayerName" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-3 py-2.5 text-white text-sm focus:border-emerald-500 focus:outline-none" placeholder="예: 홍길동">
+        </div>
+        <div class="w-full sm:w-24">
+            <label class="block text-[10px] text-slate-400 mb-1">나이</label>
+            <input type="number" id="newPlayerAge" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-3 py-2.5 text-white text-sm text-center focus:border-emerald-500 focus:outline-none" value="13">
+        </div>
+        <div class="w-full sm:w-28">
+            <label class="block text-[10px] text-slate-400 mb-1">성별</label>
+            <select id="newPlayerGender" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-3 py-2.5 text-white text-sm focus:border-emerald-500 focus:outline-none appearance-none">
+                <option value="M">남 (👦)</option>
+                <option value="F">여 (👧)</option>
+            </select>
+        </div>
+        <button onclick="window.addNewPlayer()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-6 rounded-xl transition shadow-lg text-sm h-[42px] whitespace-nowrap">등록하기</button>
+    </div>
+</div>
+
 <div class="glass-panel p-4 sm:p-8 rounded-3xl border-t-4 border-t-emerald-400 overflow-hidden">
 <h3 class="text-2xl sm:text-3xl font-display text-emerald-400 mb-2 flex items-center gap-2 sm:gap-3">
 <i class="fa-solid fa-chart-line"></i> 전체 학생 현황판 (마스터)
@@ -640,19 +664,16 @@ input[type="number"] { -moz-appearance: textfield; }
 <th class="py-3 pl-4 text-left">이름</th>
 <th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('age')">나이 <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
 <th class="py-3 px-1">포지션</th>
+<th class="py-3 px-1">티어</th>
 <th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('ovr')">OVR <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
-<th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('pac')">PAC <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
-<th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('sho')">SHO <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
-<th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('pas')">PAS <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
-<th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('dri')">DRI <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
-<th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('def')">DEF <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
-<th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('phy')">PHY <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
-<th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-200" onclick="window.sortMasterStats('ref')">REF <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
-<th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-200" onclick="window.sortMasterStats('int')">INT <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
-<th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-200" onclick="window.sortMasterStats('pst')">PST <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
-<th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-200" onclick="window.sortMasterStats('dis')">DIS <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
-<th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-200" onclick="window.sortMasterStats('cmp')">CMP <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
-<th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-200" onclick="window.sortMasterStats('wrk')">WRK <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('matches')">경기 <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group text-fut-gold" onclick="window.sortMasterStats('goals')">골 <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group text-blue-300" onclick="window.sortMasterStats('assists')">어시 <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-300" onclick="window.sortMasterStats('saves')">세이브 <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group text-emerald-300" onclick="window.sortMasterStats('training')">훈련 <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-400" onclick="window.sortMasterStats('exp')">EXP <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 pr-4 text-right cursor-pointer hover:text-white transition group text-emerald-400" onclick="window.sortMasterStats('bong')">자산(B) <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-2 text-red-400 font-bold">관리</th>
 </tr>
 </thead>
 <tbody id="masterTableBody" class="bg-slate-900/50 divide-y divide-slate-700/50 whitespace-nowrap"></tbody>
@@ -705,20 +726,23 @@ input[type="number"] { -moz-appearance: textfield; }
 <script type="module">
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, writeBatch, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, writeBatch, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 // AI 캔버스 환경과 깃허브 등 외부 환경을 자동 감지
 const appId = typeof __app_id !== 'undefined' ? __app_id : 'sambong-futsal-ultimate'; 
 
-const getSafeDocId = (name) => {
-if(name === 'gm1' || name === 'gm2') return name;
-return name.replace(/[^가-힣a-zA-Z0-9]/g, ''); 
-};
-
-const ALLOWED_PLAYERS = [
+const INITIAL_PLAYERS = [
 '김단엘', '김다래', '김라희', '김민지', '김사랑비', '김지훈', '노승희', '박소담', '박소윤', '박준수', '박하율', '박현수', '백시율', 
 '석서영', '이가온', '이동해', '이시형', '이예주', '이준용', '이지안', '인시진', '임은영', '정의영', '정의정', '조이담', '최윤희', '함인솔', '황주하', '황훈태', '황혜민', '황혜윤'
 ];
+
+let ALLOWED_PLAYERS = [...INITIAL_PLAYERS];
+
+const getSafeDocId = (name) => {
+if (!name) return 'unknown';
+if(name === 'gm1' || name === 'gm2') return name;
+return String(name).replace(/[^가-힣a-zA-Z0-9]/g, ''); 
+};
 
 const GENDER_MAP = {
 '김단엘': 'M', '김다래': 'F', '김라희': 'F', '김민지': 'F', '김사랑비': 'F', '김지훈': 'M', '노승희': 'F', '박소담': 'M', '박소윤': 'F', '박준수': 'M', '박하율': 'F', '박현수': 'M', '백시율': 'M', 
@@ -812,12 +836,29 @@ const DAILY_TIPS = [
 ];
 
 const ACHIEVEMENTS = [
-{ id: 'goal_1', category: '개인 기록', title: '마수걸이 골', desc: '풋살화 끈을 꽉 묶고 첫 골을 기록하세요.', reqKey: 'goals', reqValue: 1, icon: '⚽', color: 'text-yellow-400', bg: 'bg-yellow-400' },
-{ id: 'goal_50', category: '개인 기록', title: '득점 폭격기', desc: '누적 50골 달성! 상대 팀이 가장 두려워하는 선수입니다.', reqKey: 'goals', reqValue: 50, icon: '🚀', color: 'text-red-500', bg: 'bg-red-500' },
-{ id: 'ast_1', category: '팀 플레이', title: '이타적인 플레이', desc: '첫 어시스트를 기록하세요.', reqKey: 'assists', reqValue: 1, icon: '🤝', color: 'text-emerald-400', bg: 'bg-emerald-400' },
-{ id: 'save_30', category: '수비/헌신', title: '통곡의 벽', desc: '누적 30세이브 달성!', reqKey: 'saves', reqValue: 30, icon: '🧱', color: 'text-slate-300', bg: 'bg-slate-300' },
-{ id: 'match_50', category: '꾸준함', title: '심장 두 개 (강철 체력)', desc: '50경기 출전! 지치지 않는 체력.', reqKey: 'matches', reqValue: 50, icon: '🫀', color: 'text-pink-500', bg: 'bg-pink-500' },
-{ id: 'lv_50', category: '레벨업', title: '레전드의 시작', desc: '레벨 50 달성. 명예의 전당에 오를 자격이 충분합니다.', reqKey: 'level', reqValue: 50, icon: '👑', color: 'text-fut-gold', bg: 'bg-fut-gold' },
+{ id: 'goal_1', category: '개인 기록', title: '마수걸이 골', desc: '풋살화 끈을 꽉 묶고 첫 골을 기록하세요.', reqKey: 'goals', reqValue: 1, icon: '⚽', color: 'text-yellow-400', bg: 'bg-yellow-400', reward: 5 },
+{ id: 'goal_50', category: '개인 기록', title: '득점 폭격기', desc: '누적 50골 달성! 상대 팀이 가장 두려워하는 선수입니다.', reqKey: 'goals', reqValue: 50, icon: '🚀', color: 'text-red-500', bg: 'bg-red-500', reward: 50 },
+{ id: 'ast_1', category: '팀 플레이', title: '이타적인 플레이', desc: '첫 어시스트를 기록하세요.', reqKey: 'assists', reqValue: 1, icon: '🤝', color: 'text-emerald-400', bg: 'bg-emerald-400', reward: 5 },
+{ id: 'save_30', category: '수비/헌신', title: '통곡의 벽', desc: '누적 30세이브 달성!', reqKey: 'saves', reqValue: 30, icon: '🧱', color: 'text-slate-300', bg: 'bg-slate-300', reward: 30 },
+{ id: 'match_50', category: '꾸준함', title: '심장 두 개 (강철 체력)', desc: '50경기 출전! 지치지 않는 체력.', reqKey: 'matches', reqValue: 50, icon: '🫀', color: 'text-pink-500', bg: 'bg-pink-500', reward: 50 },
+{ id: 'lv_50', category: '레벨업', title: '레전드의 시작', desc: '레벨 50 달성. 명예의 전당에 오를 자격이 충분합니다.', reqKey: 'level', reqValue: 50, icon: '👑', color: 'text-fut-gold', bg: 'bg-fut-gold', reward: 100 },
+
+// [추가된 포지션별 트로피 12종]
+{ id: 'pivo_low', category: '피보(FW)', title: '타겟맨의 싹', desc: '누적 10골 달성. 최전방 공격수의 자질이 보입니다.', reqKey: 'goals', reqValue: 10, icon: '🎯', color: 'text-red-400', bg: 'bg-red-400', reward: 10 },
+{ id: 'pivo_med', category: '피보(FW)', title: '페널티 박스의 여우', desc: '누적 30골 달성. 찬스를 놓치지 않는 확실한 해결사!', reqKey: 'goals', reqValue: 30, icon: '🦊', color: 'text-red-500', bg: 'bg-red-500', reward: 30 },
+{ id: 'pivo_high', category: '피보(FW)', title: '전설의 피보', desc: '누적 100골 달성. 삼봉 FC 역사에 남을 최고의 공격수!', reqKey: 'goals', reqValue: 100, icon: '🔥', color: 'text-red-600', bg: 'bg-red-600', reward: 100 },
+
+{ id: 'ala_low', category: '아라(MF)', title: '윙어의 첫걸음', desc: '누적 10어시스트 달성. 동료를 활용할 줄 압니다.', reqKey: 'assists', reqValue: 10, icon: '👟', color: 'text-emerald-400', bg: 'bg-emerald-400', reward: 10 },
+{ id: 'ala_med', category: '아라(MF)', title: '정확한 택배기사', desc: '누적 30어시스트 달성. 완벽한 찬스를 만들어냅니다.', reqKey: 'assists', reqValue: 30, icon: '📦', color: 'text-emerald-500', bg: 'bg-emerald-500', reward: 30 },
+{ id: 'ala_high', category: '아라(MF)', title: '중원의 마에스트로', desc: '누적 100어시스트 달성. 팀의 공격을 지휘하는 완벽한 아라!', reqKey: 'assists', reqValue: 100, icon: '🪄', color: 'text-emerald-600', bg: 'bg-emerald-600', reward: 100 },
+
+{ id: 'fixo_low', category: '픽소(DF)', title: '후방 빌드업', desc: '누적 10킬패스 달성. 수비수지만 공격의 시발점입니다.', reqKey: 'keypass', reqValue: 10, icon: '👁️', color: 'text-blue-400', bg: 'bg-blue-400', reward: 10 },
+{ id: 'fixo_med', category: '픽소(DF)', title: '사령관의 시야', desc: '누적 30킬패스 달성. 대지를 가르는 패스의 달인!', reqKey: 'keypass', reqValue: 30, icon: '🔭', color: 'text-blue-500', bg: 'bg-blue-500', reward: 30 },
+{ id: 'fixo_high', category: '픽소(DF)', title: '베켄바워의 재림', desc: '누적 100킬패스 달성. 완벽한 수비 조율과 최고의 패스마스터!', reqKey: 'keypass', reqValue: 100, icon: '🛡️', color: 'text-blue-600', bg: 'bg-blue-600', reward: 100 },
+
+{ id: 'goleiro_low', category: '골레이로(GK)', title: '든든한 수문장', desc: '누적 10세이브 달성. 팀의 뒷문을 책임집니다.', reqKey: 'saves', reqValue: 10, icon: '🧤', color: 'text-orange-400', bg: 'bg-orange-400', reward: 10 },
+{ id: 'goleiro_med', category: '골레이로(GK)', title: '반사신경의 달인', desc: '누적 50세이브 달성. 동물적인 감각으로 실점을 막아냅니다.', reqKey: 'saves', reqValue: 50, icon: '🐆', color: 'text-orange-500', bg: 'bg-orange-500', reward: 50 },
+{ id: 'goleiro_high', category: '골레이로(GK)', title: '삼봉의 야신', desc: '누적 150세이브 달성. 누구도 그의 골문을 뚫을 수 없습니다!', reqKey: 'saves', reqValue: 150, icon: '🐙', color: 'text-orange-600', bg: 'bg-orange-600', reward: 150 }
 ];
 
 const ENHANCE_LEVELS = [
@@ -943,7 +984,7 @@ if(pos === 'Pivo') return 'bg-red-500'; if(pos === 'Ala') return 'bg-emerald-500
 if(pos === 'Fixo') return 'bg-blue-500'; if(pos === 'Goleiro') return 'bg-orange-500'; 
 return 'bg-yellow-500';
 };
-const getAvatar = (p) => GENDER_MAP[p.name] === 'F' ? '👧' : '👦';
+const getAvatar = (p) => (p.gender || GENDER_MAP[p.name]) === 'F' ? '👧' : '👦';
 
 window.switchTab = (tabId) => {
 ['tabWorkspace', 'tabTips', 'tabShop', 'tabAchievements', 'tabRank', 'tabCompare', 'tabGuide', 'tabMaster', 'tabMasterStats'].forEach(id => {
@@ -1845,7 +1886,7 @@ return getOVR(b) - getOVR(a);
 players.forEach(p => {
 const ovr = getOVR(p); const tier = getTierInfo(ovr); const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
 const ageVal = Number(p.age) || 13;
-html += `<tr class="hover:bg-slate-800/80 transition cursor-pointer" onclick="window.switchTab('tabWorkspace'); window.selectPlayer('${p.id}')"><td class="py-3 pl-4 text-left font-bold text-white flex items-center gap-2 whitespace-nowrap"><span class="text-lg">${getAvatar(p)}</span><span>${p.name}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[12px] font-bold text-emerald-400 px-1.5 py-0.5 leading-none">${ageVal}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[10px] font-bold ${getPosColor(p.pos)} border border-slate-600 px-1.5 py-0.5 rounded leading-none">${posText}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[10px] font-bold ${tier.class} border px-1.5 py-0.5 rounded shadow-sm">${tier.name.split(' ')[0]}</span></td><td class="py-3 text-center font-oswald text-base text-fut-gold font-bold">${ovr}</td><td class="py-3 text-center text-slate-300">${Number(p.matches)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.goals)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.assists)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.saves)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.training)||0}</td><td class="py-3 text-center font-oswald text-orange-400 text-sm">${Number(p.exp)||0}</td><td class="py-3 pr-4 text-right font-oswald text-emerald-400 font-bold text-sm">${Number(p.bong)||0} B</td></tr>`;
+html += `<tr class="hover:bg-slate-800/80 transition cursor-pointer" onclick="window.switchTab('tabWorkspace'); window.selectPlayer('${p.id}')"><td class="py-3 pl-4 text-left font-bold text-white flex items-center gap-2 whitespace-nowrap"><span class="text-lg">${getAvatar(p)}</span><span>${p.name}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[12px] font-bold text-emerald-400 px-1.5 py-0.5 leading-none">${ageVal}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[10px] font-bold ${getPosColor(p.pos)} border border-slate-600 px-1.5 py-0.5 rounded leading-none">${posText}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[10px] font-bold ${tier.class} border px-1.5 py-0.5 rounded shadow-sm">${tier.name.split(' ')[0]}</span></td><td class="py-3 text-center font-oswald text-base text-fut-gold font-bold">${ovr}</td><td class="py-3 text-center text-slate-300">${Number(p.matches)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.goals)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.assists)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.saves)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.training)||0}</td><td class="py-3 text-center font-oswald text-orange-400 text-sm">${Number(p.exp)||0}</td><td class="py-3 pr-4 text-right font-oswald text-emerald-400 font-bold text-sm">${Number(p.bong)||0} B</td><td class="py-3 px-2 text-center"><button onclick="event.stopPropagation(); window.deletePlayer('${p.id}', '${p.name}')" class="text-red-400 hover:text-white transition bg-red-900/40 hover:bg-red-600 px-2 py-1 rounded text-[10px] border border-red-800/50"><i class="fa-solid fa-trash"></i> 삭제</button></td></tr>`;
 });
 tbody.innerHTML = html;
 }
@@ -2012,7 +2053,7 @@ const match = url.match(regExp);
 if (match && match[2].length === 11) {
 videoId = match[2];
 } else {
-return window.customAlert('올바른 유튜브 영상 링크가 아닙니다.\n(11자리 영상 ID를 찾을 수 없습니다.)');
+return window.customAlert('올바른 유튜브 영상 링크가 아닙니다.\n(11자리 영상 ID를 찾을 수 정규식 없습니다.)');
 }
 
 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'shorts');
@@ -2041,6 +2082,71 @@ el.appendChild(floatEl); setTimeout(() => floatEl.remove(), 1200);
 };
 
 window.logout = () => { localStorage.removeItem('sfc_pid'); localStorage.removeItem('sfc_pin'); location.reload(); };
+
+// ==============================================
+// 🛠️ 신규 캐릭터 수동 등록 및 삭제
+// ==============================================
+window.addNewPlayer = async () => {
+    try {
+        checkAuthReady();
+        if(!window.playerState.isGM) return;
+
+        const nameInput = document.getElementById('newPlayerName');
+        const ageInput = document.getElementById('newPlayerAge');
+        const genderInput = document.getElementById('newPlayerGender');
+
+        const name = nameInput.value.trim();
+        const age = Number(ageInput.value) || 13;
+        const gender = genderInput.value;
+
+        if(!name) return window.customAlert('추가할 학생의 이름을 입력해주세요.');
+
+        const safeDocId = getSafeDocId(name);
+        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + safeDocId);
+
+        const snap = await getDoc(docRef);
+        if(snap.exists()) return window.customAlert('이미 등록되어 있는 이름입니다.');
+
+        const r = () => Math.floor(Math.random() * 6) + 55;
+        const baseData = {
+            name: name, pos: '미정', age: age, gender: gender,
+            pac: r(), sho: r(), pas: r(), dri: r(), def: r(), phy: r(), ref: r(), int: r(), pst: r(), dis: r(), cmp: r(), wrk: r(),
+            level: 1, exp: 0, goals: 0, assists: 0, matches: 0, training: 0, saves: 0, keypass: 0, bong: 0, lastWageWeek: '',
+            inventory: [], itemLevels: {}, equipHead: null, equipHandL: null, equipHandR: null, equipFootL: null, equipFootR: null,
+            updatedAt: new Date().toISOString()
+        };
+
+        await setDoc(docRef, baseData);
+        nameInput.value = '';
+        triggerConfetti();
+        window.customAlert(`🎉 [${name}] 선수가 신규 등록되었습니다!\n라커룸과 현황판에 즉시 반영됩니다.`);
+    } catch (e) {
+        console.error("추가 에러:", e);
+        window.customAlert(`선수 등록 에러:\n${e.message}`);
+    }
+};
+
+window.deletePlayer = async (pId, pName) => {
+    try {
+        checkAuthReady();
+        if(!window.playerState.isGM) return;
+
+        if(!await window.customConfirm(`정말 [${pName}] 선수의 데이터를 완전히 삭제하시겠습니까?\n이 작업은 절대 되돌릴 수 없습니다.`)) return;
+
+        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(pId));
+        await deleteDoc(docRef);
+
+        const index = ALLOWED_PLAYERS.indexOf(pName);
+        if(index > -1) ALLOWED_PLAYERS.splice(index, 1);
+        delete GENDER_MAP[pName];
+
+        window.customAlert(`🗑️ [${pName}] 선수의 정보가 삭제되었습니다.`);
+    } catch (e) {
+        console.error("삭제 에러:", e);
+        window.customAlert(`삭제 에러:\n${e.message}`);
+    }
+};
+
 
 // ==============================================
 // 🚀 앱 코어 인증 및 초기화
@@ -2233,9 +2339,39 @@ if(!d.id.includes('gm')) {
 const data = d.data();
 const cleanId = d.id.replace('player_', '');
 dbPlayers.set(cleanId, { id: cleanId, name: data.name || cleanId, ...data }); 
+
+// 🔥 수동으로 등록된 플레이어 배열에 동기화
+if (data.name && !ALLOWED_PLAYERS.includes(data.name)) {
+    ALLOWED_PLAYERS.push(data.name);
+}
+if (data.name && data.gender) {
+    GENDER_MAP[data.name] = data.gender;
+}
 }
 } catch(e) { console.error("Parse err", e); }
 });
+
+// 🔥 삭제된 플레이어를 로컬 배열에서도 제거 동기화 (초기 명단 보호)
+for (let i = ALLOWED_PLAYERS.length - 1; i >= 0; i--) {
+    const name = ALLOWED_PLAYERS[i];
+    const safeId = getSafeDocId(name);
+    if (!INITIAL_PLAYERS.includes(name) && !dbPlayers.has(safeId)) {
+        ALLOWED_PLAYERS.splice(i, 1);
+        delete GENDER_MAP[name];
+    }
+}
+
+// 🔥 로그인 창 플레이어 이름 선택 드롭다운 갱신
+const nameSelect = document.getElementById('loginPlayerName');
+if(nameSelect) {
+    const currentVal = nameSelect.value;
+    nameSelect.innerHTML = '<option value="" disabled selected>내 이름 선택하기</option>';
+    [...ALLOWED_PLAYERS].sort().forEach(name => {
+        const opt = document.createElement('option'); opt.value = name; opt.innerText = name;
+        if(name === currentVal) opt.selected = true;
+        nameSelect.appendChild(opt);
+    });
+}
 
 const players = [];
 ALLOWED_PLAYERS.forEach(name => {
@@ -2261,7 +2397,7 @@ if(lvDiff !== 0) return lvDiff; return getOVR(b) - getOVR(a);
 
 // 로그인 상태에 따른 자동 선택 로직
 if(window.playerState.id && !window.playerState.isGuest) {
-if(!window.selectedPlayerId) {
+if(!window.selectedPlayerId || !window.allPlayersData.find(x => x.id === window.selectedPlayerId)) {
 window.selectedPlayerId = window.playerState.isGM ? getSafeDocId(ALLOWED_PLAYERS[0]) : window.playerState.id;
 }
 }
