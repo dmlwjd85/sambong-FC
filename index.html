@@ -552,7 +552,6 @@ input[type="number"] { -moz-appearance: textfield; }
 <i class="fa-solid fa-trophy"></i> 삼봉 FC 명예의 전당
 </h3>
 <p class="text-sm text-slate-300 mb-6">시즌 누적 스탯을 기준으로 각 부문별 TOP 3 선수를 보여줍니다.</p>
-<p class="text-sm text-slate-300 mb-6">시즌 누적 스탯을 기준으로 각 부문별 TOP 3 선션을 보여줍니다.</p>
 
 <div id="leaderboardGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
 </div>
@@ -719,18 +718,14 @@ if(name === 'gm1' || name === 'gm2') return name;
 return name.replace(/[^가-힣a-zA-Z0-9]/g, ''); 
 };
 
-// 🌟 추가사항: 신무호 학생 배열 추가 완료
 const ALLOWED_PLAYERS = [
 '김단엘', '김다래', '김라희', '김민지', '김사랑비', '김지훈', '노승희', '박소담', '박소윤', '박준수', '박하율', '박현수', '백시율', 
 '석서영', '이가온', '이동해', '이시형', '이예주', '이준용', '이지안', '인시진', '임은영', '정의영', '정의정', '조이담', '최윤희', '함인솔', '황주하', '황훈태', '황혜민', '황혜윤'
-'석서영', '신무호', '이가온', '이동해', '이시형', '이예주', '이준용', '이지안', '인시진', '임은영', '정의영', '정의정', '조이담', '최윤희', '함인솔', '황주하', '황훈태', '황혜민', '황혜윤'
 ];
 
-// 🌟 추가사항: 신무호 성별 설정 완료
 const GENDER_MAP = {
 '김단엘': 'M', '김다래': 'F', '김라희': 'F', '김민지': 'F', '김사랑비': 'F', '김지훈': 'M', '노승희': 'F', '박소담': 'M', '박소윤': 'F', '박준수': 'M', '박하율': 'F', '박현수': 'M', '백시율': 'M', 
 '석서영': 'F', '이가온': 'F', '이동해': 'M', '이시형': 'M', '이예주': 'F', '이준용': 'M', '이지안': 'F', '인시진': 'M', '임은영': 'F', '정의영': 'M', '정의정': 'M', '조이담': 'M', '최윤희': 'F', '함인솔': 'F', '황주하': 'M', '황훈태': 'M', '황혜민': 'F', '황혜윤': 'F'
-'석서영': 'F', '신무호': 'M', '이가온': 'F', '이동해': 'M', '이시형': 'M', '이예주': 'F', '이준용': 'M', '이지안': 'F', '인시진': 'M', '임은영': 'F', '정의영': 'M', '정의정': 'M', '조이담': 'M', '최윤희': 'F', '함인솔': 'F', '황주하': 'M', '황훈태': 'M', '황혜민': 'F', '황혜윤': 'F'
 };
 
 const POS_KR = { 'Pivo': '피보(FW)', 'Ala': '아라(MF)', 'Fixo': '픽소(DF)', 'Goleiro': '골레이로(GK)', '미정': '포지션 미정' };
@@ -820,6 +815,12 @@ const DAILY_TIPS = [
 ];
 
 const ACHIEVEMENTS = [
+{ id: 'goal_1', category: '개인 기록', title: '마수걸이 골', desc: '풋살화 끈을 꽉 묶고 첫 골을 기록하세요.', reqKey: 'goals', reqValue: 1, icon: '⚽', color: 'text-yellow-400', bg: 'bg-yellow-400' },
+{ id: 'goal_50', category: '개인 기록', title: '득점 폭격기', desc: '누적 50골 달성! 상대 팀이 가장 두려워하는 선수입니다.', reqKey: 'goals', reqValue: 50, icon: '🚀', color: 'text-red-500', bg: 'bg-red-500' },
+{ id: 'ast_1', category: '팀 플레이', title: '이타적인 플레이', desc: '첫 어시스트를 기록하세요.', reqKey: 'assists', reqValue: 1, icon: '🤝', color: 'text-emerald-400', bg: 'bg-emerald-400' },
+{ id: 'save_30', category: '수비/헌신', title: '통곡의 벽', desc: '누적 30세이브 달성!', reqKey: 'saves', reqValue: 30, icon: '🧱', color: 'text-slate-300', bg: 'bg-slate-300' },
+{ id: 'match_50', category: '꾸준함', title: '심장 두 개 (강철 체력)', desc: '50경기 출전! 지치지 않는 체력.', reqKey: 'matches', reqValue: 50, icon: '🫀', color: 'text-pink-500', bg: 'bg-pink-500' },
+{ id: 'lv_50', category: '레벨업', title: '레전드의 시작', desc: '레벨 50 달성. 명예의 전당에 오를 자격이 충분합니다.', reqKey: 'level', reqValue: 50, icon: '👑', color: 'text-fut-gold', bg: 'bg-fut-gold' },
 { id: 'goal_1', category: '득점', title: '마수걸이 골', desc: '풋살화 끈을 꽉 묶고 첫 골을 기록하세요.', reqKey: 'goals', reqValue: 1, reward: 10, icon: '⚽', color: 'text-yellow-400', bg: 'bg-yellow-400' },
 { id: 'goal_50', category: '득점', title: '득점 폭격기', desc: '누적 50골 달성! 상대 팀이 두려워하는 선수입니다.', reqKey: 'goals', reqValue: 50, reward: 100, icon: '🚀', color: 'text-orange-500', bg: 'bg-orange-500' },
 { id: 'goal_100', category: '득점', title: '득점 기계', desc: '누적 100골 달성! 전설적인 득점왕.', reqKey: 'goals', reqValue: 100, reward: 300, icon: '🔥', color: 'text-red-500', bg: 'bg-red-500' },
@@ -853,7 +854,6 @@ const ENHANCE_LEVELS = [
 { level: 5, chance: 10,  statPlus: 12, growthMult: 3.0, css: 'eff-5', text: '+5 MAX', color: 'text-red-400 drop-shadow-[0_0_5px_red]' }
 ];
 
-// 🌟 추가사항: 5명 유명선수 패러디 아바타 추가 (isUnique 속성으로 전체 1장 한정 제어)
 const SHOP_ITEMS = [
 { id: 'head_tier1', name: '시야 확장 고글', type: 'head', price: 150, icon: '🥽', desc: '[1종 집중형] 공간 지각력을 높입니다.', baseStats: {pst: 1}, baseGrowth: {pst: 15} },
 { id: 'head_tier2', name: '와이드 비전 헤드밴드', type: 'head', price: 300, icon: '🪢', desc: '[2종 복합형] 패스 길을 읽는 헤드밴드.', baseStats: {pst: 1, pas: 1}, baseGrowth: {pst: 10, pas: 10} },
@@ -870,16 +870,9 @@ const SHOP_ITEMS = [
 { id: 'footR_tier1', name: '강철 발목 보호대 [우]', type: 'footR', price: 150, icon: '🧦', desc: '[1종 집중형] 정확한 가로채기 타이밍.', baseStats: {int: 1}, baseGrowth: {int: 15} },
 { id: 'footR_tier1_alt', name: '터프 태클 풋살화 [우]', type: 'footR', price: 150, icon: '🥾', desc: '[1종 집중형] 끈질긴 대인 수비 전용.', baseStats: {def: 1}, baseGrowth: {def: 15} },
 { id: 'footR_tier2', name: '팬텀 드리블러 풋살화 [우]', type: 'footR', price: 300, icon: '👟', desc: '[2종 복합형] 보이지 않는 발놀림.', baseStats: {dri: 1, pac: 1}, baseGrowth: {dri: 10, pac: 10} },
-{ id: 'avatar_son', name: '쏘니 마스크', type: 'avatar', price: 1500, icon: '📸', desc: '[외형 변경/전체 1장 한정] 찰칵 세리머니의 주인공! 내 카드의 얼굴을 바꿉니다.', baseStats: {}, baseGrowth: {}, avatarShape: '📸', isUnique: true },
-{ id: 'avatar_messi', name: '메갓 수염', type: 'avatar', price: 1500, icon: '🐐', desc: '[외형 변경/전체 1장 한정] 축구의 신! 내 카드의 얼굴을 바꿉니다.', baseStats: {}, baseGrowth: {}, avatarShape: '🐐', isUnique: true },
-{ id: 'avatar_ronaldo', name: '우리형 헤어', type: 'avatar', price: 1500, icon: '🤫', desc: '[외형 변경/전체 1장 한정] 호우! 세리머니의 창시자.', baseStats: {}, baseGrowth: {}, avatarShape: '🤫', isUnique: true },
-{ id: 'avatar_vidic', name: '벽디치 이마', type: 'avatar', price: 1500, icon: '🧱', desc: '[외형 변경/전체 1장 한정] 통곡의 벽.', baseStats: {}, baseGrowth: {}, avatarShape: '🧱', isUnique: true },
-{ id: 'avatar_buffon', name: '수호신 폰부 장갑', type: 'avatar', price: 1500, icon: '🧤', desc: '[외형 변경/전체 1장 한정] 이탈리아의 수호신.', baseStats: {}, baseGrowth: {}, avatarShape: '🧤', isUnique: true }
 ];
 
 window.playerState = { id: '', isGM: false, isGuest: false, name: '', inventory: [], itemLevels: {}, equipHead: null, equipHandL: null, equipHandR: null, equipFootL: null, equipFootR: null };
-// 🌟 추가사항: equipAvatar 필드 기본값 추가
-window.playerState = { id: '', isGM: false, isGuest: false, name: '', inventory: [], itemLevels: {}, equipHead: null, equipHandL: null, equipHandR: null, equipFootL: null, equipFootR: null, equipAvatar: null };
 window.allPlayersData = [];
 window.checkedInPlayers = new Set();
 window.selectedPlayerId = null;
@@ -899,7 +892,6 @@ let flat = { pac: 0, sho: 0, pas: 0, dri: 0, def: 0, phy: 0, ref: 0, int: 0, pst
 let growth = { pac: 0, sho: 0, pas: 0, dri: 0, def: 0, phy: 0, ref: 0, int: 0, pst: 0, dis: 0, cmp: 0, wrk: 0 };
 
 const equippedIds = [p.equipHead, p.equipHandL, p.equipHandR, p.equipFootL, p.equipFootR].filter(Boolean);
-const equippedIds = [p.equipHead, p.equipHandL, p.equipHandR, p.equipFootL, p.equipFootR, p.equipAvatar].filter(Boolean);
 equippedIds.forEach(itemId => {
 const item = SHOP_ITEMS.find(x => x.id === itemId);
 const level = (p.itemLevels && typeof p.itemLevels === 'object' && !Array.isArray(p.itemLevels) && p.itemLevels[itemId]) ? Number(p.itemLevels[itemId]) : 0;
@@ -977,15 +969,6 @@ if(pos === 'Fixo') return 'bg-blue-500'; if(pos === 'Goleiro') return 'bg-orange
 return 'bg-yellow-500';
 };
 const getAvatar = (p) => GENDER_MAP[p.name] === 'F' ? '👧' : '👦';
-
-// 🌟 추가사항: 장착한 아바타 외형(아이콘) 적용 로직 추가
-const getAvatar = (p) => {
-    if (p.equipAvatar) {
-        const avatarItem = SHOP_ITEMS.find(x => x.id === p.equipAvatar);
-        if (avatarItem && avatarItem.avatarShape) return avatarItem.avatarShape;
-    }
-    return GENDER_MAP[p.name] === 'F' ? '👧' : '👦';
-};
 
 window.switchTab = (tabId) => {
 ['tabWorkspace', 'tabTips', 'tabShop', 'tabAchievements', 'tabRank', 'tabCompare', 'tabGuide', 'tabMaster', 'tabMasterStats'].forEach(id => {
@@ -1118,30 +1101,24 @@ let html = '';
 SHOP_ITEMS.forEach(item => {
 const isOwned = inventory.includes(item.id);
 const isEquipped = p ? (p.equipHead === item.id || p.equipHandL === item.id || p.equipHandR === item.id || p.equipFootL === item.id || p.equipFootR === item.id) : false;
-const isEquipped = p ? (p.equipHead === item.id || p.equipHandL === item.id || p.equipHandR === item.id || p.equipFootL === item.id || p.equipFootR === item.id || p.equipAvatar === item.id) : false;
 const level = Number(itemLevels[item.id]) || 0;
 const enhData = ENHANCE_LEVELS[level] || ENHANCE_LEVELS[0];
 const nextEnhData = ENHANCE_LEVELS[level + 1];
 
-// 🌟 추가사항: 해당 아이템이 전체 1장 한정판(isUnique)인지, 누군가 이미 샀는지 체크
-const isSoldOut = item.isUnique && window.allPlayersData.some(player => Array.isArray(player.inventory) && player.inventory.includes(item.id) && player.id !== targetId);
-
 let statsHtml = '';
 for (const [k, v] of Object.entries(item.baseStats || {})) { statsHtml += `<span class="inline-block bg-emerald-900/50 text-emerald-300 border border-emerald-500/50 text-[9px] px-1 rounded mr-1 mb-1">${STAT_NAMES[k].split(' ')[0]} +${v + enhData.statPlus}</span>`; }
-for (const [k, v] of Object.entries(item.baseStats || {})) { statsHtml += `<span class="inline-block bg-emerald-900/50 text-emerald-300 border border-emerald-500/50 text-[9px] px-1 rounded mr-1 mb-1">${STAT_NAMES[k].split(' ')[0]} +${v + (item.type==='avatar'?0:enhData.statPlus)}</span>`; }
 let growthHtml = '';
 for (const [k, v] of Object.entries(item.baseGrowth || {})) { growthHtml += `<span class="inline-block bg-purple-900/50 text-purple-300 border border-purple-500/50 text-[9px] px-1 rounded mr-1 mb-1">성장 +${Math.floor(v * enhData.growthMult)}%</span>`; }
-for (const [k, v] of Object.entries(item.baseGrowth || {})) { growthHtml += `<span class="inline-block bg-purple-900/50 text-purple-300 border border-purple-500/50 text-[9px] px-1 rounded mr-1 mb-1">성장 +${Math.floor(v * (item.type==='avatar'?1:enhData.growthMult))}%</span>`; }
 
 let btnHtml = ''; let enhanceBtnHtml = '';
 if(isOwned && nextEnhData && !window.playerState.isGuest) {
 const canEnhance = bong >= item.price;
 enhanceBtnHtml = `
-                       <div class="mt-2 pt-2 border-t border-slate-700 w-full">
-                           <button onclick="window.enhanceItem('${item.id}')" class="w-full relative overflow-hidden group ${canEnhance ? 'bg-gradient-to-r from-purple-700 to-indigo-600 hover:from-purple-600 hover:to-indigo-500 text-white shadow-[0_0_10px_rgba(168,85,247,0.5)]' : 'bg-slate-800 text-slate-500 cursor-not-allowed'} text-xs font-bold py-2 rounded transition-all">
-                               <span class="relative z-10 flex items-center justify-center gap-2"><i class="fa-solid fa-hammer ${canEnhance ? 'animate-bounce' : ''}"></i> 강화 도전 (${item.price} B) - 성공률 ${nextEnhData.chance}%</span>
-                           </button>
-                       </div>`;
+                      <div class="mt-2 pt-2 border-t border-slate-700 w-full">
+                          <button onclick="window.enhanceItem('${item.id}')" class="w-full relative overflow-hidden group ${canEnhance ? 'bg-gradient-to-r from-purple-700 to-indigo-600 hover:from-purple-600 hover:to-indigo-500 text-white shadow-[0_0_10px_rgba(168,85,247,0.5)]' : 'bg-slate-800 text-slate-500 cursor-not-allowed'} text-xs font-bold py-2 rounded transition-all">
+                              <span class="relative z-10 flex items-center justify-center gap-2"><i class="fa-solid fa-hammer ${canEnhance ? 'animate-bounce' : ''}"></i> 강화 도전 (${item.price} B) - 성공률 ${nextEnhData.chance}%</span>
+                          </button>
+                      </div>`;
 } else if (isOwned && !nextEnhData) {
 enhanceBtnHtml = `<div class="mt-2 pt-2 border-t border-slate-700 w-full text-center text-[10px] font-bold text-red-400">MAX LEVEL 도달</div>`;
 }
@@ -1150,85 +1127,33 @@ if(window.playerState.isGM) {
 if (!p) { btnHtml = `<button disabled class="w-full mt-2 bg-slate-800 text-slate-500 text-xs font-bold py-1.5 rounded">데이터 없음</button>`; } 
 else if(isOwned) { 
 btnHtml = `
-                           <div class="flex gap-1 mt-2">
-                               <button onclick="window.equipItem('${item.id}', '${item.type}')" class="flex-1 ${isEquipped ? 'bg-slate-700 hover:bg-slate-600' : 'bg-emerald-700 hover:bg-emerald-600'} text-white text-[10px] font-bold py-1.5 rounded shadow">${isEquipped ? '장착 해제' : '대리 장착'}</button>
-                               <button onclick="window.revokeItem('${item.id}')" class="flex-1 bg-red-800 hover:bg-red-700 text-white text-[10px] font-bold py-1.5 rounded shadow">🗑️ 회수</button>
-                           </div>${enhanceBtnHtml}`; 
+                          <div class="flex gap-1 mt-2">
+                              <button onclick="window.equipItem('${item.id}', '${item.type}')" class="flex-1 ${isEquipped ? 'bg-slate-700 hover:bg-slate-600' : 'bg-emerald-700 hover:bg-emerald-600'} text-white text-[10px] font-bold py-1.5 rounded shadow">${isEquipped ? '장착 해제' : '대리 장착'}</button>
+                              <button onclick="window.revokeItem('${item.id}')" class="flex-1 bg-red-800 hover:bg-red-700 text-white text-[10px] font-bold py-1.5 rounded shadow">🗑️ 회수</button>
+                          </div>${enhanceBtnHtml}`; 
 } else { btnHtml = `<button onclick="window.purchaseItem('${item.id}')" class="w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-1.5 rounded shadow"><i class="fa-solid fa-gift mr-1"></i> 무료 선물하기</button>`; }
 } else if(window.playerState.isGuest) {
 btnHtml = `<button onclick="window.customAlert('게스트는 구매할 수 없습니다.')" class="w-full mt-2 bg-slate-800 hover:bg-slate-700 text-slate-500 text-xs font-bold py-1.5 rounded shadow cursor-not-allowed">구매 (${item.price} B)</button>`;
 } else {
 if(isOwned) { 
 btnHtml = `<button onclick="window.equipItem('${item.id}', '${item.type}')" class="w-full mt-2 ${isEquipped ? 'bg-slate-700 border border-slate-500' : 'bg-emerald-600 hover:bg-emerald-500'} text-white text-xs font-bold py-1.5 rounded shadow">${isEquipped ? '장착 해제' : '장착하기'}</button>${enhanceBtnHtml}`; 
-// 🌟 추가사항: avatar 전용 렌더링 + 품절 표시
-if (item.type === 'avatar') {
-    if(window.playerState.isGM) {
-        if (!p) { btnHtml = `<button disabled class="w-full mt-2 bg-slate-800 text-slate-500 text-xs font-bold py-1.5 rounded">데이터 없음</button>`; } 
-        else if(isOwned) { btnHtml = `<div class="flex gap-1 mt-2"><button onclick="window.equipItem('${item.id}', '${item.type}')" class="flex-1 ${isEquipped ? 'bg-slate-700 hover:bg-slate-600' : 'bg-emerald-700 hover:bg-emerald-600'} text-white text-[10px] font-bold py-1.5 rounded shadow">${isEquipped ? '외형 해제' : '대리 장착'}</button><button onclick="window.revokeItem('${item.id}')" class="flex-1 bg-red-800 hover:bg-red-700 text-white text-[10px] font-bold py-1.5 rounded shadow">🗑️ 회수</button></div>`; } 
-        else if(isSoldOut) { btnHtml = `<button disabled class="w-full mt-2 bg-slate-800 text-red-500 text-xs font-bold py-1.5 rounded cursor-not-allowed border border-red-900/50">SOLD OUT (누군가 선점함)</button>`; }
-        else { btnHtml = `<button onclick="window.purchaseItem('${item.id}')" class="w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-1.5 rounded shadow"><i class="fa-solid fa-gift mr-1"></i> 무료 선물하기</button>`; }
-    } else if(window.playerState.isGuest) {
-        btnHtml = `<button onclick="window.customAlert('게스트는 구매할 수 없습니다.')" class="w-full mt-2 bg-slate-800 hover:bg-slate-700 text-slate-500 text-xs font-bold py-1.5 rounded shadow cursor-not-allowed">구매 (${item.price} B)</button>`;
-    } else {
-        if(isOwned) { btnHtml = `<button onclick="window.equipItem('${item.id}', '${item.type}')" class="w-full mt-2 ${isEquipped ? 'bg-slate-700 border border-slate-500' : 'bg-emerald-600 hover:bg-emerald-500'} text-white text-xs font-bold py-1.5 rounded shadow">${isEquipped ? '외형 해제' : '외형 장착하기'}</button>`; } 
-        else if(isSoldOut) { btnHtml = `<button disabled class="w-full mt-2 bg-slate-800 text-red-500 text-xs font-bold py-1.5 rounded line-through text-opacity-60 cursor-not-allowed border border-red-900/50">SOLD OUT (누군가 선점함)</button>`; }
-        else { btnHtml = `<button onclick="window.purchaseItem('${item.id}')" class="w-full mt-2 ${bong >= item.price ? 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white shadow-lg' : 'bg-slate-800 text-slate-500 cursor-not-allowed'} text-xs font-bold py-1.5 rounded">구매 (${item.price} B)</button>`; }
-    }
 } else {
 btnHtml = `<button onclick="window.purchaseItem('${item.id}')" class="w-full mt-2 ${bong >= item.price ? 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white shadow-lg' : 'bg-slate-800 text-slate-500 cursor-not-allowed'} text-xs font-bold py-1.5 rounded">구매 (${item.price} B)</button>`;
 }
-    if(isOwned && nextEnhData && !window.playerState.isGuest) {
-    const canEnhance = bong >= item.price;
-    enhanceBtnHtml = `
-                           <div class="mt-2 pt-2 border-t border-slate-700 w-full">
-                               <button onclick="window.enhanceItem('${item.id}')" class="w-full relative overflow-hidden group ${canEnhance ? 'bg-gradient-to-r from-purple-700 to-indigo-600 hover:from-purple-600 hover:to-indigo-500 text-white shadow-[0_0_10px_rgba(168,85,247,0.5)]' : 'bg-slate-800 text-slate-500 cursor-not-allowed'} text-xs font-bold py-2 rounded transition-all">
-                                   <span class="relative z-10 flex items-center justify-center gap-2"><i class="fa-solid fa-hammer ${canEnhance ? 'animate-bounce' : ''}"></i> 강화 도전 (${item.price} B) - 성공률 ${nextEnhData.chance}%</span>
-                               </button>
-                           </div>`;
-    } else if (isOwned && !nextEnhData) {
-    enhanceBtnHtml = `<div class="mt-2 pt-2 border-t border-slate-700 w-full text-center text-[10px] font-bold text-red-400">MAX LEVEL 도달</div>`;
-    }
-
-    if(window.playerState.isGM) {
-    if (!p) { btnHtml = `<button disabled class="w-full mt-2 bg-slate-800 text-slate-500 text-xs font-bold py-1.5 rounded">데이터 없음</button>`; } 
-    else if(isOwned) { 
-    btnHtml = `
-                               <div class="flex gap-1 mt-2">
-                                   <button onclick="window.equipItem('${item.id}', '${item.type}')" class="flex-1 ${isEquipped ? 'bg-slate-700 hover:bg-slate-600' : 'bg-emerald-700 hover:bg-emerald-600'} text-white text-[10px] font-bold py-1.5 rounded shadow">${isEquipped ? '장착 해제' : '대리 장착'}</button>
-                                   <button onclick="window.revokeItem('${item.id}')" class="flex-1 bg-red-800 hover:bg-red-700 text-white text-[10px] font-bold py-1.5 rounded shadow">🗑️ 회수</button>
-                               </div>${enhanceBtnHtml}`; 
-    } else { btnHtml = `<button onclick="window.purchaseItem('${item.id}')" class="w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-1.5 rounded shadow"><i class="fa-solid fa-gift mr-1"></i> 무료 선물하기</button>`; }
-    } else if(window.playerState.isGuest) {
-    btnHtml = `<button onclick="window.customAlert('게스트는 구매할 수 없습니다.')" class="w-full mt-2 bg-slate-800 hover:bg-slate-700 text-slate-500 text-xs font-bold py-1.5 rounded shadow cursor-not-allowed">구매 (${item.price} B)</button>`;
-    } else {
-    if(isOwned) { 
-    btnHtml = `<button onclick="window.equipItem('${item.id}', '${item.type}')" class="w-full mt-2 ${isEquipped ? 'bg-slate-700 border border-slate-500' : 'bg-emerald-600 hover:bg-emerald-500'} text-white text-xs font-bold py-1.5 rounded shadow">${isEquipped ? '장착 해제' : '장착하기'}</button>${enhanceBtnHtml}`; 
-    } else {
-    btnHtml = `<button onclick="window.purchaseItem('${item.id}')" class="w-full mt-2 ${bong >= item.price ? 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white shadow-lg' : 'bg-slate-800 text-slate-500 cursor-not-allowed'} text-xs font-bold py-1.5 rounded">구매 (${item.price} B)</button>`;
-    }
-    }
 }
 
 const slotKo = { 'head':'머리', 'handL':'왼손', 'handR':'오른손', 'footL':'왼발', 'footR':'오른발' }[item.type];
-// 🌟 추가사항: slotKo에 'avatar':'외형' 추가 완료
-const slotKo = { 'head':'머리', 'handL':'왼손', 'handR':'오른손', 'footL':'왼발', 'footR':'오른발', 'avatar':'외형' }[item.type];
 
 html += `
                   <div class="bg-slate-900/80 border ${isOwned ? 'border-purple-500/50 shadow-[0_0_10px_rgba(168,85,247,0.2)]' : 'border-slate-700'} rounded-xl p-4 flex flex-col justify-between hover:border-purple-400 transition duration-300">
                       <div class="flex items-start gap-4">
-                           <div class="text-4xl w-16 h-16 bg-slate-800 flex items-center justify-center rounded-lg shadow-inner flex-shrink-0 relative border ${isOwned ? 'border-purple-500' : 'border-slate-600'} ${isOwned ? enhData.css : ''}">
-                           <div class="text-4xl w-16 h-16 bg-slate-800 flex items-center justify-center rounded-lg shadow-inner flex-shrink-0 relative border ${isOwned && item.type!=='avatar' ? 'border-purple-500' : 'border-slate-600'} ${isOwned && item.type!=='avatar' ? enhData.css : ''}">
+                          <div class="text-4xl w-16 h-16 bg-slate-800 flex items-center justify-center rounded-lg shadow-inner flex-shrink-0 relative border ${isOwned ? 'border-purple-500' : 'border-slate-600'} ${isOwned ? enhData.css : ''}">
                               <span class="z-10 relative drop-shadow-md">${item.icon}</span>
                               <div class="absolute -top-2 -left-2 bg-slate-700 text-white text-[8px] px-1.5 py-0.5 rounded border border-slate-500 z-20">${slotKo}</div>
-                               ${isOwned && level > 0 ? `<div class="absolute -bottom-2 -right-2 bg-black text-[9px] font-bold px-1.5 py-0.5 rounded border border-current z-20 ${enhData.color}">${enhData.text}</div>` : ''}
-                               ${isOwned && level > 0 && item.type !== 'avatar' ? `<div class="absolute -bottom-2 -right-2 bg-black text-[9px] font-bold px-1.5 py-0.5 rounded border border-current z-20 ${enhData.color}">${enhData.text}</div>` : ''}
+                              ${isOwned && level > 0 ? `<div class="absolute -bottom-2 -right-2 bg-black text-[9px] font-bold px-1.5 py-0.5 rounded border border-current z-20 ${enhData.color}">${enhData.text}</div>` : ''}
                           </div>
                           <div class="flex-grow">
-                               <h5 class="font-bold text-white text-sm mb-1 line-clamp-1">${item.name}</h5>
-                               <h5 class="font-bold text-white text-sm mb-1 line-clamp-1 flex items-center justify-between">
-                                   ${item.name}
-                                   ${item.isUnique ? '<span class="text-[8px] bg-red-900/80 text-white px-1.5 rounded border border-red-500/50 ml-2 shadow-[0_0_3px_red] animate-pulse">전체1장 한정</span>' : ''}
-                               </h5>
+                              <h5 class="font-bold text-white text-sm mb-1 line-clamp-1">${item.name}</h5>
                               <p class="text-[9px] sm:text-[10px] text-slate-400 mb-2 line-clamp-2 leading-tight">${item.desc}</p>
                               <div class="flex flex-wrap">${statsHtml}${growthHtml}</div>
                           </div>
@@ -1529,12 +1454,6 @@ const p = window.allPlayersData.find(x => x.id === targetId);
 const item = SHOP_ITEMS.find(x => x.id === itemId);
 if(!p || !item) return;
 
-// 🌟 추가사항: 품절(Sold Out) 더블 체크 보호 로직
-if (item.isUnique) {
-    const alreadyOwned = window.allPlayersData.some(player => Array.isArray(player.inventory) && player.inventory.includes(item.id));
-    if (alreadyOwned) return window.customAlert("😭 앗! 방금 전 누군가 먼저 이 한정판 아이템을 사갔습니다.\n(품절되었습니다)");
-}
-
 let updates = {};
 if(window.playerState.isGM) {
 if(!await window.customConfirm(`감독 권한으로 [${p.name}] 선수에게 [${item.name}]을 선물하시겠습니까?`)) return;
@@ -1549,10 +1468,6 @@ const currentItemLevels = (typeof p.itemLevels === 'object' && !Array.isArray(p.
 
 updates.inventory = [...currentInventory, itemId];
 updates.itemLevels = { ...currentItemLevels, [itemId]: 0 };
-// 🌟 추가사항: 아바타(외형) 아이템은 레벨 강화가 없으므로 itemLevels에 추가하지 않음
-if (item.type !== 'avatar') {
-    updates.itemLevels = { ...currentItemLevels, [itemId]: 0 };
-}
 
 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
 await setDoc(docRef, updates, { merge: true });
@@ -1623,8 +1538,6 @@ if(!p) return;
 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
 let updates = {};
 const fieldMap = { 'head':'equipHead', 'handL':'equipHandL', 'handR':'equipHandR', 'footL':'equipFootL', 'footR':'equipFootR' };
-// 🌟 추가사항: 'avatar' 필드 매핑 추가
-const fieldMap = { 'head':'equipHead', 'handL':'equipHandL', 'handR':'equipHandR', 'footL':'equipFootL', 'footR':'equipFootR', 'avatar':'equipAvatar' };
 const field = fieldMap[type];
 if(field) { updates[field] = p[field] === itemId ? null : itemId; }
 
@@ -1650,10 +1563,8 @@ let updates = { inventory: currentInventory.filter(id => id !== itemId) };
 const safeItemLevels = (typeof p.itemLevels === 'object' && !Array.isArray(p.itemLevels)) ? p.itemLevels : {};
 const newItemLevels = { ...safeItemLevels }; delete newItemLevels[itemId]; updates.itemLevels = newItemLevels;
 
-// 🌟 추가사항: equipAvatar 회수 조건 추가
 if(p.equipHead === itemId) updates.equipHead = null; if(p.equipHandL === itemId) updates.equipHandL = null;
 if(p.equipHandR === itemId) updates.equipHandR = null; if(p.equipFootL === itemId) updates.equipFootL = null; if(p.equipFootR === itemId) updates.equipFootR = null;
-if(p.equipAvatar === itemId) updates.equipAvatar = null;
 
 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
 await setDoc(docRef, updates, { merge: true });
@@ -2205,8 +2116,6 @@ dri: data.dri || r(), def: data.def || r(), phy: data.phy || r(), ref: data.ref 
 dis: data.dis || r(), cmp: data.cmp || r(), wrk: data.wrk || r(), level: data.level || 1, exp: data.exp || 0, goals: data.goals || 0,
 assists: data.assists || 0, matches: data.matches || 0, training: data.training || 0, saves: data.saves || 0, keypass: data.keypass || 0, bong: data.bong || 0,
 age: data.age || 13,
-// 🌟 추가사항: 초기 등록 시 신무호 나이 자동 12세 적용, 나머지 13세
-age: data.age || (pId === '신무호' ? 12 : 13),
 inventory: data.inventory || [], itemLevels: data.itemLevels || {}
 };
 await setDoc(docRef, { ...updateData, updatedAt: new Date().toISOString() }, { merge: true });
@@ -2223,8 +2132,6 @@ name: isGM ? (pId==='gm1'?'감독 J':'수석코치 J') : pId, pin, pos: isGM ? '
 pac: r(), sho: r(), pas: r(), dri: r(), def: r(), phy: r(), ref: r(), int: r(), pst: r(), dis: r(), cmp: r(), wrk: r(),
 level: 1, exp: 0, goals: 0, assists: 0, matches: 0, training: 0, saves: 0, keypass: 0, bong: 0, lastWageWeek: '',
 age: (pId === '신무호' || pId === '신무호') ? 12 : 13,
-// 🌟 추가사항: 최초 생성 시 신무호 나이 자동 12세 적용
-age: (pId === '신무호') ? 12 : 13,
 inventory: [], itemLevels: {}, equipHead: null, equipHandL: null, equipHandR: null, equipFootL: null, equipFootR: null, equipAvatar: null,
 updatedAt: new Date().toISOString()
 };
