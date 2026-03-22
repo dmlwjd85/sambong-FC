@@ -627,6 +627,30 @@ input[type="number"] { -moz-appearance: textfield; }
 </div>
 
 <div id="tabMaster" class="hidden space-y-6">
+
+<!-- 🌟 신규 선수 등록 패널 추가 -->
+<div class="glass-panel p-4 sm:p-6 rounded-3xl border-t-4 border-t-emerald-500 overflow-hidden mb-6">
+<h4 class="text-emerald-400 font-bold mb-3 flex items-center gap-2"><i class="fa-solid fa-user-plus"></i> 신규 선수 등록</h4>
+<div class="flex flex-col sm:flex-row gap-3 items-end">
+<div class="flex-1 w-full">
+<label class="block text-[10px] text-slate-400 mb-1">이름</label>
+<input type="text" id="newPlayerName" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-3 py-2.5 text-white text-sm focus:border-emerald-500 focus:outline-none" placeholder="예: 홍길동">
+</div>
+<div class="w-full sm:w-24">
+<label class="block text-[10px] text-slate-400 mb-1">나이</label>
+<input type="number" id="newPlayerAge" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-3 py-2.5 text-white text-sm text-center focus:border-emerald-500 focus:outline-none" value="13">
+</div>
+<div class="w-full sm:w-28">
+<label class="block text-[10px] text-slate-400 mb-1">성별</label>
+<select id="newPlayerGender" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-3 py-2.5 text-white text-sm focus:border-emerald-500 focus:outline-none appearance-none">
+<option value="M">남 (👦)</option>
+<option value="F">여 (👧)</option>
+</select>
+</div>
+<button onclick="window.addNewPlayer()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-6 rounded-xl transition shadow-lg text-sm h-[42px] whitespace-nowrap">등록하기</button>
+</div>
+</div>
+
 <div class="glass-panel p-4 sm:p-8 rounded-3xl border-t-4 border-t-emerald-400 overflow-hidden">
 <h3 class="text-2xl sm:text-3xl font-display text-emerald-400 mb-2 flex items-center gap-2 sm:gap-3">
 <i class="fa-solid fa-chart-line"></i> 전체 학생 현황판 (마스터)
@@ -640,19 +664,16 @@ input[type="number"] { -moz-appearance: textfield; }
 <th class="py-3 pl-4 text-left">이름</th>
 <th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('age')">나이 <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
 <th class="py-3 px-1">포지션</th>
+<th class="py-3 px-1">티어</th>
 <th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('ovr')">OVR <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
-<th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('pac')">PAC <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
-<th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('sho')">SHO <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
-<th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('pas')">PAS <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
-<th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('dri')">DRI <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
-<th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('def')">DEF <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
-<th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('phy')">PHY <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
-<th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-200" onclick="window.sortMasterStats('ref')">REF <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
-<th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-200" onclick="window.sortMasterStats('int')">INT <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
-<th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-200" onclick="window.sortMasterStats('pst')">PST <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
-<th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-200" onclick="window.sortMasterStats('dis')">DIS <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
-<th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-200" onclick="window.sortMasterStats('cmp')">CMP <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
-<th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-200" onclick="window.sortMasterStats('wrk')">WRK <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('matches')">경기 <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group text-fut-gold" onclick="window.sortMasterStats('goals')">골 <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group text-blue-300" onclick="window.sortMasterStats('assists')">어시 <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-300" onclick="window.sortMasterStats('saves')">세이브 <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group text-emerald-300" onclick="window.sortMasterStats('training')">훈련 <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-400" onclick="window.sortMasterStats('exp')">EXP <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 pr-4 text-right cursor-pointer hover:text-white transition group text-emerald-400" onclick="window.sortMasterStats('bong')">자산(B) <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-2 text-red-400 font-bold">관리</th>
 </tr>
 </thead>
 <tbody id="masterTableBody" class="bg-slate-900/50 divide-y divide-slate-700/50 whitespace-nowrap"></tbody>
@@ -705,20 +726,23 @@ input[type="number"] { -moz-appearance: textfield; }
 <script type="module">
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, writeBatch, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, writeBatch, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 // AI 캔버스 환경과 깃허브 등 외부 환경을 자동 감지
 const appId = typeof __app_id !== 'undefined' ? __app_id : 'sambong-futsal-ultimate'; 
 
-const getSafeDocId = (name) => {
-if(name === 'gm1' || name === 'gm2') return name;
-return name.replace(/[^가-힣a-zA-Z0-9]/g, ''); 
-};
-
-const ALLOWED_PLAYERS = [
+const INITIAL_PLAYERS = [
 '김단엘', '김다래', '김라희', '김민지', '김사랑비', '김지훈', '노승희', '박소담', '박소윤', '박준수', '박하율', '박현수', '백시율', 
 '석서영', '이가온', '이동해', '이시형', '이예주', '이준용', '이지안', '인시진', '임은영', '정의영', '정의정', '조이담', '최윤희', '함인솔', '황주하', '황훈태', '황혜민', '황혜윤'
 ];
+
+let ALLOWED_PLAYERS = [...INITIAL_PLAYERS];
+
+const getSafeDocId = (name) => {
+if (!name) return 'unknown';
+if(name === 'gm1' || name === 'gm2') return name;
+return String(name).replace(/[^가-힣a-zA-Z0-9]/g, ''); 
+};
 
 const GENDER_MAP = {
 '김단엘': 'M', '김다래': 'F', '김라희': 'F', '김민지': 'F', '김사랑비': 'F', '김지훈': 'M', '노승희': 'F', '박소담': 'M', '박소윤': 'F', '박준수': 'M', '박하율': 'F', '박현수': 'M', '백시율': 'M', 
@@ -812,22 +836,29 @@ const DAILY_TIPS = [
 ];
 
 const ACHIEVEMENTS = [
-{ id: 'goal_1', category: '득점', title: '마수걸이 골', desc: '풋살화 끈을 꽉 묶고 첫 골을 기록하세요.', reqKey: 'goals', reqValue: 1, reward: 10, icon: '⚽', color: 'text-yellow-400', bg: 'bg-yellow-400' },
-{ id: 'goal_50', category: '득점', title: '득점 폭격기', desc: '누적 50골 달성! 상대 팀이 두려워하는 선수입니다.', reqKey: 'goals', reqValue: 50, reward: 100, icon: '🚀', color: 'text-orange-500', bg: 'bg-orange-500' },
-{ id: 'goal_100', category: '득점', title: '득점 기계', desc: '누적 100골 달성! 전설적인 득점왕.', reqKey: 'goals', reqValue: 100, reward: 300, icon: '🔥', color: 'text-red-500', bg: 'bg-red-500' },
-{ id: 'ast_1', category: '팀 플레이', title: '이타적인 플레이', desc: '첫 어시스트를 기록하세요.', reqKey: 'assists', reqValue: 1, reward: 10, icon: '🤝', color: 'text-emerald-400', bg: 'bg-emerald-400' },
-{ id: 'ast_50', category: '팀 플레이', title: '택배 기사', desc: '누적 50어시스트! 발밑에 정확히 배달합니다.', reqKey: 'assists', reqValue: 50, reward: 100, icon: '📦', color: 'text-green-400', bg: 'bg-green-400' },
-{ id: 'ast_100', category: '팀 플레이', title: '패스 마스터', desc: '누적 100어시스트! 완벽한 플레이메이커.', reqKey: 'assists', reqValue: 100, reward: 300, icon: '🪄', color: 'text-teal-400', bg: 'bg-teal-400' },
-{ id: 'key_30', category: '전개/빌드업', title: '킬러 패스', desc: '누적 30킬패스! 수비를 찢는 패스.', reqKey: 'keypass', reqValue: 30, reward: 50, icon: '🎯', color: 'text-purple-400', bg: 'bg-purple-400' },
-{ id: 'key_100', category: '전개/빌드업', title: '황금 발', desc: '누적 100킬패스! 경기를 지배하는 시야.', reqKey: 'keypass', reqValue: 100, reward: 300, icon: '👁️', color: 'text-purple-600', bg: 'bg-purple-600' },
-{ id: 'save_30', category: '수비/헌신', title: '통곡의 벽', desc: '누적 30세이브 달성! 골문을 든든히 지킵니다.', reqKey: 'saves', reqValue: 30, reward: 50, icon: '🧱', color: 'text-slate-300', bg: 'bg-slate-300' },
-{ id: 'save_100', category: '수비/헌신', title: '거미손', desc: '누적 100세이브! 절대 뚫리지 않는 방패.', reqKey: 'saves', reqValue: 100, reward: 300, icon: '🕷️', color: 'text-gray-400', bg: 'bg-gray-400' },
-{ id: 'train_30', category: '성실함', title: '연습벌레', desc: '개인 훈련 30회 완료! 땀방울은 배신하지 않습니다.', reqKey: 'training', reqValue: 30, reward: 50, icon: '💦', color: 'text-blue-400', bg: 'bg-blue-400' },
-{ id: 'train_100', category: '성실함', title: '훈련 중독', desc: '개인 훈련 100회 완료! 엄청난 노력가.', reqKey: 'training', reqValue: 100, reward: 300, icon: '🏋️‍♂️', color: 'text-blue-600', bg: 'bg-blue-600' },
-{ id: 'match_50', category: '꾸준함', title: '심장 두 개', desc: '50경기 출전! 지치지 않는 강철 체력.', reqKey: 'matches', reqValue: 50, reward: 100, icon: '🫀', color: 'text-pink-400', bg: 'bg-pink-400' },
-{ id: 'match_100', category: '꾸준함', title: '철강왕', desc: '100경기 출전! 삼봉 FC의 살아있는 전설.', reqKey: 'matches', reqValue: 100, reward: 400, icon: '🤖', color: 'text-pink-600', bg: 'bg-pink-600' },
-{ id: 'lv_50', category: '레벨업', title: '레전드의 시작', desc: '레벨 50 달성. 명예의 전당에 오를 자격이 충분합니다.', reqKey: 'level', reqValue: 50, reward: 500, icon: '👑', color: 'text-fut-gold', bg: 'bg-fut-gold' },
-{ id: 'lv_100', category: '레벨업', title: '얼티밋 마스터', desc: '최종 레벨 100 달성! 모든 것을 이룬 완벽한 선수.', reqKey: 'level', reqValue: 100, reward: 2000, icon: '🌟', color: 'text-fut-gold-dark', bg: 'bg-gradient-to-r from-yellow-400 to-yellow-600' },
+{ id: 'goal_1', category: '개인 기록', title: '마수걸이 골', desc: '풋살화 끈을 꽉 묶고 첫 골을 기록하세요.', reqKey: 'goals', reqValue: 1, icon: '⚽', color: 'text-yellow-400', bg: 'bg-yellow-400', reward: 5 },
+{ id: 'goal_50', category: '개인 기록', title: '득점 폭격기', desc: '누적 50골 달성! 상대 팀이 가장 두려워하는 선수입니다.', reqKey: 'goals', reqValue: 50, icon: '🚀', color: 'text-red-500', bg: 'bg-red-500', reward: 50 },
+{ id: 'ast_1', category: '팀 플레이', title: '이타적인 플레이', desc: '첫 어시스트를 기록하세요.', reqKey: 'assists', reqValue: 1, icon: '🤝', color: 'text-emerald-400', bg: 'bg-emerald-400', reward: 5 },
+{ id: 'save_30', category: '수비/헌신', title: '통곡의 벽', desc: '누적 30세이브 달성!', reqKey: 'saves', reqValue: 30, icon: '🧱', color: 'text-slate-300', bg: 'bg-slate-300', reward: 30 },
+{ id: 'match_50', category: '꾸준함', title: '심장 두 개 (강철 체력)', desc: '50경기 출전! 지치지 않는 체력.', reqKey: 'matches', reqValue: 50, icon: '🫀', color: 'text-pink-500', bg: 'bg-pink-500', reward: 50 },
+{ id: 'lv_50', category: '레벨업', title: '레전드의 시작', desc: '레벨 50 달성. 명예의 전당에 오를 자격이 충분합니다.', reqKey: 'level', reqValue: 50, icon: '👑', color: 'text-fut-gold', bg: 'bg-fut-gold', reward: 100 },
+
+// [추가된 포지션별 트로피 12종]
+{ id: 'pivo_low', category: '피보(FW)', title: '타겟맨의 싹', desc: '누적 10골 달성. 최전방 공격수의 자질이 보입니다.', reqKey: 'goals', reqValue: 10, icon: '🎯', color: 'text-red-400', bg: 'bg-red-400', reward: 10 },
+{ id: 'pivo_med', category: '피보(FW)', title: '페널티 박스의 여우', desc: '누적 30골 달성. 찬스를 놓치지 않는 확실한 해결사!', reqKey: 'goals', reqValue: 30, icon: '🦊', color: 'text-red-500', bg: 'bg-red-500', reward: 30 },
+{ id: 'pivo_high', category: '피보(FW)', title: '전설의 피보', desc: '누적 100골 달성. 삼봉 FC 역사에 남을 최고의 공격수!', reqKey: 'goals', reqValue: 100, icon: '🔥', color: 'text-red-600', bg: 'bg-red-600', reward: 100 },
+
+{ id: 'ala_low', category: '아라(MF)', title: '윙어의 첫걸음', desc: '누적 10어시스트 달성. 동료를 활용할 줄 압니다.', reqKey: 'assists', reqValue: 10, icon: '👟', color: 'text-emerald-400', bg: 'bg-emerald-400', reward: 10 },
+{ id: 'ala_med', category: '아라(MF)', title: '정확한 택배기사', desc: '누적 30어시스트 달성. 완벽한 찬스를 만들어냅니다.', reqKey: 'assists', reqValue: 30, icon: '📦', color: 'text-emerald-500', bg: 'bg-emerald-500', reward: 30 },
+{ id: 'ala_high', category: '아라(MF)', title: '중원의 마에스트로', desc: '누적 100어시스트 달성. 팀의 공격을 지휘하는 완벽한 아라!', reqKey: 'assists', reqValue: 100, icon: '🪄', color: 'text-emerald-600', bg: 'bg-emerald-600', reward: 100 },
+
+{ id: 'fixo_low', category: '픽소(DF)', title: '후방 빌드업', desc: '누적 10킬패스 달성. 수비수지만 공격의 시발점입니다.', reqKey: 'keypass', reqValue: 10, icon: '👁️', color: 'text-blue-400', bg: 'bg-blue-400', reward: 10 },
+{ id: 'fixo_med', category: '픽소(DF)', title: '사령관의 시야', desc: '누적 30킬패스 달성. 대지를 가르는 패스의 달인!', reqKey: 'keypass', reqValue: 30, icon: '🔭', color: 'text-blue-500', bg: 'bg-blue-500', reward: 30 },
+{ id: 'fixo_high', category: '픽소(DF)', title: '베켄바워의 재림', desc: '누적 100킬패스 달성. 완벽한 수비 조율과 최고의 패스마스터!', reqKey: 'keypass', reqValue: 100, icon: '🛡️', color: 'text-blue-600', bg: 'bg-blue-600', reward: 100 },
+
+{ id: 'goleiro_low', category: '골레이로(GK)', title: '든든한 수문장', desc: '누적 10세이브 달성. 팀의 뒷문을 책임집니다.', reqKey: 'saves', reqValue: 10, icon: '🧤', color: 'text-orange-400', bg: 'bg-orange-400', reward: 10 },
+{ id: 'goleiro_med', category: '골레이로(GK)', title: '반사신경의 달인', desc: '누적 50세이브 달성. 동물적인 감각으로 실점을 막아냅니다.', reqKey: 'saves', reqValue: 50, icon: '🐆', color: 'text-orange-500', bg: 'bg-orange-500', reward: 50 },
+{ id: 'goleiro_high', category: '골레이로(GK)', title: '삼봉의 야신', desc: '누적 150세이브 달성. 누구도 그의 골문을 뚫을 수 없습니다!', reqKey: 'saves', reqValue: 150, icon: '🐙', color: 'text-orange-600', bg: 'bg-orange-600', reward: 150 }
 ];
 
 const ENHANCE_LEVELS = [
@@ -953,7 +984,7 @@ if(pos === 'Pivo') return 'bg-red-500'; if(pos === 'Ala') return 'bg-emerald-500
 if(pos === 'Fixo') return 'bg-blue-500'; if(pos === 'Goleiro') return 'bg-orange-500'; 
 return 'bg-yellow-500';
 };
-const getAvatar = (p) => GENDER_MAP[p.name] === 'F' ? '👧' : '👦';
+const getAvatar = (p) => (p.gender || GENDER_MAP[p.name]) === 'F' ? '👧' : '👦';
 
 window.switchTab = (tabId) => {
 ['tabWorkspace', 'tabTips', 'tabShop', 'tabAchievements', 'tabRank', 'tabCompare', 'tabGuide', 'tabMaster', 'tabMasterStats'].forEach(id => {
@@ -1001,15 +1032,15 @@ const tip = DAILY_TIPS[tipIndex];
 const container = document.getElementById('dailyTipContainer');
 if(container) {
 container.innerHTML = `
-              <div class="h-64 bg-slate-800 flex items-center justify-center border-b border-slate-700 relative overflow-hidden group">
-                  <p class="text-[6rem] z-0 absolute drop-shadow-lg transition-transform duration-700 group-hover:scale-125">${tip.img}</p>
-                  <span class="absolute top-4 left-4 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded z-20 shadow-md">${tip.category}</span>
-              </div>
-              <div class="p-6">
-                  <h4 class="text-2xl font-display text-white mb-4 leading-tight break-keep">${tip.title}</h4>
-                  <p class="text-slate-300 text-sm sm:text-base leading-relaxed break-keep font-medium">${tip.desc}</p>
-              </div>
-          `;
+             <div class="h-64 bg-slate-800 flex items-center justify-center border-b border-slate-700 relative overflow-hidden group">
+                 <p class="text-[6rem] z-0 absolute drop-shadow-lg transition-transform duration-700 group-hover:scale-125">${tip.img}</p>
+                 <span class="absolute top-4 left-4 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded z-20 shadow-md">${tip.category}</span>
+             </div>
+             <div class="p-6">
+                 <h4 class="text-2xl font-display text-white mb-4 leading-tight break-keep">${tip.title}</h4>
+                 <p class="text-slate-300 text-sm sm:text-base leading-relaxed break-keep font-medium">${tip.desc}</p>
+             </div>
+         `;
 }
 }
 
@@ -1030,13 +1061,13 @@ if(ovr >= 90) borderClass = 'border-purple-500'; else if (ovr >= 80) borderClass
 const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
 
 html += `
-                      <div class="mini-card flex flex-col items-center p-2 rounded-xl bg-pitch-panel border-2 ${borderClass} cursor-pointer ${isSelected ? 'selected' : ''} ${isChecked ? 'checked-in' : 'checked-out'}" onclick="window.selectPlayer('${p.id}')">
-                          <input type="checkbox" class="locker-checkbox absolute top-1.5 left-1.5 w-5 h-5 shadow-lg z-10" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); window.toggleCheck('${p.id}')">
-                          <div class="absolute top-1 right-1 ${tier.class} text-[9px] font-bold px-1.5 py-0.5 rounded shadow whitespace-nowrap">${tier.name.split(' ')[0]}</div>
-                          <div class="text-3xl mt-4 mb-1 drop-shadow-md">${getAvatar(p)}</div>
-                          <div class="font-oswald text-xl font-bold leading-none text-white">${ovr}</div>
-                          <div class="flex items-center gap-1 mt-1"><span class="text-[10px] font-bold ${getPosColor(p.pos)}">${posText}</span><span class="text-xs font-bold text-slate-300 truncate max-w-[50px]">${p.name}</span></div>
-                      </div>`;
+                     <div class="mini-card flex flex-col items-center p-2 rounded-xl bg-pitch-panel border-2 ${borderClass} cursor-pointer ${isSelected ? 'selected' : ''} ${isChecked ? 'checked-in' : 'checked-out'}" onclick="window.selectPlayer('${p.id}')">
+                         <input type="checkbox" class="locker-checkbox absolute top-1.5 left-1.5 w-5 h-5 shadow-lg z-10" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); window.toggleCheck('${p.id}')">
+                         <div class="absolute top-1 right-1 ${tier.class} text-[9px] font-bold px-1.5 py-0.5 rounded shadow whitespace-nowrap">${tier.name.split(' ')[0]}</div>
+                         <div class="text-3xl mt-4 mb-1 drop-shadow-md">${getAvatar(p)}</div>
+                         <div class="font-oswald text-xl font-bold leading-none text-white">${ovr}</div>
+                         <div class="flex items-center gap-1 mt-1"><span class="text-[10px] font-bold ${getPosColor(p.pos)}">${posText}</span><span class="text-xs font-bold text-slate-300 truncate max-w-[50px]">${p.name}</span></div>
+                     </div>`;
 } else {
 html += `<div class="flex flex-col items-center justify-center p-2 rounded-xl border border-slate-800 bg-slate-900/50 opacity-50"><i class="fa-solid fa-user-lock text-xl text-slate-700 mb-2"></i><span class="text-[10px] text-slate-600">${name}</span></div>`;
 }
@@ -1099,11 +1130,11 @@ let btnHtml = ''; let enhanceBtnHtml = '';
 if(isOwned && nextEnhData && !window.playerState.isGuest) {
 const canEnhance = bong >= item.price;
 enhanceBtnHtml = `
-                      <div class="mt-2 pt-2 border-t border-slate-700 w-full">
-                          <button onclick="window.enhanceItem('${item.id}')" class="w-full relative overflow-hidden group ${canEnhance ? 'bg-gradient-to-r from-purple-700 to-indigo-600 hover:from-purple-600 hover:to-indigo-500 text-white shadow-[0_0_10px_rgba(168,85,247,0.5)]' : 'bg-slate-800 text-slate-500 cursor-not-allowed'} text-xs font-bold py-2 rounded transition-all">
-                              <span class="relative z-10 flex items-center justify-center gap-2"><i class="fa-solid fa-hammer ${canEnhance ? 'animate-bounce' : ''}"></i> 강화 도전 (${item.price} B) - 성공률 ${nextEnhData.chance}%</span>
-                          </button>
-                      </div>`;
+                     <div class="mt-2 pt-2 border-t border-slate-700 w-full">
+                         <button onclick="window.enhanceItem('${item.id}')" class="w-full relative overflow-hidden group ${canEnhance ? 'bg-gradient-to-r from-purple-700 to-indigo-600 hover:from-purple-600 hover:to-indigo-500 text-white shadow-[0_0_10px_rgba(168,85,247,0.5)]' : 'bg-slate-800 text-slate-500 cursor-not-allowed'} text-xs font-bold py-2 rounded transition-all">
+                             <span class="relative z-10 flex items-center justify-center gap-2"><i class="fa-solid fa-hammer ${canEnhance ? 'animate-bounce' : ''}"></i> 강화 도전 (${item.price} B) - 성공률 ${nextEnhData.chance}%</span>
+                         </button>
+                     </div>`;
 } else if (isOwned && !nextEnhData) {
 enhanceBtnHtml = `<div class="mt-2 pt-2 border-t border-slate-700 w-full text-center text-[10px] font-bold text-red-400">MAX LEVEL 도달</div>`;
 }
@@ -1112,10 +1143,10 @@ if(window.playerState.isGM) {
 if (!p) { btnHtml = `<button disabled class="w-full mt-2 bg-slate-800 text-slate-500 text-xs font-bold py-1.5 rounded">데이터 없음</button>`; } 
 else if(isOwned) { 
 btnHtml = `
-                          <div class="flex gap-1 mt-2">
-                              <button onclick="window.equipItem('${item.id}', '${item.type}')" class="flex-1 ${isEquipped ? 'bg-slate-700 hover:bg-slate-600' : 'bg-emerald-700 hover:bg-emerald-600'} text-white text-[10px] font-bold py-1.5 rounded shadow">${isEquipped ? '장착 해제' : '대리 장착'}</button>
-                              <button onclick="window.revokeItem('${item.id}')" class="flex-1 bg-red-800 hover:bg-red-700 text-white text-[10px] font-bold py-1.5 rounded shadow">🗑️ 회수</button>
-                          </div>${enhanceBtnHtml}`; 
+                         <div class="flex gap-1 mt-2">
+                             <button onclick="window.equipItem('${item.id}', '${item.type}')" class="flex-1 ${isEquipped ? 'bg-slate-700 hover:bg-slate-600' : 'bg-emerald-700 hover:bg-emerald-600'} text-white text-[10px] font-bold py-1.5 rounded shadow">${isEquipped ? '장착 해제' : '대리 장착'}</button>
+                             <button onclick="window.revokeItem('${item.id}')" class="flex-1 bg-red-800 hover:bg-red-700 text-white text-[10px] font-bold py-1.5 rounded shadow">🗑️ 회수</button>
+                         </div>${enhanceBtnHtml}`; 
 } else { btnHtml = `<button onclick="window.purchaseItem('${item.id}')" class="w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-1.5 rounded shadow"><i class="fa-solid fa-gift mr-1"></i> 무료 선물하기</button>`; }
 } else if(window.playerState.isGuest) {
 btnHtml = `<button onclick="window.customAlert('게스트는 구매할 수 없습니다.')" class="w-full mt-2 bg-slate-800 hover:bg-slate-700 text-slate-500 text-xs font-bold py-1.5 rounded shadow cursor-not-allowed">구매 (${item.price} B)</button>`;
@@ -1130,22 +1161,22 @@ btnHtml = `<button onclick="window.purchaseItem('${item.id}')" class="w-full mt-
 const slotKo = { 'head':'머리', 'handL':'왼손', 'handR':'오른손', 'footL':'왼발', 'footR':'오른발' }[item.type];
 
 html += `
-                  <div class="bg-slate-900/80 border ${isOwned ? 'border-purple-500/50 shadow-[0_0_10px_rgba(168,85,247,0.2)]' : 'border-slate-700'} rounded-xl p-4 flex flex-col justify-between hover:border-purple-400 transition duration-300">
-                      <div class="flex items-start gap-4">
-                          <div class="text-4xl w-16 h-16 bg-slate-800 flex items-center justify-center rounded-lg shadow-inner flex-shrink-0 relative border ${isOwned ? 'border-purple-500' : 'border-slate-600'} ${isOwned ? enhData.css : ''}">
-                              <span class="z-10 relative drop-shadow-md">${item.icon}</span>
-                              <div class="absolute -top-2 -left-2 bg-slate-700 text-white text-[8px] px-1.5 py-0.5 rounded border border-slate-500 z-20">${slotKo}</div>
-                              ${isOwned && level > 0 ? `<div class="absolute -bottom-2 -right-2 bg-black text-[9px] font-bold px-1.5 py-0.5 rounded border border-current z-20 ${enhData.color}">${enhData.text}</div>` : ''}
-                          </div>
-                          <div class="flex-grow">
-                              <h5 class="font-bold text-white text-sm mb-1 line-clamp-1">${item.name}</h5>
-                              <p class="text-[9px] sm:text-[10px] text-slate-400 mb-2 line-clamp-2 leading-tight">${item.desc}</p>
-                              <div class="flex flex-wrap">${statsHtml}${growthHtml}</div>
-                          </div>
-                      </div>
-                      <div class="mt-3">${btnHtml}</div>
-                  </div>
-              `;
+                 <div class="bg-slate-900/80 border ${isOwned ? 'border-purple-500/50 shadow-[0_0_10px_rgba(168,85,247,0.2)]' : 'border-slate-700'} rounded-xl p-4 flex flex-col justify-between hover:border-purple-400 transition duration-300">
+                     <div class="flex items-start gap-4">
+                         <div class="text-4xl w-16 h-16 bg-slate-800 flex items-center justify-center rounded-lg shadow-inner flex-shrink-0 relative border ${isOwned ? 'border-purple-500' : 'border-slate-600'} ${isOwned ? enhData.css : ''}">
+                             <span class="z-10 relative drop-shadow-md">${item.icon}</span>
+                             <div class="absolute -top-2 -left-2 bg-slate-700 text-white text-[8px] px-1.5 py-0.5 rounded border border-slate-500 z-20">${slotKo}</div>
+                             ${isOwned && level > 0 ? `<div class="absolute -bottom-2 -right-2 bg-black text-[9px] font-bold px-1.5 py-0.5 rounded border border-current z-20 ${enhData.color}">${enhData.text}</div>` : ''}
+                         </div>
+                         <div class="flex-grow">
+                             <h5 class="font-bold text-white text-sm mb-1 line-clamp-1">${item.name}</h5>
+                             <p class="text-[9px] sm:text-[10px] text-slate-400 mb-2 line-clamp-2 leading-tight">${item.desc}</p>
+                             <div class="flex flex-wrap">${statsHtml}${growthHtml}</div>
+                         </div>
+                     </div>
+                     <div class="mt-3">${btnHtml}</div>
+                 </div>
+             `;
 });
 const shopGrid = document.getElementById('shopGrid');
 if(shopGrid) shopGrid.innerHTML = html;
@@ -1215,26 +1246,26 @@ labelIcon = '<i class="fa-solid fa-star text-yellow-400 text-[8px] ml-0.5"></i>'
 
 if(isGM) {
 gridHtml += `
-                      <div class="flex flex-col items-center justify-center text-current w-full group relative">
-                          <div class="flex items-center justify-center gap-1 mb-0.5">
-                              <button onclick="window.modStat('${p.id}', '${s.id}', -1)" class="w-3.5 h-3.5 rounded bg-black/40 hover:bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-minus text-[7px]"></i></button>
-                              <div class="relative flex items-center justify-center w-7">
-                                  <input type="number" min="1" max="99" value="${baseVal}" class="font-oswald text-xl font-bold w-full text-center bg-transparent border-b border-transparent hover:border-current focus:outline-none transition cursor-text leading-none p-0 m-0 text-current ${highlightClass}" onchange="window.setStat('${p.id}', '${s.id}', this.value)">
-                                  ${bonusBadge}
-                              </div>
-                              <button onclick="window.modStat('${p.id}', '${s.id}', 1)" class="w-3.5 h-3.5 rounded bg-black/40 hover:bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-plus text-[7px]"></i></button>
-                          </div>
-                          <span class="font-bold text-[10px] tracking-tight whitespace-nowrap opacity-95 cursor-pointer hover:text-emerald-400 leading-none" onclick="window.showStatDesc('${s.id}')">${s.label} ${labelIcon}</span>
-                      </div>`;
+                     <div class="flex flex-col items-center justify-center text-current w-full group relative">
+                         <div class="flex items-center justify-center gap-1 mb-0.5">
+                             <button onclick="window.modStat('${p.id}', '${s.id}', -1)" class="w-3.5 h-3.5 rounded bg-black/40 hover:bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-minus text-[7px]"></i></button>
+                             <div class="relative flex items-center justify-center w-7">
+                                 <input type="number" min="1" max="99" value="${baseVal}" class="font-oswald text-xl font-bold w-full text-center bg-transparent border-b border-transparent hover:border-current focus:outline-none transition cursor-text leading-none p-0 m-0 text-current ${highlightClass}" onchange="window.setStat('${p.id}', '${s.id}', this.value)">
+                                 ${bonusBadge}
+                             </div>
+                             <button onclick="window.modStat('${p.id}', '${s.id}', 1)" class="w-3.5 h-3.5 rounded bg-black/40 hover:bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-plus text-[7px]"></i></button>
+                         </div>
+                         <span class="font-bold text-[10px] tracking-tight whitespace-nowrap opacity-95 cursor-pointer hover:text-emerald-400 leading-none" onclick="window.showStatDesc('${s.id}')">${s.label} ${labelIcon}</span>
+                     </div>`;
 } else {
 gridHtml += `
-                      <div class="flex flex-col items-center justify-center text-current w-full">
-                          <div class="relative flex items-center justify-center mb-0.5 ${highlightClass}">
-                              <span class="font-oswald text-xl font-bold leading-none tracking-tight">${totalVal}</span>
-                              ${bonusBadge}
-                          </div>
-                          <span class="font-bold text-[10px] sm:text-[11px] opacity-95 tracking-tight whitespace-nowrap cursor-pointer hover:text-emerald-400 transition leading-none" onclick="window.showStatDesc('${s.id}')">${s.label} ${labelIcon}</span>
-                      </div>`;
+                     <div class="flex flex-col items-center justify-center text-current w-full">
+                         <div class="relative flex items-center justify-center mb-0.5 ${highlightClass}">
+                             <span class="font-oswald text-xl font-bold leading-none tracking-tight">${totalVal}</span>
+                             ${bonusBadge}
+                         </div>
+                         <span class="font-bold text-[10px] sm:text-[11px] opacity-95 tracking-tight whitespace-nowrap cursor-pointer hover:text-emerald-400 transition leading-none" onclick="window.showStatDesc('${s.id}')">${s.label} ${labelIcon}</span>
+                     </div>`;
 }
 });
 const statsGridEl = document.getElementById('detailStatsGrid');
@@ -1685,22 +1716,22 @@ dates.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${St
 }
 
 let modalHtml = `<div class="bg-pitch-panel p-4 sm:p-6 rounded-3xl border-2 border-emerald-500 w-full sm:w-[95vw] max-w-7xl shadow-2xl max-h-[90vh] flex flex-col font-sans text-white relative">
-                  <h2 class="text-2xl sm:text-3xl font-display text-center text-emerald-400 mb-2 tracking-widest drop-shadow-lg flex items-center justify-center gap-3"><i class="fa-solid fa-calendar-check"></i> 삼봉 풋살클럽 출석부 (2026)</h2>
-                  <p class="text-xs text-emerald-200 mb-4 mt-2 text-center">토요스포츠데이 (3~6학년) / 9:20~12:30 / 좌우로 스크롤하여 30주차 전체 일정을 확인하세요!</p>
-                  <div class="overflow-x-auto overflow-y-auto custom-scrollbar flex-1 border border-emerald-800/50 rounded-xl bg-slate-900/80">
-                      <table class="w-full text-center whitespace-nowrap text-xs border-collapse">
-                          <thead>
-                              <tr class="bg-slate-800 border-b border-emerald-800 sticky top-0 z-20 shadow-md">
-                                  <th rowspan="2" class="p-2 border-r border-slate-700 w-10 sticky left-0 bg-slate-800 z-30">연번</th>
-                                  <th rowspan="2" class="p-2 border-r border-slate-700 w-24 sticky left-10 bg-slate-800 z-30 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">성명</th>
-                                  <th class="p-2 border-r border-slate-700 bg-emerald-900/80 text-emerald-300 w-12 sticky left-[136px] z-30 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">누계</th>
-                                  ${dates.map((_, i) => `<th class="p-1 border-r border-slate-700 font-normal text-[10px] text-slate-400 w-12">${i+1}주차</th>`).join('')}
-                              </tr>
-                              <tr class="bg-slate-800 border-b border-emerald-800 sticky top-8 z-10 shadow-md">
-                                  <th class="p-1 border-r border-slate-700 text-[10px] bg-emerald-900/80 sticky left-[136px] z-30 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">출석</th>
-                                  ${dates.map(d => `<th class="p-1 border-r border-slate-700 text-[10px]"><div class="text-emerald-400 font-bold">${d.substring(5).replace('-','/')}</div><div class="text-emerald-500/70 mt-0.5 font-bold">(토)</div></th>`).join('')}
-                              </tr>
-                          </thead><tbody>`;
+                 <h2 class="text-2xl sm:text-3xl font-display text-center text-emerald-400 mb-2 tracking-widest drop-shadow-lg flex items-center justify-center gap-3"><i class="fa-solid fa-calendar-check"></i> 삼봉 풋살클럽 출석부 (2026)</h2>
+                 <p class="text-xs text-emerald-200 mb-4 mt-2 text-center">토요스포츠데이 (3~6학년) / 9:20~12:30 / 좌우로 스크롤하여 30주차 전체 일정을 확인하세요!</p>
+                 <div class="overflow-x-auto overflow-y-auto custom-scrollbar flex-1 border border-emerald-800/50 rounded-xl bg-slate-900/80">
+                     <table class="w-full text-center whitespace-nowrap text-xs border-collapse">
+                         <thead>
+                             <tr class="bg-slate-800 border-b border-emerald-800 sticky top-0 z-20 shadow-md">
+                                 <th rowspan="2" class="p-2 border-r border-slate-700 w-10 sticky left-0 bg-slate-800 z-30">연번</th>
+                                 <th rowspan="2" class="p-2 border-r border-slate-700 w-24 sticky left-10 bg-slate-800 z-30 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">성명</th>
+                                 <th class="p-2 border-r border-slate-700 bg-emerald-900/80 text-emerald-300 w-12 sticky left-[136px] z-30 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">누계</th>
+                                 ${dates.map((_, i) => `<th class="p-1 border-r border-slate-700 font-normal text-[10px] text-slate-400 w-12">${i+1}주차</th>`).join('')}
+                             </tr>
+                             <tr class="bg-slate-800 border-b border-emerald-800 sticky top-8 z-10 shadow-md">
+                                 <th class="p-1 border-r border-slate-700 text-[10px] bg-emerald-900/80 sticky left-[136px] z-30 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">출석</th>
+                                 ${dates.map(d => `<th class="p-1 border-r border-slate-700 text-[10px]"><div class="text-emerald-400 font-bold">${d.substring(5).replace('-','/')}</div><div class="text-emerald-500/70 mt-0.5 font-bold">(토)</div></th>`).join('')}
+                             </tr>
+                         </thead><tbody>`;
 
 ALLOWED_PLAYERS.forEach((name, idx) => {
 const safeDocId = getSafeDocId(name); const p = window.allPlayersData.find(x => x.id === safeDocId); const pId = p ? p.id : null; let attCount = 0;
@@ -1744,27 +1775,27 @@ const diffStr = ovrDiff > 0 ? `<span class="text-emerald-400 animate-pulse drop-
 const ovrColor = potentialOvr >= 90 ? 'text-purple-400' : (potentialOvr >= 80 ? 'text-fut-gold' : 'text-white');
 
 return `<button onclick="window.confirmChangePos('${pId}', '${pos.id}')" class="bg-slate-800 hover:bg-emerald-900 border border-slate-600 hover:border-emerald-500 p-3 rounded-xl text-left transition group flex flex-col gap-1 relative overflow-hidden">
-       <div class="flex justify-between items-center w-full relative z-10">
-           <div class="font-bold text-lg text-emerald-400 group-hover:text-white">${pos.name}</div>
-           <div class="flex flex-col items-end">
-               <div class="text-[10px] text-slate-400 mb-0.5">선택 시 예상 OVR</div>
-               <div class="font-oswald text-2xl ${ovrColor} leading-none flex items-center gap-2">${potentialOvr} <span class="text-sm">${diffStr}</span></div>
-           </div>
-       </div>
-       <div class="text-[11px] text-slate-400 mt-1 relative z-10">${pos.desc}</div>
-       <div class="text-[9px] text-red-300 mt-1 bg-red-900/30 w-fit px-1.5 py-0.5 rounded border border-red-800/50">🔥 핵심 스탯: ${pos.core} (70% 반영)</div>
-   </button>`;
+      <div class="flex justify-between items-center w-full relative z-10">
+          <div class="font-bold text-lg text-emerald-400 group-hover:text-white">${pos.name}</div>
+          <div class="flex flex-col items-end">
+              <div class="text-[10px] text-slate-400 mb-0.5">선택 시 예상 OVR</div>
+              <div class="font-oswald text-2xl ${ovrColor} leading-none flex items-center gap-2">${potentialOvr} <span class="text-sm">${diffStr}</span></div>
+          </div>
+      </div>
+      <div class="text-[11px] text-slate-400 mt-1 relative z-10">${pos.desc}</div>
+      <div class="text-[9px] text-red-300 mt-1 bg-red-900/30 w-fit px-1.5 py-0.5 rounded border border-red-800/50">🔥 핵심 스탯: ${pos.core} (70% 반영)</div>
+  </button>`;
 }).join('');
 
 modal.innerHTML = `<div class="bg-pitch-bg p-6 rounded-3xl border-2 border-emerald-500 max-w-sm w-full sm:max-w-md shadow-2xl">
-   <h3 class="text-xl font-display text-white mb-2 text-center">선호 포지션 변경</h3>
-   <p class="text-[10px] text-emerald-400 mb-4 text-center leading-relaxed">포지션별로 요구하는 <b>핵심 스탯(70%), 보조 스탯(25%)</b>이 다릅니다.<br>나의 강점을 극대화할 수 있는 포지션을 찾아보세요!</p>
-   <div class="bg-slate-900 p-3 rounded-xl mb-4 border border-slate-700 flex justify-between items-center shadow-inner">
-       <span class="text-sm text-slate-300 font-bold">현재 내 OVR (${POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정'})</span>
-       <span class="font-oswald text-2xl text-fut-gold">${currentOvr}</span>
-   </div>
-   <div class="grid grid-cols-1 gap-3 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">${btns}</div>
-   <button onclick="this.parentElement.parentElement.remove()" class="mt-4 bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-6 rounded-xl w-full transition shadow-md">닫기</button>
+  <h3 class="text-xl font-display text-white mb-2 text-center">선호 포지션 변경</h3>
+  <p class="text-[10px] text-emerald-400 mb-4 text-center leading-relaxed">포지션별로 요구하는 <b>핵심 스탯(70%), 보조 스탯(25%)</b>이 다릅니다.<br>나의 강점을 극대화할 수 있는 포지션을 찾아보세요!</p>
+  <div class="bg-slate-900 p-3 rounded-xl mb-4 border border-slate-700 flex justify-between items-center shadow-inner">
+      <span class="text-sm text-slate-300 font-bold">현재 내 OVR (${POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정'})</span>
+      <span class="font-oswald text-2xl text-fut-gold">${currentOvr}</span>
+  </div>
+  <div class="grid grid-cols-1 gap-3 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">${btns}</div>
+  <button onclick="this.parentElement.parentElement.remove()" class="mt-4 bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-6 rounded-xl w-full transition shadow-md">닫기</button>
 </div>`;
 document.body.appendChild(modal); window.posModalInstance = modal;
 };
@@ -1855,7 +1886,7 @@ return getOVR(b) - getOVR(a);
 players.forEach(p => {
 const ovr = getOVR(p); const tier = getTierInfo(ovr); const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
 const ageVal = Number(p.age) || 13;
-html += `<tr class="hover:bg-slate-800/80 transition cursor-pointer" onclick="window.switchTab('tabWorkspace'); window.selectPlayer('${p.id}')"><td class="py-3 pl-4 text-left font-bold text-white flex items-center gap-2 whitespace-nowrap"><span class="text-lg">${getAvatar(p)}</span><span>${p.name}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[12px] font-bold text-emerald-400 px-1.5 py-0.5 leading-none">${ageVal}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[10px] font-bold ${getPosColor(p.pos)} border border-slate-600 px-1.5 py-0.5 rounded leading-none">${posText}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[10px] font-bold ${tier.class} border px-1.5 py-0.5 rounded shadow-sm">${tier.name.split(' ')[0]}</span></td><td class="py-3 text-center font-oswald text-base text-fut-gold font-bold">${ovr}</td><td class="py-3 text-center text-slate-300">${Number(p.matches)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.goals)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.assists)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.saves)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.training)||0}</td><td class="py-3 text-center font-oswald text-orange-400 text-sm">${Number(p.exp)||0}</td><td class="py-3 pr-4 text-right font-oswald text-emerald-400 font-bold text-sm">${Number(p.bong)||0} B</td></tr>`;
+html += `<tr class="hover:bg-slate-800/80 transition cursor-pointer" onclick="window.switchTab('tabWorkspace'); window.selectPlayer('${p.id}')"><td class="py-3 pl-4 text-left font-bold text-white flex items-center gap-2 whitespace-nowrap"><span class="text-lg">${getAvatar(p)}</span><span>${p.name}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[12px] font-bold text-emerald-400 px-1.5 py-0.5 leading-none">${ageVal}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[10px] font-bold ${getPosColor(p.pos)} border border-slate-600 px-1.5 py-0.5 rounded leading-none">${posText}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[10px] font-bold ${tier.class} border px-1.5 py-0.5 rounded shadow-sm">${tier.name.split(' ')[0]}</span></td><td class="py-3 text-center font-oswald text-base text-fut-gold font-bold">${ovr}</td><td class="py-3 text-center text-slate-300">${Number(p.matches)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.goals)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.assists)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.saves)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.training)||0}</td><td class="py-3 text-center font-oswald text-orange-400 text-sm">${Number(p.exp)||0}</td><td class="py-3 pr-4 text-right font-oswald text-emerald-400 font-bold text-sm">${Number(p.bong)||0} B</td><td class="py-3 px-2 text-center"><button onclick="event.stopPropagation(); window.deletePlayer('${p.id}', '${p.name}')" class="text-red-400 hover:text-white transition bg-red-900/40 hover:bg-red-600 px-2 py-1 rounded text-[10px] border border-red-800/50"><i class="fa-solid fa-trash"></i> 삭제</button></td></tr>`;
 });
 tbody.innerHTML = html;
 }
@@ -1954,8 +1985,8 @@ await setDoc(docRef, { bong: newBong, claimedAchievements: newClaimed }, { merge
 triggerConfetti();
 window.customAlert(`🎉 [${ach.title}] 트로피 달성!\n보상으로 ${ach.reward} B가 지급되었습니다.`);
 window.renderAchievements();
-        window.renderSelectedCard(pId); // 좌측 프로필 자산 즉시 갱신
-        window.renderSelectedCard(pId);
+window.renderSelectedCard(pId); // 좌측 프로필 자산 즉시 갱신
+window.renderSelectedCard(pId);
 } catch(e) {
 console.error("claimAch err:", e);
 window.customAlert(`보상 수령 에러:\n${e.message}`);
@@ -1972,33 +2003,12 @@ const resultEl = document.getElementById('teamResult');
 if(window.checkedInPlayers.size < window.targetTeamCount) { window.customAlert(`선택된 선수가 ${window.targetTeamCount}명보다 적습니다.`); return; }
 
 const activePlayers = Array.from(window.checkedInPlayers).map(id => window.allPlayersData.find(p => p.id === id)).filter(Boolean);
+activePlayers.sort((a, b) => getOVR(b) - getOVR(a));
 const teams = Array.from({ length: window.targetTeamCount }, () => ({ players: [], totalOvr: 0 }));
 
-// 1. 포지션별 그룹화 (특정 포지션이 몰리지 않도록)
-const posGroups = { 'Goleiro': [], 'Fixo': [], 'Pivo': [], 'Ala': [], '미정': [] };
 activePlayers.forEach(p => {
-const pos = p.pos && posGroups[p.pos] ? p.pos : '미정';
-posGroups[pos].push(p);
-});
-
-// 2. 골레이로(GK) 무조건 각 팀에 1명씩 우선 고정 배치 (1팀 1명 보장)
-posGroups['Goleiro'].sort((a, b) => getOVR(b) - getOVR(a));
-let teamIdx = 0;
-posGroups['Goleiro'].forEach(p => {
-teams[teamIdx % window.targetTeamCount].players.push(p);
-teams[teamIdx % window.targetTeamCount].totalOvr += getOVR(p);
-teamIdx++;
-});
-
-// 3. 나머지 포지션 분배 (Fixo -> Pivo -> Ala -> 미정)
-const posOrder = ['Fixo', 'Pivo', 'Ala', '미정'];
-posOrder.forEach(pos => {
-posGroups[pos].sort((a, b) => getOVR(b) - getOVR(a)); // 같은 포지션 내에서 OVR 높은 순 정렬
-posGroups[pos].forEach(p => {
-teams.sort((a, b) => a.totalOvr - b.totalOvr); // 현재까지 OVR 총합이 가장 낮은 팀에 우선 배치
-teams[0].players.push(p);
-teams[0].totalOvr += getOVR(p);
-});
+teams.sort((a, b) => a.totalOvr - b.totalOvr);
+teams[0].players.push(p); teams[0].totalOvr += getOVR(p);
 });
 
 let html = '<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">';
@@ -2043,7 +2053,7 @@ const match = url.match(regExp);
 if (match && match[2].length === 11) {
 videoId = match[2];
 } else {
-return window.customAlert('올바른 유튜브 영상 링크가 아닙니다.\n(11자리 영상 ID를 찾을 수 없습니다.)');
+return window.customAlert('올바른 유튜브 영상 링크가 아닙니다.\n(11자리 영상 ID를 찾을 수 정규식 없습니다.)');
 }
 
 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'shorts');
@@ -2072,6 +2082,76 @@ el.appendChild(floatEl); setTimeout(() => floatEl.remove(), 1200);
 };
 
 window.logout = () => { localStorage.removeItem('sfc_pid'); localStorage.removeItem('sfc_pin'); location.reload(); };
+
+// ==============================================
+// 🛠️ 신규 캐릭터 수동 등록 및 삭제
+// ==============================================
+window.addNewPlayer = async () => {
+try {
+checkAuthReady();
+if(!window.playerState.isGM) return;
+
+const nameInput = document.getElementById('newPlayerName');
+const ageInput = document.getElementById('newPlayerAge');
+const genderInput = document.getElementById('newPlayerGender');
+
+const name = nameInput.value.trim();
+const age = Number(ageInput.value) || 13;
+const gender = genderInput.value;
+
+if(!name) return window.customAlert('추가할 학생의 이름을 입력해주세요.');
+
+const safeDocId = getSafeDocId(name);
+const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + safeDocId);
+
+const snap = await getDoc(docRef);
+if(snap.exists()) return window.customAlert('이미 등록되어 있는 이름입니다.');
+
+const r = () => Math.floor(Math.random() * 6) + 55;
+const baseData = {
+name: name, pos: '미정', age: age, gender: gender,
+pac: r(), sho: r(), pas: r(), dri: r(), def: r(), phy: r(), ref: r(), int: r(), pst: r(), dis: r(), cmp: r(), wrk: r(),
+level: 1, exp: 0, goals: 0, assists: 0, matches: 0, training: 0, saves: 0, keypass: 0, bong: 0, lastWageWeek: '',
+inventory: [], itemLevels: {}, equipHead: null, equipHandL: null, equipHandR: null, equipFootL: null, equipFootR: null,
+updatedAt: new Date().toISOString()
+};
+
+await setDoc(docRef, baseData);
+nameInput.value = '';
+triggerConfetti();
+window.customAlert(`🎉 [${name}] 선수가 신규 등록되었습니다!\n라커룸과 현황판에 즉시 반영됩니다.`);
+} catch (e) {
+console.error("추가 에러:", e);
+window.customAlert(`선수 등록 에러:\n${e.message}`);
+}
+};
+
+window.deletePlayer = async (pId, pName) => {
+try {
+checkAuthReady();
+if(!window.playerState.isGM) return;
+
+if(!await window.customConfirm(`정말 [${pName}] 선수의 데이터를 완전히 삭제하시겠습니까?\n이 작업은 절대 되돌릴 수 없습니다.`)) return;
+
+const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(pId));
+await deleteDoc(docRef);
+
+const index = ALLOWED_PLAYERS.indexOf(pName);
+if(index > -1) ALLOWED_PLAYERS.splice(index, 1);
+delete GENDER_MAP[pName];
+
+window.customAlert(`🗑️ [${pName}] 선수의 정보가 삭제되었습니다.`);
+        
+        if (window.selectedPlayerId === pId) {
+            window.selectedPlayerId = ALLOWED_PLAYERS.length > 0 ? getSafeDocId(ALLOWED_PLAYERS[0]) : null;
+            if(window.selectedPlayerId) window.selectPlayer(window.selectedPlayerId);
+        }
+} catch (e) {
+console.error("삭제 에러:", e);
+window.customAlert(`삭제 에러:\n${e.message}`);
+}
+};
+
 
 // ==============================================
 // 🚀 앱 코어 인증 및 초기화
@@ -2192,15 +2272,15 @@ if(window.selectedPlayerId && window.allPlayersData.length > 0) window.selectPla
 
 // 🔔 초기 공지사항 팝업 띄우기 로직 추가
 if(!isGuest && !window.hasShownAnnouncement) {
-    const annRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'announcement');
-    getDoc(annRef).then(snap => {
-        if(snap.exists() && snap.data().text) {
-            setTimeout(() => {
-                window.customAlert(`📢 [감독님 공지사항]\n\n${snap.data().text}`);
-            }, 800);
-            window.hasShownAnnouncement = true;
-        }
-    });
+const annRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'announcement');
+getDoc(annRef).then(snap => {
+if(snap.exists() && snap.data().text) {
+setTimeout(() => {
+window.customAlert(`📢 [감독님 공지사항]\n\n${snap.data().text}`);
+}, 800);
+window.hasShownAnnouncement = true;
+}
+});
 }
 };
 
@@ -2264,9 +2344,39 @@ if(!d.id.includes('gm')) {
 const data = d.data();
 const cleanId = d.id.replace('player_', '');
 dbPlayers.set(cleanId, { id: cleanId, name: data.name || cleanId, ...data }); 
+
+// 🔥 수동으로 등록된 플레이어 배열에 동기화
+if (data.name && !ALLOWED_PLAYERS.includes(data.name)) {
+ALLOWED_PLAYERS.push(data.name);
+}
+if (data.name && data.gender) {
+GENDER_MAP[data.name] = data.gender;
+}
 }
 } catch(e) { console.error("Parse err", e); }
 });
+
+// 🔥 삭제된 플레이어를 로컬 배열에서도 제거 동기화 (초기 명단 보호)
+for (let i = ALLOWED_PLAYERS.length - 1; i >= 0; i--) {
+const name = ALLOWED_PLAYERS[i];
+const safeId = getSafeDocId(name);
+if (!INITIAL_PLAYERS.includes(name) && !dbPlayers.has(safeId)) {
+ALLOWED_PLAYERS.splice(i, 1);
+delete GENDER_MAP[name];
+}
+}
+
+// 🔥 로그인 창 플레이어 이름 선택 드롭다운 갱신
+const nameSelect = document.getElementById('loginPlayerName');
+if(nameSelect) {
+const currentVal = nameSelect.value;
+nameSelect.innerHTML = '<option value="" disabled selected>내 이름 선택하기</option>';
+[...ALLOWED_PLAYERS].sort().forEach(name => {
+const opt = document.createElement('option'); opt.value = name; opt.innerText = name;
+if(name === currentVal) opt.selected = true;
+nameSelect.appendChild(opt);
+});
+}
 
 const players = [];
 ALLOWED_PLAYERS.forEach(name => {
@@ -2292,7 +2402,7 @@ if(lvDiff !== 0) return lvDiff; return getOVR(b) - getOVR(a);
 
 // 로그인 상태에 따른 자동 선택 로직
 if(window.playerState.id && !window.playerState.isGuest) {
-if(!window.selectedPlayerId) {
+if(!window.selectedPlayerId || !window.allPlayersData.find(x => x.id === window.selectedPlayerId)) {
 window.selectedPlayerId = window.playerState.isGM ? getSafeDocId(ALLOWED_PLAYERS[0]) : window.playerState.id;
 }
 }
