@@ -2003,12 +2003,47 @@ const resultEl = document.getElementById('teamResult');
 if(window.checkedInPlayers.size < window.targetTeamCount) { window.customAlert(`선택된 선수가 ${window.targetTeamCount}명보다 적습니다.`); return; }
 
 const activePlayers = Array.from(window.checkedInPlayers).map(id => window.allPlayersData.find(p => p.id === id)).filter(Boolean);
-activePlayers.sort((a, b) => getOVR(b) - getOVR(a));
 const teams = Array.from({ length: window.targetTeamCount }, () => ({ players: [], totalOvr: 0 }));
 
+// 1. 포지션별 그룹화
+const posGroups = { 'Goleiro': [], 'Fixo': [], 'Pivo': [], 'Ala': [], '미정': [] };
 activePlayers.forEach(p => {
+const pos = p.pos && posGroups[p.pos] ? p.pos : '미정';
+posGroups[pos].push(p);
+});
+
+// 2. 골레이로(GK) 우선 고정 배치 (각 팀에 1명씩 최대한 보장되도록 라운드로빈 배분)
+posGroups['Goleiro'].sort((a, b) => getOVR(b) - getOVR(a));
+let teamIdx = 0;
+posGroups['Goleiro'].forEach(p => {
+if (teamIdx < window.targetTeamCount) {
+teams[teamIdx].players.push(p);
+teams[teamIdx].totalOvr += getOVR(p);
+teamIdx++;
+} else {
 teams.sort((a, b) => a.totalOvr - b.totalOvr);
-teams[0].players.push(p); teams[0].totalOvr += getOVR(p);
+teams[0].players.push(p);
+teams[0].totalOvr += getOVR(p);
+}
+});
+
+// 3. 픽소(DF) 다음으로 밸런스 분배
+posGroups['Fixo'].sort((a, b) => getOVR(b) - getOVR(a));
+posGroups['Fixo'].forEach(p => {
+teams.sort((a, b) => a.totalOvr - b.totalOvr);
+teams[0].players.push(p);
+teams[0].totalOvr += getOVR(p);
+});
+
+// 4. 나머지 포지션(Pivo, Ala, 미정) 밸런스 분배
+const posOrder = ['Pivo', 'Ala', '미정'];
+posOrder.forEach(pos => {
+posGroups[pos].sort((a, b) => getOVR(b) - getOVR(a));
+posGroups[pos].forEach(p => {
+teams.sort((a, b) => a.totalOvr - b.totalOvr);
+teams[0].players.push(p);
+teams[0].totalOvr += getOVR(p);
+});
 });
 
 let html = '<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">';
