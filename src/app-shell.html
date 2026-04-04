@@ -1,0 +1,584 @@
+<!-- 로딩 오버레이 -->
+<div id="loadingOverlay" class="fixed inset-0 z-[6000] bg-pitch-bg flex flex-col items-center justify-center">
+<i class="fa-solid fa-spinner fa-spin text-5xl text-fut-rare mb-4"></i>
+<h2 class="font-display text-white text-xl tracking-widest">데이터 동기화 중...</h2>
+</div>
+
+<svg width="0" height="0" class="hidden">
+<defs>
+<marker id="arrowYellow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto-start-reverse">
+<path d="M 0 0 L 6 3 L 0 6 z" fill="#e8c271" />
+</marker>
+<marker id="arrowGreen" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto-start-reverse">
+<path d="M 0 0 L 6 3 L 0 6 z" fill="#38ff8e" />
+</marker>
+</defs>
+</svg>
+
+<!-- 글로벌 전광판 (Marquee) -->
+<div id="globalMarqueeContainer" class="hidden w-full bg-gradient-to-r from-red-600 via-yellow-500 to-purple-600 text-white font-display text-lg py-1.5 z-[200] relative shadow-[0_0_15px_rgba(255,215,0,0.8)] overflow-hidden">
+<marquee id="globalMarqueeText" scrollamount="12" class="tracking-widest drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]"></marquee>
+</div>
+
+<!-- 로그인 오버레이 (z-index 5000 최상단) -->
+<div id="loginOverlay" class="fixed inset-0 bg-pitch-bg z-[5000] flex flex-col items-center justify-center px-4 transition-opacity duration-500 hidden">
+<div class="text-center mb-8">
+<i class="fa-regular fa-futbol text-5xl text-fut-rare mb-4 animate-bounce"></i>
+<h1 class="text-5xl sm:text-7xl font-display text-white tracking-widest drop-shadow-[0_0_15px_rgba(56,255,142,0.5)]">SAMBONG FC</h1>
+<p class="text-emerald-400 mt-3 font-bold text-lg">삼봉초등학교 풋살 클럽</p>
+</div>
+
+<div class="glass-panel p-8 rounded-3xl max-w-sm w-full shadow-2xl border-t-4 border-t-fut-rare">
+<div class="space-y-4">
+<div>
+<label class="block text-sm font-bold text-slate-400 mb-1">라커룸 입장 자격 확인</label>
+<select id="loginId" class="w-full bg-slate-800 border border-slate-600 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-fut-rare font-bold appearance-none mb-3">
+<option value="" disabled selected>선택하세요</option>
+<option value="guest" class="text-slate-400">👀 게스트 (둘러보기)</option>
+<option value="player" class="text-fut-rare">👤 삼봉 FC 선수 (이름 선택)</option>
+<option disabled>─── 코칭 스태프 ───</option>
+<option value="gm1" class="text-fut-gold">👑 전설감독 J (선생님)</option>
+<option value="gm2" class="text-fut-gold">👑 수석코치 J (코치님)</option>
+</select>
+
+<div id="playerNameInputContainer" class="hidden">
+<div class="relative">
+<select id="loginPlayerName" class="w-full bg-slate-900 border border-emerald-600 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-fut-rare font-bold text-center appearance-none">
+<option value="" disabled selected>내 이름 선택하기</option>
+</select>
+<i class="fa-solid fa-chevron-down absolute right-4 top-1/2 transform -translate-y-1/2 text-emerald-500 pointer-events-none"></i>
+</div>
+</div>
+</div>
+
+<div id="pinContainer">
+<label class="block text-sm font-bold text-slate-400 mb-1">비밀번호 (PIN)</label>
+<input type="password" id="loginPin" placeholder="4자리 숫자" class="w-full bg-slate-800 border border-slate-600 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-fut-rare font-bold text-center tracking-[0.5em]" maxlength="4" pattern="[0-9]*" inputmode="numeric">
+</div>
+
+<button id="btnLogin" class="w-full bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white font-bold py-3 rounded-xl shadow-lg transition transform hover:scale-105 mt-4 text-lg">
+라커룸 입장
+</button>
+</div>
+</div>
+</div>
+
+<!-- 메인 UI 바구니 -->
+<div id="mainUI" class="hidden transition-opacity duration-500">
+<!-- 네비게이션 -->
+<nav class="relative lg:sticky top-0 w-full z-[90] bg-pitch-bg/95 backdrop-blur-lg border-b border-emerald-900/50">
+<div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+<div class="flex items-center justify-between h-16 gap-2 sm:gap-4">
+<div class="flex items-center gap-2 pr-2 border-r border-slate-700/50 flex-shrink-0">
+<i class="fa-solid fa-shield-halved text-xl sm:text-2xl text-fut-gold hidden sm:block"></i>
+<span class="font-display text-lg sm:text-xl text-white tracking-wider pt-1 hidden md:block">SAMBONG</span>
+</div>
+
+<div class="flex items-center space-x-1 sm:space-x-3 text-xs sm:text-sm flex-grow overflow-x-auto hide-scrollbar whitespace-nowrap scroll-smooth">
+<button onclick="window.switchTab('tabWorkspace')" id="btnTabWorkspace" class="nav-tab active pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-person-booth mr-1"></i>라커룸</button>
+<button onclick="window.switchTab('tabTips')" id="btnTabTips" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-lightbulb mr-1 text-orange-400"></i>꿀팁&공지</button>
+<button onclick="window.switchTab('tabShop')" id="btnTabShop" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-hammer mr-1 text-purple-400"></i>상점&강화소</button>
+<button onclick="window.switchTab('tabAchievements')" id="btnTabAchievements" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-medal mr-1 text-yellow-300"></i>도전과제</button>
+<button onclick="window.switchTab('tabRank')" id="btnTabRank" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-trophy mr-1 text-yellow-400"></i>명예의전당</button>
+<button onclick="window.switchTab('tabCompare')" id="btnTabCompare" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-code-compare mr-1 text-pink-400"></i>선수비교</button>
+<button onclick="window.switchTab('tabGuide')" id="btnTabGuide" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-circle-info mr-1 text-cyan-400"></i>이용안내</button>
+<button onclick="window.switchTab('tabMaster')" id="btnTabMaster" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 hidden flex-shrink-0"><i class="fa-solid fa-chart-line mr-1 text-fut-rare"></i>현황판(마스터)</button>
+<button onclick="window.switchTab('tabMasterStats')" id="btnTabMasterStats" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 hidden flex-shrink-0"><i class="fa-solid fa-list-ol mr-1 text-emerald-400"></i>스탯현황</button>
+</div>
+
+<div class="flex items-center space-x-2 pl-2 border-l border-slate-700/50 flex-shrink-0">
+<div id="saveStatus" class="hidden text-[10px] sm:text-xs text-slate-400 items-center gap-1.5 bg-pitch-panel px-2 sm:px-3 py-1.5 rounded-full border border-emerald-800 whitespace-nowrap">
+<span id="playerNameDisplay" class="font-bold text-white hidden lg:block"></span>
+<span id="playerRoleDisplay" class="text-fut-gold font-bold"></span>
+</div>
+<button onclick="window.logout()" class="text-xs bg-slate-800 hover:bg-red-900/50 text-white px-2 sm:px-3 py-1.5 rounded-lg transition border border-slate-600 hover:border-red-500">
+<i class="fa-solid fa-right-from-bracket"></i>
+</button>
+</div>
+</div>
+</div>
+</nav>
+
+<!-- 메인 컨텐츠 영역 -->
+<div class="pt-6 pb-12 px-4 max-w-7xl mx-auto min-h-screen">
+
+<div class="grid lg:grid-cols-12 gap-8 items-start relative w-full transition-all duration-500">
+
+<!-- 좌측: 상세 정보 패널 -->
+<div id="leftCardPanel" class="lg:col-span-4 space-y-6 lg:sticky lg:top-24 z-10 transition-all duration-500">
+
+<div class="glass-panel p-6 rounded-3xl border-t-4 border-fut-gold shadow-2xl relative overflow-hidden">
+<div id="confettiOrigin" class="absolute top-10 left-1/2 transform -translate-x-1/2"></div>
+
+<div class="flex justify-between items-center mb-4">
+<h2 class="font-display text-xl text-white" id="detailPanelTitle">내 선수 정보</h2>
+<div class="flex gap-2 items-center">
+<div id="detailTierBadge" class="px-2 py-1 rounded border text-[10px] font-bold shadow-md whitespace-nowrap">루키</div>
+<div class="bg-slate-800 px-3 py-1 rounded-full border border-slate-600 flex items-center gap-2 shadow-inner">
+<span class="text-xs text-slate-400 font-bold">LV.</span>
+<span class="font-display text-xl text-fut-rare drop-shadow-md" id="detailLevel">1</span>
+</div>
+</div>
+</div>
+
+<div id="cardAuraWrapper" class="mx-auto w-fit transition-all duration-500 z-10 relative">
+<div id="detailFutCard" class="fut-card w-[300px] h-[460px] p-5 flex flex-col relative shadow-2xl z-10 mx-auto transition-all duration-300">
+
+<div class="flex justify-between items-start z-10 w-full h-[155px]">
+<div class="flex flex-col items-center justify-start relative text-current mt-2 w-1/3">
+<span class="font-oswald text-[4.2rem] font-bold leading-none -ml-1 drop-shadow-md" id="detailOvr">86</span>
+<div class="flex flex-col items-center gap-1 hover:opacity-70 transition cursor-pointer mt-1 w-full" id="btnChangePos">
+<span class="font-bold text-sm tracking-widest leading-none text-center" id="detailPos">미정</span>
+<i class="fa-solid fa-pen text-[10px] opacity-70" id="iconEditPos"></i>
+</div>
+<img src="https://flagcdn.com/w40/kr.png" alt="KR" class="w-8 h-auto mt-2 shadow-sm border border-black/20 rounded-sm">
+</div>
+
+<div class="relative w-2/3 h-full flex items-center justify-center -mt-2 pr-2">
+<div class="text-[5rem] drop-shadow-xl relative z-10 mb-2" id="detailAvatar">👦</div>
+<div class="item-slot-mini" id="slotHead" style="top: -5px; left: 50%; transform: translateX(-50%);"></div>
+<div class="item-slot-mini" id="slotHandL" style="top: 35px; left: 10px;"></div>
+<div class="item-slot-mini" id="slotHandR" style="top: 35px; right: 10px;"></div>
+<div class="item-slot-mini" id="slotFootL" style="bottom: 5px; left: 28px;"></div>
+<div class="item-slot-mini" id="slotFootR" style="bottom: 5px; right: 28px;"></div>
+</div>
+</div>
+
+<div class="w-full flex flex-col items-center z-10 text-current mt-1 mb-2">
+<div class="font-display text-[1.7rem] tracking-widest uppercase drop-shadow-md leading-none" id="detailName">선수 이름</div>
+<div class="text-[10px] font-bold mt-1 bg-black/40 px-2 py-0.5 rounded border border-current opacity-80"><span id="detailAge">13</span>세</div>
+<div class="w-11/12 border-b-2 border-current opacity-30 mt-1 mb-2"></div>
+</div>
+
+<div class="relative w-full flex-grow flex items-center justify-center z-10 text-current">
+<div class="absolute inset-0 flex items-center justify-center opacity-15 pointer-events-none">
+<canvas id="statRadar" width="160" height="160"></canvas>
+</div>
+<div class="w-full grid grid-cols-3 gap-y-1.5 gap-x-0 z-10 px-1" id="detailStatsGrid">
+</div>
+</div>
+</div>
+</div>
+
+<div class="mt-8 mb-2 px-2 relative z-30">
+<div class="flex justify-between text-xs font-bold text-slate-400 mb-1">
+<span>EXP</span>
+<span id="detailExpText">0 / 120</span>
+</div>
+<div class="w-full bg-slate-800 rounded-full h-3 border border-slate-600 overflow-hidden relative shadow-inner">
+<div id="detailExpBar" class="bg-gradient-to-r from-emerald-500 to-fut-rare h-3 rounded-full exp-bar-fill shadow-[0_0_10px_#38ff8e]" style="width: 0%"></div>
+</div>
+</div>
+
+<div id="gmWalletManager" class="hidden mt-4 bg-slate-900/90 p-3 rounded-xl border border-fut-gold shadow-lg flex justify-between items-center relative z-30">
+<span class="text-xs font-bold text-slate-300 flex items-center">자산 관리: <span id="gmViewBong" class="ml-1"></span><span class="text-fut-gold ml-1">B</span></span>
+<div class="flex gap-1">
+<button onclick="window.manualAddBong(1)" class="bg-emerald-700 hover:bg-emerald-600 px-2.5 py-1 rounded text-xs font-bold text-white transition">+1</button>
+<button onclick="window.manualAddBong(5)" class="bg-emerald-700 hover:bg-emerald-600 px-2.5 py-1 rounded text-xs font-bold text-white transition">+5</button>
+<button onclick="window.manualAddBong(-1)" class="bg-red-800 hover:bg-red-700 px-2.5 py-1 rounded text-xs font-bold text-white transition">-1</button>
+<button onclick="window.manualAddBong(-5)" class="bg-red-800 hover:bg-red-700 px-2.5 py-1 rounded text-xs font-bold text-white transition">-5</button>
+</div>
+</div>
+
+<div id="gmAgeManager" class="hidden mt-2 bg-slate-900/90 p-3 rounded-xl border border-fut-gold shadow-lg flex justify-between items-center relative z-30">
+<span class="text-xs font-bold text-slate-300 flex items-center">나이 설정 (마스터):</span>
+<div class="flex items-center gap-2">
+<input type="number" id="gmInputAge" class="w-16 bg-transparent text-center border-b border-slate-600 focus:border-emerald-500 focus:outline-none transition-colors m-0 p-0 text-emerald-400 font-display text-xl leading-none" onchange="window.setRecord(window.selectedPlayerId, 'age', this.value)">
+<span class="text-xs text-slate-400">세</span>
+</div>
+</div>
+
+<div id="gmControls" class="hidden mt-4 bg-slate-900/80 p-4 rounded-xl border border-emerald-800/50 relative z-30">
+<div class="mb-3 pb-3 border-b border-amber-800/40 flex flex-wrap items-center justify-between gap-2">
+<span class="text-[11px] font-bold text-amber-300 leading-snug"><i class="fa-solid fa-arrow-rotate-left mr-1"></i>선택 선수 레벨 롤백 (마스터)</span>
+<button type="button" onclick="window.gmRollbackLevel()" class="bg-amber-900/50 hover:bg-amber-800 text-amber-100 text-xs py-2 px-3 rounded border border-amber-600/50 font-bold transition whitespace-nowrap">레벨 -1 (한 단계)</button>
+</div>
+<h3 class="text-sm font-bold text-emerald-400 mb-3 border-b border-emerald-800/50 pb-1"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> 코치 스태프 권한: 활동 기록 추가</h3>
+<div class="grid grid-cols-2 gap-2 mb-2">
+<button onclick="window.addActivity('matches')" class="bg-slate-800 hover:bg-slate-700 text-white text-xs py-2 rounded border border-slate-600 transition shadow">경기 출전 (+50 EXP)</button>
+<button onclick="window.addActivity('training')" class="bg-emerald-900/60 hover:bg-emerald-800 text-emerald-300 text-xs py-2 rounded border border-emerald-700 transition shadow">훈련 완료 (+30 EXP)</button>
+<button onclick="window.addActivity('goals')" class="bg-yellow-900/40 hover:bg-yellow-800 text-yellow-300 text-xs py-2 rounded border border-yellow-700/50 transition shadow">골 ⚽ (+20 EXP)</button>
+<button onclick="window.addActivity('assists')" class="bg-blue-900/40 hover:bg-blue-800 text-blue-300 text-xs py-2 rounded border border-blue-700/50 transition shadow">어시스트 👟 (+10 EXP)</button>
+</div>
+<div class="grid grid-cols-2 gap-2">
+<button onclick="window.addActivity('keypass')" class="bg-purple-900/40 hover:bg-purple-800 text-purple-300 text-xs py-2 rounded border border-purple-700/50 transition shadow">킬패스 🎯 (+15 EXP)</button>
+<button onclick="window.addActivity('saves')" class="bg-orange-900/40 hover:bg-orange-800 text-orange-300 text-xs py-2 rounded border border-orange-700/50 transition shadow">세이브 🧤 (+15 EXP)</button>
+</div>
+
+<div class="mt-3 pt-3 border-t border-emerald-800/50">
+<h4 class="text-[11px] font-bold text-emerald-400 mb-2 flex items-center gap-1"><i class="fa-solid fa-gift"></i> 전체 일괄 지급 (모든 학생)</h4>
+<div class="flex gap-2">
+<button onclick="window.giveAll('exp', 50)" class="flex-1 bg-gradient-to-r from-emerald-600 to-emerald-800 hover:from-emerald-500 hover:to-emerald-700 text-white text-xs py-2.5 rounded shadow font-bold transition">전체 +50 EXP</button>
+<button onclick="window.giveAll('bong', 10)" class="flex-1 bg-gradient-to-r from-fut-gold-dark to-fut-gold hover:from-fut-gold hover:to-yellow-200 text-slate-900 text-xs py-2.5 rounded shadow font-bold transition">전체 +10 B 지급</button>
+</div>
+</div>
+<div class="mt-3 pt-3 border-t border-red-800/50">
+<h4 class="text-[11px] font-bold text-red-400 mb-2 flex items-center gap-1"><i class="fa-solid fa-rotate-left"></i> 전체 레벨 초기화</h4>
+<button onclick="window.resetAllLevels()" class="w-full bg-red-900/40 hover:bg-red-800 text-red-200 text-xs py-2.5 rounded shadow font-bold transition border border-red-700/50">전체 학생 레벨 0으로 초기화</button>
+</div>
+</div>
+
+<div class="mt-6 bg-pitch-bg p-4 rounded-xl border border-emerald-900/50 relative z-30">
+<div class="grid grid-cols-3 gap-y-3 gap-x-2 text-center text-sm">
+<div><div class="text-[10px] text-slate-500">경기</div><div class="font-bold text-white text-lg" id="recMatches">0</div></div>
+<div><div class="text-[10px] text-slate-500">훈련</div><div class="font-bold text-emerald-400 text-lg" id="recTraining">0</div></div>
+<div><div class="text-[10px] text-slate-500">골</div><div class="font-bold text-fut-gold text-lg" id="recGoals">0</div></div>
+<div><div class="text-[10px] text-slate-500">어시</div><div class="font-bold text-blue-400 text-lg" id="recAssists">0</div></div>
+<div><div class="text-[10px] text-slate-500">킬패스</div><div class="font-bold text-purple-400 text-lg" id="recKeypass">0</div></div>
+<div><div class="text-[10px] text-slate-500">세이브</div><div class="font-bold text-orange-400 text-lg" id="recSaves">0</div></div>
+</div>
+</div>
+
+<div id="playerTrainingPanel" class="mt-4 flex flex-col gap-3 relative z-30">
+<div class="flex justify-between items-center bg-slate-800 p-3 rounded-xl border border-fut-gold/30 shadow-inner">
+<span class="text-sm font-bold text-slate-300">내 지갑 (자산)</span>
+<span class="font-display text-2xl text-fut-gold tracking-widest"><span id="recBong">0</span> B</span>
+</div>
+
+<div class="bg-slate-900/60 p-3 rounded-xl border border-blue-500/30">
+<h4 class="text-[11px] font-bold text-blue-300 mb-2 border-b border-blue-500/30 pb-1 flex items-center justify-between">
+<span><i class="fa-solid fa-pen-to-square mr-1"></i> 내 기록 스스로 입력하기 (양심껏!)</span>
+</h4>
+<div class="grid grid-cols-2 gap-1.5">
+<div class="flex shadow">
+<button onclick="window.addActivity('matches')" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white text-[10px] font-bold py-1.5 rounded-l border border-slate-600 transition">경기 출전</button>
+<button onclick="window.undoActivity('matches')" class="w-7 bg-red-900/50 hover:bg-red-800 text-red-200 text-[10px] font-bold py-1.5 rounded-r border-y border-r border-red-700/50 transition has-tooltip relative flex justify-center items-center"><i class="fa-solid fa-rotate-left"></i><span class="tooltip text-[10px]">실수 취소 (활동 EXP+1 페널티)</span></button>
+</div>
+<div class="flex shadow">
+<button onclick="window.addActivity('training')" class="flex-1 bg-emerald-900/40 hover:bg-emerald-800 text-emerald-300 text-[10px] font-bold py-1.5 rounded-l border border-emerald-700/50 transition">개인 훈련</button>
+<button onclick="window.undoActivity('training')" class="w-7 bg-red-900/50 hover:bg-red-800 text-red-200 text-[10px] font-bold py-1.5 rounded-r border-y border-r border-red-700/50 transition has-tooltip relative flex justify-center items-center"><i class="fa-solid fa-rotate-left"></i><span class="tooltip text-[10px]">실수 취소 (활동 EXP+1 페널티)</span></button>
+</div>
+<div class="flex shadow">
+<button onclick="window.addActivity('goals')" class="flex-1 bg-yellow-900/40 hover:bg-yellow-800 text-yellow-300 text-[10px] font-bold py-1.5 rounded-l border border-yellow-700/50 transition">골 ⚽</button>
+<button onclick="window.undoActivity('goals')" class="w-7 bg-red-900/50 hover:bg-red-800 text-red-200 text-[10px] font-bold py-1.5 rounded-r border-y border-r border-red-700/50 transition has-tooltip relative flex justify-center items-center"><i class="fa-solid fa-rotate-left"></i><span class="tooltip text-[10px]">실수 취소 (활동 EXP+1 페널티)</span></button>
+</div>
+<div class="flex shadow">
+<button onclick="window.addActivity('assists')" class="flex-1 bg-blue-900/40 hover:bg-blue-800 text-blue-300 text-[10px] font-bold py-1.5 rounded-l border border-blue-700/50 transition">어시스트 👟</button>
+<button onclick="window.undoActivity('assists')" class="w-7 bg-red-900/50 hover:bg-red-800 text-red-200 text-[10px] font-bold py-1.5 rounded-r border-y border-r border-red-700/50 transition has-tooltip relative flex justify-center items-center"><i class="fa-solid fa-rotate-left"></i><span class="tooltip text-[10px]">실수 취소 (활동 EXP+1 페널티)</span></button>
+</div>
+<div class="flex shadow">
+<button onclick="window.addActivity('keypass')" class="flex-1 bg-purple-900/40 hover:bg-purple-800 text-purple-300 text-[10px] font-bold py-1.5 rounded-l border border-purple-700/50 transition">킬패스 🎯</button>
+<button onclick="window.undoActivity('keypass')" class="w-7 bg-red-900/50 hover:bg-red-800 text-red-200 text-[10px] font-bold py-1.5 rounded-r border-y border-r border-red-700/50 transition has-tooltip relative flex justify-center items-center"><i class="fa-solid fa-rotate-left"></i><span class="tooltip text-[10px]">실수 취소 (활동 EXP+1 페널티)</span></button>
+</div>
+<div class="flex shadow">
+<button onclick="window.addActivity('saves')" class="flex-1 bg-orange-900/40 hover:bg-orange-800 text-orange-300 text-[10px] font-bold py-1.5 rounded-l border border-orange-700/50 transition">세이브 🧤</button>
+<button onclick="window.undoActivity('saves')" class="w-7 bg-red-900/50 hover:bg-red-800 text-red-200 text-[10px] font-bold py-1.5 rounded-r border-y border-r border-red-700/50 transition has-tooltip relative flex justify-center items-center"><i class="fa-solid fa-rotate-left"></i><span class="tooltip text-[10px]">실수 취소 (활동 EXP+1 페널티)</span></button>
+</div>
+</div>
+</div>
+
+<button onclick="window.claimWage()" class="w-full bg-gradient-to-r from-fut-gold-dark to-fut-gold hover:from-fut-gold hover:to-yellow-200 text-slate-900 font-bold py-3 rounded-xl shadow-lg transition flex justify-between items-center px-4">
+<span><i class="fa-solid fa-sack-dollar mr-2"></i> 이번 주 주급 받기</span>
+<span class="text-xs bg-black/20 px-2 py-1 rounded-md text-slate-900 font-bold" id="expectedWageDisplay">예상: ? B</span>
+</button>
+</div>
+</div>
+</div>
+
+<!-- 우측 영역 -->
+<div id="rightContentPanel" class="lg:col-span-8 space-y-8 pb-10 transition-all duration-500 w-full">
+
+<div id="tabWorkspace" class="space-y-8">
+<div class="locker-panel rounded-3xl p-6 sm:p-8">
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+<div>
+<h3 class="text-2xl font-display text-white flex items-center gap-2">
+<i class="fa-solid fa-door-open text-emerald-400"></i> 삼봉 FC 라커룸
+</h3>
+<p class="text-sm text-slate-400 mt-1">훈련/경기에 참여한 선수를 체크해주세요. (카드 클릭 시 좌측에 상세 정보 표시)</p>
+</div>
+<div id="gmAttendanceTools" class="hidden w-full sm:w-auto justify-end gap-2">
+<button onclick="window.viewAttendance()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg transition flex items-center text-sm flex-1 sm:flex-none justify-center">
+<i class="fa-solid fa-file-excel mr-2"></i> 출석부 조회
+</button>
+<button onclick="window.saveAttendance()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg transition flex items-center text-sm flex-1 sm:flex-none justify-center">
+<i class="fa-solid fa-floppy-disk mr-2"></i> 현재 출석 저장
+</button>
+</div>
+</div>
+
+<div id="lockerGrid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 sm:gap-4 min-h-[200px]">
+<div class="col-span-full text-center text-slate-500 py-10 flex flex-col items-center">
+<i class="fa-solid fa-spinner fa-spin text-3xl mb-3 text-emerald-500"></i>
+<span>라커룸 문을 여는 중입니다...</span>
+</div>
+</div>
+</div>
+
+<div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-blue-500">
+<h3 class="text-2xl font-display text-white mb-2 flex items-center gap-2">
+<i class="fa-solid fa-scale-balanced text-blue-400"></i> AI 매치메이킹 시스템
+</h3>
+<p class="text-sm text-slate-400 mb-6">라커룸에서 <strong>체크된 선수들</strong>의 포지션과 OVR(능력치) 밸런스를 계산하여 자동으로 팀을 짜줍니다.</p>
+
+<div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700 mb-6">
+<h4 class="text-xs font-bold text-emerald-400 mb-3 border-b border-slate-700 pb-2">선발 대기 명단 <span id="activeCount" class="text-white ml-1 font-oswald text-sm bg-slate-800 px-2 rounded">0 명</span></h4>
+<div id="activePool" class="flex flex-wrap gap-2 min-h-[40px]"></div>
+</div>
+
+<div class="flex items-center justify-between bg-slate-800 p-3 rounded-xl border border-slate-600 mb-4 shadow-inner">
+<span class="text-sm font-bold text-slate-300"><i class="fa-solid fa-users mr-2 text-blue-400"></i>생성할 팀 수 (2~6팀)</span>
+<div class="flex items-center gap-4">
+<button onclick="window.changeTeamCount(-1)" class="w-8 h-8 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center text-white transition border border-slate-500 hover:border-blue-400 shadow-md"><i class="fa-solid fa-minus"></i></button>
+<span id="targetTeamCount" class="font-display text-2xl text-fut-gold w-6 text-center drop-shadow-md">2</span>
+<button onclick="window.changeTeamCount(1)" class="w-8 h-8 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center text-white transition border border-slate-500 hover:border-blue-400 shadow-md"><i class="fa-solid fa-plus"></i></button>
+</div>
+</div>
+
+<button onclick="window.generateBalancedTeams()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-4 rounded-xl shadow-xl transition transform hover:scale-[1.01] active:scale-95 text-lg flex justify-center items-center gap-2 border border-blue-400/30">
+<i class="fa-solid fa-shuffle text-xl"></i> 황금 밸런스로 팀 나누기
+</button>
+
+<div id="teamResult" class="hidden mt-8"></div>
+</div>
+</div>
+
+<div id="tabTips" class="hidden space-y-8">
+<div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-red-500 relative">
+<h3 class="text-2xl sm:text-3xl font-display text-red-400 mb-4 flex items-center gap-3">
+<i class="fa-solid fa-bullhorn text-red-500 animate-pulse"></i> 감독님 공지사항
+</h3>
+<div id="announcementContent" class="bg-slate-900/80 rounded-2xl p-5 border border-slate-700 text-white whitespace-pre-wrap min-h-[100px] leading-relaxed break-keep font-medium text-sm sm:text-base shadow-inner">등록된 공지사항이 없습니다. 불러오는 중...</div>
+
+<div id="gmAnnouncementEditor" class="hidden mt-4 pt-4 border-t border-slate-700">
+<h4 class="text-xs font-bold text-slate-400 mb-2 flex items-center gap-1"><i class="fa-solid fa-pen-to-square"></i> 공지사항 작성 (감독 전용)</h4>
+<textarea id="announcementInput" class="w-full bg-slate-800 border border-slate-600 rounded-xl p-4 text-white focus:border-red-400 focus:outline-none mb-3 resize-y custom-scrollbar" rows="4" placeholder="대회 일정, 훈련 안내 등 풋살부 공지사항을 자유롭게 입력하세요..."></textarea>
+<button onclick="window.saveAnnouncement()" class="w-full sm:w-auto bg-gradient-to-r from-red-700 to-red-600 hover:from-red-600 hover:to-red-500 text-white font-bold py-3 px-8 rounded-xl transition shadow-lg flex items-center justify-center gap-2">
+<i class="fa-solid fa-floppy-disk"></i> 전체 학생에게 공지 등록하기
+</button>
+</div>
+</div>
+
+<div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-blue-500">
+<h3 class="text-2xl sm:text-3xl font-display text-blue-400 mb-6 flex items-center gap-3">
+<i class="fa-brands fa-youtube text-red-500"></i> 감독님의 추천 쇼츠
+</h3>
+<div class="flex flex-col md:flex-row gap-6 items-start">
+<div class="w-full max-w-[280px] mx-auto md:mx-0 aspect-[9/16] bg-slate-900 rounded-2xl border border-slate-700 shadow-2xl relative overflow-hidden flex-shrink-0" id="shortsPlayerContainer">
+<div class="absolute inset-0 flex items-center justify-center text-slate-500 flex-col">
+<i class="fa-brands fa-youtube text-4xl mb-2 opacity-30"></i>
+<span class="text-xs">감독님이 영상을 준비 중입니다.</span>
+</div>
+</div>
+
+<div id="gmShortsEditor" class="hidden flex-1 w-full bg-slate-900/60 p-5 rounded-2xl border border-blue-500/30 mt-4 md:mt-0">
+<h4 class="text-sm font-bold text-blue-300 mb-3 flex items-center gap-2"><i class="fa-solid fa-link"></i> 쇼츠 주소 등록 (감독 전용)</h4>
+<p class="text-xs text-slate-400 mb-3 break-keep">유튜브 쇼츠 주소를 복사해서 붙여넣으세요.<br>(PC/모바일 유튜브의 '공유' 버튼을 눌러 링크 복사)</p>
+<input type="text" id="shortsInput" class="w-full bg-slate-800 border border-slate-600 rounded-xl p-3 text-white focus:border-blue-400 focus:outline-none mb-3 text-sm" placeholder="https://youtube.com/shorts/...">
+<button onclick="window.saveShorts()" class="w-full sm:w-auto bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-500 text-white font-bold py-3 px-6 rounded-xl transition shadow-lg flex items-center justify-center gap-2 text-sm">
+<i class="fa-solid fa-satellite-dish"></i> 전송! (모든 학생 화면에 재생)
+</button>
+</div>
+</div>
+</div>
+
+<div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-orange-500">
+<h3 class="text-2xl sm:text-3xl font-display text-orange-400 mb-6 flex items-center gap-3">
+<i class="fa-solid fa-book-open"></i> 오늘의 풋살 꿀팁 <span class="text-[10px] font-sans text-slate-400 font-normal ml-2 border border-slate-600 px-2 py-1 rounded bg-slate-800">3일마다 갱신</span>
+</h3>
+<div id="dailyTipContainer" class="bg-slate-900/80 rounded-2xl border border-slate-700 overflow-hidden shadow-2xl"></div>
+</div>
+</div>
+
+<div id="tabAchievements" class="hidden space-y-6">
+<div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-yellow-300">
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 border-b border-slate-700 pb-4 gap-4">
+<div>
+<h3 class="text-3xl font-display text-yellow-300 flex items-center gap-3">
+<i class="fa-solid fa-medal"></i> 플래티넘 트로피 룸
+</h3>
+<p class="text-sm text-slate-400 mt-2 break-keep leading-relaxed">밀어내기 매치에서 다양한 미션을 수행하고 컬렉션을 완성하세요!<br>달성률 100%를 향한 여러분의 땀방울은 배신하지 않습니다.</p>
+</div>
+<div class="text-left sm:text-right w-full sm:w-auto bg-slate-900/50 p-3 rounded-xl border border-slate-700">
+<p class="text-xs text-slate-400 font-bold mb-1" id="achievementTargetName">내 달성률</p>
+<div class="font-display text-3xl text-fut-gold drop-shadow-md" id="achievementProgressText">0%</div>
+</div>
+</div>
+
+<div class="w-full bg-slate-800 rounded-full h-4 border border-slate-600 overflow-hidden mb-8 shadow-inner relative">
+<div id="achievementProgressBar" class="bg-gradient-to-r from-yellow-600 via-yellow-400 to-yellow-200 h-4 rounded-full shadow-[0_0_15px_#e8c271] transition-all duration-1000 ease-out" style="width: 0%"></div>
+</div>
+
+<div id="achievementsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+</div>
+</div>
+</div>
+
+<div id="tabRank" class="hidden space-y-6">
+<div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-yellow-400">
+<h3 class="text-3xl font-display text-yellow-400 mb-6 flex items-center gap-3">
+<i class="fa-solid fa-trophy"></i> 삼봉 FC 명예의 전당
+</h3>
+<p class="text-sm text-slate-300 mb-6">시즌 누적 스탯을 기준으로 각 부문별 TOP 3 선수를 보여줍니다.</p>
+
+<div id="leaderboardGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+</div>
+</div>
+
+<div id="tabCompare" class="hidden space-y-6">
+<div class="glass-panel p-4 sm:p-8 rounded-3xl border-t-4 border-t-pink-500">
+<h3 class="text-2xl sm:text-3xl font-display text-pink-400 mb-6 flex items-center gap-3">
+<i class="fa-solid fa-code-compare"></i> 스탯 비교실
+</h3>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+<div id="compareViewArea" class="bg-slate-900/80 rounded-2xl p-4 sm:p-6 border border-slate-700 shadow-xl flex flex-col justify-center min-h-[400px]">
+<div class="text-center text-slate-500 py-10">비교할 선수를 아래 명단에서 선택해주세요.</div>
+</div>
+
+<div class="bg-slate-900/50 rounded-2xl p-4 border border-slate-700 h-[500px] flex flex-col">
+<h4 class="text-emerald-400 font-bold mb-3 flex items-center gap-2 border-b border-slate-700 pb-2">
+<i class="fa-solid fa-users"></i> 비교 대상 선택
+</h4>
+<div id="comparePlayerList" class="overflow-y-auto custom-scrollbar flex-1 space-y-2 pr-2">
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- 🛠️ 탭 3: 꾸미기 상점 & 제련소 -->
+<div id="tabShop" class="hidden space-y-6">
+<div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-purple-500 relative overflow-hidden">
+
+<!-- 화려한 배경 장식 -->
+<div class="absolute -top-20 -right-20 w-64 h-64 bg-purple-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 border-b border-slate-700 pb-4 gap-4 relative z-10">
+<div>
+<h3 class="text-3xl font-display text-purple-400 flex items-center gap-3">
+<i class="fa-solid fa-hammer text-fuchsia-400"></i> 장비 상점 & 강화소
+</h3>
+<p class="text-sm text-slate-300 mt-2 break-keep" id="shopSubTitle">자산(B)으로 장비를 구매하고 강화하세요. (최대 +5강)<br><span class="text-emerald-400 font-bold">💡 아이템 장착 시 레벨업할 때 해당 스탯이 오를 확률이 증가합니다!</span></p>
+</div>
+<div class="text-left sm:text-right w-full sm:w-auto bg-slate-900/60 p-3 rounded-xl border border-purple-500/30">
+<p class="text-xs text-slate-400 font-bold mb-1" id="shopWalletLabel">보유 자산</p>
+<div class="font-display text-3xl text-fut-gold"><span id="shopBong">0</span> B</div>
+</div>
+</div>
+
+<div id="shopGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10"></div>
+</div>
+</div>
+
+<div id="tabGuide" class="hidden space-y-6">
+<div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-cyan-400">
+<h3 class="text-3xl font-display text-cyan-400 mb-6 flex items-center gap-3">
+<i class="fa-solid fa-circle-info"></i> 라커룸 이용 가이드
+</h3>
+<div class="space-y-4">
+<div class="bg-slate-900/60 p-5 rounded-xl border border-slate-700 hover:border-cyan-500/50 transition">
+<h4 class="text-base sm:text-lg font-bold text-white mb-2 flex items-center gap-2"><i class="fa-solid fa-ranking-star text-yellow-400"></i> 1. FC 온라인 방식의 포지션 OVR</h4>
+<p class="text-sm text-slate-300 leading-relaxed break-keep">내 포지션에 맞춰 핵심 스탯(70%), 보조 스탯(25%)이 계산되어 전체 OVR이 결정됩니다. 공격수(피보)가 골키퍼(골레이로)로 바꾸면 OVR이 수직 하락할 수 있습니다!</p>
+</div>
+<div class="bg-slate-900/60 p-5 rounded-xl border border-slate-700 hover:border-cyan-500/50 transition">
+<h4 class="text-base sm:text-lg font-bold text-white mb-2 flex items-center gap-2"><i class="fa-solid fa-pen-to-square text-emerald-400"></i> 2. 양심 기록소 (스탯 직접 입력)</h4>
+<p class="text-sm text-slate-300 leading-relaxed break-keep">경기가 끝나면 스스로 골, 어시스트 등을 입력합니다. 실수 취소 시 경험치가 깎이니 신중하세요.</p>
+</div>
+<div class="bg-gradient-to-r from-purple-900/40 to-slate-900/60 p-5 rounded-xl border border-purple-500/50 hover:border-purple-400 transition">
+<h4 class="text-base sm:text-lg font-bold text-purple-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-hammer text-fuchsia-400"></i> 3. 장비 강화 및 확률형 성장</h4>
+<p class="text-sm text-purple-100/80 leading-relaxed break-keep">레벨업을 하면 각 스탯마다 기본 10% 확률로 능력치가 상승합니다. 상점에서 장비를 구매해 장착하면 <b>해당 스탯이 오를 확률(최대 +45%)</b>이 엄청나게 증가합니다. 같은 장비를 중복 구매하여 최대 +5강까지 강화해보세요! (실패 시 1단계 하락)</p>
+</div>
+<div class="bg-gradient-to-r from-slate-900/60 to-emerald-900/30 p-5 rounded-xl border border-emerald-700/50 hover:border-emerald-500/80 transition">
+<h4 class="text-base sm:text-lg font-bold text-emerald-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-bullseye text-red-400"></i> 4. 목표: 30주 만에 레벨 100 달성!</h4>
+<p class="text-sm text-emerald-100/80 leading-relaxed break-keep">매주 토요스포츠데이에 꾸준히 참여하고 각종 기록을 쌓으면, 정확히 30주 후 전설의 100레벨(만렙)에 도달할 수 있습니다. 끈기 있게 도전해보세요!</p>
+</div>
+</div>
+</div>
+</div>
+
+<div id="tabMaster" class="hidden space-y-6">
+
+<!-- 🌟 신규 선수 등록 패널 추가 -->
+<div class="glass-panel p-4 sm:p-6 rounded-3xl border-t-4 border-t-emerald-500 overflow-hidden mb-6">
+<h4 class="text-emerald-400 font-bold mb-3 flex items-center gap-2"><i class="fa-solid fa-user-plus"></i> 신규 선수 등록</h4>
+<div class="flex flex-col sm:flex-row gap-3 items-end">
+<div class="flex-1 w-full">
+<label class="block text-[10px] text-slate-400 mb-1">이름</label>
+<input type="text" id="newPlayerName" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-3 py-2.5 text-white text-sm focus:border-emerald-500 focus:outline-none" placeholder="예: 홍길동">
+</div>
+<div class="w-full sm:w-24">
+<label class="block text-[10px] text-slate-400 mb-1">나이</label>
+<input type="number" id="newPlayerAge" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-3 py-2.5 text-white text-sm text-center focus:border-emerald-500 focus:outline-none" value="13">
+</div>
+<div class="w-full sm:w-28">
+<label class="block text-[10px] text-slate-400 mb-1">성별</label>
+<select id="newPlayerGender" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-3 py-2.5 text-white text-sm focus:border-emerald-500 focus:outline-none appearance-none">
+<option value="M">남 (👦)</option>
+<option value="F">여 (👧)</option>
+</select>
+</div>
+<button onclick="window.addNewPlayer()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-6 rounded-xl transition shadow-lg text-sm h-[42px] whitespace-nowrap">등록하기</button>
+</div>
+</div>
+
+<div class="glass-panel p-4 sm:p-8 rounded-3xl border-t-4 border-t-emerald-400 overflow-hidden">
+<h3 class="text-2xl sm:text-3xl font-display text-emerald-400 mb-2 flex items-center gap-2 sm:gap-3">
+<i class="fa-solid fa-chart-line"></i> 전체 학생 현황판 (마스터)
+</h3>
+<p class="text-xs sm:text-sm text-slate-400 mb-4 sm:mb-6">모든 학생의 능력치, 나이, 보상을 한눈에 파악합니다. (표를 좌우로 스크롤하세요)</p>
+
+<div class="overflow-x-auto custom-scrollbar rounded-xl border border-slate-700 shadow-inner bg-slate-900">
+<table class="w-full text-center text-[11px] sm:text-sm text-slate-300 min-w-[700px] sm:min-w-[1200px]">
+<thead class="bg-slate-800 text-slate-400 font-bold border-b border-slate-600 whitespace-nowrap select-none">
+<tr>
+<th class="py-3 pl-4 text-left">이름</th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('age')">나이 <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-1">포지션</th>
+<th class="py-3 px-1">티어</th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('ovr')">OVR <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('matches')">경기 <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group text-fut-gold" onclick="window.sortMasterStats('goals')">골 <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group text-blue-300" onclick="window.sortMasterStats('assists')">어시 <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-300" onclick="window.sortMasterStats('saves')">세이브 <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group text-emerald-300" onclick="window.sortMasterStats('training')">훈련 <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-400" onclick="window.sortMasterStats('exp')">EXP <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 pr-4 text-right cursor-pointer hover:text-white transition group text-emerald-400" onclick="window.sortMasterStats('bong')">자산(B) <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-2 text-red-400 font-bold">관리</th>
+</tr>
+</thead>
+<tbody id="masterTableBody" class="bg-slate-900/50 divide-y divide-slate-700/50 whitespace-nowrap"></tbody>
+</table>
+</div>
+</div>
+</div>
+
+<div id="tabMasterStats" class="hidden space-y-6">
+<div class="glass-panel p-4 sm:p-8 rounded-3xl border-t-4 border-t-emerald-400 overflow-hidden">
+<h3 class="text-2xl sm:text-3xl font-display text-emerald-400 mb-2 flex items-center gap-2 sm:gap-3">
+<i class="fa-solid fa-list-ol"></i> 상세 스탯 현황판 (마스터)
+</h3>
+<p class="text-xs sm:text-sm text-slate-400 mb-4 sm:mb-6">각 스탯 헤더를 클릭하여 정렬할 수 있습니다. (+수치는 장착 아이템 보너스)</p>
+
+<div class="overflow-x-auto custom-scrollbar rounded-xl border border-slate-700 shadow-inner bg-slate-900">
+<table class="w-full text-center text-[11px] sm:text-sm text-slate-300 min-w-[700px] sm:min-w-[1200px]">
+<thead class="bg-slate-800 text-slate-400 font-bold border-b border-slate-600 whitespace-nowrap select-none">
+<tr>
+<th class="py-3 pl-4 text-left">이름</th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('age')">나이 <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-1">포지션</th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('ovr')">OVR <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('pac')">PAC <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('sho')">SHO <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('pas')">PAS <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('dri')">DRI <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('def')">DEF <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group" onclick="window.sortMasterStats('phy')">PHY <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-200" onclick="window.sortMasterStats('ref')">REF <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-200" onclick="window.sortMasterStats('int')">INT <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-200" onclick="window.sortMasterStats('pst')">PST <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-200" onclick="window.sortMasterStats('dis')">DIS <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-200" onclick="window.sortMasterStats('cmp')">CMP <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+<th class="py-3 px-1 cursor-pointer hover:text-white transition group text-orange-200" onclick="window.sortMasterStats('wrk')">WRK <i class="fa-solid fa-sort text-[9px] opacity-30 group-hover:opacity-100"></i></th>
+</tr>
+</thead>
+<tbody id="masterStatsTableBodyOnly" class="bg-slate-900/50 divide-y divide-slate-700/50 whitespace-nowrap"></tbody>
+</table>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
