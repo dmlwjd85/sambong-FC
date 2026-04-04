@@ -332,6 +332,10 @@ input[type="number"] { -moz-appearance: textfield; }
 </div>
 
 <div id="gmControls" class="hidden mt-4 bg-slate-900/80 p-4 rounded-xl border border-emerald-800/50 relative z-30">
+<div class="mb-3 pb-3 border-b border-amber-800/40 flex flex-wrap items-center justify-between gap-2">
+<span class="text-[11px] font-bold text-amber-300 leading-snug"><i class="fa-solid fa-arrow-rotate-left mr-1"></i>선택 선수 레벨 롤백 (마스터)</span>
+<button type="button" onclick="window.gmRollbackLevel()" class="bg-amber-900/50 hover:bg-amber-800 text-amber-100 text-xs py-2 px-3 rounded border border-amber-600/50 font-bold transition whitespace-nowrap">레벨 -1 (한 단계)</button>
+</div>
 <h3 class="text-sm font-bold text-emerald-400 mb-3 border-b border-emerald-800/50 pb-1"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> 코치 스태프 권한: 활동 기록 추가</h3>
 <div class="grid grid-cols-2 gap-2 mb-2">
 <button onclick="window.addActivity('matches')" class="bg-slate-800 hover:bg-slate-700 text-white text-xs py-2 rounded border border-slate-600 transition shadow">경기 출전 (+50 EXP)</button>
@@ -381,27 +385,27 @@ input[type="number"] { -moz-appearance: textfield; }
 <div class="grid grid-cols-2 gap-1.5">
 <div class="flex shadow">
 <button onclick="window.addActivity('matches')" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white text-[10px] font-bold py-1.5 rounded-l border border-slate-600 transition">경기 출전</button>
-<button onclick="window.undoActivity('matches')" class="w-7 bg-red-900/50 hover:bg-red-800 text-red-200 text-[10px] font-bold py-1.5 rounded-r border-y border-r border-red-700/50 transition has-tooltip relative flex justify-center items-center"><i class="fa-solid fa-rotate-left"></i><span class="tooltip text-[10px]">실수 취소 (-1 EXP)</span></button>
+<button onclick="window.undoActivity('matches')" class="w-7 bg-red-900/50 hover:bg-red-800 text-red-200 text-[10px] font-bold py-1.5 rounded-r border-y border-r border-red-700/50 transition has-tooltip relative flex justify-center items-center"><i class="fa-solid fa-rotate-left"></i><span class="tooltip text-[10px]">실수 취소 (활동 EXP+1 페널티)</span></button>
 </div>
 <div class="flex shadow">
 <button onclick="window.addActivity('training')" class="flex-1 bg-emerald-900/40 hover:bg-emerald-800 text-emerald-300 text-[10px] font-bold py-1.5 rounded-l border border-emerald-700/50 transition">개인 훈련</button>
-<button onclick="window.undoActivity('training')" class="w-7 bg-red-900/50 hover:bg-red-800 text-red-200 text-[10px] font-bold py-1.5 rounded-r border-y border-r border-red-700/50 transition has-tooltip relative flex justify-center items-center"><i class="fa-solid fa-rotate-left"></i><span class="tooltip text-[10px]">실수 취소 (-1 EXP)</span></button>
+<button onclick="window.undoActivity('training')" class="w-7 bg-red-900/50 hover:bg-red-800 text-red-200 text-[10px] font-bold py-1.5 rounded-r border-y border-r border-red-700/50 transition has-tooltip relative flex justify-center items-center"><i class="fa-solid fa-rotate-left"></i><span class="tooltip text-[10px]">실수 취소 (활동 EXP+1 페널티)</span></button>
 </div>
 <div class="flex shadow">
 <button onclick="window.addActivity('goals')" class="flex-1 bg-yellow-900/40 hover:bg-yellow-800 text-yellow-300 text-[10px] font-bold py-1.5 rounded-l border border-yellow-700/50 transition">골 ⚽</button>
-<button onclick="window.undoActivity('goals')" class="w-7 bg-red-900/50 hover:bg-red-800 text-red-200 text-[10px] font-bold py-1.5 rounded-r border-y border-r border-red-700/50 transition has-tooltip relative flex justify-center items-center"><i class="fa-solid fa-rotate-left"></i><span class="tooltip text-[10px]">실수 취소 (-1 EXP)</span></button>
+<button onclick="window.undoActivity('goals')" class="w-7 bg-red-900/50 hover:bg-red-800 text-red-200 text-[10px] font-bold py-1.5 rounded-r border-y border-r border-red-700/50 transition has-tooltip relative flex justify-center items-center"><i class="fa-solid fa-rotate-left"></i><span class="tooltip text-[10px]">실수 취소 (활동 EXP+1 페널티)</span></button>
 </div>
 <div class="flex shadow">
 <button onclick="window.addActivity('assists')" class="flex-1 bg-blue-900/40 hover:bg-blue-800 text-blue-300 text-[10px] font-bold py-1.5 rounded-l border border-blue-700/50 transition">어시스트 👟</button>
-<button onclick="window.undoActivity('assists')" class="w-7 bg-red-900/50 hover:bg-red-800 text-red-200 text-[10px] font-bold py-1.5 rounded-r border-y border-r border-red-700/50 transition has-tooltip relative flex justify-center items-center"><i class="fa-solid fa-rotate-left"></i><span class="tooltip text-[10px]">실수 취소 (-1 EXP)</span></button>
+<button onclick="window.undoActivity('assists')" class="w-7 bg-red-900/50 hover:bg-red-800 text-red-200 text-[10px] font-bold py-1.5 rounded-r border-y border-r border-red-700/50 transition has-tooltip relative flex justify-center items-center"><i class="fa-solid fa-rotate-left"></i><span class="tooltip text-[10px]">실수 취소 (활동 EXP+1 페널티)</span></button>
 </div>
 <div class="flex shadow">
 <button onclick="window.addActivity('keypass')" class="flex-1 bg-purple-900/40 hover:bg-purple-800 text-purple-300 text-[10px] font-bold py-1.5 rounded-l border border-purple-700/50 transition">킬패스 🎯</button>
-<button onclick="window.undoActivity('keypass')" class="w-7 bg-red-900/50 hover:bg-red-800 text-red-200 text-[10px] font-bold py-1.5 rounded-r border-y border-r border-red-700/50 transition has-tooltip relative flex justify-center items-center"><i class="fa-solid fa-rotate-left"></i><span class="tooltip text-[10px]">실수 취소 (-1 EXP)</span></button>
+<button onclick="window.undoActivity('keypass')" class="w-7 bg-red-900/50 hover:bg-red-800 text-red-200 text-[10px] font-bold py-1.5 rounded-r border-y border-r border-red-700/50 transition has-tooltip relative flex justify-center items-center"><i class="fa-solid fa-rotate-left"></i><span class="tooltip text-[10px]">실수 취소 (활동 EXP+1 페널티)</span></button>
 </div>
 <div class="flex shadow">
 <button onclick="window.addActivity('saves')" class="flex-1 bg-orange-900/40 hover:bg-orange-800 text-orange-300 text-[10px] font-bold py-1.5 rounded-l border border-orange-700/50 transition">세이브 🧤</button>
-<button onclick="window.undoActivity('saves')" class="w-7 bg-red-900/50 hover:bg-red-800 text-red-200 text-[10px] font-bold py-1.5 rounded-r border-y border-r border-red-700/50 transition has-tooltip relative flex justify-center items-center"><i class="fa-solid fa-rotate-left"></i><span class="tooltip text-[10px]">실수 취소 (-1 EXP)</span></button>
+<button onclick="window.undoActivity('saves')" class="w-7 bg-red-900/50 hover:bg-red-800 text-red-200 text-[10px] font-bold py-1.5 rounded-r border-y border-r border-red-700/50 transition has-tooltip relative flex justify-center items-center"><i class="fa-solid fa-rotate-left"></i><span class="tooltip text-[10px]">실수 취소 (활동 EXP+1 페널티)</span></button>
 </div>
 </div>
 </div>
@@ -967,6 +971,22 @@ return { name: '챌린저 (CHALLENGER)', class: 'tier-badge-challenger', cardCla
 const getWeeklyWage = (ovr) => { return Math.max(50, Math.min(200, Math.floor(50 + ((ovr - 50) / 49) * 150))); };
 const getExpNeeded = (level) => Math.floor(40 + ((Number(level) || 1) * 3));
 
+/** 기록 취소 등: 차감분만큼 EXP에서 빼고, 부족하면 레벨을 내리며 이전 구간 필요치를 보충함 (processExp와 역연산) */
+function applyExpLoss(p, totalDeduct, updatesObj) {
+let lv = Number(p.level) || 1;
+let ex = Number(p.exp) || 0;
+let d = Number(totalDeduct) || 0;
+ex -= d;
+while (ex < 0 && lv > 1) {
+lv--;
+ex += getExpNeeded(lv);
+}
+if (lv < 1) lv = 1;
+if (ex < 0) ex = 0;
+updatesObj.level = lv;
+updatesObj.exp = ex;
+}
+
 function getWeekNumber(d) {
 d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
 d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
@@ -1452,10 +1472,10 @@ else if(type === 'keypass' && (Number(p.keypass) || 0) > 0) { expDeduct += 15; u
 else if(type === 'saves' && (Number(p.saves) || 0) > 0) { expDeduct += 15; updates.saves = Number(p.saves) - 1; updates.bong = Math.max(0, (Number(p.bong)||0) - 2); }
 else return window.customAlert("❌ 차감할 해당 기록이 없습니다.");
 
-if(!await window.customConfirm("방금 입력한 기록을 취소하시겠습니까?\n(경험치 1이 추가 페널티로 차감됩니다.)")) return;
+if(!await window.customConfirm("방금 입력한 기록을 취소하시겠습니까?\n(해당 활동으로 받은 경험치와 같은 양이 차감되고, 1 EXP 페널티가 추가됩니다.\n부족 시 레벨이 함께 내려갑니다.)")) return;
 
 animateFloatText(`-${expDeduct} EXP`, 'text-red-400', 'confettiOrigin');
-updates.exp = Math.max(0, (Number(p.exp) || 0) - expDeduct);
+applyExpLoss(p, expDeduct, updates);
 await setDoc(docRef, updates, { merge: true });
 } catch (e) { console.error("undoActivity Error:", e); window.customAlert(`서버 에러:\n${e.message}`); }
 };
@@ -1659,6 +1679,24 @@ batch.set(docRef, updatesObj, { merge: true });
 });
 await batch.commit(); triggerConfetti(); window.customAlert(`✅ 모든 학생에게 성공적으로 지급되었습니다!`);
 } catch (e) { console.error("giveAll Error:", e); window.customAlert(`지급 에러:\n${e.message}`); }
+};
+
+window.gmRollbackLevel = async () => {
+try {
+checkAuthReady();
+if(!window.playerState.isGM || !window.selectedPlayerId) return;
+const p = window.allPlayersData.find(x => x.id === window.selectedPlayerId);
+if(!p) return;
+const L = Number(p.level) || 1;
+if(L <= 1) return window.customAlert("더 이상 내릴 레벨이 없습니다.");
+if(!await window.customConfirm(`[${p.name}] 선수의 레벨을 ${L} → ${L - 1}로 한 단계 롤백하시겠습니까?\n(경험치 바는 낮아진 레벨 구간 상한에 맞게 조정됩니다.)`)) return;
+const newLv = L - 1;
+const cap = Math.max(0, getExpNeeded(newLv) - 1);
+const newExp = Math.min(Number(p.exp) || 0, cap);
+const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
+await setDoc(docRef, { level: newLv, exp: newExp }, { merge: true });
+window.customAlert(`레벨이 ${newLv}로 조정되었습니다.`);
+} catch (e) { console.error("gmRollbackLevel Error:", e); window.customAlert(`레벨 롤백 에러:\n${e.message}`); }
 };
 
 window.resetAllLevels = async () => {
