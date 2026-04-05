@@ -138,16 +138,15 @@
 <div class="relative w-2/3 h-full flex flex-col items-center justify-center -mt-2 pr-2">
 <div class="flex flex-col items-center justify-center relative z-10 mb-1 w-full">
 <div class="flex items-center justify-center min-h-[5rem] w-full relative z-[12]" id="detailAvatar"></div>
-<div class="mt-1 flex justify-center w-full shrink-0" title="얼굴 프레임">
+<div class="mt-1 flex justify-center w-full shrink-0" title="장착 얼굴">
 <div class="item-slot-mini item-slot-face-below" id="slotFace"></div>
 </div>
-<div id="facePhotoControls" class="hidden w-full max-w-[200px] mx-auto mt-0.5"></div>
 </div>
-<div class="item-slot-mini" id="slotHead" style="top: -5px; left: 50%; transform: translateX(-50%);"></div>
-<div class="item-slot-mini" id="slotHandL" style="top: 35px; left: 10px;"></div>
-<div class="item-slot-mini" id="slotHandR" style="top: 35px; right: 10px;"></div>
-<div class="item-slot-mini" id="slotFootL" style="bottom: 5px; left: 28px;"></div>
-<div class="item-slot-mini" id="slotFootR" style="bottom: 5px; right: 28px;"></div>
+<div class="item-slot-mini hidden" id="slotHead" style="top: -5px; left: 50%; transform: translateX(-50%);"></div>
+<div class="item-slot-mini hidden" id="slotHandL" style="top: 35px; left: 10px;"></div>
+<div class="item-slot-mini hidden" id="slotHandR" style="top: 35px; right: 10px;"></div>
+<div class="item-slot-mini hidden" id="slotFootL" style="bottom: 5px; left: 28px;"></div>
+<div class="item-slot-mini hidden" id="slotFootR" style="bottom: 5px; right: 28px;"></div>
 </div>
 </div>
 
@@ -314,6 +313,8 @@
 <span>라커룸 문을 여는 중입니다...</span>
 </div>
 </div>
+
+<div id="lockerSimTeamsPreview" class="mt-6 pt-4 border-t border-slate-600/60"></div>
 </div>
 
 <div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-blue-500">

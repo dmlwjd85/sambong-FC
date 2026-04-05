@@ -83,6 +83,13 @@ z-index: 20; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
 
 .item-slot-mini .item-icon { font-size: 1.1rem; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5)); z-index: 2; position: relative; }
 .item-slot-mini .item-face-thumb { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; position: relative; z-index: 2; }
+.item-slot-face-below.item-slot-mini {
+width: 5rem !important;
+height: 5rem !important;
+position: relative !important;
+border-width: 2px;
+box-shadow: 0 0 20px rgba(56, 255, 142, 0.25);
+}
 
 /* 얼굴 슬롯: 절대배치하지 않고 초상 바로 아래에 두어 기본 썸네일이 얼굴을 가리지 않음 */
 .item-slot-mini.item-slot-face-below {

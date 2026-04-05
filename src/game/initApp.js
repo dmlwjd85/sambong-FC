@@ -1,7 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, writeBatch, getDocs, deleteDoc, deleteField } from 'firebase/firestore';
-import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import confetti from 'canvas-confetti';
 
 // Vite 빌드 시 .env의 VITE_APP_ID 사용, 없으면 기본값 (기존 단일 HTML과 동일)
@@ -197,7 +196,7 @@ window.compareTargetId = null;
 window.currentSortKey = 'ovr';
 window.lockerViewMode = 'default';
 
-let db, auth, storage;
+let db, auth;
 
 const isVisible = (id) => {
 const el = document.getElementById(id);
@@ -306,18 +305,18 @@ function escapeAttr(u) {
 return String(u).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 }
 
-/** 장착한 얼굴 아이템 → 업로드 사진 → 이모지 순으로 표시용 URL */
+/** 장착한 얼굴 아이템 URL (상점 레전드 얼굴만; 업로드 사진은 미사용) */
 function getPortraitUrl(p) {
 const fid = p.equipFace;
 if (fid) {
 const it = SHOP_ITEMS.find(x => x.id === fid && x.type === 'face' && x.faceImageUrl);
 if (it && String(it.faceImageUrl).trim()) return String(it.faceImageUrl).trim();
 }
-return (p.facePhotoUrl || '').trim();
+return '';
 }
 
 /**
- * 선수 얼굴: 얼굴 아이템(레전드/스포트라이트) > 직접 업로드 > 이모지
+ * 선수 얼굴: 얼굴 아이템(레전드) > 이모지
  * variant: locker | detail | sm | md | xl
  */
 function getAvatarHtml(p, variant) {
@@ -435,6 +434,27 @@ return `<div class="flex flex-col items-center justify-center p-2 rounded-xl bor
 const LOCKER_POS_ORDER = ['Goleiro', 'Fixo', 'Ala', 'Pivo', '미정'];
 const LOCKER_POS_HEAD = { Goleiro: '골레이로 (GK)', Fixo: '픽소 (DF)', Ala: '아라 (MF)', Pivo: '피보 (FW)', '미정': '포지션 미정' };
 
+/** 라커 패널 하단: 모의경기 팀 A/B 소속 명단 (정렬 모드와 무관하게 동일 표시) */
+window.renderLockerSimPreview = () => {
+const el = document.getElementById('lockerSimTeamsPreview');
+if (!el) return;
+const listA = (window.allPlayersData || []).filter((p) => p.simTeam === 'A').sort((a, b) => getOVR(b) - getOVR(a));
+const listB = (window.allPlayersData || []).filter((p) => p.simTeam === 'B').sort((a, b) => getOVR(b) - getOVR(a));
+const row = (p) => `<div class="flex justify-between gap-2 text-xs py-0.5 border-b border-white/5"><span class="text-white truncate">${p.name}</span><span class="text-fut-gold font-oswald shrink-0">${getOVR(p)}</span></div>`;
+el.innerHTML = `
+<p class="text-xs font-bold text-slate-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-futbol text-amber-400"></i> 모의경기 팀 (카드에서 A/B 선택 · 팀당 최대 5명)</p>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+<div class="rounded-xl border border-red-800/40 bg-red-950/25 p-3 min-h-[5rem]">
+<div class="font-display text-red-400 text-sm mb-1.5">팀 A <span class="text-[10px] text-slate-500 font-sans">${listA.length}명</span></div>
+${listA.length ? listA.map(row).join('') : '<p class="text-[10px] text-slate-500">소속 없음</p>'}
+</div>
+<div class="rounded-xl border border-blue-800/40 bg-blue-950/25 p-3 min-h-[5rem]">
+<div class="font-display text-blue-400 text-sm mb-1.5">팀 B <span class="text-[10px] text-slate-500 font-sans">${listB.length}명</span></div>
+${listB.length ? listB.map(row).join('') : '<p class="text-[10px] text-slate-500">소속 없음</p>'}
+</div>
+</div>`;
+};
+
 window.setLockerViewMode = (mode) => {
 window.lockerViewMode = mode === 'byPos' ? 'byPos' : 'default';
 window.renderLockerRoom();
@@ -478,6 +498,7 @@ pendingNames.forEach(n => { html += lockerLockedSlotHtml(n); });
 html += `</div>`;
 }
 grid.innerHTML = html || '<div class="col-span-full text-center text-slate-500 py-8">표시할 선수가 없습니다.</div>';
+window.renderLockerSimPreview();
 return;
 }
 
@@ -489,6 +510,7 @@ if(p) html += lockerPlayerCardHtml(p);
 else html += lockerLockedSlotHtml(name);
 });
 grid.innerHTML = html;
+window.renderLockerSimPreview();
 };
 
 window.toggleCheck = (pId) => {
@@ -657,24 +679,6 @@ if(card) { card.className = `fut-card w-[300px] h-[460px] p-5 flex flex-col rela
 
 const detailAv = document.getElementById('detailAvatar');
 if (detailAv) detailAv.innerHTML = getAvatarHtml(p, 'detail');
-const fc = document.getElementById('facePhotoControls');
-if (fc) {
-if (isMe && !isGM && !window.playerState.isGuest) {
-fc.classList.remove('hidden');
-fc.innerHTML = `
-<input type="file" id="facePhotoInput" accept="image/jpeg,image/png,image/webp,image/gif" class="hidden" />
-<div class="flex flex-wrap justify-center gap-1.5">
-<button type="button" class="text-[10px] font-bold px-2 py-1 rounded bg-emerald-800/80 hover:bg-emerald-700 text-emerald-200 border border-emerald-600/50" onclick="document.getElementById('facePhotoInput').click()">얼굴 사진 올리기</button>
-${(p.facePhotoUrl || '').trim() ? `<button type="button" class="text-[10px] font-bold px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 border border-slate-600" onclick="window.clearFacePhoto()">사진 삭제</button>` : ''}
-</div>
-<p class="text-[9px] text-slate-500 text-center mt-1 leading-tight">본인만 등록 가능 · JPG·PNG·WebP·GIF, 최대 2MB</p>`;
-const inp = document.getElementById('facePhotoInput');
-if (inp) inp.onchange = (e) => window.uploadFacePhoto(e);
-} else {
-fc.classList.add('hidden');
-fc.innerHTML = '';
-}
-}
 document.getElementById('detailName') && (document.getElementById('detailName').innerText = p.name);
 document.getElementById('detailAge') && (document.getElementById('detailAge').innerText = Number(p.age) || 13);
 document.getElementById('detailOvr') && (document.getElementById('detailOvr').innerText = ovr);
@@ -748,8 +752,6 @@ if(statsGridEl) statsGridEl.innerHTML = gridHtml;
 drawRadarChart(p, bonus.flat);
 
 const equipSlots = [
-{ id: 'slotHead', equip: p.equipHead, empty: '🧢', label: '머리' }, { id: 'slotHandL', equip: p.equipHandL, empty: '🧤', label: '왼손' },
-{ id: 'slotHandR', equip: p.equipHandR, empty: '📿', label: '오른손' }, { id: 'slotFootL', equip: p.equipFootL, empty: '👟', label: '왼발' }, { id: 'slotFootR', equip: p.equipFootR, empty: '🥾', label: '오른발' },
 { id: 'slotFace', equip: p.equipFace, empty: '😶', label: '얼굴' }
 ];
 
@@ -1158,52 +1160,6 @@ const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_
 await setDoc(docRef, { level: newLv, exp: newExp }, { merge: true });
 window.customAlert(`레벨이 ${newLv}로 조정되었습니다.`);
 } catch (e) { console.error("gmRollbackLevel Error:", e); window.customAlert(`레벨 롤백 에러:\n${e.message}`); }
-};
-
-/** 본인 프로필 사진 업로드 (Firebase Storage + Firestore facePhotoUrl) */
-window.uploadFacePhoto = async (ev) => {
-try {
-checkAuthReady();
-if (!storage) return window.customAlert('스토리지가 준비되지 않았습니다. 잠시 후 다시 시도하세요.');
-const file = ev.target?.files?.[0];
-if (!file) return;
-if (!file.type.startsWith('image/')) return window.customAlert('이미지 파일(JPG·PNG·WebP·GIF)만 올릴 수 있습니다.');
-if (file.size > 2 * 1024 * 1024) return window.customAlert('파일 크기는 2MB 이하여야 합니다.');
-const pId = window.playerState.id;
-if (!pId || window.playerState.isGM || window.playerState.isGuest) return;
-const safeId = getSafeDocId(pId);
-const path = `artifacts/${appId}/public/player_avatars/${safeId}/face`;
-const sref = ref(storage, path);
-await uploadBytes(sref, file, { contentType: file.type || 'image/jpeg' });
-const url = await getDownloadURL(sref);
-const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + safeId);
-await setDoc(docRef, { facePhotoUrl: url, updatedAt: new Date().toISOString() }, { merge: true });
-window.customAlert('프로필 사진이 저장되었습니다.');
-ev.target.value = '';
-} catch (e) {
-console.error('uploadFacePhoto', e);
-window.customAlert(`업로드 실패:\n${e.message}\n\nFirebase Console → Storage 규칙에서 인증된 사용자의 쓰기를 허용했는지 확인하세요.`);
-}
-};
-
-/** 본인 프로필 사진 삭제 */
-window.clearFacePhoto = async () => {
-try {
-checkAuthReady();
-if (!storage) return window.customAlert('스토리지가 준비되지 않았습니다.');
-if (!await window.customConfirm('등록한 얼굴 사진을 삭제하고 기본 이모지로 돌아갈까요?')) return;
-const pId = window.playerState.id;
-if (!pId || window.playerState.isGM || window.playerState.isGuest) return;
-const safeId = getSafeDocId(pId);
-const path = `artifacts/${appId}/public/player_avatars/${safeId}/face`;
-try { await deleteObject(ref(storage, path)); } catch (err) { /* 객체 없음 등은 무시 */ }
-const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + safeId);
-await setDoc(docRef, { facePhotoUrl: deleteField(), updatedAt: new Date().toISOString() }, { merge: true });
-window.customAlert('사진이 삭제되었습니다.');
-} catch (e) {
-console.error('clearFacePhoto', e);
-window.customAlert(`삭제 실패:\n${e.message}`);
-}
 };
 
 window.resetAllLevels = async () => {
@@ -1677,7 +1633,40 @@ img.onerror = () => resolve(img);
 });
 }
 
-/** 상단 고정 캔버스에 경기장·위험지역·볼·화살표(성공=초록/실패=빨강/중립=주황) */
+/** 골대·페널티 에어리어·센터 서클 등 풋살 코트 마킹 */
+function drawFutsalPitchMarkings(ctx, px0, py0, pw, ph, midX) {
+ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+ctx.lineWidth = 1.5;
+ctx.strokeRect(px0, py0, pw, ph);
+ctx.beginPath();
+ctx.moveTo(midX, py0);
+ctx.lineTo(midX, py0 + ph);
+ctx.stroke();
+ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+ctx.lineWidth = 1;
+ctx.beginPath();
+ctx.arc(midX, py0 + ph / 2, Math.min(ph, pw) * 0.14, 0, Math.PI * 2);
+ctx.stroke();
+const gaW = pw * 0.13;
+const gaH = ph * 0.44;
+const gaY = py0 + (ph - gaH) / 2;
+ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+ctx.lineWidth = 1.1;
+ctx.strokeRect(px0, gaY, gaW, gaH);
+ctx.strokeRect(px0 + pw - gaW, gaY, gaW, gaH);
+const gmouthW = 5;
+const gmouthH = gaH * 0.36;
+const gmouthY = py0 + ph / 2 - gmouthH / 2;
+ctx.fillStyle = 'rgba(15,23,42,0.93)';
+ctx.fillRect(px0 - 1, gmouthY, gmouthW, gmouthH);
+ctx.fillRect(px0 + pw - gmouthW + 1, gmouthY, gmouthW, gmouthH);
+ctx.strokeStyle = 'rgba(250,204,21,0.88)';
+ctx.lineWidth = 1.6;
+ctx.strokeRect(px0 - 1, gmouthY, gmouthW, gmouthH);
+ctx.strokeRect(px0 + pw - gmouthW + 1, gmouthY, gmouthW, gmouthH);
+}
+
+/** 상단 고정 캔버스: 경기장·위험지역·골대·페널티·볼·공격 방향 화살표(성공=초록/실패=빨강/중립=주황) */
 function drawSimPitchLive(opts) {
 const canvas = document.getElementById('simPitchCanvas');
 const badge = document.getElementById('simPitchBadge');
@@ -1710,21 +1699,10 @@ grass.addColorStop(0.45, '#166534');
 grass.addColorStop(1, '#14532d');
 ctx.fillStyle = grass;
 ctx.fillRect(px0, py0, pw, ph);
-ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-ctx.lineWidth = 1.5;
-ctx.strokeRect(px0, py0, pw, ph);
-ctx.beginPath();
-ctx.moveTo(midX, py0);
-ctx.lineTo(midX, py0 + ph);
-ctx.stroke();
-ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-ctx.lineWidth = 1;
-ctx.beginPath();
-ctx.arc(midX, py0 + ph / 2, Math.min(ph, pw) * 0.14, 0, Math.PI * 2);
-ctx.stroke();
+drawFutsalPitchMarkings(ctx, px0, py0, pw, ph, midX);
 
 const dzW = pw * 0.24;
-ctx.fillStyle = 'rgba(220, 38, 38, 0.22)';
+ctx.fillStyle = 'rgba(220, 38, 38, 0.18)';
 ctx.fillRect(px0, py0, dzW, ph);
 ctx.fillRect(px0 + pw - dzW, py0, dzW, ph);
 ctx.font = '600 9px "Malgun Gothic","Noto Sans KR",sans-serif';
@@ -1760,31 +1738,36 @@ ctx.beginPath();
 ctx.arc(ballX, ballY, 11, 0, Math.PI * 2);
 ctx.stroke();
 
+const gaW = pw * 0.13;
+const goalTargetX = attackA ? px0 + pw - gaW * 0.45 : px0 + gaW * 0.45;
+const laneT = chY[opts.channel] ?? 0.5;
+const goalTargetY = py0 + ph * (0.35 + laneT * 0.3);
+let ang = Math.atan2(goalTargetY - ballY, goalTargetX - ballX);
+const arrowLen = Math.min(100, pw * 0.32);
+let tipX = ballX + Math.cos(ang) * arrowLen;
+let tipY = ballY + Math.sin(ang) * arrowLen;
 ctx.strokeStyle = oc;
 ctx.lineWidth = 3.2;
 ctx.beginPath();
 ctx.moveTo(ballX, ballY);
-const arrowLen = Math.min(92, pw * 0.24);
-const dx = attackA ? arrowLen : -arrowLen;
-const dyOff = attackA ? 6 : -6;
-ctx.lineTo(ballX + dx, ballY + dyOff);
+ctx.lineTo(tipX, tipY);
 ctx.stroke();
 ctx.fillStyle = oc;
+const head = 12;
+const backAng = ang + Math.PI;
 ctx.beginPath();
-const tipX = ballX + dx;
-const tipY = ballY + dyOff;
-const head = 13;
 ctx.moveTo(tipX, tipY);
-ctx.lineTo(tipX - (attackA ? head : -head), tipY - 7);
-ctx.lineTo(tipX - (attackA ? head : -head), tipY + 7);
+ctx.lineTo(tipX + Math.cos(backAng + 0.35) * head, tipY + Math.sin(backAng + 0.35) * head);
+ctx.lineTo(tipX + Math.cos(backAng - 0.35) * head, tipY + Math.sin(backAng - 0.35) * head);
 ctx.closePath();
 ctx.fill();
 
 ctx.fillStyle = 'rgba(226, 232, 240, 0.95)';
 ctx.font = '600 11px "Malgun Gothic","Noto Sans KR",sans-serif';
-const cap = opts.phase === 'danger' ? '페널티 인근' : opts.phase === 'progress' ? '중앙' : '빌드업';
+const cap = opts.phase === 'danger' ? '페널티 인근' : opts.phase === 'progress' ? '중앙 전개' : '빌드업';
+const sideHint = opts.channel === 'left' ? '왼쪽 측면' : opts.channel === 'right' ? '오른쪽 측면' : '중앙';
 const dir = attackA ? 'A→B' : 'B→A';
-ctx.fillText(`${dir} · ${cap}`, px0 + 4, py0 + ph + 6);
+ctx.fillText(`${dir} · ${sideHint} · ${cap}`, px0 + 4, py0 + ph + 6);
 
 if (badge) {
 const out = opts.outcome === 'success' ? '성공' : opts.outcome === 'fail' ? '실패' : '중립';
@@ -1825,18 +1808,7 @@ grass.addColorStop(0.5, '#166534');
 grass.addColorStop(1, '#14532d');
 ctx.fillStyle = grass;
 ctx.fillRect(px0, py0, pw, ph);
-ctx.strokeStyle = 'rgba(255,255,255,0.4)';
-ctx.lineWidth = 1.5;
-ctx.strokeRect(px0, py0, pw, ph);
-ctx.beginPath();
-ctx.moveTo(midX, py0);
-ctx.lineTo(midX, py0 + ph);
-ctx.stroke();
-ctx.strokeStyle = 'rgba(255,255,255,0.18)';
-ctx.lineWidth = 1;
-ctx.beginPath();
-ctx.arc(midX, py0 + ph / 2, Math.min(ph, pw) * 0.14, 0, Math.PI * 2);
-ctx.stroke();
+drawFutsalPitchMarkings(ctx, px0, py0, pw, ph, midX);
 ctx.fillStyle = 'rgba(148, 163, 184, 0.92)';
 ctx.font = '600 12px "Malgun Gothic","Noto Sans KR",sans-serif';
 ctx.textAlign = 'center';
@@ -1984,6 +1956,15 @@ await sleep(42);
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const gkOf = (arr) => arr.find((p) => p.pos === 'Goleiro') || arr[0];
 
+/** 풋살: 사이드 전개 비중↑ (좌·우 약 38%씩) */
+const pickSimChannel = () => {
+const u = Math.random();
+if (u < 0.38) return 'left';
+if (u < 0.76) return 'right';
+return 'center';
+};
+let sideAttackMomentum = 0;
+
 const trySecondEvent = async (halfIdx, simSec) => {
 const halfLabel = halfIdx === 0 ? '전반' : '후반';
 const mm = String(Math.floor(simSec / 60)).padStart(2, '0');
@@ -1999,9 +1980,14 @@ const defName = attackA ? teamBName : teamAName;
 const strAtk = attackA ? strA : strB;
 const strDef = attackA ? strB : strA;
 
-const channels = ['left', 'center', 'right'];
-const ch = channels[Math.floor(Math.random() * 3)];
-const pitch = (phase, outcome) => ({ attackA, channel: ch, phase, outcome: outcome || 'neutral' });
+let ch = pickSimChannel();
+const pitch = (phase, outcome, chOverride) => ({ attackA, channel: chOverride !== undefined ? chOverride : ch, phase, outcome: outcome || 'neutral' });
+
+if (Math.random() < 0.05) {
+ch = Math.random() < 0.5 ? 'left' : 'right';
+await append(`${prefix} [킥 인] ${ch === 'left' ? '왼쪽' : '오른쪽'} 사이드라인 인플레이. ${atkName}이 터치 후 짧은 패스로 전개를 이어갑니다.`, pitch('build', Math.random() < 0.58 ? 'success' : 'neutral'));
+return;
+}
 
 const passOk = (a, b) => {
 const t = 0.4 + (getOVR(a) + getOVR(b)) / 420 + (strAtk - strDef) * 0.0012;
@@ -2014,54 +2000,66 @@ return Math.random() < Math.min(0.88, Math.max(0.12, t));
 
 const r = Math.random();
 
-if (r < 0.24) {
+if (r < 0.22) {
+ch = pickSimChannel();
 const [p1, p2] = simPickTwoDistinct(atk);
 const ok = passOk(p1, p2);
 const z1 = simPosShort(p1);
 const z2 = simPosShort(p2);
+const sideHint = ch === 'left' ? '왼쪽 측면·' : ch === 'right' ? '오른쪽 측면·' : '';
 if (ok) {
 bumpStat('keypass', p1.id);
-const ph = Math.random() < 0.4 ? 'danger' : 'progress';
-await append(`${prefix} ${atkName}: [${z1}] ${p1.name}가 [${z2}] ${p2.name}에게 패스를 연결합니다. 성공.`, pitch(ph, 'success'));
+const ph = Math.random() < 0.42 ? 'danger' : 'progress';
+if (ch === 'left' || ch === 'right') sideAttackMomentum = Math.min(1, sideAttackMomentum + 0.12);
+await append(`${prefix} ${atkName}: ${sideHint}[${z1}] ${p1.name}가 [${z2}] ${p2.name}에게 패스 연결. 성공.`, pitch(ph, 'success'));
 } else {
 const intr = pick(def);
-await append(`${prefix} ${atkName}: [${z1}] ${p1.name} → ${p2.name} 패스는 실패합니다. [${simPosShort(intr)}] ${intr.name}에게 차단됩니다.`, pitch('progress', 'fail'));
+await append(`${prefix} ${atkName}: ${sideHint}[${z1}] ${p1.name} → ${p2.name} 패스 실패. [${simPosShort(intr)}] ${intr.name} 차단.`, pitch('progress', 'fail'));
 }
-} else if (r < 0.4) {
+} else if (r < 0.42) {
+ch = pickSimChannel();
 const o = pick(atk);
 const d = pick(def);
 const ok = dribOk(o, d);
 const zo = simPosShort(o);
 const zd = simPosShort(d);
+const sideTag = ch === 'left' || ch === 'right' ? `${ch === 'left' ? '왼쪽' : '오른쪽'} 측면 ` : '';
 if (ok) {
-await append(`${prefix} ${atkName}: [${zo}] ${o.name}, ${d.name}(${zd})를 제치고 드리블 돌파에 성공합니다.`, pitch(Math.random() < 0.5 ? 'danger' : 'progress', 'success'));
+if (ch === 'left' || ch === 'right') sideAttackMomentum = Math.min(1, sideAttackMomentum + 0.32);
+await append(`${prefix} ${atkName}: ${sideTag}[${zo}] ${o.name}, ${d.name}(${zd})를 제치고 사이드 돌파 성공. 골대를 바라보며 전진합니다.`, pitch(Math.random() < 0.55 ? 'danger' : 'progress', 'success'));
 } else {
-await append(`${prefix} ${atkName}: [${zo}] ${o.name}의 드리블 시도 실패. ${d.name}(${zd})가 몸으로 막아냅니다.`, pitch('build', 'fail'));
+await append(`${prefix} ${atkName}: ${sideTag}[${zo}] ${o.name} 드리블 돌파 실패. ${d.name}(${zd}) 압박.`, pitch('build', 'fail'));
 }
-} else if (r < 0.58) {
+} else if (r < 0.62) {
+ch = pickSimChannel();
 const p = pick(atk);
 const gk = gkOf(def);
 const defOut = def.filter((x) => x.id !== gk.id);
 const blk = defOut.length ? pick(defOut) : pick(def);
 const zp = simPosShort(p);
-const shot = getOVR(p) + Math.random() * 14;
+const shot = getOVR(p) + Math.random() * 14 + sideAttackMomentum * 1.85;
 const save = getOVR(gk) * 1.06 + Math.random() * 11;
 const bias = (strAtk - strDef) * 0.017;
-if (shot + bias > save + 8) {
+const sideGoalBonus = (ch === 'left' || ch === 'right') ? 0.85 : 0;
+if (shot + bias + sideGoalBonus > save + 8) {
 if (attackA) sa++; else sb++;
 updScore();
 const mates = atk.filter((x) => x.id !== p.id);
 const assi = mates.length ? pick(mates) : null;
 bumpStat('goals', p.id);
 if (assi) bumpStat('assists', assi.id);
-await append(`${prefix} ⚽ 골! ${atkName} [${zp}] ${p.name}, 페널티 에어리어에서 슛 성공. ${defName} ${gk.name} 무력화. (${sa}-${sb})`, pitch('danger', 'success'));
+sideAttackMomentum *= 0.22;
+await append(`${prefix} ⚽ 골! ${atkName} [${zp}] ${p.name}, 페널티 에어리어 슛 성공. ${defName} ${gk.name} 무력화. (${sa}-${sb})`, pitch('danger', 'success', ch));
 } else if (shot + bias > save - 2) {
 bumpStat('saves', gk.id);
-await append(`${prefix} ${defName}: 골키퍼 ${gk.name}, [${zp}] ${p.name}의 슛을 선방합니다. 세이브 성공.`, pitch('danger', 'fail'));
+sideAttackMomentum *= 0.5;
+await append(`${prefix} ${defName}: 골키퍼 ${gk.name}, [${zp}] ${p.name} 슛 선방.`, pitch('danger', 'fail', ch));
 } else {
-await append(`${prefix} ${defName}: [${simPosShort(blk)}] ${blk.name}가 슛을 블록합니다. ${p.name}(${zp})의 시도는 막혔습니다.`, pitch('danger', 'fail'));
+sideAttackMomentum *= 0.55;
+await append(`${prefix} ${defName}: [${simPosShort(blk)}] ${blk.name} 슛 블록. ${p.name}(${zp}).`, pitch('danger', 'fail', ch));
 }
-} else if (r < 0.72) {
+} else if (r < 0.78) {
+ch = Math.random() < 0.5 ? 'left' : 'right';
 const w = atk.filter((x) => x.pos === 'Ala' || x.pos === '미정');
 const wx = w.length ? pick(w) : pick(atk);
 const atkOthers = atk.filter((x) => x.id !== wx.id);
@@ -2069,43 +2067,47 @@ const tgt = atkOthers.length ? pick(atkOthers) : wx;
 const ok = passOk(wx, tgt);
 if (ok) {
 bumpStat('keypass', wx.id);
-await append(`${prefix} ${atkName}: 측면 [아라] ${wx.name}가 페널티 근처로 크로스. [${simPosShort(tgt)}] ${tgt.name}가 받습니다. 성공.`, pitch('danger', 'success'));
+sideAttackMomentum = Math.min(1, sideAttackMomentum + 0.4);
+await append(`${prefix} ${atkName}: ${ch === 'left' ? '왼쪽' : '오른쪽'} 측면에서 ${wx.name}가 골문 쪽으로 컷백 패스. [${simPosShort(tgt)}] ${tgt.name}가 받아 전개.`, pitch('danger', 'success', ch));
 } else {
-await append(`${prefix} ${atkName}: ${wx.name}의 크로스는 상대 수비에 걸립니다. 패스 실패.`, pitch('progress', 'fail'));
+await append(`${prefix} ${atkName}: ${wx.name}의 컷백 패스 시도가 수비에 걸립니다.`, pitch('progress', 'fail', ch));
 }
-} else if (r < 0.84) {
+} else if (r < 0.88) {
+ch = pickSimChannel();
 const df = def.find((x) => x.pos === 'Fixo') || pick(def);
 const at = pick(atk);
 const ok = Math.random() < 0.35 + (getOVR(df) - getOVR(at)) * 0.006;
 if (ok) {
-await append(`${prefix} ${defName}: [픽소] ${df.name}가 태클에 성공합니다. ${at.name}(${simPosShort(at)})에게서 공을 뺍니다.`, pitch('build', 'fail'));
+await append(`${prefix} ${defName}: [픽소] ${df.name} 태클 성공. ${at.name}(${simPosShort(at)})에서 공 탈취.`, pitch('build', 'fail'));
 } else {
-await append(`${prefix} ${atkName}: [${simPosShort(at)}] ${at.name}가 ${df.name}(픽소)의 태클을 피합니다. 성공.`, pitch('progress', 'success'));
+await append(`${prefix} ${atkName}: [${simPosShort(at)}] ${at.name}, ${df.name}(픽소) 태클 회피.`, pitch('progress', 'success'));
 }
-} else if (r < 0.92) {
+} else if (r < 0.94) {
+ch = pickSimChannel();
 const gk = gkOf(atk);
 const atkNoGk = atk.filter((x) => x.id !== gk.id);
 const lon = atkNoGk.length ? pick(atkNoGk) : pick(atk);
 const ok = passOk(gk, lon);
 if (ok) {
 bumpStat('keypass', gk.id);
-await append(`${prefix} ${atkName}: 골키퍼 ${gk.name} 롱킥 배급 → ${lon.name}(${simPosShort(lon)})가 처리합니다. 성공.`, pitch('build', 'success'));
+await append(`${prefix} ${atkName}: 골키퍼 ${gk.name} 롱킥 → ${lon.name}(${simPosShort(lon)}) 연결.`, pitch('build', 'success'));
 } else {
-await append(`${prefix} ${atkName}: 골키퍼 ${gk.name}의 배급이 상대 진영에서 끊깁니다. 실패.`, pitch('build', 'fail'));
+await append(`${prefix} ${atkName}: 골키퍼 ${gk.name} 배급 차단.`, pitch('build', 'fail'));
 }
 } else {
+ch = pickSimChannel();
 const r2 = Math.random();
 if (r2 < 0.42) {
 const pv = atk.find((x) => x.pos === 'Pivo') || pick(atk);
 const keep = Math.random() < 0.52 + getOVR(pv) * 0.002;
 if (keep) {
-await append(`${prefix} ${atkName}: [피보] ${pv.name}가 페널티 호라이즌에서 볼을 묶고 연결합니다. 성공.`, pitch('danger', 'success'));
+await append(`${prefix} ${atkName}: [피보] ${pv.name} 페널티 호라이즌에서 볼 유지·컷백 패스 연계 시도.`, pitch('danger', 'success'));
 } else {
-await append(`${prefix} ${atkName}: [피보] ${pv.name}의 턴 실패. ${defName} 수비가 걷어냅니다.`, pitch('build', 'fail'));
+await append(`${prefix} ${atkName}: [피보] ${pv.name} 턴 실패. ${defName} 수비.`, pitch('build', 'fail'));
 }
 } else {
 const fx = def.find((x) => x.pos === 'Fixo') || pick(def);
-await append(`${prefix} ${defName}: [픽소] ${fx.name}, 페널티 프론트에서 클리어런스. 위험 지역 제거.`, pitch('danger', 'neutral'));
+await append(`${prefix} ${defName}: [픽소] ${fx.name} 페널티 프론트 클리어.`, pitch('danger', 'neutral'));
 }
 }
 };
@@ -2198,6 +2200,7 @@ html += `<div class="bg-slate-900/80 p-4 rounded-xl border-t-4 border-emerald-50
 });
 html += '</div>';
 if(resultEl) { resultEl.innerHTML = html; resultEl.classList.remove('hidden'); resultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+window.renderLockerSimPreview();
 triggerConfetti();
 };
 
@@ -2491,8 +2494,6 @@ measurementId: "G-H1RGMJHGTV"
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 auth = getAuth(app);
 db = getFirestore(app);
-storage = getStorage(app);
-
 const initAuth = async () => {
 try {
 // 캔버스 환경 전용 인증 토큰이 있으면 최우선 사용
