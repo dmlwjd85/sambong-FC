@@ -304,6 +304,10 @@ return 'bg-yellow-500';
 function escapeAttr(u) {
 return String(u).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 }
+/** 텍스트 노드용 HTML 이스케이프 */
+function escapeHtml(s) {
+return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 
 /** 장착한 얼굴 아이템 URL (상점 레전드 얼굴만; 업로드 사진은 미사용) */
 function getPortraitUrl(p) {
@@ -434,25 +438,100 @@ return `<div class="flex flex-col items-center justify-center p-2 rounded-xl bor
 const LOCKER_POS_ORDER = ['Goleiro', 'Fixo', 'Ala', 'Pivo', '미정'];
 const LOCKER_POS_HEAD = { Goleiro: '골레이로 (GK)', Fixo: '픽소 (DF)', Ala: '아라 (MF)', Pivo: '피보 (FW)', '미정': '포지션 미정' };
 
-/** 라커 패널 하단: 모의경기 팀 A/B 소속 명단 (정렬 모드와 무관하게 동일 표시) */
-window.renderLockerSimPreview = () => {
-const el = document.getElementById('lockerSimTeamsPreview');
-if (!el) return;
+/** 모의경기 팀 분류 라디오 name (라커·모의경기 탭 간 충돌 방지) */
+function getSimTeamBoardRadioName(boardKey) {
+return `simBoardPick_${boardKey}`;
+}
+
+/** 라디오로 선택한 목표 팀 (라커·탭 각각 유지) */
+window.simBoardPreferredTarget = window.simBoardPreferredTarget || { locker: 'A', sim: 'A' };
+
+/** 팀 분류 보드 HTML (삭제·DnD·하단 레드/블루 라디오) */
+function buildSimTeamBoardHtml(boardKey) {
 const listA = (window.allPlayersData || []).filter((p) => p.simTeam === 'A').sort((a, b) => getOVR(b) - getOVR(a));
 const listB = (window.allPlayersData || []).filter((p) => p.simTeam === 'B').sort((a, b) => getOVR(b) - getOVR(a));
-const row = (p) => `<div class="flex justify-between gap-2 text-xs py-0.5 border-b border-white/5"><span class="text-white truncate">${p.name}</span><span class="text-fut-gold font-oswald shrink-0">${getOVR(p)}</span></div>`;
-el.innerHTML = `
-<p class="text-xs font-bold text-slate-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-futbol text-amber-400"></i> 모의경기 팀 (카드에서 A/B 선택 · 팀당 최대 5명)</p>
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-<div class="rounded-xl border border-red-800/40 bg-red-950/25 p-3 min-h-[5rem]">
-<div class="font-display text-red-400 text-sm mb-1.5">팀 A <span class="text-[10px] text-slate-500 font-sans">${listA.length}명</span></div>
-${listA.length ? listA.map(row).join('') : '<p class="text-[10px] text-slate-500">소속 없음</p>'}
+const pref = window.simBoardPreferredTarget[boardKey] === 'B' ? 'B' : 'A';
+const rname = getSimTeamBoardRadioName(boardKey);
+const rowHtml = (p, team) => {
+const canEdit = !window.playerState.isGuest && (window.playerState.isGM || window.playerState.id === p.id);
+const canDrag = canEdit;
+const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
+const delBtn = canEdit
+? `<button type="button" class="sim-team-remove-btn shrink-0 text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-red-300 border border-red-800/60 hover:bg-red-950" data-player-id="${escapeAttr(p.id)}" title="팀에서 제외">삭제</button>`
+: '';
+const dragAttr = canDrag ? 'true' : 'false';
+return `<div class="sim-team-row flex items-center gap-1.5 text-xs py-1 px-1 border-b border-white/5 rounded hover:bg-white/5" draggable="${dragAttr}" data-player-id="${escapeAttr(p.id)}" data-sim-team="${team}" data-sim-board="${boardKey}">
+<span class="text-slate-500 select-none shrink-0" title="드래그">${canDrag ? '<i class="fa-solid fa-grip-vertical text-[10px]"></i>' : ''}</span>
+<span class="text-white truncate flex-1 min-w-0">${escapeHtml(p.name)}</span>
+<span class="text-[9px] ${getPosColor(p.pos)} shrink-0">${posText}</span>
+<span class="text-fut-gold font-oswald shrink-0">${getOVR(p)}</span>
+${delBtn}
+</div>`;
+};
+const emptyHint = '<p class="text-[10px] text-slate-500 py-2 pointer-events-none">빈 곳에 놓으면 이동</p>';
+return `
+<p class="text-xs font-bold text-slate-400 mb-2 flex flex-wrap items-center gap-2"><i class="fa-solid fa-futbol text-amber-400"></i> 모의경기 팀 분류 <span class="text-[10px] font-normal text-slate-500">삭제 · 드래그 이동 · 상대 팀 선수 위에 놓으면 감독 맞교체</span></p>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+<div class="sim-team-drop-zone rounded-xl border border-red-800/40 bg-red-950/25 p-3 min-h-[6rem]" data-sim-drop="A">
+<div class="font-display text-red-400 text-sm mb-1.5 flex justify-between items-center">
+<span>레드 (팀 A)</span>
+<span class="text-[10px] text-slate-500 font-sans">${listA.length}명</span>
 </div>
-<div class="rounded-xl border border-blue-800/40 bg-blue-950/25 p-3 min-h-[5rem]">
-<div class="font-display text-blue-400 text-sm mb-1.5">팀 B <span class="text-[10px] text-slate-500 font-sans">${listB.length}명</span></div>
-${listB.length ? listB.map(row).join('') : '<p class="text-[10px] text-slate-500">소속 없음</p>'}
+${listA.length ? listA.map((p) => rowHtml(p, 'A')).join('') : emptyHint}
+</div>
+<div class="sim-team-drop-zone rounded-xl border border-blue-800/40 bg-blue-950/25 p-3 min-h-[6rem]" data-sim-drop="B">
+<div class="font-display text-blue-400 text-sm mb-1.5 flex justify-between items-center">
+<span>블루 (팀 B)</span>
+<span class="text-[10px] text-slate-500 font-sans">${listB.length}명</span>
+</div>
+${listB.length ? listB.map((p) => rowHtml(p, 'B')).join('') : emptyHint}
+</div>
+</div>
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-2 border-t border-slate-700/50">
+<span class="text-[10px] text-slate-500">목표 팀 선택 후 행을 더블클릭하면 해당 팀으로 이동합니다.</span>
+<div class="flex items-center justify-between gap-6 sm:justify-end">
+<label class="flex items-center gap-2 text-xs text-red-300 cursor-pointer">
+<input type="radio" name="${rname}" value="A" class="accent-red-500" data-sim-board="${boardKey}" ${pref === 'A' ? 'checked' : ''} />
+레드 (A)
+</label>
+<label class="flex items-center gap-2 text-xs text-blue-300 cursor-pointer">
+<input type="radio" name="${rname}" value="B" class="accent-blue-500" data-sim-board="${boardKey}" ${pref === 'B' ? 'checked' : ''} />
+블루 (B)
+</label>
 </div>
 </div>`;
+}
+
+/** 라커 하단 + 모의경기 탭 팀 분류창 동시 갱신 */
+window.renderSimTeamBoards = () => {
+const elLocker = document.getElementById('lockerSimTeamsPreview');
+const elTab = document.getElementById('simTeamBoardTab');
+if (elLocker) elLocker.innerHTML = buildSimTeamBoardHtml('locker');
+if (elTab) elTab.innerHTML = buildSimTeamBoardHtml('sim');
+};
+
+/** 감독 전용: 서로 다른 팀 소속 두 선수 맞교체 */
+window.swapSimTeamPlayers = async (id1, id2) => {
+try {
+checkAuthReady();
+if (window.playerState.isGuest) return window.customAlert('게스트는 사용할 수 없습니다.');
+if (!window.playerState.isGM) return window.customAlert('팀 간 맞교체는 감독만 사용할 수 있습니다.');
+const p1 = window.allPlayersData.find((x) => x.id === id1);
+const p2 = window.allPlayersData.find((x) => x.id === id2);
+if (!p1 || !p2) return;
+const t1 = p1.simTeam;
+const t2 = p2.simTeam;
+if (!t1 || !t2 || t1 === t2) return;
+await window.setPlayerSimTeam(id1, null, true);
+await window.setPlayerSimTeam(id2, null, true);
+await window.setPlayerSimTeam(id1, t2, true);
+await window.setPlayerSimTeam(id2, t1, true);
+window.renderLockerRoom();
+if (isVisible('tabSim')) window.renderSimMatchTab();
+} catch (e) {
+console.error(e);
+window.customAlert('팀 교체에 실패했습니다.');
+}
 };
 
 window.setLockerViewMode = (mode) => {
@@ -498,7 +577,7 @@ pendingNames.forEach(n => { html += lockerLockedSlotHtml(n); });
 html += `</div>`;
 }
 grid.innerHTML = html || '<div class="col-span-full text-center text-slate-500 py-8">표시할 선수가 없습니다.</div>';
-window.renderLockerSimPreview();
+window.renderSimTeamBoards();
 return;
 }
 
@@ -510,7 +589,7 @@ if(p) html += lockerPlayerCardHtml(p);
 else html += lockerLockedSlotHtml(name);
 });
 grid.innerHTML = html;
-window.renderLockerSimPreview();
+window.renderSimTeamBoards();
 };
 
 window.toggleCheck = (pId) => {
@@ -520,7 +599,8 @@ window.renderLockerRoom(); renderActivePool();
 };
 
 /** 라커룸에서 모의경기 팀 A/B 지정 (Firestore simTeam, 팀당 최대 5명) */
-window.setPlayerSimTeam = async (pId, team) => {
+/** @param skipRefresh 일괄 처리 시 true로 중간 렌더 생략 */
+window.setPlayerSimTeam = async (pId, team, skipRefresh) => {
 try {
 checkAuthReady();
 if (window.playerState.isGuest) return window.customAlert('게스트는 모의경기 팀을 설정할 수 없습니다.');
@@ -546,8 +626,10 @@ delete copy.simTeam;
 window.allPlayersData[idx] = copy;
 }
 }
+if (!skipRefresh) {
 window.renderLockerRoom();
 if (isVisible('tabSim')) window.renderSimMatchTab();
+}
 } catch (e) {
 console.error(e);
 window.customAlert('모의경기 팀 설정 저장에 실패했습니다.');
@@ -1513,7 +1595,7 @@ return (window.allPlayersData || [])
 .slice(0, 5);
 }
 
-/** 모의경기 탭: 라커 simTeam 기준 로스터 미리보기 */
+/** 모의경기 탭: 인원 수 + 팀 분류 보드(라커와 동일 UI) */
 window.renderSimMatchTab = () => {
 const na = countSimTeam('A');
 const nb = countSimTeam('B');
@@ -1521,16 +1603,7 @@ const ca = document.getElementById('simCountA');
 const cb = document.getElementById('simCountB');
 if (ca) ca.textContent = `소속 ${na}명 · 출전 OVR 상위 5명`;
 if (cb) cb.textContent = `소속 ${nb}명 · 출전 OVR 상위 5명`;
-const rosterA = getSimMatchRoster('A');
-const rosterB = getSimMatchRoster('B');
-const elA = document.getElementById('simRosterPreviewA');
-const elB = document.getElementById('simRosterPreviewB');
-const line = (p) => {
-const pt = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
-return `<div class="flex justify-between gap-2 border-b border-white/5 pb-0.5"><span class="truncate">${p.name}</span><span class="text-fut-gold shrink-0">${getOVR(p)}</span><span class="text-slate-500 text-[10px] shrink-0">${pt}</span></div>`;
-};
-if (elA) elA.innerHTML = rosterA.length ? rosterA.map(line).join('') : '<span class="text-slate-500">팀 A 소속 없음 — 라커룸에서 A를 눌러주세요.</span>';
-if (elB) elB.innerHTML = rosterB.length ? rosterB.map(line).join('') : '<span class="text-slate-500">팀 B 소속 없음 — 라커룸에서 B를 눌러주세요.</span>';
+window.renderSimTeamBoards();
 const slog = document.getElementById('simMatchLog');
 if (slog && slog.children.length === 0) resetSimPitchCanvas();
 };
@@ -2200,7 +2273,7 @@ html += `<div class="bg-slate-900/80 p-4 rounded-xl border-t-4 border-emerald-50
 });
 html += '</div>';
 if(resultEl) { resultEl.innerHTML = html; resultEl.classList.remove('hidden'); resultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
-window.renderLockerSimPreview();
+window.renderSimTeamBoards();
 triggerConfetti();
 };
 
@@ -2675,6 +2748,79 @@ if(role === 'player') pId = document.getElementById('loginPlayerName').value;
 const pin = document.getElementById('loginPin').value;
 window.handleLogin(pId, pin);
 });
+
+// 모의경기 팀 분류창: 삭제 버튼·레드/블루 라디오·더블클릭 이동·드래그 앤 드롭 (한 번만 등록)
+if (typeof window !== 'undefined' && !window.__simTeamBoardUiBound) {
+window.__simTeamBoardUiBound = true;
+let dragSimPid = null;
+document.addEventListener('change', (ev) => {
+const t = ev.target;
+if (!t || !t.matches || !t.matches('input[type="radio"][data-sim-board]')) return;
+if (t.value !== 'A' && t.value !== 'B') return;
+const k = t.getAttribute('data-sim-board');
+if (k && window.simBoardPreferredTarget) window.simBoardPreferredTarget[k] = t.value;
+});
+document.addEventListener('click', (ev) => {
+const btn = ev.target.closest('.sim-team-remove-btn');
+if (!btn) return;
+ev.preventDefault();
+const pid = btn.getAttribute('data-player-id');
+if (pid) window.setPlayerSimTeam(pid, null);
+});
+document.addEventListener('dblclick', (ev) => {
+const row = ev.target.closest('.sim-team-row');
+if (!row) return;
+const boardKey = row.getAttribute('data-sim-board');
+if (!boardKey) return;
+const pid = row.getAttribute('data-player-id');
+if (!pid) return;
+const r = document.querySelector(`input[name="${getSimTeamBoardRadioName(boardKey)}"]:checked`);
+const team = r && (r.value === 'A' || r.value === 'B') ? r.value : 'A';
+window.setPlayerSimTeam(pid, team);
+});
+document.addEventListener('dragstart', (ev) => {
+const row = ev.target.closest('.sim-team-row');
+if (!row || row.getAttribute('draggable') !== 'true') return;
+dragSimPid = row.getAttribute('data-player-id');
+if (dragSimPid) {
+ev.dataTransfer.setData('text/plain', dragSimPid);
+ev.dataTransfer.effectAllowed = 'move';
+}
+});
+document.addEventListener('dragend', () => { dragSimPid = null; });
+document.addEventListener('dragover', (ev) => {
+if (ev.target.closest('.sim-team-drop-zone')) {
+ev.preventDefault();
+ev.dataTransfer.dropEffect = 'move';
+}
+});
+document.addEventListener('drop', async (ev) => {
+const zone = ev.target.closest('.sim-team-drop-zone');
+if (!zone) return;
+ev.preventDefault();
+const pid = (ev.dataTransfer.getData('text/plain') || dragSimPid || '').trim();
+if (!pid) return;
+const toTeam = zone.getAttribute('data-sim-drop');
+if (toTeam !== 'A' && toTeam !== 'B') return;
+const hitRow = ev.target.closest('.sim-team-row');
+if (hitRow && hitRow.getAttribute('data-player-id') !== pid) {
+const otherId = hitRow.getAttribute('data-player-id');
+const pDrag = window.allPlayersData.find((x) => x.id === pid);
+const pOther = window.allPlayersData.find((x) => x.id === otherId);
+if (pDrag && pOther && pDrag.simTeam && pOther.simTeam && pDrag.simTeam !== pOther.simTeam) {
+if (window.playerState.isGM) {
+await window.swapSimTeamPlayers(pid, otherId);
+} else {
+await window.setPlayerSimTeam(pid, toTeam);
+}
+}
+return;
+}
+const pOnly = window.allPlayersData.find((x) => x.id === pid);
+if (pOnly && pOnly.simTeam === toTeam) return;
+await window.setPlayerSimTeam(pid, toTeam);
+});
+}
 
 // 이벤트 리스너 세팅 등 모든 준비가 끝난 후 마지막에 시동
 initApp();
