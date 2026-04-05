@@ -1526,9 +1526,107 @@ if (elA) elA.innerHTML = rosterA.length ? rosterA.map(line).join('') : '<span cl
 if (elB) elB.innerHTML = rosterB.length ? rosterB.map(line).join('') : '<span class="text-slate-500">팀 B 소속 없음 — 라커룸에서 B를 눌러주세요.</span>';
 };
 
+/** 중계 문장을 자동 줄바꿈 (캔버스 폭 기준) */
+function wrapSimBroadcastLines(ctx, text, maxWidth) {
+const lines = [];
+let line = '';
+for (let i = 0; i < text.length; i++) {
+const ch = text[i];
+const test = line + ch;
+if (ctx.measureText(test).width > maxWidth && line.length > 0) {
+lines.push(line);
+line = ch;
+} else {
+line = test;
+}
+}
+if (line.length) lines.push(line);
+return lines.length ? lines : [''];
+}
+
+/** 중계 한 줄을 방송용 이미지(img)로 렌더링 */
+function simBroadcastTextToImage(text) {
+return new Promise((resolve) => {
+const logBox = document.getElementById('simMatchLog');
+const maxCssW = Math.min(720, Math.max(260, (logBox?.clientWidth || 560) - 8));
+const pad = 14;
+const lineHeight = 22;
+const fontSize = 14;
+const dpr = Math.min(2, typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1);
+
+const canvas = document.createElement('canvas');
+const ctx = canvas.getContext('2d');
+if (!ctx) {
+const fallback = document.createElement('div');
+fallback.className = 'text-slate-200 text-xs p-2 rounded-lg bg-slate-900/90 border border-amber-800/40';
+fallback.textContent = text;
+resolve(fallback);
+return;
+}
+
+ctx.font = `600 ${fontSize}px "Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif`;
+const innerW = maxCssW - pad * 2 - 6;
+const lines = wrapSimBroadcastLines(ctx, text, innerW);
+const isGoal = text.includes('⚽');
+const isTitle = text.includes('━━');
+const isHalftime = text.includes('하프타임') || text.includes('[휴식]');
+
+let cssH = pad * 2 + lines.length * lineHeight + 6;
+const cssW = maxCssW;
+
+canvas.width = Math.floor(cssW * dpr);
+canvas.height = Math.floor(cssH * dpr);
+ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+const grd = ctx.createLinearGradient(0, 0, cssW, cssH);
+if (isGoal) {
+grd.addColorStop(0, '#14532d');
+grd.addColorStop(1, '#052e16');
+} else if (isTitle) {
+grd.addColorStop(0, '#1e293b');
+grd.addColorStop(1, '#0f172a');
+} else if (isHalftime) {
+grd.addColorStop(0, '#312e81');
+grd.addColorStop(1, '#1e1b4b');
+} else {
+grd.addColorStop(0, '#132447');
+grd.addColorStop(1, '#0a1628');
+}
+ctx.fillStyle = grd;
+if (typeof ctx.roundRect === 'function') {
+ctx.beginPath();
+ctx.roundRect(0, 0, cssW, cssH, 10);
+ctx.fill();
+} else {
+ctx.fillRect(0, 0, cssW, cssH);
+}
+
+ctx.fillStyle = isGoal ? '#fbbf24' : isHalftime ? '#a5b4fc' : '#e8c271';
+ctx.fillRect(0, 0, 5, cssH);
+
+ctx.fillStyle = isGoal ? '#fef9c3' : '#f1f5f9';
+ctx.font = `600 ${fontSize}px "Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif`;
+ctx.textBaseline = 'top';
+lines.forEach((ln, i) => {
+ctx.fillText(ln, pad + 8, pad + i * lineHeight);
+});
+
+const img = new Image();
+img.className = 'sim-broadcast-img w-full h-auto rounded-lg shadow-md border border-amber-900/30 select-none';
+img.alt = text;
+img.draggable = false;
+img.src = canvas.toDataURL('image/png');
+if (img.complete) resolve(img);
+else {
+img.onload = () => resolve(img);
+img.onerror = () => resolve(img);
+}
+});
+}
+
 window.simClearLog = () => {
 const log = document.getElementById('simMatchLog');
-if (log) log.textContent = '';
+if (log) log.innerHTML = '';
 document.getElementById('simScoreBar')?.classList.add('hidden');
 document.getElementById('simClockWrap')?.classList.add('hidden');
 };
@@ -1554,7 +1652,7 @@ const scoreNums = document.getElementById('simScoreNums');
 const nameAEl = document.getElementById('simScoreAName');
 const nameBEl = document.getElementById('simScoreBName');
 const clockWrap = document.getElementById('simClockWrap');
-if (logEl) logEl.textContent = '';
+if (logEl) logEl.innerHTML = '';
 if (scoreBar) scoreBar.classList.remove('hidden');
 if (clockWrap) clockWrap.classList.remove('hidden');
 if (nameAEl) nameAEl.textContent = teamAName;
@@ -1580,8 +1678,10 @@ if (el) el.textContent = `${halfLabel} ${String(m).padStart(2, '0')}:${String(s)
 };
 
 const append = async (line) => {
-if (logEl) logEl.textContent += (logEl.textContent ? '\n' : '') + line;
-logEl?.scrollTo({ top: logEl.scrollHeight, behavior: 'smooth' });
+if (!logEl) return;
+const node = await simBroadcastTextToImage(line);
+logEl.appendChild(node);
+logEl.scrollTo({ top: logEl.scrollHeight, behavior: 'smooth' });
 await sleep(42);
 };
 
