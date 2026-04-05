@@ -134,8 +134,13 @@
 <img src="https://flagcdn.com/w40/kr.png" alt="KR" class="w-8 h-auto mt-2 shadow-sm border border-black/20 rounded-sm">
 </div>
 
-<div class="relative w-2/3 h-full flex items-center justify-center -mt-2 pr-2">
-<div class="text-[5rem] drop-shadow-xl relative z-10 mb-2" id="detailAvatar">👦</div>
+<div class="relative w-2/3 h-full flex flex-col items-center justify-center -mt-2 pr-2">
+<div class="flex flex-col items-center justify-center relative z-10 mb-1 w-full">
+<div class="flex items-center justify-center min-h-[5rem] w-full" id="detailAvatar"></div>
+<div id="facePhotoControls" class="hidden w-full max-w-[200px] mx-auto mt-0.5"></div>
+</div>
+<div class="item-slot-mini overflow-hidden" id="slotFace" style="top: 48px; left: 50%; transform: translateX(-50%);"></div>
+<div class="item-slot-mini" id="slotFace" style="top: 52px; left: 50%; transform: translateX(-50%);" title="얼굴 프레임"></div>
 <div class="item-slot-mini" id="slotHead" style="top: -5px; left: 50%; transform: translateX(-50%);"></div>
 <div class="item-slot-mini" id="slotHandL" style="top: 35px; left: 10px;"></div>
 <div class="item-slot-mini" id="slotHandR" style="top: 35px; right: 10px;"></div>

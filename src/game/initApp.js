@@ -1,6 +1,7 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, writeBatch, getDocs, deleteDoc } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, writeBatch, getDocs, deleteDoc, deleteField } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import confetti from 'canvas-confetti';
 
 // Vite 빌드 시 .env의 VITE_APP_ID 사용, 없으면 기본값 (기존 단일 HTML과 동일)
@@ -166,9 +167,27 @@ const SHOP_ITEMS = [
 { id: 'footR_tier1', name: '강철 발목 보호대 [우]', type: 'footR', price: 150, icon: '🧦', desc: '[1종 집중형] 정확한 가로채기 타이밍.', baseStats: {int: 1}, baseGrowth: {int: 15} },
 { id: 'footR_tier1_alt', name: '터프 태클 풋살화 [우]', type: 'footR', price: 150, icon: '🥾', desc: '[1종 집중형] 끈질긴 대인 수비 전용.', baseStats: {def: 1}, baseGrowth: {def: 15} },
 { id: 'footR_tier2', name: '팬텀 드리블러 풋살화 [우]', type: 'footR', price: 300, icon: '👟', desc: '[2종 복합형] 보이지 않는 발놀림.', baseStats: {dri: 1, pac: 1}, baseGrowth: {dri: 10, pac: 10} },
+
+// 얼굴 프레임: 장착 시 선수 카드/라커 아바타에 레전드·컨셉 이미지 표시 (스탯 보너스 없음)
+{ id: 'face_legend_buffon', name: '레전드 얼굴: 부폰 (GK)', type: 'face', price: 300, icon: '🥅', desc: '[골키퍼] 이탈리아 전설 골키퍼 잔루이지 부폰.', faceImageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Gianluigi_Buffon_%2831784919414%29.jpg/200px-Gianluigi_Buffon_%2831784919414%29.jpg', baseStats: {}, baseGrowth: {} },
+{ id: 'face_legend_neuer', name: '레전드 얼굴: 노이어 (GK)', type: 'face', price: 320, icon: '🧤', desc: '[골키퍼] 스위퍼 키퍼의 대명사, 마누엘 노이어.', faceImageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Manuel_Neuer%2C_Germany_national_football_team_%2804%29.jpg/200px-Manuel_Neuer%2C_Germany_national_football_team_%2804%29.jpg', baseStats: {}, baseGrowth: {} },
+{ id: 'face_legend_maldini', name: '레전드 얼굴: 말디니 (DF)', type: 'face', price: 400, icon: '🛡️', desc: '[수비] 밀란의 영원한 캡틴, 파올로 말디니.', faceImageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Paolo_Maldini_2012.jpg/200px-Paolo_Maldini_2012.jpg', baseStats: {}, baseGrowth: {} },
+{ id: 'face_legend_beckenbauer', name: '레전드 얼굴: 베켄바워 (DF)', type: 'face', price: 450, icon: '👑', desc: '[수비] 프리 키퍼의 창시자, 프란츠 베켄바워.', faceImageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Franz_Beckenbauer_2013.jpg/200px-Franz_Beckenbauer_2013.jpg', baseStats: {}, baseGrowth: {} },
+{ id: 'face_legend_modric', name: '레전드 얼굴: 모드리치 (MF)', type: 'face', price: 350, icon: '⚡', desc: '[미드] 발롱도르 미드필더, 루카 모드리치.', faceImageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Luka_Modri%C4%87_%28cropped%29.jpg/200px-Luka_Modri%C4%87_%28cropped%29.jpg', baseStats: {}, baseGrowth: {} },
+{ id: 'face_legend_iniesta', name: '레전드 얼굴: 이니에스타 (MF)', type: 'face', price: 380, icon: '🎻', desc: '[미드] 바르사의 마에스트로, 안드레스 이니에스타.', faceImageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Andr%C3%A9s_Iniesta_2018.jpg/200px-Andr%C3%A9s_Iniesta_2018.jpg', baseStats: {}, baseGrowth: {} },
+{ id: 'face_legend_zidane', name: '레전드 얼굴: 지단 (MF)', type: 'face', price: 420, icon: '✨', desc: '[미드] 우아한 플레이메이커, 지네딘 지단.', faceImageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Zinedine_Zidane_by_Tasnim_Asports_03.jpg/200px-Zinedine_Zidane_by_Tasnim_Asports_03.jpg', baseStats: {}, baseGrowth: {} },
+{ id: 'face_legend_pele', name: '레전드 얼굴: 펠레 (FW)', type: 'face', price: 390, icon: '⚽', desc: '[공격] 브라질의 황제, 펠레.', faceImageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Pele_-_1960_-_AC_Santos.jpg/200px-Pele_-_1960_-_AC_Santos.jpg', baseStats: {}, baseGrowth: {} },
+{ id: 'face_legend_ronaldo', name: '레전드 얼굴: 호나우두 (FW)', type: 'face', price: 480, icon: '🔥', desc: '[공격] 엘 프레노메노, 호나우두.', faceImageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Ronaldo_Lima_2006.jpg/200px-Ronaldo_Lima_2006.jpg', baseStats: {}, baseGrowth: {} },
+{ id: 'face_legend_messi', name: '레전드 얼굴: 메시 (FW)', type: 'face', price: 500, icon: '🐐', desc: '[공격] 아르헨티나의 전설, 리오넬 메시.', faceImageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Lionel_Messi_Argentina_2022_FIFA_World_Cup_%28cropped%29.jpg/200px-Lionel_Messi_Argentina_2022_FIFA_World_Cup_%28cropped%29.jpg', baseStats: {}, baseGrowth: {} },
+
+{ id: 'face_idol_rose', name: '스포트라이트 얼굴: 로즈 무대', type: 'face', price: 350, icon: '💗', desc: '[컨셉] 핑크 조명의 아이돌 무대 느낌 (여학생 추천).', faceImageUrl: 'https://api.dicebear.com/7.x/lorelei/png?seed=SambongRose&size=256&backgroundColor=ffc0cb', baseStats: {}, baseGrowth: {} },
+{ id: 'face_idol_sky', name: '스포트라이트 얼굴: 스카이 무대', type: 'face', price: 380, icon: '💙', desc: '[컨셉] 시원한 블루 톤 무대 조명.', faceImageUrl: 'https://api.dicebear.com/7.x/lorelei/png?seed=SambongSky&size=256&backgroundColor=c7d2fe', baseStats: {}, baseGrowth: {} },
+{ id: 'face_idol_peach', name: '스포트라이트 얼굴: 피치 글로우', type: 'face', price: 400, icon: '🍑', desc: '[컨셉] 따뜻한 피치·코랄 톤.', faceImageUrl: 'https://api.dicebear.com/7.x/lorelei/png?seed=SambongPeach&size=256&backgroundColor=ffecd2', baseStats: {}, baseGrowth: {} },
+{ id: 'face_idol_mint', name: '스포트라이트 얼굴: 민트 쉬머', type: 'face', price: 320, icon: '💚', desc: '[컨셉] 청량 민트 그라데이션.', faceImageUrl: 'https://api.dicebear.com/7.x/lorelei/png?seed=SambongMint&size=256&backgroundColor=a7f3d0', baseStats: {}, baseGrowth: {} },
+{ id: 'face_idol_lilac', name: '스포트라이트 얼굴: 라일락 드림', type: 'face', price: 420, icon: '💜', desc: '[컨셉] 몽환적인 라일락 퍼플.', faceImageUrl: 'https://api.dicebear.com/7.x/lorelei/png?seed=SambongLilac&size=256&backgroundColor=e9d5ff', baseStats: {}, baseGrowth: {} },
 ];
 
-window.playerState = { id: '', isGM: false, isGuest: false, name: '', inventory: [], itemLevels: {}, equipHead: null, equipHandL: null, equipHandR: null, equipFootL: null, equipFootR: null };
+window.playerState = { id: '', isGM: false, isGuest: false, name: '', inventory: [], itemLevels: {}, equipHead: null, equipHandL: null, equipHandR: null, equipFootL: null, equipFootR: null, equipFace: null };
 window.allPlayersData = [];
 window.checkedInPlayers = new Set();
 window.selectedPlayerId = null;
@@ -176,7 +195,7 @@ window.targetTeamCount = 2;
 window.compareTargetId = null;
 window.currentSortKey = 'ovr';
 
-let db, auth;
+let db, auth, storage;
 
 const isVisible = (id) => {
 const el = document.getElementById(id);
@@ -280,7 +299,41 @@ if(pos === 'Pivo') return 'bg-red-500'; if(pos === 'Ala') return 'bg-emerald-500
 if(pos === 'Fixo') return 'bg-blue-500'; if(pos === 'Goleiro') return 'bg-orange-500'; 
 return 'bg-yellow-500';
 };
-const getAvatar = (p) => (p.gender || GENDER_MAP[p.name]) === 'F' ? '👧' : '👦';
+/** 속성값 이스케이프 (img src 등) */
+function escapeAttr(u) {
+return String(u).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+}
+
+/** 장착한 얼굴 아이템 → 업로드 사진 → 이모지 순으로 표시용 URL */
+function getPortraitUrl(p) {
+const fid = p.equipFace;
+if (fid) {
+const it = SHOP_ITEMS.find(x => x.id === fid && x.type === 'face' && x.faceImageUrl);
+if (it && String(it.faceImageUrl).trim()) return String(it.faceImageUrl).trim();
+}
+return (p.facePhotoUrl || '').trim();
+}
+
+/**
+ * 선수 얼굴: 얼굴 아이템(레전드/스포트라이트) > 직접 업로드 > 이모지
+ * variant: locker | detail | sm | md | xl
+ */
+function getAvatarHtml(p, variant) {
+const url = getPortraitUrl(p);
+const boxes = {
+locker: { img: 'w-14 h-14 min-w-[3.5rem] min-h-[3.5rem]', emoji: 'text-3xl mt-4 mb-1 drop-shadow-md inline-flex items-center justify-center' },
+detail: { img: 'w-[5rem] h-[5rem] min-w-[5rem] min-h-[5rem]', emoji: 'text-[5rem] drop-shadow-xl relative z-10 mb-2 inline-flex items-center justify-center leading-none' },
+sm: { img: 'w-8 h-8 min-w-[2rem] min-h-[2rem]', emoji: 'text-base sm:text-lg inline-flex items-center justify-center' },
+md: { img: 'w-10 h-10 min-w-[2.5rem] min-h-[2.5rem]', emoji: 'text-2xl inline-flex items-center justify-center' },
+xl: { img: 'w-16 h-16 min-w-[4rem] min-h-[4rem]', emoji: 'text-4xl drop-shadow-md mb-2 inline-flex items-center justify-center' }
+};
+const b = boxes[variant] || boxes.md;
+if (url) {
+return `<img src="${escapeAttr(url)}" alt="" class="rounded-full object-cover border-2 border-white/25 shadow-md ${b.img}" loading="lazy" referrerpolicy="no-referrer"/>`;
+}
+const emoji = (p.gender || GENDER_MAP[p.name]) === 'F' ? '👧' : '👦';
+return `<span class="${b.emoji}">${emoji}</span>`;
+}
 
 window.switchTab = (tabId) => {
 ['tabWorkspace', 'tabTips', 'tabShop', 'tabAchievements', 'tabRank', 'tabCompare', 'tabGuide', 'tabMaster', 'tabMasterStats'].forEach(id => {
@@ -360,7 +413,7 @@ html += `
                      <div class="mini-card flex flex-col items-center p-2 rounded-xl bg-pitch-panel border-2 ${borderClass} cursor-pointer ${isSelected ? 'selected' : ''} ${isChecked ? 'checked-in' : 'checked-out'}" onclick="window.selectPlayer('${p.id}')">
                          <input type="checkbox" class="locker-checkbox absolute top-1.5 left-1.5 w-5 h-5 shadow-lg z-10" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); window.toggleCheck('${p.id}')">
                          <div class="absolute top-1 right-1 ${tier.class} text-[9px] font-bold px-1.5 py-0.5 rounded shadow whitespace-nowrap">${tier.name.split(' ')[0]}</div>
-                         <div class="text-3xl mt-4 mb-1 drop-shadow-md">${getAvatar(p)}</div>
+                         <div class="flex items-center justify-center min-h-[3.5rem]">${getAvatarHtml(p, 'locker')}</div>
                          <div class="font-oswald text-xl font-bold leading-none text-white">${ovr}</div>
                          <div class="flex items-center gap-1 mt-1"><span class="text-[10px] font-bold ${getPosColor(p.pos)}">${posText}</span><span class="text-xs font-bold text-slate-300 truncate max-w-[50px]">${p.name}</span></div>
                      </div>`;
@@ -412,7 +465,7 @@ document.getElementById('shopWalletLabel') && (document.getElementById('shopWall
 let html = '';
 SHOP_ITEMS.forEach(item => {
 const isOwned = inventory.includes(item.id);
-const isEquipped = p ? (p.equipHead === item.id || p.equipHandL === item.id || p.equipHandR === item.id || p.equipFootL === item.id || p.equipFootR === item.id) : false;
+const isEquipped = p ? (p.equipHead === item.id || p.equipHandL === item.id || p.equipHandR === item.id || p.equipFootL === item.id || p.equipFootR === item.id || p.equipFace === item.id) : false;
 const level = Number(itemLevels[item.id]) || 0;
 const enhData = ENHANCE_LEVELS[level] || ENHANCE_LEVELS[0];
 const nextEnhData = ENHANCE_LEVELS[level + 1];
@@ -423,7 +476,7 @@ let growthHtml = '';
 for (const [k, v] of Object.entries(item.baseGrowth || {})) { growthHtml += `<span class="inline-block bg-purple-900/50 text-purple-300 border border-purple-500/50 text-[9px] px-1 rounded mr-1 mb-1">성장 +${Math.floor(v * enhData.growthMult)}%</span>`; }
 
 let btnHtml = ''; let enhanceBtnHtml = '';
-if(isOwned && nextEnhData && !window.playerState.isGuest) {
+if(isOwned && nextEnhData && !window.playerState.isGuest && item.type !== 'face') {
 const canEnhance = bong >= item.price;
 enhanceBtnHtml = `
                      <div class="mt-2 pt-2 border-t border-slate-700 w-full">
@@ -431,7 +484,7 @@ enhanceBtnHtml = `
                              <span class="relative z-10 flex items-center justify-center gap-2"><i class="fa-solid fa-hammer ${canEnhance ? 'animate-bounce' : ''}"></i> 강화 도전 (${item.price} B) - 성공률 ${nextEnhData.chance}%</span>
                          </button>
                      </div>`;
-} else if (isOwned && !nextEnhData) {
+} else if (isOwned && !nextEnhData && item.type !== 'face') {
 enhanceBtnHtml = `<div class="mt-2 pt-2 border-t border-slate-700 w-full text-center text-[10px] font-bold text-red-400">MAX LEVEL 도달</div>`;
 }
 
@@ -454,13 +507,17 @@ btnHtml = `<button onclick="window.purchaseItem('${item.id}')" class="w-full mt-
 }
 }
 
-const slotKo = { 'head':'머리', 'handL':'왼손', 'handR':'오른손', 'footL':'왼발', 'footR':'오른발' }[item.type];
+const slotKo = { 'head':'머리', 'handL':'왼손', 'handR':'오른손', 'footL':'왼발', 'footR':'오른발', 'face':'얼굴' }[item.type] || '기타';
+
+let previewInner = item.faceImageUrl
+? `<img src="${escapeAttr(item.faceImageUrl)}" alt="" class="w-full h-full object-cover rounded-lg"/>`
+: `<span class="z-10 relative drop-shadow-md">${item.icon}</span>`;
 
 html += `
                  <div class="bg-slate-900/80 border ${isOwned ? 'border-purple-500/50 shadow-[0_0_10px_rgba(168,85,247,0.2)]' : 'border-slate-700'} rounded-xl p-4 flex flex-col justify-between hover:border-purple-400 transition duration-300">
                      <div class="flex items-start gap-4">
-                         <div class="text-4xl w-16 h-16 bg-slate-800 flex items-center justify-center rounded-lg shadow-inner flex-shrink-0 relative border ${isOwned ? 'border-purple-500' : 'border-slate-600'} ${isOwned ? enhData.css : ''}">
-                             <span class="z-10 relative drop-shadow-md">${item.icon}</span>
+                         <div class="text-4xl w-16 h-16 bg-slate-800 flex items-center justify-center rounded-lg shadow-inner flex-shrink-0 relative border overflow-hidden ${isOwned ? 'border-purple-500' : 'border-slate-600'} ${isOwned && item.type !== 'face' ? enhData.css : ''}">
+                             ${previewInner}
                              <div class="absolute -top-2 -left-2 bg-slate-700 text-white text-[8px] px-1.5 py-0.5 rounded border border-slate-500 z-20">${slotKo}</div>
                              ${isOwned && level > 0 ? `<div class="absolute -bottom-2 -right-2 bg-black text-[9px] font-bold px-1.5 py-0.5 rounded border border-current z-20 ${enhData.color}">${enhData.text}</div>` : ''}
                          </div>
@@ -496,7 +553,26 @@ if(badge) { badge.innerText = tier.name; badge.className = `px-2 py-1 rounded bo
 const card = document.getElementById('detailFutCard');
 if(card) { card.className = `fut-card w-[300px] h-[460px] p-5 flex flex-col relative shadow-2xl z-10 mx-auto transition-all duration-300 ${tier.cardClass}`; }
 
-document.getElementById('detailAvatar') && (document.getElementById('detailAvatar').innerText = getAvatar(p));
+const detailAv = document.getElementById('detailAvatar');
+if (detailAv) detailAv.innerHTML = getAvatarHtml(p, 'detail');
+const fc = document.getElementById('facePhotoControls');
+if (fc) {
+if (isMe && !isGM && !window.playerState.isGuest) {
+fc.classList.remove('hidden');
+fc.innerHTML = `
+<input type="file" id="facePhotoInput" accept="image/jpeg,image/png,image/webp,image/gif" class="hidden" />
+<div class="flex flex-wrap justify-center gap-1.5">
+<button type="button" class="text-[10px] font-bold px-2 py-1 rounded bg-emerald-800/80 hover:bg-emerald-700 text-emerald-200 border border-emerald-600/50" onclick="document.getElementById('facePhotoInput').click()">얼굴 사진 올리기</button>
+${(p.facePhotoUrl || '').trim() ? `<button type="button" class="text-[10px] font-bold px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 border border-slate-600" onclick="window.clearFacePhoto()">사진 삭제</button>` : ''}
+</div>
+<p class="text-[9px] text-slate-500 text-center mt-1 leading-tight">본인만 등록 가능 · JPG·PNG·WebP·GIF, 최대 2MB</p>`;
+const inp = document.getElementById('facePhotoInput');
+if (inp) inp.onchange = (e) => window.uploadFacePhoto(e);
+} else {
+fc.classList.add('hidden');
+fc.innerHTML = '';
+}
+}
 document.getElementById('detailName') && (document.getElementById('detailName').innerText = p.name);
 document.getElementById('detailAge') && (document.getElementById('detailAge').innerText = Number(p.age) || 13);
 document.getElementById('detailOvr') && (document.getElementById('detailOvr').innerText = ovr);
@@ -571,25 +647,30 @@ drawRadarChart(p, bonus.flat);
 
 const equipSlots = [
 { id: 'slotHead', equip: p.equipHead, empty: '🧢', label: '머리' }, { id: 'slotHandL', equip: p.equipHandL, empty: '🧤', label: '왼손' },
-{ id: 'slotHandR', equip: p.equipHandR, empty: '📿', label: '오른손' }, { id: 'slotFootL', equip: p.equipFootL, empty: '👟', label: '왼발' }, { id: 'slotFootR', equip: p.equipFootR, empty: '🥾', label: '오른발' }
+{ id: 'slotHandR', equip: p.equipHandR, empty: '📿', label: '오른손' }, { id: 'slotFootL', equip: p.equipFootL, empty: '👟', label: '왼발' }, { id: 'slotFootR', equip: p.equipFootR, empty: '🥾', label: '오른발' },
+{ id: 'slotFace', equip: p.equipFace, empty: '😶', label: '얼굴' }
 ];
 
 equipSlots.forEach(slot => {
 const el = document.getElementById(slot.id);
-if(el) {
-if(slot.equip) {
+if (!el) return;
+if (slot.equip) {
 const item = SHOP_ITEMS.find(x => x.id === slot.equip);
 const level = (p.itemLevels && typeof p.itemLevels === 'object' && !Array.isArray(p.itemLevels) && p.itemLevels[slot.equip]) ? Number(p.itemLevels[slot.equip]) : 0;
 const enhData = ENHANCE_LEVELS[level] || ENHANCE_LEVELS[0];
 
-if(item) {
+if (item) {
+if (item.type === 'face' && item.faceImageUrl) {
+el.innerHTML = `<img src="${escapeAttr(item.faceImageUrl)}" alt="" class="item-face-thumb"/><span class="item-label">${slot.label}</span>`;
+el.className = 'item-slot-mini equipped eff-0';
+} else {
 el.innerHTML = `<span class="item-icon">${item.icon}</span><span class="item-label">${slot.label}</span>${level>0?`<span class="absolute -top-1 -right-1 text-[8px] font-bold ${enhData.color} z-10">${enhData.text}</span>`:''}`;
 el.className = `item-slot-mini equipped ${enhData.css}`;
+}
 }
 } else {
 el.innerHTML = `<span class="opacity-30 text-lg">${slot.empty}</span><span class="item-label">${slot.label}</span>`;
 el.className = 'item-slot-mini';
-}
 }
 });
 
@@ -799,6 +880,7 @@ const pId = window.playerState.isGM ? window.selectedPlayerId : window.playerSta
 const p = window.allPlayersData.find(x => x.id === pId);
 const item = SHOP_ITEMS.find(x => x.id === itemId);
 if(!p || !item) return;
+if (item.type === 'face') return window.customAlert('얼굴 프레임 아이템은 강화할 수 없습니다.');
 
 const cost = item.price;
 if(!window.playerState.isGM && (Number(p.bong) || 0) < cost) return window.customAlert(`자산이 부족합니다. (필요 자산: ${cost} B)`);
@@ -849,7 +931,7 @@ if(!p) return;
 
 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
 let updates = {};
-const fieldMap = { 'head':'equipHead', 'handL':'equipHandL', 'handR':'equipHandR', 'footL':'equipFootL', 'footR':'equipFootR' };
+const fieldMap = { 'head':'equipHead', 'handL':'equipHandL', 'handR':'equipHandR', 'footL':'equipFootL', 'footR':'equipFootR', 'face':'equipFace' };
 const field = fieldMap[type];
 if(field) { updates[field] = p[field] === itemId ? null : itemId; }
 
@@ -877,6 +959,7 @@ const newItemLevels = { ...safeItemLevels }; delete newItemLevels[itemId]; updat
 
 if(p.equipHead === itemId) updates.equipHead = null; if(p.equipHandL === itemId) updates.equipHandL = null;
 if(p.equipHandR === itemId) updates.equipHandR = null; if(p.equipFootL === itemId) updates.equipFootL = null; if(p.equipFootR === itemId) updates.equipFootR = null;
+if(p.equipFace === itemId) updates.equipFace = null;
 
 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
 await setDoc(docRef, updates, { merge: true });
@@ -973,6 +1056,52 @@ const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_
 await setDoc(docRef, { level: newLv, exp: newExp }, { merge: true });
 window.customAlert(`레벨이 ${newLv}로 조정되었습니다.`);
 } catch (e) { console.error("gmRollbackLevel Error:", e); window.customAlert(`레벨 롤백 에러:\n${e.message}`); }
+};
+
+/** 본인 프로필 사진 업로드 (Firebase Storage + Firestore facePhotoUrl) */
+window.uploadFacePhoto = async (ev) => {
+try {
+checkAuthReady();
+if (!storage) return window.customAlert('스토리지가 준비되지 않았습니다. 잠시 후 다시 시도하세요.');
+const file = ev.target?.files?.[0];
+if (!file) return;
+if (!file.type.startsWith('image/')) return window.customAlert('이미지 파일(JPG·PNG·WebP·GIF)만 올릴 수 있습니다.');
+if (file.size > 2 * 1024 * 1024) return window.customAlert('파일 크기는 2MB 이하여야 합니다.');
+const pId = window.playerState.id;
+if (!pId || window.playerState.isGM || window.playerState.isGuest) return;
+const safeId = getSafeDocId(pId);
+const path = `artifacts/${appId}/public/player_avatars/${safeId}/face`;
+const sref = ref(storage, path);
+await uploadBytes(sref, file, { contentType: file.type || 'image/jpeg' });
+const url = await getDownloadURL(sref);
+const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + safeId);
+await setDoc(docRef, { facePhotoUrl: url, updatedAt: new Date().toISOString() }, { merge: true });
+window.customAlert('프로필 사진이 저장되었습니다.');
+ev.target.value = '';
+} catch (e) {
+console.error('uploadFacePhoto', e);
+window.customAlert(`업로드 실패:\n${e.message}\n\nFirebase Console → Storage 규칙에서 인증된 사용자의 쓰기를 허용했는지 확인하세요.`);
+}
+};
+
+/** 본인 프로필 사진 삭제 */
+window.clearFacePhoto = async () => {
+try {
+checkAuthReady();
+if (!storage) return window.customAlert('스토리지가 준비되지 않았습니다.');
+if (!await window.customConfirm('등록한 얼굴 사진을 삭제하고 기본 이모지로 돌아갈까요?')) return;
+const pId = window.playerState.id;
+if (!pId || window.playerState.isGM || window.playerState.isGuest) return;
+const safeId = getSafeDocId(pId);
+const path = `artifacts/${appId}/public/player_avatars/${safeId}/face`;
+try { await deleteObject(ref(storage, path)); } catch (err) { /* 객체 없음 등은 무시 */ }
+const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + safeId);
+await setDoc(docRef, { facePhotoUrl: deleteField(), updatedAt: new Date().toISOString() }, { merge: true });
+window.customAlert('사진이 삭제되었습니다.');
+} catch (e) {
+console.error('clearFacePhoto', e);
+window.customAlert(`삭제 실패:\n${e.message}`);
+}
 };
 
 window.resetAllLevels = async () => {
@@ -1154,7 +1283,7 @@ const base = Number(p[key])||60; const bonus = b[key]||0; const total = Math.min
 const isHighlight = window.currentSortKey === key;
 return `<td class="py-3 text-center font-oswald text-sm sm:text-base ${isHighlight ? 'text-white font-bold bg-slate-800/50' : 'text-slate-300'}">${total} ${bonus>0 ? `<span class="text-[9px] text-emerald-400 ml-0.5 absolute mt-0.5">+${bonus}</span>`:''}</td>`;
 };
-statsHtml += `<tr class="hover:bg-slate-800/80 transition cursor-pointer" onclick="window.switchTab('tabWorkspace'); window.selectPlayer('${p.id}')"><td class="py-3 pl-4 text-left font-bold text-white flex items-center gap-2 whitespace-nowrap"><span class="text-base sm:text-lg">${getAvatar(p)}</span><span>${p.name}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[12px] font-bold text-emerald-400 px-1.5 py-0.5 leading-none">${ageVal}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[10px] font-bold ${getPosColor(p.pos)} border border-slate-600 px-1.5 py-0.5 rounded leading-none">${posText}</span></td><td class="py-3 text-center font-oswald text-base sm:text-lg ${window.currentSortKey==='ovr' ? 'text-white bg-slate-800/50' : 'text-fut-gold'} font-bold">${ovr}</td>${getCell('pac')}${getCell('sho')}${getCell('pas')}${getCell('dri')}${getCell('def')}${getCell('phy')}${getCell('ref')}${getCell('int')}${getCell('pst')}${getCell('dis')}${getCell('cmp')}${getCell('wrk')}</tr>`;
+statsHtml += `<tr class="hover:bg-slate-800/80 transition cursor-pointer" onclick="window.switchTab('tabWorkspace'); window.selectPlayer('${p.id}')"><td class="py-3 pl-4 text-left font-bold text-white flex items-center gap-2 whitespace-nowrap"><span class="inline-flex items-center justify-center align-middle">${getAvatarHtml(p, 'sm')}</span><span>${p.name}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[12px] font-bold text-emerald-400 px-1.5 py-0.5 leading-none">${ageVal}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[10px] font-bold ${getPosColor(p.pos)} border border-slate-600 px-1.5 py-0.5 rounded leading-none">${posText}</span></td><td class="py-3 text-center font-oswald text-base sm:text-lg ${window.currentSortKey==='ovr' ? 'text-white bg-slate-800/50' : 'text-fut-gold'} font-bold">${ovr}</td>${getCell('pac')}${getCell('sho')}${getCell('pas')}${getCell('dri')}${getCell('def')}${getCell('phy')}${getCell('ref')}${getCell('int')}${getCell('pst')}${getCell('dis')}${getCell('cmp')}${getCell('wrk')}</tr>`;
 });
 statsTbody.innerHTML = statsHtml;
 };
@@ -1176,7 +1305,7 @@ else {
 const medals = ['🥇', '🥈', '🥉'];
 sorted.forEach((p, idx) => {
 const tier = getTierInfo(getOVR(p)); const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
-listHtml += `<div class="flex items-center justify-between bg-slate-800/50 p-2 rounded-lg mb-1 border border-slate-700"><div class="flex items-center gap-2"><span class="text-lg w-6 text-center">${medals[idx]}</span><span class="text-2xl">${getAvatar(p)}</span><div><p class="text-sm font-bold text-white leading-none">${p.name}</p><div class="flex items-center gap-1 mt-1"><span class="text-[8px] ${tier.class} px-1 rounded border leading-none py-0.5">${tier.name.split(' ')[0]}</span><span class="text-[9px] ${cat.color} font-bold">${posText}</span></div></div></div><div class="font-oswald text-xl font-bold ${cat.color} bg-black/30 px-3 py-1 rounded-lg border ${cat.border}">${Number(p[cat.id])||0}</div></div>`;
+listHtml += `<div class="flex items-center justify-between bg-slate-800/50 p-2 rounded-lg mb-1 border border-slate-700"><div class="flex items-center gap-2"><span class="text-lg w-6 text-center">${medals[idx]}</span><span class="inline-flex items-center justify-center">${getAvatarHtml(p, 'md')}</span><div><p class="text-sm font-bold text-white leading-none">${p.name}</p><div class="flex items-center gap-1 mt-1"><span class="text-[8px] ${tier.class} px-1 rounded border leading-none py-0.5">${tier.name.split(' ')[0]}</span><span class="text-[9px] ${cat.color} font-bold">${posText}</span></div></div></div><div class="font-oswald text-xl font-bold ${cat.color} bg-black/30 px-3 py-1 rounded-lg border ${cat.border}">${Number(p[cat.id])||0}</div></div>`;
 });
 }
 html += `<div class="bg-slate-900/60 rounded-2xl border border-slate-700 overflow-hidden shadow-lg hover:border-slate-500 transition duration-300"><div class="bg-slate-800 p-3 border-b border-slate-700 flex items-center justify-between"><h4 class="font-display text-lg text-white flex items-center gap-2"><span class="text-2xl">${cat.icon}</span> ${cat.name}</h4></div><div class="p-3">${listHtml}</div></div>`;
@@ -1200,7 +1329,7 @@ return getOVR(b) - getOVR(a);
 players.forEach(p => {
 const ovr = getOVR(p); const tier = getTierInfo(ovr); const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
 const ageVal = Number(p.age) || 13;
-html += `<tr class="hover:bg-slate-800/80 transition cursor-pointer" onclick="window.switchTab('tabWorkspace'); window.selectPlayer('${p.id}')"><td class="py-3 pl-4 text-left font-bold text-white flex items-center gap-2 whitespace-nowrap"><span class="text-lg">${getAvatar(p)}</span><span>${p.name}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[12px] font-bold text-emerald-400 px-1.5 py-0.5 leading-none">${ageVal}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[10px] font-bold ${getPosColor(p.pos)} border border-slate-600 px-1.5 py-0.5 rounded leading-none">${posText}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[10px] font-bold ${tier.class} border px-1.5 py-0.5 rounded shadow-sm">${tier.name.split(' ')[0]}</span></td><td class="py-3 text-center font-oswald text-base text-fut-gold font-bold">${ovr}</td><td class="py-3 text-center text-slate-300">${Number(p.matches)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.goals)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.assists)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.saves)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.training)||0}</td><td class="py-3 text-center font-oswald text-orange-400 text-sm">${Number(p.exp)||0}</td><td class="py-3 pr-4 text-right font-oswald text-emerald-400 font-bold text-sm">${Number(p.bong)||0} B</td><td class="py-3 px-2 text-center"><button onclick="event.stopPropagation(); window.deletePlayer('${p.id}', '${p.name}')" class="text-red-400 hover:text-white transition bg-red-900/40 hover:bg-red-600 px-2 py-1 rounded text-[10px] border border-red-800/50"><i class="fa-solid fa-trash"></i> 삭제</button></td></tr>`;
+html += `<tr class="hover:bg-slate-800/80 transition cursor-pointer" onclick="window.switchTab('tabWorkspace'); window.selectPlayer('${p.id}')"><td class="py-3 pl-4 text-left font-bold text-white flex items-center gap-2 whitespace-nowrap"><span class="inline-flex items-center justify-center">${getAvatarHtml(p, 'sm')}</span><span>${p.name}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[12px] font-bold text-emerald-400 px-1.5 py-0.5 leading-none">${ageVal}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[10px] font-bold ${getPosColor(p.pos)} border border-slate-600 px-1.5 py-0.5 rounded leading-none">${posText}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[10px] font-bold ${tier.class} border px-1.5 py-0.5 rounded shadow-sm">${tier.name.split(' ')[0]}</span></td><td class="py-3 text-center font-oswald text-base text-fut-gold font-bold">${ovr}</td><td class="py-3 text-center text-slate-300">${Number(p.matches)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.goals)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.assists)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.saves)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.training)||0}</td><td class="py-3 text-center font-oswald text-orange-400 text-sm">${Number(p.exp)||0}</td><td class="py-3 pr-4 text-right font-oswald text-emerald-400 font-bold text-sm">${Number(p.bong)||0} B</td><td class="py-3 px-2 text-center"><button onclick="event.stopPropagation(); window.deletePlayer('${p.id}', '${p.name}')" class="text-red-400 hover:text-white transition bg-red-900/40 hover:bg-red-600 px-2 py-1 rounded text-[10px] border border-red-800/50"><i class="fa-solid fa-trash"></i> 삭제</button></td></tr>`;
 });
 tbody.innerHTML = html;
 }
@@ -1211,7 +1340,7 @@ let html = ''; const myId = window.selectedPlayerId; const players = [...window.
 players.forEach(p => {
 if(p.id === myId) return; 
 const ovr = getOVR(p); const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
-html += `<div class="flex items-center justify-between p-3 rounded-xl cursor-pointer transition ${window.compareTargetId === p.id ? 'bg-pink-900/40 border-pink-500' : 'bg-slate-800 hover:bg-slate-700 border-slate-600'} border" onclick="window.selectCompareTarget('${p.id}')"><div class="flex items-center gap-3"><div class="text-2xl">${getAvatar(p)}</div><div><div class="font-bold text-white text-sm">${p.name}</div><div class="text-[10px] font-bold ${getPosColor(p.pos)}">${posText}</div></div></div><div class="font-oswald text-lg text-fut-gold font-bold">${ovr}</div></div>`;
+html += `<div class="flex items-center justify-between p-3 rounded-xl cursor-pointer transition ${window.compareTargetId === p.id ? 'bg-pink-900/40 border-pink-500' : 'bg-slate-800 hover:bg-slate-700 border-slate-600'} border" onclick="window.selectCompareTarget('${p.id}')"><div class="flex items-center gap-3"><div class="flex items-center justify-center">${getAvatarHtml(p, 'md')}</div><div><div class="font-bold text-white text-sm">${p.name}</div><div class="text-[10px] font-bold ${getPosColor(p.pos)}">${posText}</div></div></div><div class="font-oswald text-lg text-fut-gold font-bold">${ovr}</div></div>`;
 });
 listContainer.innerHTML = html; window.renderCompareView();
 };
@@ -1240,7 +1369,7 @@ const myW = (myVal / 99) * 100; const tgW = (tgVal / 99) * 100;
 statRows += `<div class="mb-2.5"><div class="flex justify-between items-center text-[10px] sm:text-xs font-bold mb-1 px-1"><span class="${myColor} font-oswald text-sm sm:text-base drop-shadow-sm">${myVal}</span><span class="text-slate-400 font-sans tracking-tight">${s.label.split(' ')[0]}</span><span class="${tgColor} font-oswald text-sm sm:text-base drop-shadow-sm">${tgVal}</span></div><div class="flex gap-1 h-2 sm:h-2.5"><div class="flex-1 bg-slate-800 rounded-l-full overflow-hidden flex justify-end shadow-inner"><div class="${myVal > tgVal ? 'bg-emerald-500' : 'bg-slate-500'} h-full transition-all duration-700 ease-out" style="width: ${myW}%"></div></div><div class="flex-1 bg-slate-800 rounded-r-full overflow-hidden shadow-inner"><div class="${tgVal > myVal ? 'bg-pink-500' : 'bg-slate-500'} h-full transition-all duration-700 ease-out" style="width: ${tgW}%"></div></div></div></div>`;
 });
 
-view.innerHTML = `<div class="flex justify-between items-center mb-6 px-4"><div class="flex flex-col items-center"><span class="text-4xl drop-shadow-md mb-2">${getAvatar(myP)}</span><span class="font-bold text-white text-sm sm:text-base">${myP.name}</span><span class="font-oswald text-2xl text-emerald-400 mt-1">${myOvr}</span></div><div class="font-display text-2xl text-slate-500 px-4">VS</div><div class="flex flex-col items-center"><span class="text-4xl drop-shadow-md mb-2">${getAvatar(tgP)}</span><span class="font-bold text-white text-sm sm:text-base">${tgP.name}</span><span class="font-oswald text-2xl text-pink-400 mt-1">${tgOvr}</span></div></div><div class="flex-1 bg-slate-900/50 p-4 sm:p-5 rounded-xl border border-slate-700 shadow-inner overflow-y-auto custom-scrollbar">${statRows}</div>`;
+view.innerHTML = `<div class="flex justify-between items-center mb-6 px-4"><div class="flex flex-col items-center"><span class="inline-flex items-center justify-center mb-2">${getAvatarHtml(myP, 'xl')}</span><span class="font-bold text-white text-sm sm:text-base">${myP.name}</span><span class="font-oswald text-2xl text-emerald-400 mt-1">${myOvr}</span></div><div class="font-display text-2xl text-slate-500 px-4">VS</div><div class="flex flex-col items-center"><span class="inline-flex items-center justify-center mb-2">${getAvatarHtml(tgP, 'xl')}</span><span class="font-bold text-white text-sm sm:text-base">${tgP.name}</span><span class="font-oswald text-2xl text-pink-400 mt-1">${tgOvr}</span></div></div><div class="flex-1 bg-slate-900/50 p-4 sm:p-5 rounded-xl border border-slate-700 shadow-inner overflow-y-auto custom-scrollbar">${statRows}</div>`;
 };
 
 window.renderAchievements = () => {
@@ -1365,7 +1494,7 @@ teams.forEach((team, idx) => {
 const avgOvr = Math.round(team.totalOvr / team.players.length);
 let pList = team.players.map(p => {
 const posColor = getPosColor(p.pos); const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
-return `<div class="flex justify-between items-center text-sm py-1 border-b border-slate-700/50 last:border-0"><span class="flex items-center gap-2"><span class="text-lg w-5 text-center">${getAvatar(p)}</span> <span class="text-white font-bold">${p.name}</span></span> <div class="flex items-center gap-2"><span class="text-[9px] ${posColor} border border-slate-700 px-1 rounded font-bold">${posText}</span><span class="font-oswald text-fut-gold">${getOVR(p)}</span></div></div>`;
+return `<div class="flex justify-between items-center text-sm py-1 border-b border-slate-700/50 last:border-0"><span class="flex items-center gap-2"><span class="inline-flex w-8 justify-center">${getAvatarHtml(p, 'sm')}</span> <span class="text-white font-bold">${p.name}</span></span> <div class="flex items-center gap-2"><span class="text-[9px] ${posColor} border border-slate-700 px-1 rounded font-bold">${posText}</span><span class="font-oswald text-fut-gold">${getOVR(p)}</span></div></div>`;
 }).join('');
 
 html += `<div class="bg-slate-900/80 p-4 rounded-xl border-t-4 border-emerald-500 shadow-lg"><div class="flex justify-between items-center mb-3 pb-2 border-b border-emerald-900/50"><h4 class="font-display text-emerald-400 text-lg">TEAM ${idx + 1}</h4><span class="text-xs bg-emerald-900/50 text-emerald-300 px-2 py-1 rounded font-bold shadow-inner">평균 OVR ${avgOvr}</span></div><div class="space-y-1">${pList}</div></div>`;
@@ -1461,7 +1590,7 @@ const baseData = {
 name: name, pos: '미정', age: age, gender: gender,
 pac: r(), sho: r(), pas: r(), dri: r(), def: r(), phy: r(), ref: r(), int: r(), pst: r(), dis: r(), cmp: r(), wrk: r(),
 level: 1, exp: 0, goals: 0, assists: 0, matches: 0, training: 0, saves: 0, keypass: 0, bong: 0, lastWageWeek: '',
-inventory: [], itemLevels: {}, equipHead: null, equipHandL: null, equipHandR: null, equipFootL: null, equipFootR: null,
+inventory: [], itemLevels: {}, equipHead: null, equipHandL: null, equipHandR: null, equipFootL: null, equipFootR: null, equipFace: null,
 updatedAt: new Date().toISOString()
 };
 
@@ -1567,10 +1696,8 @@ const baseData = {
 name: isGM ? (pId==='gm1'?'감독 J':'수석코치 J') : pId, pin, pos: isGM ? 'Fixo' : '미정', 
 pac: r(), sho: r(), pas: r(), dri: r(), def: r(), phy: r(), ref: r(), int: r(), pst: r(), dis: r(), cmp: r(), wrk: r(),
 level: 1, exp: 0, goals: 0, assists: 0, matches: 0, training: 0, saves: 0, keypass: 0, bong: 0, lastWageWeek: '',
-age: 13,
-inventory: [], itemLevels: {}, equipHead: null, equipHandL: null, equipHandR: null, equipFootL: null, equipFootR: null,
 age: (pId === '신무호' || pId === '신무호') ? 12 : 13,
-inventory: [], itemLevels: {}, equipHead: null, equipHandL: null, equipHandR: null, equipFootL: null, equipFootR: null, equipAvatar: null,
+inventory: [], itemLevels: {}, equipHead: null, equipHandL: null, equipHandR: null, equipFootL: null, equipFootR: null, equipFace: null, equipAvatar: null,
 updatedAt: new Date().toISOString()
 };
 await setDoc(docRef, baseData, { merge: true });
@@ -1665,6 +1792,7 @@ measurementId: "G-H1RGMJHGTV"
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 auth = getAuth(app);
 db = getFirestore(app);
+storage = getStorage(app);
 
 const initAuth = async () => {
 try {
