@@ -195,6 +195,7 @@ window.selectedPlayerId = null;
 window.targetTeamCount = 2; 
 window.compareTargetId = null;
 window.currentSortKey = 'ovr';
+window.lockerViewMode = 'default';
 
 let db, auth, storage;
 
@@ -396,15 +397,8 @@ container.innerHTML = `
 }
 }
 
-window.renderLockerRoom = () => {
-const grid = document.getElementById('lockerGrid');
-if(!grid) return;
-let html = '';
-ALLOWED_PLAYERS.forEach(name => {
-const safeDocId = getSafeDocId(name);
-const p = window.allPlayersData.find(x => x.id === safeDocId);
-
-if(p) {
+/** 라커룸 한 선수 카드 HTML */
+function lockerPlayerCardHtml(p) {
 const isChecked = window.checkedInPlayers.has(p.id);
 const isSelected = window.selectedPlayerId === p.id;
 const ovr = getOVR(p); const tier = getTierInfo(ovr);
@@ -423,8 +417,7 @@ simRow = `<div class="w-full mt-1 pt-1 border-t border-slate-700/60" onclick="ev
 } else if (st === 'A' || st === 'B') {
 simRow = `<div class="mt-0.5 text-[9px] font-bold ${st === 'A' ? 'text-red-400' : 'text-blue-400'}" onclick="event.stopPropagation()">모의 ${st}</div>`;
 }
-
-html += `
+return `
                      <div class="mini-card flex flex-col items-center p-2 rounded-xl bg-pitch-panel border-2 ${borderClass} cursor-pointer ${isSelected ? 'selected' : ''} ${isChecked ? 'checked-in' : 'checked-out'}" onclick="window.selectPlayer('${p.id}')">
                          <input type="checkbox" class="locker-checkbox absolute top-1.5 left-1.5 w-5 h-5 shadow-lg z-10" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); window.toggleCheck('${p.id}')">
                          <div class="absolute top-1 right-1 ${tier.class} text-[9px] font-bold px-1.5 py-0.5 rounded shadow whitespace-nowrap">${tier.name.split(' ')[0]}</div>
@@ -433,9 +426,67 @@ html += `
                          <div class="flex items-center gap-1 mt-1"><span class="text-[10px] font-bold ${getPosColor(p.pos)}">${posText}</span><span class="text-xs font-bold text-slate-300 truncate max-w-[50px]">${p.name}</span></div>
                          ${simRow}
                      </div>`;
-} else {
-html += `<div class="flex flex-col items-center justify-center p-2 rounded-xl border border-slate-800 bg-slate-900/50 opacity-50"><i class="fa-solid fa-user-lock text-xl text-slate-700 mb-2"></i><span class="text-[10px] text-slate-600">${name}</span></div>`;
 }
+
+function lockerLockedSlotHtml(name) {
+return `<div class="flex flex-col items-center justify-center p-2 rounded-xl border border-slate-800 bg-slate-900/50 opacity-50"><i class="fa-solid fa-user-lock text-xl text-slate-700 mb-2"></i><span class="text-[10px] text-slate-600">${name}</span></div>`;
+}
+
+const LOCKER_POS_ORDER = ['Goleiro', 'Fixo', 'Ala', 'Pivo', '미정'];
+const LOCKER_POS_HEAD = { Goleiro: '골레이로 (GK)', Fixo: '픽소 (DF)', Ala: '아라 (MF)', Pivo: '피보 (FW)', '미정': '포지션 미정' };
+
+window.setLockerViewMode = (mode) => {
+window.lockerViewMode = mode === 'byPos' ? 'byPos' : 'default';
+window.renderLockerRoom();
+};
+
+window.renderLockerRoom = () => {
+const grid = document.getElementById('lockerGrid');
+if(!grid) return;
+const mode = window.lockerViewMode || 'default';
+const bd = document.getElementById('btnLockerViewDefault');
+const bp = document.getElementById('btnLockerViewPos');
+const tabOn = 'text-xs font-bold px-3 py-2 rounded-lg border transition shadow bg-emerald-700 text-white border-emerald-500';
+const tabOff = 'text-xs font-bold px-3 py-2 rounded-lg border transition bg-slate-800 text-slate-300 border-slate-600 hover:bg-slate-700';
+if (bd) bd.className = mode === 'byPos' ? tabOff : tabOn;
+if (bp) bp.className = mode === 'byPos' ? tabOn : tabOff;
+
+if (mode === 'byPos') {
+const buckets = { Goleiro: [], Fixo: [], Ala: [], Pivo: [], '미정': [] };
+const pendingNames = [];
+ALLOWED_PLAYERS.forEach(name => {
+const safeDocId = getSafeDocId(name);
+const p = window.allPlayersData.find(x => x.id === safeDocId);
+if (p) {
+const k = ['Goleiro', 'Fixo', 'Ala', 'Pivo'].includes(p.pos) ? p.pos : '미정';
+buckets[k].push(p);
+} else pendingNames.push(name);
+});
+let html = '';
+LOCKER_POS_ORDER.forEach(pos => {
+const list = buckets[pos];
+if (!list.length) return;
+html += `<div class="col-span-full flex items-center gap-2 pt-3 first:pt-0 border-t border-slate-700/50 first:border-0"><span class="text-emerald-400 font-bold text-sm">${LOCKER_POS_HEAD[pos]}</span><span class="text-[10px] text-slate-500">${list.length}명</span></div>`;
+html += `<div class="col-span-full grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 sm:gap-4">`;
+list.forEach(p => { html += lockerPlayerCardHtml(p); });
+html += `</div>`;
+});
+if (pendingNames.length) {
+html += `<div class="col-span-full flex items-center gap-2 pt-3 border-t border-slate-700/50"><span class="text-slate-500 font-bold text-sm">등록 대기</span><span class="text-[10px] text-slate-600">${pendingNames.length}명</span></div>`;
+html += `<div class="col-span-full grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 sm:gap-4">`;
+pendingNames.forEach(n => { html += lockerLockedSlotHtml(n); });
+html += `</div>`;
+}
+grid.innerHTML = html || '<div class="col-span-full text-center text-slate-500 py-8">표시할 선수가 없습니다.</div>';
+return;
+}
+
+let html = '';
+ALLOWED_PLAYERS.forEach(name => {
+const safeDocId = getSafeDocId(name);
+const p = window.allPlayersData.find(x => x.id === safeDocId);
+if(p) html += lockerPlayerCardHtml(p);
+else html += lockerLockedSlotHtml(name);
 });
 grid.innerHTML = html;
 };
@@ -1650,21 +1701,30 @@ const pw = W - 32;
 const ph = H - 44;
 const midX = px0 + pw / 2;
 
-ctx.fillStyle = '#0f172a';
+ctx.fillStyle = '#0b1220';
 ctx.fillRect(0, 0, W, H);
 
-ctx.fillStyle = '#174a1f';
+const grass = ctx.createLinearGradient(px0, py0, px0 + pw, py0 + ph);
+grass.addColorStop(0, '#14532d');
+grass.addColorStop(0.45, '#166534');
+grass.addColorStop(1, '#14532d');
+ctx.fillStyle = grass;
 ctx.fillRect(px0, py0, pw, ph);
-ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+ctx.strokeStyle = 'rgba(255,255,255,0.5)';
 ctx.lineWidth = 1.5;
 ctx.strokeRect(px0, py0, pw, ph);
 ctx.beginPath();
 ctx.moveTo(midX, py0);
 ctx.lineTo(midX, py0 + ph);
 ctx.stroke();
+ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+ctx.lineWidth = 1;
+ctx.beginPath();
+ctx.arc(midX, py0 + ph / 2, Math.min(ph, pw) * 0.14, 0, Math.PI * 2);
+ctx.stroke();
 
 const dzW = pw * 0.24;
-ctx.fillStyle = 'rgba(220, 38, 38, 0.28)';
+ctx.fillStyle = 'rgba(220, 38, 38, 0.22)';
 ctx.fillRect(px0, py0, dzW, ph);
 ctx.fillRect(px0 + pw - dzW, py0, dzW, ph);
 ctx.font = '600 9px "Malgun Gothic","Noto Sans KR",sans-serif';
@@ -1672,7 +1732,7 @@ ctx.fillStyle = 'rgba(254, 242, 242, 0.95)';
 ctx.fillText('위험', px0 + 4, py0 + 11);
 ctx.fillText('위험', px0 + pw - dzW + 4, py0 + 11);
 
-ctx.fillStyle = 'rgba(0,0,0,0.45)';
+ctx.fillStyle = 'rgba(0,0,0,0.5)';
 ctx.fillRect(px0 - 3, py0 + ph * 0.32, 3, ph * 0.36);
 ctx.fillRect(px0 + pw, py0 + ph * 0.32, 3, ph * 0.36);
 
@@ -1701,19 +1761,22 @@ ctx.arc(ballX, ballY, 11, 0, Math.PI * 2);
 ctx.stroke();
 
 ctx.strokeStyle = oc;
-ctx.lineWidth = 3;
+ctx.lineWidth = 3.2;
 ctx.beginPath();
 ctx.moveTo(ballX, ballY);
-const dx = attackA ? Math.min(48, pw * 0.12) : -Math.min(48, pw * 0.12);
-ctx.lineTo(ballX + dx, ballY + (attackA ? 5 : -5));
+const arrowLen = Math.min(92, pw * 0.24);
+const dx = attackA ? arrowLen : -arrowLen;
+const dyOff = attackA ? 6 : -6;
+ctx.lineTo(ballX + dx, ballY + dyOff);
 ctx.stroke();
 ctx.fillStyle = oc;
 ctx.beginPath();
 const tipX = ballX + dx;
-const tipY = ballY + (attackA ? 5 : -5);
+const tipY = ballY + dyOff;
+const head = 13;
 ctx.moveTo(tipX, tipY);
-ctx.lineTo(tipX - (attackA ? 10 : -10), tipY - 6);
-ctx.lineTo(tipX - (attackA ? 10 : -10), tipY + 6);
+ctx.lineTo(tipX - (attackA ? head : -head), tipY - 7);
+ctx.lineTo(tipX - (attackA ? head : -head), tipY + 7);
 ctx.closePath();
 ctx.fill();
 
@@ -1749,21 +1812,32 @@ canvas.height = Math.floor(cssH * dpr);
 canvas.style.width = `${cssW}px`;
 canvas.style.height = `${cssH}px`;
 ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-ctx.fillStyle = '#0f172a';
+ctx.fillStyle = '#0b1220';
 ctx.fillRect(0, 0, cssW, cssH);
-ctx.fillStyle = '#174a1f';
 const px0 = 16;
 const py0 = 12;
 const pw = cssW - 32;
 const ph = cssH - 44;
+const midX = px0 + pw / 2;
+const grass = ctx.createLinearGradient(px0, py0, px0 + pw, py0 + ph);
+grass.addColorStop(0, '#14532d');
+grass.addColorStop(0.5, '#166534');
+grass.addColorStop(1, '#14532d');
+ctx.fillStyle = grass;
 ctx.fillRect(px0, py0, pw, ph);
-ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+ctx.lineWidth = 1.5;
 ctx.strokeRect(px0, py0, pw, ph);
 ctx.beginPath();
-ctx.moveTo(px0 + pw / 2, py0);
-ctx.lineTo(px0 + pw / 2, py0 + ph);
+ctx.moveTo(midX, py0);
+ctx.lineTo(midX, py0 + ph);
 ctx.stroke();
-ctx.fillStyle = 'rgba(148, 163, 184, 0.9)';
+ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+ctx.lineWidth = 1;
+ctx.beginPath();
+ctx.arc(midX, py0 + ph / 2, Math.min(ph, pw) * 0.14, 0, Math.PI * 2);
+ctx.stroke();
+ctx.fillStyle = 'rgba(148, 163, 184, 0.92)';
 ctx.font = '600 12px "Malgun Gothic","Noto Sans KR",sans-serif';
 ctx.textAlign = 'center';
 ctx.fillText('경기 시작 시 공의 방향과 성공·실패가 표시됩니다', cssW / 2, py0 + ph / 2);
@@ -1789,11 +1863,46 @@ while (b.id === a.id && guard++ < 12) b = players[Math.floor(Math.random() * pla
 return [a, b];
 }
 
+/** 모의경기 종료 후 골·어시·킬패스·세이브 요약 패널 */
+function renderSimPostMatchStats(plA, plB, teamAName, teamBName, simStats) {
+const el = document.getElementById('simPostMatchStats');
+if (!el) return;
+const goals = simStats.goals || {};
+const assists = simStats.assists || {};
+const keypass = simStats.keypass || {};
+const saves = simStats.saves || {};
+const all = [...plA, ...plB];
+const rows = all.map((p) => {
+const g = goals[p.id] || 0;
+const a = assists[p.id] || 0;
+const k = keypass[p.id] || 0;
+const s = saves[p.id] || 0;
+if (g + a + k + s === 0) return null;
+const inA = plA.some((x) => x.id === p.id);
+return { p, g, a, k, s, teamTag: inA ? teamAName : teamBName, teamCls: inA ? 'text-red-400' : 'text-blue-400' };
+}).filter(Boolean);
+rows.sort((x, y) => y.g - x.g || y.a - x.a || y.k - x.k || y.s - x.s || String(x.p.name).localeCompare(String(y.p.name), 'ko'));
+if (!rows.length) {
+el.classList.add('hidden');
+el.innerHTML = '';
+return;
+}
+const head = `<div class="flex flex-wrap items-center gap-2 mb-2 border-b border-amber-700/30 pb-2"><i class="fa-solid fa-chart-simple text-amber-400"></i><span class="text-sm font-bold text-amber-200">이번 경기 기록 요약</span><span class="text-[10px] text-slate-500">(모의 시뮬 · 서버 미반영)</span></div>`;
+const table = `<div class="overflow-x-auto"><table class="w-full text-[11px] sm:text-xs text-left border-collapse"><thead><tr class="text-slate-400 border-b border-slate-700"><th class="py-1.5 pr-2">팀</th><th class="py-1.5 pr-2">선수</th><th class="py-1.5 text-center" title="골">⚽</th><th class="py-1.5 text-center" title="어시스트">🅰️</th><th class="py-1.5 text-center" title="킬패스">KP</th><th class="py-1.5 text-center" title="세이브">🧤</th></tr></thead><tbody>${rows.map((r) => `<tr class="border-b border-slate-800/80 hover:bg-slate-800/40"><td class="py-1.5 pr-2 font-bold ${r.teamCls} truncate max-w-[5.5rem]">${escapeAttr(r.teamTag)}</td><td class="py-1.5 pr-2 text-white font-bold truncate max-w-[8rem]">${escapeAttr(r.p.name)}</td><td class="py-1.5 text-center text-fut-gold font-oswald">${r.g}</td><td class="py-1.5 text-center text-emerald-300">${r.a}</td><td class="py-1.5 text-center text-cyan-300">${r.k}</td><td class="py-1.5 text-center text-orange-300">${r.s}</td></tr>`).join('')}</tbody></table></div>`;
+el.innerHTML = head + table;
+el.classList.remove('hidden');
+}
+
 window.simClearLog = () => {
 const log = document.getElementById('simMatchLog');
 if (log) log.innerHTML = '';
 document.getElementById('simScoreBar')?.classList.add('hidden');
 document.getElementById('simClockWrap')?.classList.add('hidden');
+const post = document.getElementById('simPostMatchStats');
+if (post) {
+post.classList.add('hidden');
+post.innerHTML = '';
+}
 resetSimPitchCanvas();
 };
 
@@ -1818,6 +1927,11 @@ const scoreNums = document.getElementById('simScoreNums');
 const nameAEl = document.getElementById('simScoreAName');
 const nameBEl = document.getElementById('simScoreBName');
 const clockWrap = document.getElementById('simClockWrap');
+const postStatsEl = document.getElementById('simPostMatchStats');
+if (postStatsEl) {
+postStatsEl.classList.add('hidden');
+postStatsEl.innerHTML = '';
+}
 if (logEl) logEl.innerHTML = '';
 resetSimPitchCanvas();
 if (scoreBar) scoreBar.classList.remove('hidden');
@@ -1832,6 +1946,12 @@ updScore();
 const strA = plA.reduce((s, p) => s + getOVR(p), 0);
 const strB = plB.reduce((s, p) => s + getOVR(p), 0);
 const ratio = strA + strB > 0 ? strA / (strA + strB) : 0.5;
+
+const simStats = { goals: {}, assists: {}, keypass: {}, saves: {} };
+const bumpStat = (cat, id) => {
+if (!id) return;
+simStats[cat][id] = (simStats[cat][id] || 0) + 1;
+};
 
 /** 시뮬레이터 한 하프 길이(초): 20분 */
 const SIM_HALF_SEC = 20 * 60;
@@ -1897,6 +2017,7 @@ const ok = passOk(p1, p2);
 const z1 = simPosShort(p1);
 const z2 = simPosShort(p2);
 if (ok) {
+bumpStat('keypass', p1.id);
 const ph = Math.random() < 0.4 ? 'danger' : 'progress';
 await append(`${prefix} ${atkName}: [${z1}] ${p1.name}가 [${z2}] ${p2.name}에게 패스를 연결합니다. 성공.`, pitch(ph, 'success'));
 } else {
@@ -1926,8 +2047,13 @@ const bias = (strAtk - strDef) * 0.017;
 if (shot + bias > save + 8) {
 if (attackA) sa++; else sb++;
 updScore();
+const mates = atk.filter((x) => x.id !== p.id);
+const assi = mates.length ? pick(mates) : null;
+bumpStat('goals', p.id);
+if (assi) bumpStat('assists', assi.id);
 await append(`${prefix} ⚽ 골! ${atkName} [${zp}] ${p.name}, 페널티 에어리어에서 슛 성공. ${defName} ${gk.name} 무력화. (${sa}-${sb})`, pitch('danger', 'success'));
 } else if (shot + bias > save - 2) {
+bumpStat('saves', gk.id);
 await append(`${prefix} ${defName}: 골키퍼 ${gk.name}, [${zp}] ${p.name}의 슛을 선방합니다. 세이브 성공.`, pitch('danger', 'fail'));
 } else {
 await append(`${prefix} ${defName}: [${simPosShort(blk)}] ${blk.name}가 슛을 블록합니다. ${p.name}(${zp})의 시도는 막혔습니다.`, pitch('danger', 'fail'));
@@ -1939,6 +2065,7 @@ const atkOthers = atk.filter((x) => x.id !== wx.id);
 const tgt = atkOthers.length ? pick(atkOthers) : wx;
 const ok = passOk(wx, tgt);
 if (ok) {
+bumpStat('keypass', wx.id);
 await append(`${prefix} ${atkName}: 측면 [아라] ${wx.name}가 페널티 근처로 크로스. [${simPosShort(tgt)}] ${tgt.name}가 받습니다. 성공.`, pitch('danger', 'success'));
 } else {
 await append(`${prefix} ${atkName}: ${wx.name}의 크로스는 상대 수비에 걸립니다. 패스 실패.`, pitch('progress', 'fail'));
@@ -1958,6 +2085,7 @@ const atkNoGk = atk.filter((x) => x.id !== gk.id);
 const lon = atkNoGk.length ? pick(atkNoGk) : pick(atk);
 const ok = passOk(gk, lon);
 if (ok) {
+bumpStat('keypass', gk.id);
 await append(`${prefix} ${atkName}: 골키퍼 ${gk.name} 롱킥 배급 → ${lon.name}(${simPosShort(lon)})가 처리합니다. 성공.`, pitch('build', 'success'));
 } else {
 await append(`${prefix} ${atkName}: 골키퍼 ${gk.name}의 배급이 상대 진영에서 끊깁니다. 실패.`, pitch('build', 'fail'));
@@ -2001,6 +2129,7 @@ await append(`[휴식] 하프타임 — 전술을 가다듬습니다.`);
 
 await append(`━━ 최종 스코어 ${teamAName} ${sa} : ${sb} ${teamBName} ━━`);
 await append(`(모의 시뮬레이션 종료 · 서버 기록·EXP 미반영)`);
+renderSimPostMatchStats(plA, plB, teamAName, teamBName, simStats);
 } finally {
 if (btn) { btn.disabled = false; btn.classList.remove('opacity-50', 'cursor-not-allowed'); }
 }

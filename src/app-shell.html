@@ -76,12 +76,12 @@
 
 <div class="flex items-center space-x-1 sm:space-x-3 text-xs sm:text-sm flex-grow overflow-x-auto hide-scrollbar whitespace-nowrap scroll-smooth">
 <button onclick="window.switchTab('tabWorkspace')" id="btnTabWorkspace" class="nav-tab active pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-person-booth mr-1"></i>라커룸</button>
+<button onclick="window.switchTab('tabSim')" id="btnTabSim" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-futbol mr-1 text-amber-400"></i>모의경기</button>
 <button onclick="window.switchTab('tabTips')" id="btnTabTips" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-lightbulb mr-1 text-orange-400"></i>꿀팁&공지</button>
 <button onclick="window.switchTab('tabShop')" id="btnTabShop" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-hammer mr-1 text-purple-400"></i>상점&강화소</button>
 <button onclick="window.switchTab('tabAchievements')" id="btnTabAchievements" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-medal mr-1 text-yellow-300"></i>도전과제</button>
 <button onclick="window.switchTab('tabRank')" id="btnTabRank" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-trophy mr-1 text-yellow-400"></i>명예의전당</button>
 <button onclick="window.switchTab('tabCompare')" id="btnTabCompare" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-code-compare mr-1 text-pink-400"></i>선수비교</button>
-<button onclick="window.switchTab('tabSim')" id="btnTabSim" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-futbol mr-1 text-amber-400"></i>모의경기</button>
 <button onclick="window.switchTab('tabGuide')" id="btnTabGuide" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-circle-info mr-1 text-cyan-400"></i>이용안내</button>
 <button onclick="window.switchTab('tabMaster')" id="btnTabMaster" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 hidden flex-shrink-0"><i class="fa-solid fa-chart-line mr-1 text-fut-rare"></i>현황판(마스터)</button>
 <button onclick="window.switchTab('tabMasterStats')" id="btnTabMasterStats" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 hidden flex-shrink-0"><i class="fa-solid fa-list-ol mr-1 text-emerald-400"></i>스탯현황</button>
@@ -294,6 +294,10 @@
 </h3>
 <p class="text-sm text-slate-400 mt-1">훈련/경기에 참여한 선수를 체크해주세요. (카드 클릭 시 좌측에 상세 정보 표시)</p>
 </div>
+<div class="flex flex-wrap items-center gap-2 mb-4 w-full">
+<button type="button" id="btnLockerViewDefault" onclick="window.setLockerViewMode('default')" class="text-xs font-bold px-3 py-2 rounded-lg border transition bg-emerald-700 text-white border-emerald-500 shadow">기본 순서</button>
+<button type="button" id="btnLockerViewPos" onclick="window.setLockerViewMode('byPos')" class="text-xs font-bold px-3 py-2 rounded-lg border transition bg-slate-800 text-slate-300 border-slate-600 hover:bg-slate-700">포지션별 모아보기</button>
+</div>
 <div id="gmAttendanceTools" class="hidden w-full sm:w-auto justify-end gap-2">
 <button onclick="window.viewAttendance()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg transition flex items-center text-sm flex-1 sm:flex-none justify-center">
 <i class="fa-solid fa-file-excel mr-2"></i> 출석부 조회
@@ -489,11 +493,13 @@
 <span id="simScoreBName" class="text-blue-400"></span>
 </div>
 
+<div id="simPostMatchStats" class="hidden mb-3 rounded-xl border border-amber-600/40 bg-gradient-to-br from-slate-900/95 to-black/80 p-3 shadow-lg"></div>
+
 <!-- 시뮬레이션: 상단 경기장(캔버스) / 하단 텍스트 중계 -->
 <div id="simLiveSplit" class="flex flex-col gap-3 w-full min-h-[min(78vh,820px)]">
-<div id="simPitchPanel" class="flex flex-col rounded-xl border border-emerald-800/50 bg-[#0a1510] overflow-hidden shrink-0 h-[min(42vh,400px)] min-h-[200px]">
-<div class="flex items-center justify-between px-3 py-1.5 bg-black/35 border-b border-emerald-900/50">
-<span class="text-[11px] text-emerald-400/90 font-bold tracking-wide">경기장 · 공 진행</span>
+<div id="simPitchPanel" class="flex flex-col rounded-2xl border border-emerald-500/30 bg-gradient-to-b from-[#0c1810] to-[#050a08] shadow-[0_0_32px_rgba(16,185,129,0.12)] overflow-hidden shrink-0 h-[min(42vh,400px)] min-h-[200px] ring-1 ring-emerald-900/40">
+<div class="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-black/50 via-emerald-950/40 to-black/50 border-b border-emerald-800/60">
+<span class="text-[11px] text-emerald-300 font-bold tracking-wide drop-shadow">경기장 · 공 진행</span>
 <span id="simPitchBadge" class="text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-slate-800 text-slate-300">대기</span>
 </div>
 <div class="relative flex-1 min-h-[160px] flex items-center justify-center p-2">
