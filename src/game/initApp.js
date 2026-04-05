@@ -1915,8 +1915,11 @@ const plA = getSimMatchRoster('A');
 const plB = getSimMatchRoster('B');
 if (plA.length !== 5 || plB.length !== 5) return window.customAlert('출전 선수를 구성할 수 없습니다.');
 
-const teamAName = (document.getElementById('simTeamAName')?.value || '').trim() || '팀 A';
-const teamBName = (document.getElementById('simTeamBName')?.value || '').trim() || '팀 B';
+const tabSimRoot = document.getElementById('tabSim');
+const elTeamA = tabSimRoot?.querySelector('input[data-sim-team="A"]') || document.getElementById('simTeamAName');
+const elTeamB = tabSimRoot?.querySelector('input[data-sim-team="B"]') || document.getElementById('simTeamBName');
+const teamAName = (elTeamA?.value || '').trim() || '팀 A';
+const teamBName = (elTeamB?.value || '').trim() || '팀 B';
 
 const btn = document.getElementById('btnSimStart');
 if (btn) { btn.disabled = true; btn.classList.add('opacity-50', 'cursor-not-allowed'); }
