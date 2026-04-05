@@ -338,7 +338,7 @@ return `<span class="${b.emoji}">${emoji}</span>`;
 }
 
 window.switchTab = (tabId) => {
-['tabWorkspace', 'tabTips', 'tabShop', 'tabAchievements', 'tabRank', 'tabCompare', 'tabGuide', 'tabMaster', 'tabMasterStats'].forEach(id => {
+['tabWorkspace', 'tabTips', 'tabShop', 'tabAchievements', 'tabRank', 'tabCompare', 'tabSim', 'tabGuide', 'tabMaster', 'tabMasterStats'].forEach(id => {
 document.getElementById(id)?.classList.add('hidden');
 document.getElementById('btn' + id.charAt(0).toUpperCase() + id.slice(1))?.classList.remove('active');
 });
@@ -371,6 +371,7 @@ if(tabId === 'tabShop') window.renderShop();
 if(tabId === 'tabAchievements') window.renderAchievements();
 if(tabId === 'tabRank') renderLeaderboard();
 if(tabId === 'tabCompare') window.renderCompareList();
+if(tabId === 'tabSim') window.renderSimMatchTab();
 if(tabId === 'tabMaster') renderMasterDashboard();
 if(tabId === 'tabMasterStats') window.renderMasterStats();
 };
@@ -1443,6 +1444,143 @@ window.targetTeamCount = Math.max(2, Math.min(6, window.targetTeamCount + change
 document.getElementById('targetTeamCount') && (document.getElementById('targetTeamCount').innerText = window.targetTeamCount);
 };
 
+const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
+
+/** 모의경기 탭: 선수 목록으로 드롭다운 채움 */
+window.renderSimMatchTab = () => {
+const players = (window.allPlayersData || []).slice().sort((a, b) => String(a.name).localeCompare(b.name, 'ko'));
+const opts = '<option value="">— 선수 선택 —</option>' + players.map((p) => `<option value="${p.id}">${p.name} (OVR ${getOVR(p)})</option>`).join('');
+for (let i = 1; i <= 5; i++) {
+['simA', 'simB'].forEach((prefix) => {
+const el = document.getElementById(prefix + i);
+if (el) {
+const v = el.value;
+el.innerHTML = opts;
+el.value = v;
+}
+});
+}
+};
+
+window.simClearLog = () => {
+const log = document.getElementById('simMatchLog');
+if (log) log.textContent = '';
+document.getElementById('simScoreBar')?.classList.add('hidden');
+};
+
+/** 라커 체크 10명 → A/B 각 5명 랜덤 배정 */
+window.simFillFromLocker = () => {
+const ids = Array.from(window.checkedInPlayers || []);
+if (ids.length < 10) return window.customAlert('라커룸에서 선수 10명 이상 체크한 뒤 사용할 수 있습니다. (5vs5 자동 편성)');
+const shuffled = [...ids].sort(() => Math.random() - 0.5);
+window.renderSimMatchTab();
+for (let i = 0; i < 5; i++) {
+const a = document.getElementById('simA' + (i + 1));
+const b = document.getElementById('simB' + (i + 1));
+if (a) a.value = shuffled[i];
+if (b) b.value = shuffled[i + 5];
+}
+};
+
+/** 풋살 5vs5 40분 텍스트 시뮬 (FM 감독 모드 스타일 중계) */
+window.runSimMatch = async () => {
+const getV = (id) => document.getElementById(id)?.value || '';
+const idsA = [1, 2, 3, 4, 5].map((n) => getV('simA' + n));
+const idsB = [1, 2, 3, 4, 5].map((n) => getV('simB' + n));
+if (idsA.some((x) => !x) || idsB.some((x) => !x)) return window.customAlert('양 팀 모두 GK·Fixo·Ala·Ala·Pivo 자리에 선수를 선택해주세요.');
+const setA = new Set(idsA);
+const setB = new Set(idsB);
+if (setA.size !== 5 || setB.size !== 5) return window.customAlert('같은 팀 안에서 중복된 선수가 있습니다.');
+for (const id of idsA) { if (setB.has(id)) return window.customAlert('팀 A와 팀 B에 동일한 선수가 있습니다. 교체해주세요.'); }
+
+const teamAName = (document.getElementById('simTeamAName')?.value || '').trim() || '팀 A';
+const teamBName = (document.getElementById('simTeamBName')?.value || '').trim() || '팀 B';
+const plA = idsA.map((id) => window.allPlayersData.find((p) => p.id === id)).filter(Boolean);
+const plB = idsB.map((id) => window.allPlayersData.find((p) => p.id === id)).filter(Boolean);
+if (plA.length !== 5 || plB.length !== 5) return window.customAlert('선수 데이터를 찾을 수 없습니다.');
+
+const btn = document.getElementById('btnSimStart');
+if (btn) { btn.disabled = true; btn.classList.add('opacity-50', 'cursor-not-allowed'); }
+
+const logEl = document.getElementById('simMatchLog');
+const scoreBar = document.getElementById('simScoreBar');
+const scoreNums = document.getElementById('simScoreNums');
+const nameAEl = document.getElementById('simScoreAName');
+const nameBEl = document.getElementById('simScoreBName');
+if (logEl) logEl.textContent = '';
+if (scoreBar) scoreBar.classList.remove('hidden');
+if (nameAEl) nameAEl.textContent = teamAName;
+if (nameBEl) nameBEl.textContent = teamBName;
+let sa = 0;
+let sb = 0;
+const updScore = () => { if (scoreNums) scoreNums.textContent = `${sa} - ${sb}`; };
+updScore();
+
+const strA = plA.reduce((s, p) => s + getOVR(p), 0);
+const strB = plB.reduce((s, p) => s + getOVR(p), 0);
+const ratio = strA + strB > 0 ? strA / (strA + strB) : 0.5;
+
+const append = async (line) => {
+if (logEl) logEl.textContent += (logEl.textContent ? '\n' : '') + line;
+logEl?.scrollTo({ top: logEl.scrollHeight, behavior: 'smooth' });
+await sleep(42);
+};
+
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const gkOf = (arr) => arr.find((p) => p.pos === 'Goleiro') || arr[0];
+
+try {
+await append(`━━ ${teamAName} vs ${teamBName} · 모의 풋살 (5vs5, 40분) ━━`);
+await append(`[감독 모드] 전력 요약: ${teamAName} 합계 OVR ${strA}  |  ${teamBName} 합계 OVR ${strB}`);
+await append(`[0'] 킥오프 — 좁은 풋살 코트에서 공이 굴러갑니다.`);
+
+for (let m = 1; m <= 40; m++) {
+if (Math.random() > 0.38) continue;
+const attackA = Math.random() < ratio + (Math.random() * 0.08 - 0.04);
+const atk = attackA ? plA : plB;
+const def = attackA ? plB : plA;
+const atkName = attackA ? teamAName : teamBName;
+const defName = attackA ? teamBName : teamAName;
+const r = Math.random();
+
+if (r < 0.28) {
+const p1 = pick(atk);
+const p2 = pick(atk);
+if (p1.id === p2.id) {
+await append(`[${m}'] ${atkName}: ${p1.name}이(가) 공을 끌고 전진합니다.`);
+} else {
+await append(`[${m}'] ${atkName}: ${p1.name} → ${p2.name}. 패스로 지역을 넓힙니다.`);
+}
+} else if (r < 0.48) {
+const p = pick(atk);
+await append(`[${m}'] ${atkName}: ${p.name}이(가) 좁은 공간에서 드리블 돌파를 노립니다.`);
+} else if (r < 0.68) {
+const p = pick(atk);
+const gk = gkOf(def);
+const shot = getOVR(p) + Math.random() * 15;
+const save = getOVR(gk) * 1.08 + Math.random() * 12;
+const bias = (attackA ? strA - strB : strB - strA) * 0.018;
+if (shot + bias > save + 7) {
+if (attackA) sa++; else sb++;
+updScore();
+await append(`[${m}'] ⚽ 골! ${atkName} — ${p.name}의 슛이 골망을 흔듭니다! (${sa}-${sb})`);
+} else {
+await append(`[${m}'] ${defName} ${gk.name}, 선방! ${p.name}의 슛을 막아냅니다.`);
+}
+} else if (r < 0.88) {
+await append(`[${m}'] ${atkName}: 터치라인 근처 킥인. 패스 템포를 유지합니다.`);
+} else {
+await append(`[${m}'] ${defName}: 피벗 앞 압박으로 공간을 좁힙니다.`);
+}
+}
+
+await append(`[40'] 최종 휘슬 — ${teamAName} ${sa} : ${sb} ${teamBName}`);
+await append(`(모의 시뮬레이션 종료 · 서버 기록·EXP 미반영)`);
+} finally {
+if (btn) { btn.disabled = false; btn.classList.remove('opacity-50', 'cursor-not-allowed'); }
+}
+};
+
 window.generateBalancedTeams = () => {
 const resultEl = document.getElementById('teamResult');
 if(window.checkedInPlayers.size < window.targetTeamCount) { window.customAlert(`선택된 선수가 ${window.targetTeamCount}명보다 적습니다.`); return; }
@@ -1748,13 +1886,15 @@ window.switchTab('tabWorkspace');
 if(window.selectedPlayerId && window.allPlayersData.length > 0) window.selectPlayer(window.selectedPlayerId);
 }
 
-// 🔔 초기 공지사항 팝업 띄우기 로직 추가
+// 🔔 초기 공지사항 팝업 (본문이 비어 있거나 공백만 있으면 표시하지 않음)
 if(!isGuest && !window.hasShownAnnouncement) {
 const annRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'announcement');
 getDoc(annRef).then(snap => {
-if(snap.exists() && snap.data().text) {
+const raw = snap.exists() ? snap.data().text : '';
+const annText = typeof raw === 'string' ? raw.trim() : '';
+if (annText) {
 setTimeout(() => {
-window.customAlert(`📢 [감독님 공지사항]\n\n${snap.data().text}`);
+window.customAlert(`📢 [감독님 공지사항]\n\n${annText}`);
 }, 800);
 window.hasShownAnnouncement = true;
 }
@@ -1901,6 +2041,7 @@ if(isVisible('tabAchievements')) window.renderAchievements();
 if(isVisible('tabRank')) renderLeaderboard();
 if(isVisible('tabMaster')) renderMasterDashboard();
 if(isVisible('tabCompare')) window.renderCompareList();
+if(isVisible('tabSim')) window.renderSimMatchTab();
 if(isVisible('tabMasterStats')) window.renderMasterStats();
 }, (error) => console.error("Players Listen Error:", error));
 

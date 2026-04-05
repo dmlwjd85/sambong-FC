@@ -100,6 +100,12 @@ height: 32px;
 bottom: -12px;
 font-size: 9px;
 }
+
+/* FM 감독 모드 느낌 텍스트 중계 */
+.sim-fm-log {
+color: #c9d1d9;
+text-shadow: 0 0 1px rgba(56, 255, 142, 0.15);
+}
 .item-slot-mini .item-label {
 position: absolute; bottom: -14px; font-size: 10px; font-weight: 900;
 color: inherit; opacity: 0.9; text-shadow: 0 1px 2px rgba(0,0,0,0.8);

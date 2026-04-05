@@ -81,6 +81,7 @@
 <button onclick="window.switchTab('tabAchievements')" id="btnTabAchievements" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-medal mr-1 text-yellow-300"></i>도전과제</button>
 <button onclick="window.switchTab('tabRank')" id="btnTabRank" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-trophy mr-1 text-yellow-400"></i>명예의전당</button>
 <button onclick="window.switchTab('tabCompare')" id="btnTabCompare" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-code-compare mr-1 text-pink-400"></i>선수비교</button>
+<button onclick="window.switchTab('tabSim')" id="btnTabSim" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-futbol mr-1 text-amber-400"></i>모의경기</button>
 <button onclick="window.switchTab('tabGuide')" id="btnTabGuide" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-circle-info mr-1 text-cyan-400"></i>이용안내</button>
 <button onclick="window.switchTab('tabMaster')" id="btnTabMaster" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 hidden flex-shrink-0"><i class="fa-solid fa-chart-line mr-1 text-fut-rare"></i>현황판(마스터)</button>
 <button onclick="window.switchTab('tabMasterStats')" id="btnTabMasterStats" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 hidden flex-shrink-0"><i class="fa-solid fa-list-ol mr-1 text-emerald-400"></i>스탯현황</button>
@@ -439,6 +440,64 @@
 <div id="comparePlayerList" class="overflow-y-auto custom-scrollbar flex-1 space-y-2 pr-2">
 </div>
 </div>
+</div>
+</div>
+</div>
+
+<div id="tabSim" class="hidden space-y-6">
+<div class="glass-panel p-4 sm:p-8 rounded-3xl border-t-4 border-t-amber-500 relative overflow-hidden">
+<div class="absolute -top-24 -right-10 w-72 h-72 bg-amber-600/15 rounded-full blur-3xl pointer-events-none"></div>
+<div class="relative z-10">
+<h3 class="text-2xl sm:text-3xl font-display text-amber-400 mb-2 flex items-center gap-3">
+<i class="fa-solid fa-clipboard-list"></i> 모의 풋살 시뮬레이션
+</h3>
+<p class="text-sm text-slate-300 mb-6 break-keep leading-relaxed">
+<span class="text-amber-200/90 font-bold">5vs5 풋살</span> 규칙(골키퍼 1 + 필드 4) · 40분 가상 경기 · 텍스트 중계는 풋볼매니저 <span class="text-slate-400">감독 모드</span> 스타일입니다. 양 팀 각 5명을 지정한 뒤 경기를 시작하세요.
+</p>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+<div class="rounded-2xl border border-red-900/50 bg-red-950/30 p-4">
+<div class="flex items-center justify-between mb-3 border-b border-red-800/40 pb-2">
+<span class="font-display text-red-400 text-lg">팀 A</span>
+<input type="text" id="simTeamAName" maxlength="20" class="w-40 sm:w-48 bg-slate-900/80 border border-red-700/50 rounded-lg px-2 py-1 text-sm text-white" placeholder="팀 이름" value="삼봉 레드"/>
+</div>
+<div class="space-y-2 text-xs">
+<label class="flex items-center gap-2 text-slate-400"><span class="w-16 shrink-0">GK</span><select id="simA1" class="flex-1 bg-slate-900 border border-slate-600 rounded-lg px-2 py-1.5 text-white text-xs sim-player-select"></select></label>
+<label class="flex items-center gap-2 text-slate-400"><span class="w-16 shrink-0">Fixo</span><select id="simA2" class="flex-1 bg-slate-900 border border-slate-600 rounded-lg px-2 py-1.5 text-white text-xs sim-player-select"></select></label>
+<label class="flex items-center gap-2 text-slate-400"><span class="w-16 shrink-0">Ala</span><select id="simA3" class="flex-1 bg-slate-900 border border-slate-600 rounded-lg px-2 py-1.5 text-white text-xs sim-player-select"></select></label>
+<label class="flex items-center gap-2 text-slate-400"><span class="w-16 shrink-0">Ala</span><select id="simA4" class="flex-1 bg-slate-900 border border-slate-600 rounded-lg px-2 py-1.5 text-white text-xs sim-player-select"></select></label>
+<label class="flex items-center gap-2 text-slate-400"><span class="w-16 shrink-0">Pivo</span><select id="simA5" class="flex-1 bg-slate-900 border border-slate-600 rounded-lg px-2 py-1.5 text-white text-xs sim-player-select"></select></label>
+</div>
+</div>
+<div class="rounded-2xl border border-blue-900/50 bg-blue-950/30 p-4">
+<div class="flex items-center justify-between mb-3 border-b border-blue-800/40 pb-2">
+<span class="font-display text-blue-400 text-lg">팀 B</span>
+<input type="text" id="simTeamBName" maxlength="20" class="w-40 sm:w-48 bg-slate-900/80 border border-blue-700/50 rounded-lg px-2 py-1 text-sm text-white" placeholder="팀 이름" value="삼봉 블루"/>
+</div>
+<div class="space-y-2 text-xs">
+<label class="flex items-center gap-2 text-slate-400"><span class="w-16 shrink-0">GK</span><select id="simB1" class="flex-1 bg-slate-900 border border-slate-600 rounded-lg px-2 py-1.5 text-white text-xs sim-player-select"></select></label>
+<label class="flex items-center gap-2 text-slate-400"><span class="w-16 shrink-0">Fixo</span><select id="simB2" class="flex-1 bg-slate-900 border border-slate-600 rounded-lg px-2 py-1.5 text-white text-xs sim-player-select"></select></label>
+<label class="flex items-center gap-2 text-slate-400"><span class="w-16 shrink-0">Ala</span><select id="simB3" class="flex-1 bg-slate-900 border border-slate-600 rounded-lg px-2 py-1.5 text-white text-xs sim-player-select"></select></label>
+<label class="flex items-center gap-2 text-slate-400"><span class="w-16 shrink-0">Ala</span><select id="simB4" class="flex-1 bg-slate-900 border border-slate-600 rounded-lg px-2 py-1.5 text-white text-xs sim-player-select"></select></label>
+<label class="flex items-center gap-2 text-slate-400"><span class="w-16 shrink-0">Pivo</span><select id="simB5" class="flex-1 bg-slate-900 border border-slate-600 rounded-lg px-2 py-1.5 text-white text-xs sim-player-select"></select></label>
+</div>
+</div>
+</div>
+
+<div class="flex flex-wrap gap-2 mb-4">
+<button type="button" id="btnSimAutoLocker" onclick="window.simFillFromLocker()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold px-3 py-2 rounded-lg border border-slate-500">라커 체크 10명 자동 편성</button>
+<button type="button" id="btnSimStart" onclick="window.runSimMatch()" class="bg-amber-600 hover:bg-amber-500 text-white text-sm font-bold px-5 py-2 rounded-lg shadow-lg">경기 시작</button>
+<button type="button" onclick="window.simClearLog()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold px-3 py-2 rounded-lg border border-slate-600">중계 지우기</button>
+</div>
+
+<div id="simScoreBar" class="hidden mb-3 flex flex-wrap items-center justify-center gap-4 font-display text-2xl sm:text-3xl text-white bg-black/40 rounded-xl py-3 px-4 border border-amber-700/40">
+<span id="simScoreAName" class="text-red-400"></span>
+<span id="simScoreNums" class="text-fut-gold">0 - 0</span>
+<span id="simScoreBName" class="text-blue-400"></span>
+</div>
+
+<div id="simMatchLog" class="rounded-xl border border-slate-700 bg-[#0d1117] text-slate-200 font-mono text-[11px] sm:text-xs leading-relaxed p-4 min-h-[280px] max-h-[min(55vh,520px)] overflow-y-auto custom-scrollbar shadow-inner whitespace-pre-wrap sim-fm-log"></div>
+<p class="text-[10px] text-slate-500 mt-2">※ 모의 결과는 서버 기록에 반영되지 않으며, 재미용 시뮬레이션입니다.</p>
 </div>
 </div>
 </div>
