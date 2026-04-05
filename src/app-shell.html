@@ -452,7 +452,7 @@
 <i class="fa-solid fa-clipboard-list"></i> 모의 풋살 시뮬레이션
 </h3>
 <p class="text-sm text-slate-300 mb-4 break-keep leading-relaxed">
-<span class="text-amber-200/90 font-bold">5vs5 풋살</span> · 시뮬레이터 시간 <span class="text-amber-300 font-bold">전반 20분 + 후반 20분</span>이며, 실제 시청은 <span class="text-amber-200 font-bold">전·후반 각 2분</span> 길이로 비례 압축되어 재생됩니다. 팀은 <span class="text-emerald-300">라커룸 카드</span>에서 본인이 팀 A/B를 선택해 구성합니다(팀당 최대 5명, 경기에는 OVR 상위 5명 출전). 중계는 라이브 스코어 스타일의 구체 문장(패스·드리블 성공/실패 등)과 함께 <span class="text-amber-200/90">미니 피치</span>로 위험지역·공격 방향을 표시합니다.
+<span class="text-amber-200/90 font-bold">5vs5 풋살</span> · 시뮬레이터 시간 <span class="text-amber-300 font-bold">전반 20분 + 후반 20분</span>이며, 실제 시청은 <span class="text-amber-200 font-bold">전·후반 각 2분</span> 길이로 비례 압축되어 재생됩니다. 팀은 <span class="text-emerald-300">라커룸 카드</span>에서 본인이 팀 A/B를 선택해 구성합니다(팀당 최대 5명, 경기에는 OVR 상위 5명 출전). 화면은 위쪽 <span class="text-amber-200/90">경기장</span>(공 방향·성공/실패)과 아래 <span class="text-amber-200/90">텍스트 중계</span>로 나뉩니다.
 </p>
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-4">
@@ -489,7 +489,22 @@
 <span id="simScoreBName" class="text-blue-400"></span>
 </div>
 
-<div id="simMatchLog" class="sim-match-log-panel rounded-xl border border-slate-700 bg-[#0a1628] p-3 min-h-[280px] max-h-[min(55vh,520px)] overflow-y-auto custom-scrollbar shadow-inner flex flex-col items-stretch gap-2"></div>
+<!-- 시뮬레이션: 상단 경기장(캔버스) / 하단 텍스트 중계 -->
+<div id="simLiveSplit" class="flex flex-col gap-3 w-full min-h-[min(78vh,820px)]">
+<div id="simPitchPanel" class="flex flex-col rounded-xl border border-emerald-800/50 bg-[#0a1510] overflow-hidden shrink-0 h-[min(42vh,400px)] min-h-[200px]">
+<div class="flex items-center justify-between px-3 py-1.5 bg-black/35 border-b border-emerald-900/50">
+<span class="text-[11px] text-emerald-400/90 font-bold tracking-wide">경기장 · 공 진행</span>
+<span id="simPitchBadge" class="text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-slate-800 text-slate-300">대기</span>
+</div>
+<div class="relative flex-1 min-h-[160px] flex items-center justify-center p-2">
+<canvas id="simPitchCanvas" width="800" height="360" class="w-full h-full max-h-[min(38vh,360px)] object-contain"></canvas>
+</div>
+</div>
+<div class="flex flex-col flex-1 min-h-0 min-h-[240px]">
+<p class="text-[10px] text-slate-500 mb-1 font-bold">텍스트 중계</p>
+<div id="simMatchLog" class="sim-match-log-panel rounded-xl border border-slate-700 bg-[#0a1628] p-3 flex-1 min-h-[min(42vh,400px)] max-h-[min(48vh,520px)] overflow-y-auto custom-scrollbar shadow-inner flex flex-col items-stretch gap-2"></div>
+</div>
+</div>
 <p class="text-[10px] text-slate-500 mt-2">※ 모의 결과는 서버 기록에 반영되지 않으며, 재미용 시뮬레이션입니다.</p>
 </div>
 </div>

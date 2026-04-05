@@ -1524,6 +1524,8 @@ return `<div class="flex justify-between gap-2 border-b border-white/5 pb-0.5"><
 };
 if (elA) elA.innerHTML = rosterA.length ? rosterA.map(line).join('') : '<span class="text-slate-500">팀 A 소속 없음 — 라커룸에서 A를 눌러주세요.</span>';
 if (elB) elB.innerHTML = rosterB.length ? rosterB.map(line).join('') : '<span class="text-slate-500">팀 B 소속 없음 — 라커룸에서 B를 눌러주세요.</span>';
+const slog = document.getElementById('simMatchLog');
+if (slog && slog.children.length === 0) resetSimPitchCanvas();
 };
 
 /** 중계 문장을 자동 줄바꿈 (캔버스 폭 기준) */
@@ -1624,31 +1626,32 @@ img.onerror = () => resolve(img);
 });
 }
 
-/** 풋살 미니 피치 다이어그램 이미지 (양쪽 위험지역·공격방향·볼·화살표) */
-function simPitchDiagramToImage(opts) {
-return new Promise((resolve) => {
-const W = 680;
-const H = 112;
-const dpr = Math.min(2, typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1);
-const canvas = document.createElement('canvas');
+/** 상단 고정 캔버스에 경기장·위험지역·볼·화살표(성공=초록/실패=빨강/중립=주황) */
+function drawSimPitchLive(opts) {
+const canvas = document.getElementById('simPitchCanvas');
+const badge = document.getElementById('simPitchBadge');
+if (!canvas || !canvas.getContext) return;
 const ctx = canvas.getContext('2d');
-if (!ctx) {
-const d = document.createElement('div');
-d.className = 'text-[10px] text-slate-500';
-d.textContent = '[피치]';
-resolve(d);
-return;
-}
-
-canvas.width = Math.floor(W * dpr);
-canvas.height = Math.floor(H * dpr);
+const wrap = canvas.parentElement;
+const cssW = Math.max(280, wrap?.clientWidth || 640);
+const cssH = Math.max(160, Math.min(320, wrap?.clientHeight || 220));
+const dpr = Math.min(2, typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1);
+canvas.width = Math.floor(cssW * dpr);
+canvas.height = Math.floor(cssH * dpr);
+canvas.style.width = `${cssW}px`;
+canvas.style.height = `${cssH}px`;
 ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-const px0 = 20;
-const py0 = 14;
-const pw = W - 40;
-const ph = H - 36;
+const W = cssW;
+const H = cssH;
+const px0 = 16;
+const py0 = 12;
+const pw = W - 32;
+const ph = H - 44;
 const midX = px0 + pw / 2;
+
+ctx.fillStyle = '#0f172a';
+ctx.fillRect(0, 0, W, H);
 
 ctx.fillStyle = '#174a1f';
 ctx.fillRect(px0, py0, pw, ph);
@@ -1663,13 +1666,11 @@ ctx.stroke();
 const dzW = pw * 0.24;
 ctx.fillStyle = 'rgba(220, 38, 38, 0.28)';
 ctx.fillRect(px0, py0, dzW, ph);
-ctx.fillStyle = 'rgba(220, 38, 38, 0.28)';
 ctx.fillRect(px0 + pw - dzW, py0, dzW, ph);
-
 ctx.font = '600 9px "Malgun Gothic","Noto Sans KR",sans-serif';
 ctx.fillStyle = 'rgba(254, 242, 242, 0.95)';
-ctx.fillText('위험', px0 + 5, py0 + 12);
-ctx.fillText('위험', px0 + pw - dzW + 5, py0 + 12);
+ctx.fillText('위험', px0 + 4, py0 + 11);
+ctx.fillText('위험', px0 + pw - dzW + 4, py0 + 11);
 
 ctx.fillStyle = 'rgba(0,0,0,0.45)';
 ctx.fillRect(px0 - 3, py0 + ph * 0.32, 3, ph * 0.36);
@@ -1684,48 +1685,93 @@ else if (opts.phase === 'progress') ballX = attackA ? px0 + pw * 0.55 : px0 + pw
 else ballX = attackA ? px0 + pw * 0.82 : px0 + pw * 0.18;
 
 const ballY = py0 + ph * lane;
+const oc = opts.outcome === 'success' ? '#4ade80' : opts.outcome === 'fail' ? '#f87171' : '#fb923c';
+
 ctx.fillStyle = '#facc15';
 ctx.strokeStyle = '#422006';
 ctx.lineWidth = 1;
 ctx.beginPath();
-ctx.arc(ballX, ballY, 6, 0, Math.PI * 2);
+ctx.arc(ballX, ballY, 7, 0, Math.PI * 2);
 ctx.fill();
 ctx.stroke();
+ctx.strokeStyle = oc;
+ctx.lineWidth = 3;
+ctx.beginPath();
+ctx.arc(ballX, ballY, 11, 0, Math.PI * 2);
+ctx.stroke();
 
-ctx.strokeStyle = '#fb923c';
-ctx.lineWidth = 2.5;
+ctx.strokeStyle = oc;
+ctx.lineWidth = 3;
 ctx.beginPath();
 ctx.moveTo(ballX, ballY);
-const dx = attackA ? 28 : -28;
-ctx.lineTo(ballX + dx, ballY + (attackA ? 4 : -4));
+const dx = attackA ? Math.min(48, pw * 0.12) : -Math.min(48, pw * 0.12);
+ctx.lineTo(ballX + dx, ballY + (attackA ? 5 : -5));
 ctx.stroke();
-ctx.fillStyle = '#fb923c';
+ctx.fillStyle = oc;
 ctx.beginPath();
 const tipX = ballX + dx;
-const tipY = ballY + (attackA ? 4 : -4);
+const tipY = ballY + (attackA ? 5 : -5);
 ctx.moveTo(tipX, tipY);
-ctx.lineTo(tipX - (attackA ? 8 : -8), tipY - 5);
-ctx.lineTo(tipX - (attackA ? 8 : -8), tipY + 5);
+ctx.lineTo(tipX - (attackA ? 10 : -10), tipY - 6);
+ctx.lineTo(tipX - (attackA ? 10 : -10), tipY + 6);
 ctx.closePath();
 ctx.fill();
 
-ctx.fillStyle = 'rgba(226, 232, 240, 0.92)';
-ctx.font = '600 10px "Malgun Gothic","Noto Sans KR",sans-serif';
-const dir = attackA ? '→ B진영' : '→ A진영';
-const cap = opts.phase === 'danger' ? '페널티 에어리어 인근' : opts.phase === 'progress' ? '중앙 진입' : '빌드업';
-ctx.fillText(`${dir} · ${cap}`, px0 + 4, py0 + ph + 4);
+ctx.fillStyle = 'rgba(226, 232, 240, 0.95)';
+ctx.font = '600 11px "Malgun Gothic","Noto Sans KR",sans-serif';
+const cap = opts.phase === 'danger' ? '페널티 인근' : opts.phase === 'progress' ? '중앙' : '빌드업';
+const dir = attackA ? 'A→B' : 'B→A';
+ctx.fillText(`${dir} · ${cap}`, px0 + 4, py0 + ph + 6);
 
-const img = new Image();
-img.className = 'sim-pitch-img w-full max-w-full h-auto rounded-md border border-emerald-800/40 shadow select-none';
-img.alt = '경기장 다이어그램';
-img.draggable = false;
-img.src = canvas.toDataURL('image/png');
-if (img.complete) resolve(img);
-else {
-img.onload = () => resolve(img);
-img.onerror = () => resolve(img);
+if (badge) {
+const out = opts.outcome === 'success' ? '성공' : opts.outcome === 'fail' ? '실패' : '중립';
+badge.textContent = `진행: ${out}`;
+badge.className = opts.outcome === 'success'
+? 'text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-emerald-900/80 text-emerald-200 border border-emerald-600/50'
+: opts.outcome === 'fail'
+? 'text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-red-900/80 text-red-200 border border-red-600/50'
+: 'text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-amber-900/70 text-amber-100 border border-amber-600/40';
 }
-});
+}
+
+/** 경기 전·중계 지움 후 상단 패널 초기화 */
+function resetSimPitchCanvas() {
+const canvas = document.getElementById('simPitchCanvas');
+const badge = document.getElementById('simPitchBadge');
+if (!canvas || !canvas.getContext) return;
+const ctx = canvas.getContext('2d');
+const wrap = canvas.parentElement;
+const cssW = Math.max(280, wrap?.clientWidth || 640);
+const cssH = Math.max(160, Math.min(320, wrap?.clientHeight || 220));
+const dpr = Math.min(2, window.devicePixelRatio || 1);
+canvas.width = Math.floor(cssW * dpr);
+canvas.height = Math.floor(cssH * dpr);
+canvas.style.width = `${cssW}px`;
+canvas.style.height = `${cssH}px`;
+ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+ctx.fillStyle = '#0f172a';
+ctx.fillRect(0, 0, cssW, cssH);
+ctx.fillStyle = '#174a1f';
+const px0 = 16;
+const py0 = 12;
+const pw = cssW - 32;
+const ph = cssH - 44;
+ctx.fillRect(px0, py0, pw, ph);
+ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+ctx.strokeRect(px0, py0, pw, ph);
+ctx.beginPath();
+ctx.moveTo(px0 + pw / 2, py0);
+ctx.lineTo(px0 + pw / 2, py0 + ph);
+ctx.stroke();
+ctx.fillStyle = 'rgba(148, 163, 184, 0.9)';
+ctx.font = '600 12px "Malgun Gothic","Noto Sans KR",sans-serif';
+ctx.textAlign = 'center';
+ctx.fillText('경기 시작 시 공의 방향과 성공·실패가 표시됩니다', cssW / 2, py0 + ph / 2);
+ctx.textAlign = 'left';
+if (badge) {
+badge.textContent = '대기';
+badge.className = 'text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-slate-800 text-slate-300';
+}
 }
 
 /** 모의경기 포지션 약칭 (중계용) */
@@ -1748,6 +1794,7 @@ const log = document.getElementById('simMatchLog');
 if (log) log.innerHTML = '';
 document.getElementById('simScoreBar')?.classList.add('hidden');
 document.getElementById('simClockWrap')?.classList.add('hidden');
+resetSimPitchCanvas();
 };
 
 /** 풋살 5vs5 · 시뮬 전·후반 각 20분을 실제 시청 전·후반 각 2분에 비례 압축 중계 */
@@ -1772,6 +1819,7 @@ const nameAEl = document.getElementById('simScoreAName');
 const nameBEl = document.getElementById('simScoreBName');
 const clockWrap = document.getElementById('simClockWrap');
 if (logEl) logEl.innerHTML = '';
+resetSimPitchCanvas();
 if (scoreBar) scoreBar.classList.remove('hidden');
 if (clockWrap) clockWrap.classList.remove('hidden');
 if (nameAEl) nameAEl.textContent = teamAName;
@@ -1800,18 +1848,12 @@ const s = simSec % 60;
 if (el) el.textContent = `${halfLabel} ${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 };
 
-/** 중계 한 줄 + 선택 시 미니 피치 이미지 */
+/** 중계 텍스트(하단) + 상단 경기장 캔버스 갱신 */
 const append = async (line, pitchOpts) => {
 if (!logEl) return;
-const wrap = document.createElement('div');
-wrap.className = 'sim-broadcast-row flex flex-col gap-1 w-full';
-if (pitchOpts) {
-const pImg = await simPitchDiagramToImage(pitchOpts);
-wrap.appendChild(pImg);
-}
+if (pitchOpts) drawSimPitchLive(pitchOpts);
 const tImg = await simBroadcastTextToImage(line);
-wrap.appendChild(tImg);
-logEl.appendChild(wrap);
+logEl.appendChild(tImg);
 logEl.scrollTo({ top: logEl.scrollHeight, behavior: 'smooth' });
 await sleep(42);
 };
@@ -1836,7 +1878,7 @@ const strDef = attackA ? strB : strA;
 
 const channels = ['left', 'center', 'right'];
 const ch = channels[Math.floor(Math.random() * 3)];
-const pitch = (phase) => ({ attackA, channel: ch, phase });
+const pitch = (phase, outcome) => ({ attackA, channel: ch, phase, outcome: outcome || 'neutral' });
 
 const passOk = (a, b) => {
 const t = 0.4 + (getOVR(a) + getOVR(b)) / 420 + (strAtk - strDef) * 0.0012;
@@ -1856,10 +1898,10 @@ const z1 = simPosShort(p1);
 const z2 = simPosShort(p2);
 if (ok) {
 const ph = Math.random() < 0.4 ? 'danger' : 'progress';
-await append(`${prefix} ${atkName}: [${z1}] ${p1.name}가 [${z2}] ${p2.name}에게 패스를 연결합니다. 성공.`, pitch(ph));
+await append(`${prefix} ${atkName}: [${z1}] ${p1.name}가 [${z2}] ${p2.name}에게 패스를 연결합니다. 성공.`, pitch(ph, 'success'));
 } else {
 const intr = pick(def);
-await append(`${prefix} ${atkName}: [${z1}] ${p1.name} → ${p2.name} 패스는 실패합니다. [${simPosShort(intr)}] ${intr.name}에게 차단됩니다.`, { attackA, channel: ch, phase: 'progress' });
+await append(`${prefix} ${atkName}: [${z1}] ${p1.name} → ${p2.name} 패스는 실패합니다. [${simPosShort(intr)}] ${intr.name}에게 차단됩니다.`, pitch('progress', 'fail'));
 }
 } else if (r < 0.4) {
 const o = pick(atk);
@@ -1868,9 +1910,9 @@ const ok = dribOk(o, d);
 const zo = simPosShort(o);
 const zd = simPosShort(d);
 if (ok) {
-await append(`${prefix} ${atkName}: [${zo}] ${o.name}, ${d.name}(${zd})를 제치고 드리블 돌파에 성공합니다.`, pitch(Math.random() < 0.5 ? 'danger' : 'progress'));
+await append(`${prefix} ${atkName}: [${zo}] ${o.name}, ${d.name}(${zd})를 제치고 드리블 돌파에 성공합니다.`, pitch(Math.random() < 0.5 ? 'danger' : 'progress', 'success'));
 } else {
-await append(`${prefix} ${atkName}: [${zo}] ${o.name}의 드리블 시도 실패. ${d.name}(${zd})가 몸으로 막아냅니다.`, pitch('build'));
+await append(`${prefix} ${atkName}: [${zo}] ${o.name}의 드리블 시도 실패. ${d.name}(${zd})가 몸으로 막아냅니다.`, pitch('build', 'fail'));
 }
 } else if (r < 0.58) {
 const p = pick(atk);
@@ -1884,11 +1926,11 @@ const bias = (strAtk - strDef) * 0.017;
 if (shot + bias > save + 8) {
 if (attackA) sa++; else sb++;
 updScore();
-await append(`${prefix} ⚽ 골! ${atkName} [${zp}] ${p.name}, 페널티 에어리어에서 슛 성공. ${defName} ${gk.name} 무력화. (${sa}-${sb})`, pitch('danger'));
+await append(`${prefix} ⚽ 골! ${atkName} [${zp}] ${p.name}, 페널티 에어리어에서 슛 성공. ${defName} ${gk.name} 무력화. (${sa}-${sb})`, pitch('danger', 'success'));
 } else if (shot + bias > save - 2) {
-await append(`${prefix} ${defName}: 골키퍼 ${gk.name}, [${zp}] ${p.name}의 슛을 선방합니다. 세이브 성공.`, pitch('danger'));
+await append(`${prefix} ${defName}: 골키퍼 ${gk.name}, [${zp}] ${p.name}의 슛을 선방합니다. 세이브 성공.`, pitch('danger', 'fail'));
 } else {
-await append(`${prefix} ${defName}: [${simPosShort(blk)}] ${blk.name}가 슛을 블록합니다. ${p.name}(${zp})의 시도는 막혔습니다.`, pitch('danger'));
+await append(`${prefix} ${defName}: [${simPosShort(blk)}] ${blk.name}가 슛을 블록합니다. ${p.name}(${zp})의 시도는 막혔습니다.`, pitch('danger', 'fail'));
 }
 } else if (r < 0.72) {
 const w = atk.filter((x) => x.pos === 'Ala' || x.pos === '미정');
@@ -1897,18 +1939,18 @@ const atkOthers = atk.filter((x) => x.id !== wx.id);
 const tgt = atkOthers.length ? pick(atkOthers) : wx;
 const ok = passOk(wx, tgt);
 if (ok) {
-await append(`${prefix} ${atkName}: 측면 [아라] ${wx.name}가 페널티 근처로 크로스. [${simPosShort(tgt)}] ${tgt.name}가 받습니다. 성공.`, pitch('danger'));
+await append(`${prefix} ${atkName}: 측면 [아라] ${wx.name}가 페널티 근처로 크로스. [${simPosShort(tgt)}] ${tgt.name}가 받습니다. 성공.`, pitch('danger', 'success'));
 } else {
-await append(`${prefix} ${atkName}: ${wx.name}의 크로스는 상대 수비에 걸립니다. 패스 실패.`, pitch('progress'));
+await append(`${prefix} ${atkName}: ${wx.name}의 크로스는 상대 수비에 걸립니다. 패스 실패.`, pitch('progress', 'fail'));
 }
 } else if (r < 0.84) {
 const df = def.find((x) => x.pos === 'Fixo') || pick(def);
 const at = pick(atk);
 const ok = Math.random() < 0.35 + (getOVR(df) - getOVR(at)) * 0.006;
 if (ok) {
-await append(`${prefix} ${defName}: [픽소] ${df.name}가 태클에 성공합니다. ${at.name}(${simPosShort(at)})에게서 공을 뺍니다.`, pitch('build'));
+await append(`${prefix} ${defName}: [픽소] ${df.name}가 태클에 성공합니다. ${at.name}(${simPosShort(at)})에게서 공을 뺍니다.`, pitch('build', 'fail'));
 } else {
-await append(`${prefix} ${atkName}: [${simPosShort(at)}] ${at.name}가 ${df.name}(픽소)의 태클을 피합니다. 성공.`, pitch('progress'));
+await append(`${prefix} ${atkName}: [${simPosShort(at)}] ${at.name}가 ${df.name}(픽소)의 태클을 피합니다. 성공.`, pitch('progress', 'success'));
 }
 } else if (r < 0.92) {
 const gk = gkOf(atk);
@@ -1916,9 +1958,9 @@ const atkNoGk = atk.filter((x) => x.id !== gk.id);
 const lon = atkNoGk.length ? pick(atkNoGk) : pick(atk);
 const ok = passOk(gk, lon);
 if (ok) {
-await append(`${prefix} ${atkName}: 골키퍼 ${gk.name} 롱킥 배급 → ${lon.name}(${simPosShort(lon)})가 처리합니다. 성공.`, pitch('build'));
+await append(`${prefix} ${atkName}: 골키퍼 ${gk.name} 롱킥 배급 → ${lon.name}(${simPosShort(lon)})가 처리합니다. 성공.`, pitch('build', 'success'));
 } else {
-await append(`${prefix} ${atkName}: 골키퍼 ${gk.name}의 배급이 상대 진영에서 끊깁니다. 실패.`, pitch('build'));
+await append(`${prefix} ${atkName}: 골키퍼 ${gk.name}의 배급이 상대 진영에서 끊깁니다. 실패.`, pitch('build', 'fail'));
 }
 } else {
 const r2 = Math.random();
@@ -1926,13 +1968,13 @@ if (r2 < 0.42) {
 const pv = atk.find((x) => x.pos === 'Pivo') || pick(atk);
 const keep = Math.random() < 0.52 + getOVR(pv) * 0.002;
 if (keep) {
-await append(`${prefix} ${atkName}: [피보] ${pv.name}가 페널티 호라이즌에서 볼을 묶고 연결합니다. 성공.`, pitch('danger'));
+await append(`${prefix} ${atkName}: [피보] ${pv.name}가 페널티 호라이즌에서 볼을 묶고 연결합니다. 성공.`, pitch('danger', 'success'));
 } else {
-await append(`${prefix} ${atkName}: [피보] ${pv.name}의 턴 실패. ${defName} 수비가 걷어냅니다.`, pitch('build'));
+await append(`${prefix} ${atkName}: [피보] ${pv.name}의 턴 실패. ${defName} 수비가 걷어냅니다.`, pitch('build', 'fail'));
 }
 } else {
 const fx = def.find((x) => x.pos === 'Fixo') || pick(def);
-await append(`${prefix} ${defName}: [픽소] ${fx.name}, 페널티 프론트에서 클리어런스. 위험 지역 제거.`, pitch('danger'));
+await append(`${prefix} ${defName}: [픽소] ${fx.name}, 페널티 프론트에서 클리어런스. 위험 지역 제거.`, pitch('danger', 'neutral'));
 }
 }
 };
