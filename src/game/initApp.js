@@ -409,7 +409,7 @@ let borderClass = 'border-slate-700';
 if(ovr >= 90) borderClass = 'border-purple-500'; else if (ovr >= 80) borderClass = 'border-fut-gold'; else if (ovr >= 70) borderClass = 'border-gray-300';
 const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
 const st = p.simTeam;
-const canSimEdit = !window.playerState.isGuest && (window.playerState.isGM || window.playerState.id === p.id);
+const canSimEdit = !window.playerState.isGuest;
 let simRow = '';
 if (canSimEdit) {
 simRow = `<div class="w-full mt-1 pt-1 border-t border-slate-700/60" onclick="event.stopPropagation()"><div class="flex gap-0.5 justify-center items-center">
@@ -452,14 +452,21 @@ const listA = (window.allPlayersData || []).filter((p) => p.simTeam === 'A').sor
 const listB = (window.allPlayersData || []).filter((p) => p.simTeam === 'B').sort((a, b) => getOVR(b) - getOVR(a));
 const pref = window.simBoardPreferredTarget[boardKey] === 'B' ? 'B' : 'A';
 const rname = getSimTeamBoardRadioName(boardKey);
-const clearColA = window.playerState.isGM
+const simTools = !window.playerState.isGuest;
+const clearColA = simTools
 ? `<button type="button" class="sim-team-clear-btn text-[10px] px-2 py-0.5 rounded bg-slate-900/80 text-amber-200 border border-amber-800/50 hover:bg-slate-800 shrink-0" data-sim-clear-team="A" title="레드 팀 전원 해제">전체 삭제</button>`
 : '';
-const clearColB = window.playerState.isGM
+const clearColB = simTools
 ? `<button type="button" class="sim-team-clear-btn text-[10px] px-2 py-0.5 rounded bg-slate-900/80 text-amber-200 border border-amber-800/50 hover:bg-slate-800 shrink-0" data-sim-clear-team="B" title="블루 팀 전원 해제">전체 삭제</button>`
 : '';
+const randomFillA = simTools
+? `<button type="button" class="sim-team-random-fill-btn text-[10px] px-2 py-0.5 rounded bg-emerald-900/55 text-emerald-200 border border-emerald-700/45 hover:bg-emerald-900/90 shrink-0" data-sim-random-team="A" title="빈 자리를 포지션 감안 랜덤 보강">랜덤 보강</button>`
+: '';
+const randomFillB = simTools
+? `<button type="button" class="sim-team-random-fill-btn text-[10px] px-2 py-0.5 rounded bg-emerald-900/55 text-emerald-200 border border-emerald-700/45 hover:bg-emerald-900/90 shrink-0" data-sim-random-team="B" title="빈 자리를 포지션 감안 랜덤 보강">랜덤 보강</button>`
+: '';
 const rowHtml = (p, team) => {
-const canEdit = !window.playerState.isGuest && (window.playerState.isGM || window.playerState.id === p.id);
+const canEdit = simTools;
 const canDrag = canEdit;
 const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
 const delBtn = canEdit
@@ -476,12 +483,13 @@ ${delBtn}
 };
 const emptyHint = '<p class="text-[10px] text-slate-500 py-2 pointer-events-none">빈 곳에 놓으면 이동</p>';
 return `
-<p class="text-xs font-bold text-slate-400 mb-2 flex flex-wrap items-center gap-2"><i class="fa-solid fa-futbol text-amber-400"></i> 모의경기 팀 분류 <span class="text-[10px] font-normal text-slate-500">삭제 · 드래그 이동 · 상대 팀 선수 위에 놓으면 감독 맞교체</span></p>
+<p class="text-xs font-bold text-slate-400 mb-2 flex flex-wrap items-center gap-2"><i class="fa-solid fa-futbol text-amber-400"></i> 모의경기 팀 분류 <span class="text-[10px] font-normal text-slate-500">누구나 편집 · 삭제 · 드래그 · 맞교체 · 랜덤 보강(포지션 감안)</span></p>
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
 <div class="sim-team-drop-zone rounded-xl border border-red-800/40 bg-red-950/25 p-3 min-h-[6rem]" data-sim-drop="A">
 <div class="font-display text-red-400 text-sm mb-1.5 flex justify-between items-center gap-2 flex-wrap">
 <span>레드 (팀 A)</span>
-<div class="flex items-center gap-2 shrink-0">
+<div class="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
+${randomFillA}
 ${clearColA}
 <span class="text-[10px] text-slate-500 font-sans">${listA.length}명</span>
 </div>
@@ -491,7 +499,8 @@ ${listA.length ? listA.map((p) => rowHtml(p, 'A')).join('') : emptyHint}
 <div class="sim-team-drop-zone rounded-xl border border-blue-800/40 bg-blue-950/25 p-3 min-h-[6rem]" data-sim-drop="B">
 <div class="font-display text-blue-400 text-sm mb-1.5 flex justify-between items-center gap-2 flex-wrap">
 <span>블루 (팀 B)</span>
-<div class="flex items-center gap-2 shrink-0">
+<div class="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
+${randomFillB}
 ${clearColB}
 <span class="text-[10px] text-slate-500 font-sans">${listB.length}명</span>
 </div>
@@ -522,12 +531,11 @@ if (elLocker) elLocker.innerHTML = buildSimTeamBoardHtml('locker');
 if (elTab) elTab.innerHTML = buildSimTeamBoardHtml('sim');
 };
 
-/** 감독 전용: 서로 다른 팀 소속 두 선수 맞교체 */
+/** 서로 다른 팀 소속 두 선수 맞교체 (로그인 학생 전원) */
 window.swapSimTeamPlayers = async (id1, id2) => {
 try {
 checkAuthReady();
 if (window.playerState.isGuest) return window.customAlert('게스트는 사용할 수 없습니다.');
-if (!window.playerState.isGM) return window.customAlert('팀 간 맞교체는 감독만 사용할 수 있습니다.');
 const p1 = window.allPlayersData.find((x) => x.id === id1);
 const p2 = window.allPlayersData.find((x) => x.id === id2);
 if (!p1 || !p2) return;
@@ -547,12 +555,11 @@ window.customAlert('팀 교체에 실패했습니다.');
 }
 };
 
-/** 감독 전용: 해당 팀(레드/블루)에 속한 모든 선수 팀 해제 */
+/** 해당 팀(레드/블루)에 속한 모든 선수 팀 해제 */
 window.clearSimTeamColumn = async (team) => {
 try {
 checkAuthReady();
 if (window.playerState.isGuest) return window.customAlert('게스트는 사용할 수 없습니다.');
-if (!window.playerState.isGM) return window.customAlert('팀 전체 비우기는 감독만 사용할 수 있습니다.');
 if (team !== 'A' && team !== 'B') return;
 const ids = (window.allPlayersData || []).filter((p) => p.simTeam === team).map((p) => p.id);
 for (let i = 0; i < ids.length; i++) {
@@ -561,6 +568,49 @@ await window.setPlayerSimTeam(ids[i], null, i < ids.length - 1);
 } catch (e) {
 console.error(e);
 window.customAlert('팀 비우기에 실패했습니다.');
+}
+};
+
+/** 팀 인원이 5명 미만일 때: 미배정 우선 → 부족 시 상대팀에서, 포지션(골·픽·아라·피보) 순서를 감안해 무작위 보강 */
+window.fillSimTeamRandomPos = async (team) => {
+try {
+checkAuthReady();
+if (window.playerState.isGuest) return window.customAlert('게스트는 사용할 수 없습니다.');
+if (team !== 'A' && team !== 'B') return;
+const other = team === 'A' ? 'B' : 'A';
+const onTeam = (window.allPlayersData || []).filter((p) => p.simTeam === team);
+const need = 5 - onTeam.length;
+if (need <= 0) return window.customAlert('이미 5명입니다.');
+const shuffle = (arr) => {
+const a = [...arr];
+for (let i = a.length - 1; i > 0; i--) {
+const j = Math.floor(Math.random() * (i + 1));
+[a[i], a[j]] = [a[j], a[i]];
+}
+return a;
+};
+const unassigned = (window.allPlayersData || []).filter((p) => !p.simTeam);
+const fromOther = (window.allPlayersData || []).filter((p) => p.simTeam === other);
+let pool = [...shuffle(unassigned), ...shuffle(fromOther)];
+if (!pool.length) return window.customAlert('보강할 다른 선수가 없습니다.');
+const posPriority = ['Goleiro', 'Fixo', 'Ala', 'Pivo', 'Ala'];
+const picks = [];
+for (let n = 0; n < need && pool.length; n++) {
+const prefer = posPriority[(onTeam.length + n) % posPriority.length];
+let idx = pool.findIndex((p) => p.pos === prefer);
+if (idx < 0 && prefer === 'Ala') idx = pool.findIndex((p) => p.pos === '미정');
+if (idx < 0) idx = pool.findIndex((p) => ['Goleiro', 'Fixo', 'Ala', 'Pivo', '미정'].includes(p.pos));
+if (idx < 0) idx = 0;
+picks.push(pool[idx]);
+pool.splice(idx, 1);
+}
+if (!picks.length) return window.customAlert('선택할 선수가 없습니다.');
+for (let i = 0; i < picks.length; i++) {
+await window.setPlayerSimTeam(picks[i].id, team, i < picks.length - 1);
+}
+} catch (e) {
+console.error(e);
+window.customAlert('랜덤 보강에 실패했습니다.');
 }
 };
 
@@ -636,8 +686,6 @@ checkAuthReady();
 if (window.playerState.isGuest) return window.customAlert('게스트는 모의경기 팀을 설정할 수 없습니다.');
 const target = window.allPlayersData.find((x) => x.id === pId);
 if (!target) return;
-const canEdit = window.playerState.isGM || window.playerState.id === pId;
-if (!canEdit) return window.customAlert('본인 또는 감독만 팀을 변경할 수 있습니다.');
 if (team === 'A' || team === 'B') {
 const n = (window.allPlayersData || []).filter((x) => x.id !== pId && x.simTeam === team).length;
 if (n >= 5) return window.customAlert('해당 팀은 이미 5명입니다. 다른 팀을 선택하거나 해제 후 다시 시도하세요.');
@@ -807,7 +855,7 @@ simTeamPanel.classList.add('hidden');
 } else {
 simTeamPanel.classList.remove('hidden');
 const st = p.simTeam;
-const canSimPick = isGM || isMe;
+const canSimPick = !window.playerState.isGuest;
 const dis = canSimPick ? '' : 'disabled';
 const cA = st === 'A' ? 'checked' : '';
 const cB = st === 'B' ? 'checked' : '';
@@ -825,7 +873,7 @@ simTeamPanel.innerHTML = `
 블루 (팀 B)
 </label>
 </div>
-<p class="text-[9px] text-slate-500 mt-1.5 leading-snug">한쪽만 선택됩니다. 체크 해제 시 팀에서 빠집니다. (감독은 모든 선수 지정 가능)</p>
+<p class="text-[9px] text-slate-500 mt-1.5 leading-snug">한쪽만 선택됩니다. 체크 해제 시 팀에서 빠집니다. 로그인한 학생은 누구나 팀을 구성할 수 있습니다.</p>
 </div>`;
 }
 }
@@ -2884,6 +2932,13 @@ const tm = clr.getAttribute('data-sim-clear-team');
 if (tm === 'A' || tm === 'B') window.clearSimTeamColumn(tm);
 return;
 }
+const rnd = ev.target.closest('.sim-team-random-fill-btn');
+if (rnd) {
+ev.preventDefault();
+const tm = rnd.getAttribute('data-sim-random-team');
+if (tm === 'A' || tm === 'B') window.fillSimTeamRandomPos(tm);
+return;
+}
 const btn = ev.target.closest('.sim-team-remove-btn');
 if (!btn) return;
 ev.preventDefault();
@@ -2931,11 +2986,7 @@ const otherId = hitRow.getAttribute('data-player-id');
 const pDrag = window.allPlayersData.find((x) => x.id === pid);
 const pOther = window.allPlayersData.find((x) => x.id === otherId);
 if (pDrag && pOther && pDrag.simTeam && pOther.simTeam && pDrag.simTeam !== pOther.simTeam) {
-if (window.playerState.isGM) {
 await window.swapSimTeamPlayers(pid, otherId);
-} else {
-await window.setPlayerSimTeam(pid, toTeam);
-}
 }
 return;
 }
