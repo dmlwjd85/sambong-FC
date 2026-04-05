@@ -411,6 +411,18 @@ const ovr = getOVR(p); const tier = getTierInfo(ovr);
 let borderClass = 'border-slate-700';
 if(ovr >= 90) borderClass = 'border-purple-500'; else if (ovr >= 80) borderClass = 'border-fut-gold'; else if (ovr >= 70) borderClass = 'border-gray-300';
 const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
+const st = p.simTeam;
+const canSimEdit = !window.playerState.isGuest && (window.playerState.isGM || window.playerState.id === p.id);
+let simRow = '';
+if (canSimEdit) {
+simRow = `<div class="w-full mt-1 pt-1 border-t border-slate-700/60" onclick="event.stopPropagation()"><div class="flex gap-0.5 justify-center items-center">
+<button type="button" class="text-[9px] px-1.5 py-0.5 rounded font-bold ${st === 'A' ? 'bg-red-600 text-white' : 'bg-slate-800 text-slate-300'} border border-slate-600" onclick="window.setPlayerSimTeam('${p.id}','A')">A</button>
+<button type="button" class="text-[9px] px-1.5 py-0.5 rounded font-bold ${st === 'B' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300'} border border-slate-600" onclick="window.setPlayerSimTeam('${p.id}','B')">B</button>
+<button type="button" class="text-[8px] px-1 py-0.5 rounded bg-slate-900 text-slate-500 border border-slate-700" onclick="window.setPlayerSimTeam('${p.id}',null)">해제</button>
+</div><p class="text-[7px] text-center text-slate-500 mt-0.5 leading-tight">모의경기 팀</p></div>`;
+} else if (st === 'A' || st === 'B') {
+simRow = `<div class="mt-0.5 text-[9px] font-bold ${st === 'A' ? 'text-red-400' : 'text-blue-400'}" onclick="event.stopPropagation()">모의 ${st}</div>`;
+}
 
 html += `
                      <div class="mini-card flex flex-col items-center p-2 rounded-xl bg-pitch-panel border-2 ${borderClass} cursor-pointer ${isSelected ? 'selected' : ''} ${isChecked ? 'checked-in' : 'checked-out'}" onclick="window.selectPlayer('${p.id}')">
@@ -419,6 +431,7 @@ html += `
                          <div class="flex items-center justify-center min-h-[3.5rem]">${getAvatarHtml(p, 'locker')}</div>
                          <div class="font-oswald text-xl font-bold leading-none text-white">${ovr}</div>
                          <div class="flex items-center gap-1 mt-1"><span class="text-[10px] font-bold ${getPosColor(p.pos)}">${posText}</span><span class="text-xs font-bold text-slate-300 truncate max-w-[50px]">${p.name}</span></div>
+                         ${simRow}
                      </div>`;
 } else {
 html += `<div class="flex flex-col items-center justify-center p-2 rounded-xl border border-slate-800 bg-slate-900/50 opacity-50"><i class="fa-solid fa-user-lock text-xl text-slate-700 mb-2"></i><span class="text-[10px] text-slate-600">${name}</span></div>`;
@@ -431,6 +444,41 @@ window.toggleCheck = (pId) => {
 if(window.playerState.isGuest) return window.customAlert("게스트 모드에서는 출석 체크를 할 수 없습니다.");
 if(window.checkedInPlayers.has(pId)) window.checkedInPlayers.delete(pId); else window.checkedInPlayers.add(pId);
 window.renderLockerRoom(); renderActivePool();
+};
+
+/** 라커룸에서 모의경기 팀 A/B 지정 (Firestore simTeam, 팀당 최대 5명) */
+window.setPlayerSimTeam = async (pId, team) => {
+try {
+checkAuthReady();
+if (window.playerState.isGuest) return window.customAlert('게스트는 모의경기 팀을 설정할 수 없습니다.');
+const target = window.allPlayersData.find((x) => x.id === pId);
+if (!target) return;
+const canEdit = window.playerState.isGM || window.playerState.id === pId;
+if (!canEdit) return window.customAlert('본인 또는 감독만 팀을 변경할 수 있습니다.');
+if (team === 'A' || team === 'B') {
+const n = (window.allPlayersData || []).filter((x) => x.id !== pId && x.simTeam === team).length;
+if (n >= 5) return window.customAlert('해당 팀은 이미 5명입니다. 다른 팀을 선택하거나 해제 후 다시 시도하세요.');
+}
+const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(pId));
+const payload = { updatedAt: new Date().toISOString() };
+if (team === 'A' || team === 'B') payload.simTeam = team;
+else payload.simTeam = deleteField();
+await setDoc(docRef, payload, { merge: true });
+const idx = window.allPlayersData.findIndex((x) => x.id === pId);
+if (idx >= 0) {
+if (team === 'A' || team === 'B') window.allPlayersData[idx] = { ...window.allPlayersData[idx], simTeam: team };
+else {
+const copy = { ...window.allPlayersData[idx] };
+delete copy.simTeam;
+window.allPlayersData[idx] = copy;
+}
+}
+window.renderLockerRoom();
+if (isVisible('tabSim')) window.renderSimMatchTab();
+} catch (e) {
+console.error(e);
+window.customAlert('모의경기 팀 설정 저장에 실패했습니다.');
+}
 };
 
 window.selectPlayer = (pId) => {
@@ -1446,58 +1494,56 @@ document.getElementById('targetTeamCount') && (document.getElementById('targetTe
 
 const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
 
-/** 모의경기 탭: 선수 목록으로 드롭다운 채움 */
+/** 모의경기: 팀별 라커 소속 인원 수 */
+function countSimTeam(team) {
+return (window.allPlayersData || []).filter((p) => p.simTeam === team).length;
+}
+/** 출전 5인: OVR 상위 5명 */
+function getSimMatchRoster(team) {
+return (window.allPlayersData || [])
+.filter((p) => p.simTeam === team)
+.sort((a, b) => getOVR(b) - getOVR(a))
+.slice(0, 5);
+}
+
+/** 모의경기 탭: 라커 simTeam 기준 로스터 미리보기 */
 window.renderSimMatchTab = () => {
-const players = (window.allPlayersData || []).slice().sort((a, b) => String(a.name).localeCompare(b.name, 'ko'));
-const opts = '<option value="">— 선수 선택 —</option>' + players.map((p) => `<option value="${p.id}">${p.name} (OVR ${getOVR(p)})</option>`).join('');
-for (let i = 1; i <= 5; i++) {
-['simA', 'simB'].forEach((prefix) => {
-const el = document.getElementById(prefix + i);
-if (el) {
-const v = el.value;
-el.innerHTML = opts;
-el.value = v;
-}
-});
-}
+const na = countSimTeam('A');
+const nb = countSimTeam('B');
+const ca = document.getElementById('simCountA');
+const cb = document.getElementById('simCountB');
+if (ca) ca.textContent = `소속 ${na}명 · 출전 OVR 상위 5명`;
+if (cb) cb.textContent = `소속 ${nb}명 · 출전 OVR 상위 5명`;
+const rosterA = getSimMatchRoster('A');
+const rosterB = getSimMatchRoster('B');
+const elA = document.getElementById('simRosterPreviewA');
+const elB = document.getElementById('simRosterPreviewB');
+const line = (p) => {
+const pt = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
+return `<div class="flex justify-between gap-2 border-b border-white/5 pb-0.5"><span class="truncate">${p.name}</span><span class="text-fut-gold shrink-0">${getOVR(p)}</span><span class="text-slate-500 text-[10px] shrink-0">${pt}</span></div>`;
+};
+if (elA) elA.innerHTML = rosterA.length ? rosterA.map(line).join('') : '<span class="text-slate-500">팀 A 소속 없음 — 라커룸에서 A를 눌러주세요.</span>';
+if (elB) elB.innerHTML = rosterB.length ? rosterB.map(line).join('') : '<span class="text-slate-500">팀 B 소속 없음 — 라커룸에서 B를 눌러주세요.</span>';
 };
 
 window.simClearLog = () => {
 const log = document.getElementById('simMatchLog');
 if (log) log.textContent = '';
 document.getElementById('simScoreBar')?.classList.add('hidden');
+document.getElementById('simClockWrap')?.classList.add('hidden');
 };
 
-/** 라커 체크 10명 → A/B 각 5명 랜덤 배정 */
-window.simFillFromLocker = () => {
-const ids = Array.from(window.checkedInPlayers || []);
-if (ids.length < 10) return window.customAlert('라커룸에서 선수 10명 이상 체크한 뒤 사용할 수 있습니다. (5vs5 자동 편성)');
-const shuffled = [...ids].sort(() => Math.random() - 0.5);
-window.renderSimMatchTab();
-for (let i = 0; i < 5; i++) {
-const a = document.getElementById('simA' + (i + 1));
-const b = document.getElementById('simB' + (i + 1));
-if (a) a.value = shuffled[i];
-if (b) b.value = shuffled[i + 5];
-}
-};
-
-/** 풋살 5vs5 40분 텍스트 시뮬 (FM 감독 모드 스타일 중계) */
+/** 풋살 5vs5 · 시뮬레이터 시간 전·후반 각 2분 중계 */
 window.runSimMatch = async () => {
-const getV = (id) => document.getElementById(id)?.value || '';
-const idsA = [1, 2, 3, 4, 5].map((n) => getV('simA' + n));
-const idsB = [1, 2, 3, 4, 5].map((n) => getV('simB' + n));
-if (idsA.some((x) => !x) || idsB.some((x) => !x)) return window.customAlert('양 팀 모두 GK·Fixo·Ala·Ala·Pivo 자리에 선수를 선택해주세요.');
-const setA = new Set(idsA);
-const setB = new Set(idsB);
-if (setA.size !== 5 || setB.size !== 5) return window.customAlert('같은 팀 안에서 중복된 선수가 있습니다.');
-for (const id of idsA) { if (setB.has(id)) return window.customAlert('팀 A와 팀 B에 동일한 선수가 있습니다. 교체해주세요.'); }
+if (countSimTeam('A') < 5 || countSimTeam('B') < 5) {
+return window.customAlert('팀 A·팀 B 각각 라커룸에서 5명이 소속되어야 합니다. (경기 출전은 OVR 상위 5명)');
+}
+const plA = getSimMatchRoster('A');
+const plB = getSimMatchRoster('B');
+if (plA.length !== 5 || plB.length !== 5) return window.customAlert('출전 선수를 구성할 수 없습니다.');
 
 const teamAName = (document.getElementById('simTeamAName')?.value || '').trim() || '팀 A';
 const teamBName = (document.getElementById('simTeamBName')?.value || '').trim() || '팀 B';
-const plA = idsA.map((id) => window.allPlayersData.find((p) => p.id === id)).filter(Boolean);
-const plB = idsB.map((id) => window.allPlayersData.find((p) => p.id === id)).filter(Boolean);
-if (plA.length !== 5 || plB.length !== 5) return window.customAlert('선수 데이터를 찾을 수 없습니다.');
 
 const btn = document.getElementById('btnSimStart');
 if (btn) { btn.disabled = true; btn.classList.add('opacity-50', 'cursor-not-allowed'); }
@@ -1507,8 +1553,10 @@ const scoreBar = document.getElementById('simScoreBar');
 const scoreNums = document.getElementById('simScoreNums');
 const nameAEl = document.getElementById('simScoreAName');
 const nameBEl = document.getElementById('simScoreBName');
+const clockWrap = document.getElementById('simClockWrap');
 if (logEl) logEl.textContent = '';
 if (scoreBar) scoreBar.classList.remove('hidden');
+if (clockWrap) clockWrap.classList.remove('hidden');
 if (nameAEl) nameAEl.textContent = teamAName;
 if (nameBEl) nameBEl.textContent = teamBName;
 let sa = 0;
@@ -1520,6 +1568,17 @@ const strA = plA.reduce((s, p) => s + getOVR(p), 0);
 const strB = plB.reduce((s, p) => s + getOVR(p), 0);
 const ratio = strA + strB > 0 ? strA / (strA + strB) : 0.5;
 
+const SIM_HALF_SEC = 120;
+const SIM_SEC_REAL_MS = 28;
+
+const setMatchClock = (halfIdx, simSec) => {
+const el = document.getElementById('simMatchClock');
+const halfLabel = halfIdx === 0 ? '전반' : '후반';
+const m = Math.floor(simSec / 60);
+const s = simSec % 60;
+if (el) el.textContent = `${halfLabel} ${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+};
+
 const append = async (line) => {
 if (logEl) logEl.textContent += (logEl.textContent ? '\n' : '') + line;
 logEl?.scrollTo({ top: logEl.scrollHeight, behavior: 'smooth' });
@@ -1529,13 +1588,12 @@ await sleep(42);
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const gkOf = (arr) => arr.find((p) => p.pos === 'Goleiro') || arr[0];
 
-try {
-await append(`━━ ${teamAName} vs ${teamBName} · 모의 풋살 (5vs5, 40분) ━━`);
-await append(`[감독 모드] 전력 요약: ${teamAName} 합계 OVR ${strA}  |  ${teamBName} 합계 OVR ${strB}`);
-await append(`[0'] 킥오프 — 좁은 풋살 코트에서 공이 굴러갑니다.`);
-
-for (let m = 1; m <= 40; m++) {
-if (Math.random() > 0.38) continue;
+const trySecondEvent = async (halfIdx, simSec) => {
+const halfLabel = halfIdx === 0 ? '전반' : '후반';
+const mm = String(Math.floor(simSec / 60)).padStart(2, '0');
+const ss = String(simSec % 60).padStart(2, '0');
+const prefix = `[${halfLabel} ${mm}:${ss}]`;
+if (Math.random() > 0.16) return;
 const attackA = Math.random() < ratio + (Math.random() * 0.08 - 0.04);
 const atk = attackA ? plA : plB;
 const def = attackA ? plB : plA;
@@ -1547,13 +1605,13 @@ if (r < 0.28) {
 const p1 = pick(atk);
 const p2 = pick(atk);
 if (p1.id === p2.id) {
-await append(`[${m}'] ${atkName}: ${p1.name}이(가) 공을 끌고 전진합니다.`);
+await append(`${prefix} ${atkName}: ${p1.name}이(가) 공을 끌고 전진합니다.`);
 } else {
-await append(`[${m}'] ${atkName}: ${p1.name} → ${p2.name}. 패스로 지역을 넓힙니다.`);
+await append(`${prefix} ${atkName}: ${p1.name} → ${p2.name}. 패스로 지역을 넓힙니다.`);
 }
 } else if (r < 0.48) {
 const p = pick(atk);
-await append(`[${m}'] ${atkName}: ${p.name}이(가) 좁은 공간에서 드리블 돌파를 노립니다.`);
+await append(`${prefix} ${atkName}: ${p.name}이(가) 좁은 공간에서 드리블 돌파를 노립니다.`);
 } else if (r < 0.68) {
 const p = pick(atk);
 const gk = gkOf(def);
@@ -1563,18 +1621,38 @@ const bias = (attackA ? strA - strB : strB - strA) * 0.018;
 if (shot + bias > save + 7) {
 if (attackA) sa++; else sb++;
 updScore();
-await append(`[${m}'] ⚽ 골! ${atkName} — ${p.name}의 슛이 골망을 흔듭니다! (${sa}-${sb})`);
+await append(`${prefix} ⚽ 골! ${atkName} — ${p.name}의 슛이 골망을 흔듭니다! (${sa}-${sb})`);
 } else {
-await append(`[${m}'] ${defName} ${gk.name}, 선방! ${p.name}의 슛을 막아냅니다.`);
+await append(`${prefix} ${defName} ${gk.name}, 선방! ${p.name}의 슛을 막아냅니다.`);
 }
 } else if (r < 0.88) {
-await append(`[${m}'] ${atkName}: 터치라인 근처 킥인. 패스 템포를 유지합니다.`);
+await append(`${prefix} ${atkName}: 터치라인 근처 킥인. 패스 템포를 유지합니다.`);
 } else {
-await append(`[${m}'] ${defName}: 피벗 앞 압박으로 공간을 좁힙니다.`);
+await append(`${prefix} ${defName}: 피벗 앞 압박으로 공간을 좁힙니다.`);
+}
+};
+
+try {
+await append(`━━ ${teamAName} vs ${teamBName} · 모의 풋살 (5vs5, 전·후반 각 2분 시뮬레이터 시간) ━━`);
+await append(`[감독 모드] 전력 요약: ${teamAName} 출전 OVR 합 ${strA}  |  ${teamBName} 출전 OVR 합 ${strB}`);
+await append(`[전반 00:00] 킥오프 — 좁은 풋살 코트에서 공이 굴러갑니다.`);
+
+for (let halfIdx = 0; halfIdx < 2; halfIdx++) {
+setMatchClock(halfIdx, 0);
+for (let simSec = 0; simSec < SIM_HALF_SEC; simSec++) {
+setMatchClock(halfIdx, simSec);
+await trySecondEvent(halfIdx, simSec);
+await sleep(SIM_SEC_REAL_MS);
+}
+setMatchClock(halfIdx, SIM_HALF_SEC);
+const hl = halfIdx === 0 ? '전반' : '후반';
+await append(`[${hl} 02:00] ${hl} 종료 휘슬`);
+if (halfIdx === 0) {
+await append(`[휴식] 하프타임 — 전술을 가다듬습니다.`);
 }
 }
 
-await append(`[40'] 최종 휘슬 — ${teamAName} ${sa} : ${sb} ${teamBName}`);
+await append(`━━ 최종 스코어 ${teamAName} ${sa} : ${sb} ${teamBName} ━━`);
 await append(`(모의 시뮬레이션 종료 · 서버 기록·EXP 미반영)`);
 } finally {
 if (btn) { btn.disabled = false; btn.classList.remove('opacity-50', 'cursor-not-allowed'); }
