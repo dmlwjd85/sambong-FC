@@ -1631,7 +1631,7 @@ document.getElementById('simScoreBar')?.classList.add('hidden');
 document.getElementById('simClockWrap')?.classList.add('hidden');
 };
 
-/** 풋살 5vs5 · 시뮬레이터 시간 전·후반 각 2분 중계 */
+/** 풋살 5vs5 · 시뮬 전·후반 각 20분을 실제 시청 전·후반 각 2분에 비례 압축 중계 */
 window.runSimMatch = async () => {
 if (countSimTeam('A') < 5 || countSimTeam('B') < 5) {
 return window.customAlert('팀 A·팀 B 각각 라커룸에서 5명이 소속되어야 합니다. (경기 출전은 OVR 상위 5명)');
@@ -1666,8 +1666,12 @@ const strA = plA.reduce((s, p) => s + getOVR(p), 0);
 const strB = plB.reduce((s, p) => s + getOVR(p), 0);
 const ratio = strA + strB > 0 ? strA / (strA + strB) : 0.5;
 
-const SIM_HALF_SEC = 120;
-const SIM_SEC_REAL_MS = 28;
+/** 시뮬레이터 한 하프 길이(초): 20분 */
+const SIM_HALF_SEC = 20 * 60;
+/** 실제로 한 하프를 보는 시간(ms): 2분 → 시뮬 1초당 실제 경과 */
+const MS_PER_SIM_SEC = (2 * 60 * 1000) / SIM_HALF_SEC;
+/** 하프당 중계 이벤트 기대치 유지(구 2분하프·초당 0.16과 동일 스케일) */
+const SIM_EVENT_PROB_PER_SEC = (120 * 0.16) / SIM_HALF_SEC;
 
 const setMatchClock = (halfIdx, simSec) => {
 const el = document.getElementById('simMatchClock');
@@ -1693,7 +1697,7 @@ const halfLabel = halfIdx === 0 ? '전반' : '후반';
 const mm = String(Math.floor(simSec / 60)).padStart(2, '0');
 const ss = String(simSec % 60).padStart(2, '0');
 const prefix = `[${halfLabel} ${mm}:${ss}]`;
-if (Math.random() > 0.16) return;
+if (Math.random() > SIM_EVENT_PROB_PER_SEC) return;
 const attackA = Math.random() < ratio + (Math.random() * 0.08 - 0.04);
 const atk = attackA ? plA : plB;
 const def = attackA ? plB : plA;
@@ -1733,7 +1737,7 @@ await append(`${prefix} ${defName}: 피벗 앞 압박으로 공간을 좁힙니�
 };
 
 try {
-await append(`━━ ${teamAName} vs ${teamBName} · 모의 풋살 (5vs5, 전·후반 각 2분 시뮬레이터 시간) ━━`);
+await append(`━━ ${teamAName} vs ${teamBName} · 모의 풋살 (5vs5, 시뮬 전·후반 각 20분 — 시청은 각 2분 비례) ━━`);
 await append(`[감독 모드] 전력 요약: ${teamAName} 출전 OVR 합 ${strA}  |  ${teamBName} 출전 OVR 합 ${strB}`);
 await append(`[전반 00:00] 킥오프 — 좁은 풋살 코트에서 공이 굴러갑니다.`);
 
@@ -1742,11 +1746,11 @@ setMatchClock(halfIdx, 0);
 for (let simSec = 0; simSec < SIM_HALF_SEC; simSec++) {
 setMatchClock(halfIdx, simSec);
 await trySecondEvent(halfIdx, simSec);
-await sleep(SIM_SEC_REAL_MS);
+await sleep(MS_PER_SIM_SEC);
 }
 setMatchClock(halfIdx, SIM_HALF_SEC);
 const hl = halfIdx === 0 ? '전반' : '후반';
-await append(`[${hl} 02:00] ${hl} 종료 휘슬`);
+await append(`[${hl} 20:00] ${hl} 종료 휘슬`);
 if (halfIdx === 0) {
 await append(`[휴식] 하프타임 — 전술을 가다듬습니다.`);
 }
