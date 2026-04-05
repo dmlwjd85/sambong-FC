@@ -452,6 +452,12 @@ const listA = (window.allPlayersData || []).filter((p) => p.simTeam === 'A').sor
 const listB = (window.allPlayersData || []).filter((p) => p.simTeam === 'B').sort((a, b) => getOVR(b) - getOVR(a));
 const pref = window.simBoardPreferredTarget[boardKey] === 'B' ? 'B' : 'A';
 const rname = getSimTeamBoardRadioName(boardKey);
+const clearColA = window.playerState.isGM
+? `<button type="button" class="sim-team-clear-btn text-[10px] px-2 py-0.5 rounded bg-slate-900/80 text-amber-200 border border-amber-800/50 hover:bg-slate-800 shrink-0" data-sim-clear-team="A" title="레드 팀 전원 해제">전체 삭제</button>`
+: '';
+const clearColB = window.playerState.isGM
+? `<button type="button" class="sim-team-clear-btn text-[10px] px-2 py-0.5 rounded bg-slate-900/80 text-amber-200 border border-amber-800/50 hover:bg-slate-800 shrink-0" data-sim-clear-team="B" title="블루 팀 전원 해제">전체 삭제</button>`
+: '';
 const rowHtml = (p, team) => {
 const canEdit = !window.playerState.isGuest && (window.playerState.isGM || window.playerState.id === p.id);
 const canDrag = canEdit;
@@ -473,16 +479,22 @@ return `
 <p class="text-xs font-bold text-slate-400 mb-2 flex flex-wrap items-center gap-2"><i class="fa-solid fa-futbol text-amber-400"></i> 모의경기 팀 분류 <span class="text-[10px] font-normal text-slate-500">삭제 · 드래그 이동 · 상대 팀 선수 위에 놓으면 감독 맞교체</span></p>
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
 <div class="sim-team-drop-zone rounded-xl border border-red-800/40 bg-red-950/25 p-3 min-h-[6rem]" data-sim-drop="A">
-<div class="font-display text-red-400 text-sm mb-1.5 flex justify-between items-center">
+<div class="font-display text-red-400 text-sm mb-1.5 flex justify-between items-center gap-2 flex-wrap">
 <span>레드 (팀 A)</span>
+<div class="flex items-center gap-2 shrink-0">
+${clearColA}
 <span class="text-[10px] text-slate-500 font-sans">${listA.length}명</span>
+</div>
 </div>
 ${listA.length ? listA.map((p) => rowHtml(p, 'A')).join('') : emptyHint}
 </div>
 <div class="sim-team-drop-zone rounded-xl border border-blue-800/40 bg-blue-950/25 p-3 min-h-[6rem]" data-sim-drop="B">
-<div class="font-display text-blue-400 text-sm mb-1.5 flex justify-between items-center">
+<div class="font-display text-blue-400 text-sm mb-1.5 flex justify-between items-center gap-2 flex-wrap">
 <span>블루 (팀 B)</span>
+<div class="flex items-center gap-2 shrink-0">
+${clearColB}
 <span class="text-[10px] text-slate-500 font-sans">${listB.length}명</span>
+</div>
 </div>
 ${listB.length ? listB.map((p) => rowHtml(p, 'B')).join('') : emptyHint}
 </div>
@@ -528,9 +540,27 @@ await window.setPlayerSimTeam(id1, t2, true);
 await window.setPlayerSimTeam(id2, t1, true);
 window.renderLockerRoom();
 if (isVisible('tabSim')) window.renderSimMatchTab();
+if (window.selectedPlayerId) window.renderSelectedCard(window.selectedPlayerId);
 } catch (e) {
 console.error(e);
 window.customAlert('팀 교체에 실패했습니다.');
+}
+};
+
+/** 감독 전용: 해당 팀(레드/블루)에 속한 모든 선수 팀 해제 */
+window.clearSimTeamColumn = async (team) => {
+try {
+checkAuthReady();
+if (window.playerState.isGuest) return window.customAlert('게스트는 사용할 수 없습니다.');
+if (!window.playerState.isGM) return window.customAlert('팀 전체 비우기는 감독만 사용할 수 있습니다.');
+if (team !== 'A' && team !== 'B') return;
+const ids = (window.allPlayersData || []).filter((p) => p.simTeam === team).map((p) => p.id);
+for (let i = 0; i < ids.length; i++) {
+await window.setPlayerSimTeam(ids[i], null, i < ids.length - 1);
+}
+} catch (e) {
+console.error(e);
+window.customAlert('팀 비우기에 실패했습니다.');
 }
 };
 
@@ -629,6 +659,7 @@ window.allPlayersData[idx] = copy;
 if (!skipRefresh) {
 window.renderLockerRoom();
 if (isVisible('tabSim')) window.renderSimMatchTab();
+if (window.selectedPlayerId) window.renderSelectedCard(window.selectedPlayerId);
 }
 } catch (e) {
 console.error(e);
@@ -767,6 +798,37 @@ document.getElementById('detailOvr') && (document.getElementById('detailOvr').in
 document.getElementById('detailPos') && (document.getElementById('detailPos').innerText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정');
 document.getElementById('detailExpText') && (document.getElementById('detailExpText').innerText = `${exp} / ${expNeeded}`);
 document.getElementById('detailExpBar') && (document.getElementById('detailExpBar').style.width = `${expPercent}%`);
+
+const simTeamPanel = document.getElementById('detailSimTeamPanel');
+if (simTeamPanel) {
+if (window.playerState.isGuest) {
+simTeamPanel.innerHTML = '';
+simTeamPanel.classList.add('hidden');
+} else {
+simTeamPanel.classList.remove('hidden');
+const st = p.simTeam;
+const canSimPick = isGM || isMe;
+const dis = canSimPick ? '' : 'disabled';
+const cA = st === 'A' ? 'checked' : '';
+const cB = st === 'B' ? 'checked' : '';
+const pidAttr = escapeAttr(p.id);
+simTeamPanel.innerHTML = `
+<div class="mt-4 pt-3 border-t border-slate-700/80">
+<p class="text-[10px] font-bold text-amber-400/90 mb-2 flex items-center gap-1"><i class="fa-solid fa-futbol"></i> 모의경기 팀 (프로필에서 선택)</p>
+<div class="flex items-center justify-between gap-3 text-xs flex-wrap">
+<label class="flex items-center gap-2 ${canSimPick ? 'cursor-pointer text-red-300' : 'text-slate-500 cursor-default'}">
+<input type="checkbox" class="accent-red-500 rounded border-slate-600 sim-profile-cb" ${cA} ${dis} data-sim-profile-team="A" data-player-id="${pidAttr}" />
+레드 (팀 A)
+</label>
+<label class="flex items-center gap-2 ${canSimPick ? 'cursor-pointer text-blue-300' : 'text-slate-500 cursor-default'}">
+<input type="checkbox" class="accent-blue-500 rounded border-slate-600 sim-profile-cb" ${cB} ${dis} data-sim-profile-team="B" data-player-id="${pidAttr}" />
+블루 (팀 B)
+</label>
+</div>
+<p class="text-[9px] text-slate-500 mt-1.5 leading-snug">한쪽만 선택됩니다. 체크 해제 시 팀에서 빠집니다. (감독은 모든 선수 지정 가능)</p>
+</div>`;
+}
+}
 
 const renderRecord = (id, key, val) => {
 const el = document.getElementById(id); if(!el) return;
@@ -1601,8 +1663,8 @@ const na = countSimTeam('A');
 const nb = countSimTeam('B');
 const ca = document.getElementById('simCountA');
 const cb = document.getElementById('simCountB');
-if (ca) ca.textContent = `소속 ${na}명 · 출전 OVR 상위 5명`;
-if (cb) cb.textContent = `소속 ${nb}명 · 출전 OVR 상위 5명`;
+if (ca) ca.textContent = `소속 ${na}명 · 출전 OVR 상위 5명 (팀당 1명 이상이면 연습 경기 가능)`;
+if (cb) cb.textContent = `소속 ${nb}명 · 출전 OVR 상위 5명 (팀당 1명 이상이면 연습 경기 가능)`;
 window.renderSimTeamBoards();
 const slog = document.getElementById('simMatchLog');
 if (slog && slog.children.length === 0) resetSimPitchCanvas();
@@ -1908,6 +1970,36 @@ while (b.id === a.id && guard++ < 12) b = players[Math.floor(Math.random() * pla
 return [a, b];
 }
 
+/** 실제 소속 선수만으로 5명 미만일 때 시뮬용 가상 팀원으로 채움 (서버·기록 없음) */
+function padSimRosterWithBots(realRoster, teamLetter) {
+const sorted = [...realRoster].sort((a, b) => getOVR(b) - getOVR(a)).slice(0, 5);
+const need = Math.max(0, 5 - sorted.length);
+let bots = 0;
+const posCycle = ['Goleiro', 'Fixo', 'Ala', 'Pivo', 'Ala'];
+const avgOvr = sorted.length
+? Math.round(sorted.reduce((s, p) => s + getOVR(p), 0) / sorted.length)
+: 72;
+for (let i = 0; i < need; i++) {
+bots++;
+const idx = sorted.length;
+const v = Math.max(58, Math.min(82, avgOvr + Math.floor(Math.random() * 7) - 3));
+const pos = posCycle[idx % posCycle.length];
+const bot = {
+id: `__sim_bot_${teamLetter}_${idx}`,
+name: `자동 보조 ${bots}`,
+pos,
+age: 15,
+level: 1,
+pac: v, sho: v, pas: v, dri: v, def: v, phy: v, ref: v, int: v, pst: v, dis: v, cmp: v, wrk: v,
+inventory: [],
+itemLevels: {},
+equipHead: null, equipHandL: null, equipHandR: null, equipFootL: null, equipFootR: null, equipFace: null
+};
+sorted.push(bot);
+}
+return { roster: sorted, bots };
+}
+
 /** 모의경기 종료 후 골·어시·킬패스·세이브 요약 패널 */
 function renderSimPostMatchStats(plA, plB, teamAName, teamBName, simStats) {
 const el = document.getElementById('simPostMatchStats');
@@ -1953,11 +2045,19 @@ resetSimPitchCanvas();
 
 /** 풋살 5vs5 · 시뮬 전·후반 각 20분을 실제 시청 전·후반 각 2분에 비례 압축 중계 */
 window.runSimMatch = async () => {
-if (countSimTeam('A') < 5 || countSimTeam('B') < 5) {
-return window.customAlert('팀 A·팀 B 각각 라커룸에서 5명이 소속되어야 합니다. (경기 출전은 OVR 상위 5명)');
+if (window.playerState.isGuest) {
+return window.customAlert('게스트는 모의경기를 실행할 수 없습니다. 학생 계정으로 로그인해 주세요.');
 }
-const plA = getSimMatchRoster('A');
-const plB = getSimMatchRoster('B');
+if (countSimTeam('A') < 1 || countSimTeam('B') < 1) {
+return window.customAlert('팀 A(레드)와 팀 B(블루)에 각각 최소 1명 이상 배정되어야 합니다.\n프로필의 체크박스 또는 라커/팀 분류에서 팀을 선택하세요.');
+}
+const rawA = getSimMatchRoster('A');
+const rawB = getSimMatchRoster('B');
+const padA = padSimRosterWithBots(rawA, 'A');
+const padB = padSimRosterWithBots(rawB, 'B');
+const plA = padA.roster;
+const plB = padB.roster;
+const usedBots = padA.bots > 0 || padB.bots > 0;
 if (plA.length !== 5 || plB.length !== 5) return window.customAlert('출전 선수를 구성할 수 없습니다.');
 
 const tabSimRoot = document.getElementById('tabSim');
@@ -2187,7 +2287,10 @@ await append(`${prefix} ${defName}: [픽소] ${fx.name} 페널티 프론트 클�
 
 try {
 await append(`━━ ${teamAName} vs ${teamBName} · 모의 풋살 (5vs5, 시뮬 전·후반 각 20분 — 시청은 각 2분 비례) ━━`);
-await append(`[감독 모드] 전력 요약: ${teamAName} 출전 OVR 합 ${strA}  |  ${teamBName} 출전 OVR 합 ${strB}`);
+if (usedBots) {
+await append(`[연습 모드] 실제 소속 인원이 5명 미만인 팀은 자동 보조 선수로 채워 5vs5로 진행합니다. (가상 인원은 기록에 반영되지 않습니다)`);
+}
+await append(`전력 요약: ${teamAName} 출전 OVR 합 ${strA}  |  ${teamBName} 출전 OVR 합 ${strB}`);
 await append(`[전반 00:00] 킥오프 — 좁은 풋살 코트에서 공이 굴러갑니다.`);
 
 for (let halfIdx = 0; halfIdx < 2; halfIdx++) {
@@ -2755,12 +2858,32 @@ window.__simTeamBoardUiBound = true;
 let dragSimPid = null;
 document.addEventListener('change', (ev) => {
 const t = ev.target;
+if (t && t.matches && t.matches('.sim-profile-cb')) {
+const team = t.getAttribute('data-sim-profile-team');
+const pid = t.getAttribute('data-player-id');
+if (pid && (team === 'A' || team === 'B')) {
+if (t.checked) {
+window.setPlayerSimTeam(pid, team);
+} else {
+const pl = window.allPlayersData.find((x) => x.id === pid);
+if (pl && pl.simTeam === team) window.setPlayerSimTeam(pid, null);
+}
+}
+return;
+}
 if (!t || !t.matches || !t.matches('input[type="radio"][data-sim-board]')) return;
 if (t.value !== 'A' && t.value !== 'B') return;
 const k = t.getAttribute('data-sim-board');
 if (k && window.simBoardPreferredTarget) window.simBoardPreferredTarget[k] = t.value;
 });
 document.addEventListener('click', (ev) => {
+const clr = ev.target.closest('.sim-team-clear-btn');
+if (clr) {
+ev.preventDefault();
+const tm = clr.getAttribute('data-sim-clear-team');
+if (tm === 'A' || tm === 'B') window.clearSimTeamColumn(tm);
+return;
+}
 const btn = ev.target.closest('.sim-team-remove-btn');
 if (!btn) return;
 ev.preventDefault();
