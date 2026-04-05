@@ -124,7 +124,7 @@
 <div id="cardAuraWrapper" class="mx-auto w-fit transition-all duration-500 z-10 relative">
 <div id="detailFutCard" class="fut-card w-[300px] h-[460px] p-5 flex flex-col relative shadow-2xl z-10 mx-auto transition-all duration-300">
 
-<div class="flex justify-between items-start z-10 w-full h-[155px]">
+<div class="flex justify-between items-start z-10 w-full min-h-[155px]">
 <div class="flex flex-col items-center justify-start relative text-current mt-2 w-1/3">
 <span class="font-oswald text-[4.2rem] font-bold leading-none -ml-1 drop-shadow-md" id="detailOvr">86</span>
 <div class="flex flex-col items-center gap-1 hover:opacity-70 transition cursor-pointer mt-1 w-full" id="btnChangePos">
@@ -136,11 +136,12 @@
 
 <div class="relative w-2/3 h-full flex flex-col items-center justify-center -mt-2 pr-2">
 <div class="flex flex-col items-center justify-center relative z-10 mb-1 w-full">
-<div class="flex items-center justify-center min-h-[5rem] w-full" id="detailAvatar"></div>
+<div class="flex items-center justify-center min-h-[5rem] w-full relative z-[12]" id="detailAvatar"></div>
+<div class="mt-1 flex justify-center w-full shrink-0" title="얼굴 프레임">
+<div class="item-slot-mini item-slot-face-below" id="slotFace"></div>
+</div>
 <div id="facePhotoControls" class="hidden w-full max-w-[200px] mx-auto mt-0.5"></div>
 </div>
-<div class="item-slot-mini overflow-hidden" id="slotFace" style="top: 48px; left: 50%; transform: translateX(-50%);"></div>
-<div class="item-slot-mini" id="slotFace" style="top: 52px; left: 50%; transform: translateX(-50%);" title="얼굴 프레임"></div>
 <div class="item-slot-mini" id="slotHead" style="top: -5px; left: 50%; transform: translateX(-50%);"></div>
 <div class="item-slot-mini" id="slotHandL" style="top: 35px; left: 10px;"></div>
 <div class="item-slot-mini" id="slotHandR" style="top: 35px; right: 10px;"></div>
