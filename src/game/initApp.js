@@ -460,10 +460,10 @@ const clearColB = simTools
 ? `<button type="button" class="sim-team-clear-btn text-[10px] px-2 py-0.5 rounded bg-slate-900/80 text-amber-200 border border-amber-800/50 hover:bg-slate-800 shrink-0" data-sim-clear-team="B" title="블루 팀 전원 해제">전체 삭제</button>`
 : '';
 const randomFillA = simTools
-? `<button type="button" class="sim-team-random-fill-btn text-[10px] px-2 py-0.5 rounded bg-emerald-900/55 text-emerald-200 border border-emerald-700/45 hover:bg-emerald-900/90 shrink-0" data-sim-random-team="A" title="빈 자리를 포지션 감안 랜덤 보강">랜덤 보강</button>`
+? `<button type="button" class="sim-team-random-fill-btn text-[10px] px-2 py-0.5 rounded bg-emerald-900/55 text-emerald-200 border border-emerald-700/45 hover:bg-emerald-900/90 shrink-0" data-sim-random-team="A" title="골레이로→픽소 우선, 이후 아라·피보·미정 골고루">랜덤 보강</button>`
 : '';
 const randomFillB = simTools
-? `<button type="button" class="sim-team-random-fill-btn text-[10px] px-2 py-0.5 rounded bg-emerald-900/55 text-emerald-200 border border-emerald-700/45 hover:bg-emerald-900/90 shrink-0" data-sim-random-team="B" title="빈 자리를 포지션 감안 랜덤 보강">랜덤 보강</button>`
+? `<button type="button" class="sim-team-random-fill-btn text-[10px] px-2 py-0.5 rounded bg-emerald-900/55 text-emerald-200 border border-emerald-700/45 hover:bg-emerald-900/90 shrink-0" data-sim-random-team="B" title="골레이로→픽소 우선, 이후 아라·피보·미정 골고루">랜덤 보강</button>`
 : '';
 const rowHtml = (p, team) => {
 const canEdit = simTools;
@@ -483,7 +483,7 @@ ${delBtn}
 };
 const emptyHint = '<p class="text-[10px] text-slate-500 py-2 pointer-events-none">빈 곳에 놓으면 이동</p>';
 return `
-<p class="text-xs font-bold text-slate-400 mb-2 flex flex-wrap items-center gap-2"><i class="fa-solid fa-futbol text-amber-400"></i> 모의경기 팀 분류 <span class="text-[10px] font-normal text-slate-500">누구나 편집 · 삭제 · 드래그 · 맞교체 · 랜덤 보강(포지션 감안)</span></p>
+<p class="text-xs font-bold text-slate-400 mb-2 flex flex-wrap items-center gap-2"><i class="fa-solid fa-futbol text-amber-400"></i> 모의경기 팀 분류 <span class="text-[10px] font-normal text-slate-500">누구나 편집 · 삭제 · 드래그 · 맞교체 · 랜덤 보강(골레이로·픽소 우선)</span></p>
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
 <div class="sim-team-drop-zone rounded-xl border border-red-800/40 bg-red-950/25 p-3 min-h-[6rem]" data-sim-drop="A">
 <div class="font-display text-red-400 text-sm mb-1.5 flex justify-between items-center gap-2 flex-wrap">
@@ -571,7 +571,7 @@ window.customAlert('팀 비우기에 실패했습니다.');
 }
 };
 
-/** 팀 인원이 5명 미만일 때: 미배정 우선 → 부족 시 상대팀에서, 포지션(골·픽·아라·피보) 순서를 감안해 무작위 보강 */
+/** 팀 인원이 5명 미만일 때: 미배정 우선 → 부족 시 상대팀에서 보강. 포지션: 골레이로 1순위, 픽소 2순위, 이후 아라·피보·미정을 순환해 골고루 */
 window.fillSimTeamRandomPos = async (team) => {
 try {
 checkAuthReady();
@@ -589,18 +589,43 @@ const j = Math.floor(Math.random() * (i + 1));
 }
 return a;
 };
+/** n번째 보강(0부터)에 맞는 선호 포지션 */
+const preferredPosForPick = (n) => {
+if (n === 0) return 'Goleiro';
+if (n === 1) return 'Fixo';
+const restCycle = ['Ala', 'Pivo', '미정'];
+return restCycle[(n - 2) % restCycle.length];
+};
+/** 풀에서 선호 포지션 우선, 없으면 대체 순서로 1명 인덱스 */
+const findBestIndexForPos = (pool, prefer) => {
+let idx = pool.findIndex((p) => p.pos === prefer);
+if (idx >= 0) return idx;
+if (prefer === 'Ala') {
+idx = pool.findIndex((p) => p.pos === '미정');
+if (idx >= 0) return idx;
+}
+const fallbackByPrefer = {
+Goleiro: ['Fixo', 'Ala', 'Pivo', '미정'],
+Fixo: ['Goleiro', 'Ala', 'Pivo', '미정'],
+Ala: ['Pivo', '미정', 'Fixo', 'Goleiro'],
+Pivo: ['Ala', '미정', 'Fixo', 'Goleiro'],
+미정: ['Ala', 'Pivo', 'Fixo', 'Goleiro']
+};
+const chain = fallbackByPrefer[prefer] || ['Goleiro', 'Fixo', 'Ala', 'Pivo', '미정'];
+for (let c = 0; c < chain.length; c++) {
+idx = pool.findIndex((p) => p.pos === chain[c]);
+if (idx >= 0) return idx;
+}
+return 0;
+};
 const unassigned = (window.allPlayersData || []).filter((p) => !p.simTeam);
 const fromOther = (window.allPlayersData || []).filter((p) => p.simTeam === other);
 let pool = [...shuffle(unassigned), ...shuffle(fromOther)];
 if (!pool.length) return window.customAlert('보강할 다른 선수가 없습니다.');
-const posPriority = ['Goleiro', 'Fixo', 'Ala', 'Pivo', 'Ala'];
 const picks = [];
 for (let n = 0; n < need && pool.length; n++) {
-const prefer = posPriority[(onTeam.length + n) % posPriority.length];
-let idx = pool.findIndex((p) => p.pos === prefer);
-if (idx < 0 && prefer === 'Ala') idx = pool.findIndex((p) => p.pos === '미정');
-if (idx < 0) idx = pool.findIndex((p) => ['Goleiro', 'Fixo', 'Ala', 'Pivo', '미정'].includes(p.pos));
-if (idx < 0) idx = 0;
+const prefer = preferredPosForPick(n);
+const idx = findBestIndexForPos(pool, prefer);
 picks.push(pool[idx]);
 pool.splice(idx, 1);
 }
