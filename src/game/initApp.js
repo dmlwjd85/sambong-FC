@@ -1739,6 +1739,13 @@ const cb = document.getElementById('simCountB');
 if (ca) ca.textContent = `소속 ${na}명 · 출전 OVR 상위 5명 (팀당 1명 이상이면 연습 경기 가능)`;
 if (cb) cb.textContent = `소속 ${nb}명 · 출전 OVR 상위 5명 (팀당 1명 이상이면 연습 경기 가능)`;
 window.renderSimTeamBoards();
+const rawTA = getSimMatchRoster('A');
+const rawTB = getSimMatchRoster('B');
+const padTA = padSimRosterWithBots(rawTA, 'A');
+const padTB = padSimRosterWithBots(rawTB, 'B');
+ensureSimFieldPositions(padTA.roster, padTB.roster);
+window.renderSimTacticalStrips();
+window.drawSimTacticalBoard();
 const slog = document.getElementById('simMatchLog');
 if (slog && slog.children.length === 0) resetSimPitchCanvas();
 };
@@ -1881,8 +1888,9 @@ const badge = document.getElementById('simPitchBadge');
 if (!canvas || !canvas.getContext) return;
 const ctx = canvas.getContext('2d');
 const wrap = canvas.parentElement;
-const cssW = Math.max(280, wrap?.clientWidth || 640);
-const cssH = Math.max(160, Math.min(320, wrap?.clientHeight || 220));
+const maxCssW = typeof window !== 'undefined' ? Math.min(window.innerWidth - 20, 720) : 720;
+const cssW = Math.max(260, Math.min(maxCssW, wrap?.clientWidth || maxCssW));
+const cssH = Math.max(160, Math.min(320, Math.floor(cssW * 0.42)));
 const dpr = Math.min(2, typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1);
 canvas.width = Math.floor(cssW * dpr);
 canvas.height = Math.floor(cssH * dpr);
@@ -1921,6 +1929,10 @@ ctx.fillText('위험', px0 + pw - dzW + 4, py0 + 11);
 ctx.fillStyle = 'rgba(0,0,0,0.5)';
 ctx.fillRect(px0 - 3, py0 + ph * 0.32, 3, ph * 0.36);
 ctx.fillRect(px0 + pw, py0 + ph * 0.32, 3, ph * 0.36);
+
+if (opts.plA && opts.plB && opts.plA.length && opts.plB.length) {
+drawSimPlayersOnPitch(ctx, px0, py0, pw, ph, opts);
+}
 
 const chY = { left: 0.22, center: 0.5, right: 0.78 };
 const lane = chY[opts.channel] ?? 0.5;
@@ -1995,8 +2007,9 @@ const badge = document.getElementById('simPitchBadge');
 if (!canvas || !canvas.getContext) return;
 const ctx = canvas.getContext('2d');
 const wrap = canvas.parentElement;
-const cssW = Math.max(280, wrap?.clientWidth || 640);
-const cssH = Math.max(160, Math.min(320, wrap?.clientHeight || 220));
+const maxCssW = typeof window !== 'undefined' ? Math.min(window.innerWidth - 20, 720) : 720;
+const cssW = Math.max(260, Math.min(maxCssW, wrap?.clientWidth || maxCssW));
+const cssH = Math.max(160, Math.min(320, Math.floor(cssW * 0.42)));
 const dpr = Math.min(2, window.devicePixelRatio || 1);
 canvas.width = Math.floor(cssW * dpr);
 canvas.height = Math.floor(cssH * dpr);
@@ -2027,6 +2040,219 @@ badge.textContent = '대기';
 badge.className = 'text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-slate-800 text-slate-300';
 }
 }
+
+const SIM_FIELD_LS_KEY = 'sfc_sim_field_v1';
+/** @type {{ A: Record<string, { nx: number, ny: number }>, B: Record<string, { nx: number, ny: number }> }} */
+window.simFieldPositions = window.simFieldPositions || { A: {}, B: {} };
+
+function loadSimFieldPositionsFromStorage() {
+try {
+const raw = localStorage.getItem(SIM_FIELD_LS_KEY);
+if (!raw) return;
+const o = JSON.parse(raw);
+if (o && o.A && o.B) window.simFieldPositions = { A: o.A, B: o.B };
+} catch (e) { console.warn('sim field load', e); }
+}
+function saveSimFieldPositionsToStorage() {
+try {
+localStorage.setItem(SIM_FIELD_LS_KEY, JSON.stringify(window.simFieldPositions));
+} catch (e) { console.warn('sim field save', e); }
+}
+loadSimFieldPositionsFromStorage();
+
+const SIM_DEFAULT_SLOTS_A = [
+{ nx: 0.11, ny: 0.5 },
+{ nx: 0.22, ny: 0.28 },
+{ nx: 0.26, ny: 0.5 },
+{ nx: 0.22, ny: 0.72 },
+{ nx: 0.42, ny: 0.5 }
+];
+const SIM_DEFAULT_SLOTS_B = SIM_DEFAULT_SLOTS_A.map((s) => ({ nx: 1 - s.nx, ny: s.ny }));
+
+function assignDefaultFormationNorm(plList, team) {
+const slots = team === 'A' ? SIM_DEFAULT_SLOTS_A : SIM_DEFAULT_SLOTS_B;
+const order = [...plList].sort((a, b) => {
+const pr = (p) => ({ Goleiro: 0, Fixo: 1, Ala: 2, Pivo: 3, 미정: 4 }[p.pos] ?? 4);
+return pr(a) - pr(b);
+});
+const out = {};
+order.forEach((p, i) => {
+const s = slots[Math.min(i, slots.length - 1)];
+out[p.id] = { nx: s.nx, ny: s.ny };
+});
+return out;
+}
+
+/** 출전 명단 기준으로 미저장 좌표만 기본 포메이션으로 채움 */
+function ensureSimFieldPositions(plA, plB) {
+const defA = assignDefaultFormationNorm(plA, 'A');
+const defB = assignDefaultFormationNorm(plB, 'B');
+window.simFieldPositions.A = window.simFieldPositions.A || {};
+window.simFieldPositions.B = window.simFieldPositions.B || {};
+plA.forEach((p) => {
+if (!window.simFieldPositions.A[p.id]) window.simFieldPositions.A[p.id] = { ...defA[p.id] };
+});
+plB.forEach((p) => {
+if (!window.simFieldPositions.B[p.id]) window.simFieldPositions.B[p.id] = { ...defB[p.id] };
+});
+Object.keys(window.simFieldPositions.A).forEach((id) => {
+if (!plA.some((p) => p.id === id)) delete window.simFieldPositions.A[id];
+});
+Object.keys(window.simFieldPositions.B).forEach((id) => {
+if (!plB.some((p) => p.id === id)) delete window.simFieldPositions.B[id];
+});
+saveSimFieldPositionsToStorage();
+}
+
+/** 중계 프레임용: 포지션·공 흐름·시간에 따른 미세 이동(정규화 좌표 오프셋) */
+function simOrganicOffsetNorm(p, teamIsA, o) {
+const pos = p.pos || '미정';
+const attackA = o.attackA;
+const channel = o.channel || 'center';
+const phase = o.phase || 'build';
+const simT = ((o.halfIdx || 0) * 1200 + (o.simSec || 0)) * 0.5 + (String(p.id).length % 7);
+const t = simT * 0.035;
+const cy = channel === 'left' ? -0.11 : channel === 'right' ? 0.11 : 0;
+const atkTeam = attackA ? 'A' : 'B';
+const myTeam = teamIsA ? 'A' : 'B';
+const attacking = atkTeam === myTeam;
+const ovrF = (getOVR(p) / 99) * 0.55 + 0.45;
+let nx = 0;
+let ny = 0;
+if (pos === 'Goleiro') {
+nx = (attacking ? 0.018 : -0.012) * ovrF;
+ny = cy * 0.55 + Math.sin(t * 0.65) * 0.042;
+} else if (pos === 'Fixo') {
+nx = (attacking ? 0.04 : -0.028) * (phase === 'danger' ? 1.15 : 1) * ovrF;
+ny = cy * 0.28 + Math.sin(t * 1.05 + 0.8) * 0.038;
+} else if (pos === 'Ala') {
+nx = (attacking ? 0.055 : -0.032) * ovrF;
+ny = (channel === 'left' ? -0.12 : channel === 'right' ? 0.12 : cy) * 0.75 + Math.sin(t + 1.2) * 0.048;
+} else if (pos === 'Pivo') {
+nx = (attacking ? 0.075 : -0.045) * ovrF;
+ny = Math.sin(t * 0.88 + 0.3) * 0.052;
+} else {
+nx = Math.sin(t * 0.55) * 0.028 * ovrF;
+ny = cy * 0.35 + Math.cos(t * 0.75) * 0.04;
+}
+if (!teamIsA) nx = -nx;
+return { dx: nx * 0.9, dy: ny * 0.9 };
+}
+
+function drawSimPlayersOnPitch(ctx, px0, py0, pw, ph, opts) {
+const plA = opts.plA;
+const plB = opts.plB;
+if (!plA || !plB || !plA.length || !plB.length) return;
+const halfIdx = opts.halfIdx ?? 0;
+const simSec = opts.simSec ?? 0;
+const drawOne = (p, team) => {
+const teamIsA = team === 'A';
+const base = window.simFieldPositions[team][p.id] || { nx: teamIsA ? 0.25 : 0.75, ny: 0.5 };
+const off = simOrganicOffsetNorm(p, teamIsA, { ...opts, halfIdx, simSec });
+let nx = base.nx + off.dx;
+let ny = base.ny + off.dy;
+nx = Math.max(0.04, Math.min(0.96, nx));
+ny = Math.max(0.08, Math.min(0.92, ny));
+const x = px0 + nx * pw;
+const y = py0 + ny * ph;
+const col = teamIsA ? 'rgba(248,113,113,0.92)' : 'rgba(96,165,250,0.92)';
+const colRing = teamIsA ? 'rgba(127,29,29,0.95)' : 'rgba(30,64,175,0.95)';
+ctx.beginPath();
+ctx.arc(x, y, 10, 0, Math.PI * 2);
+ctx.fillStyle = col;
+ctx.fill();
+ctx.lineWidth = 2;
+ctx.strokeStyle = colRing;
+ctx.stroke();
+ctx.fillStyle = 'rgba(15,23,42,0.92)';
+ctx.font = '700 8px "Malgun Gothic","Noto Sans KR",sans-serif';
+ctx.textAlign = 'center';
+ctx.textBaseline = 'middle';
+const initial = String(p.name || '?').charAt(0);
+ctx.fillText(initial, x, y + 3);
+ctx.font = '600 7px "Malgun Gothic","Noto Sans KR",sans-serif';
+ctx.fillStyle = 'rgba(226,232,240,0.95)';
+ctx.fillText(String(getOVR(p)), x, y - 12);
+ctx.textAlign = 'left';
+ctx.textBaseline = 'alphabetic';
+};
+plA.forEach((p) => drawOne(p, 'A'));
+plB.forEach((p) => drawOne(p, 'B'));
+}
+
+/** 전술 보드 캔버스: 배치 전용(공 없음) */
+window.drawSimTacticalBoard = () => {
+const canvas = document.getElementById('simTacticalCanvas');
+if (!canvas || !canvas.getContext) return;
+const rawA = getSimMatchRoster('A');
+const rawB = getSimMatchRoster('B');
+const padA = padSimRosterWithBots(rawA, 'A');
+const padB = padSimRosterWithBots(rawB, 'B');
+ensureSimFieldPositions(padA.roster, padB.roster);
+const ctx = canvas.getContext('2d');
+const wrap = canvas.parentElement;
+const cssW = Math.min(720, Math.max(260, wrap?.clientWidth || 320));
+const cssH = Math.max(180, Math.min(340, Math.floor(cssW * 0.42)));
+const dpr = Math.min(2, window.devicePixelRatio || 1);
+canvas.width = Math.floor(cssW * dpr);
+canvas.height = Math.floor(cssH * dpr);
+canvas.style.width = `${cssW}px`;
+canvas.style.height = `${cssH}px`;
+ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+const W = cssW;
+const H = cssH;
+const px0 = 12;
+const py0 = 10;
+const pw = W - 24;
+const ph = H - 36;
+const midX = px0 + pw / 2;
+ctx.fillStyle = '#0b1220';
+ctx.fillRect(0, 0, W, H);
+const grass = ctx.createLinearGradient(px0, py0, px0 + pw, py0 + ph);
+grass.addColorStop(0, '#14532d');
+grass.addColorStop(0.45, '#166534');
+grass.addColorStop(1, '#14532d');
+ctx.fillStyle = grass;
+ctx.fillRect(px0, py0, pw, ph);
+drawFutsalPitchMarkings(ctx, px0, py0, pw, ph, midX);
+ctx.strokeStyle = 'rgba(34,211,238,0.35)';
+ctx.setLineDash([6, 4]);
+ctx.beginPath();
+ctx.moveTo(midX, py0);
+ctx.lineTo(midX, py0 + ph);
+ctx.stroke();
+ctx.setLineDash([]);
+ctx.fillStyle = 'rgba(226,232,240,0.85)';
+ctx.font = '600 9px "Malgun Gothic","Noto Sans KR",sans-serif';
+ctx.fillText('레드 진영 ←  |  → 블루 진영', px0 + 4, py0 + ph + 14);
+drawSimPlayersOnPitch(ctx, px0, py0, pw, ph, {
+plA: padA.roster,
+plB: padB.roster,
+attackA: true,
+channel: 'center',
+phase: 'build',
+outcome: 'neutral',
+halfIdx: 0,
+simSec: 0
+});
+};
+
+window.renderSimTacticalStrips = () => {
+const elA = document.getElementById('simTacticalStripA');
+const elB = document.getElementById('simTacticalStripB');
+if (!elA || !elB) return;
+const rawA = getSimMatchRoster('A');
+const rawB = getSimMatchRoster('B');
+const padA = padSimRosterWithBots(rawA, 'A');
+const padB = padSimRosterWithBots(rawB, 'B');
+const chip = (p, team) => {
+const br = team === 'A' ? 'border-red-700/60 bg-red-950/50 text-red-100' : 'border-blue-700/60 bg-blue-950/50 text-blue-100';
+const pt = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
+return `<button type="button" draggable="true" class="sim-tactical-chip text-[10px] font-bold px-2 py-1 rounded-lg border ${br} whitespace-nowrap shrink-0" data-sim-chip-team="${team}" data-sim-chip-id="${escapeAttr(p.id)}">${escapeHtml(p.name)} <span class="opacity-70">${pt}</span></button>`;
+};
+elA.innerHTML = padA.roster.map((p) => chip(p, 'A')).join('') || '<span class="text-[10px] text-slate-500">레드 인원 없음</span>';
+elB.innerHTML = padB.roster.map((p) => chip(p, 'B')).join('') || '<span class="text-[10px] text-slate-500">블루 인원 없음</span>';
+};
 
 /** 모의경기 포지션 약칭 (중계용) */
 function simPosShort(p) {
@@ -2132,6 +2358,8 @@ const plA = padA.roster;
 const plB = padB.roster;
 const usedBots = padA.bots > 0 || padB.bots > 0;
 if (plA.length !== 5 || plB.length !== 5) return window.customAlert('출전 선수를 구성할 수 없습니다.');
+ensureSimFieldPositions(plA, plB);
+document.getElementById('simTacticalSection')?.classList.add('hidden');
 
 const tabSimRoot = document.getElementById('tabSim');
 const elTeamA = tabSimRoot?.querySelector('input[data-sim-team="A"]') || document.getElementById('simTeamAName');
@@ -2227,7 +2455,16 @@ const strAtk = attackA ? strA : strB;
 const strDef = attackA ? strB : strA;
 
 let ch = pickSimChannel();
-const pitch = (phase, outcome, chOverride) => ({ attackA, channel: chOverride !== undefined ? chOverride : ch, phase, outcome: outcome || 'neutral' });
+const pitch = (phase, outcome, chOverride) => ({
+attackA,
+channel: chOverride !== undefined ? chOverride : ch,
+phase,
+outcome: outcome || 'neutral',
+plA,
+plB,
+halfIdx,
+simSec
+});
 
 if (Math.random() < 0.05) {
 ch = Math.random() < 0.5 ? 'left' : 'right';
@@ -2358,13 +2595,14 @@ await append(`${prefix} ${defName}: [픽소] ${fx.name} 페널티 프론트 클�
 }
 };
 
+const kickPitch = { attackA: true, channel: 'center', phase: 'build', outcome: 'neutral', plA, plB, halfIdx: 0, simSec: 0 };
 try {
-await append(`━━ ${teamAName} vs ${teamBName} · 모의 풋살 (5vs5, 시뮬 전·후반 각 20분 — 시청은 각 2분 비례) ━━`);
+await append(`━━ ${teamAName} vs ${teamBName} · 모의 풋살 (5vs5, 시뮬 전·후반 각 20분 — 시청은 각 2분 비례) ━━`, kickPitch);
 if (usedBots) {
-await append(`[연습 모드] 실제 소속 인원이 5명 미만인 팀은 자동 보조 선수로 채워 5vs5로 진행합니다. (가상 인원은 기록에 반영되지 않습니다)`);
+await append(`[연습 모드] 실제 소속 인원이 5명 미만인 팀은 자동 보조 선수로 채워 5vs5로 진행합니다. (가상 인원은 기록에 반영되지 않습니다)`, kickPitch);
 }
-await append(`전력 요약: ${teamAName} 출전 OVR 합 ${strA}  |  ${teamBName} 출전 OVR 합 ${strB}`);
-await append(`[전반 00:00] 킥오프 — 좁은 풋살 코트에서 공이 굴러갑니다.`);
+await append(`전력 요약: ${teamAName} 출전 OVR 합 ${strA}  |  ${teamBName} 출전 OVR 합 ${strB}`, kickPitch);
+await append(`[전반 00:00] 킥오프 — 좁은 풋살 코트에서 공이 굴러갑니다.`, kickPitch);
 
 for (let halfIdx = 0; halfIdx < 2; halfIdx++) {
 setMatchClock(halfIdx, 0);
@@ -2386,6 +2624,9 @@ await append(`(모의 시뮬레이션 종료 · 서버 기록·EXP 미반영)`);
 renderSimPostMatchStats(plA, plB, teamAName, teamBName, simStats);
 } finally {
 if (btn) { btn.disabled = false; btn.classList.remove('opacity-50', 'cursor-not-allowed'); }
+document.getElementById('simTacticalSection')?.classList.remove('hidden');
+window.drawSimTacticalBoard();
+window.renderSimTacticalStrips();
 }
 };
 
@@ -2982,6 +3223,13 @@ const team = r && (r.value === 'A' || r.value === 'B') ? r.value : 'A';
 window.setPlayerSimTeam(pid, team);
 });
 document.addEventListener('dragstart', (ev) => {
+const chip = ev.target.closest('.sim-tactical-chip');
+if (chip) {
+ev.dataTransfer.setData('text/sim-player', chip.getAttribute('data-sim-chip-id') || '');
+ev.dataTransfer.setData('text/sim-team', chip.getAttribute('data-sim-chip-team') || '');
+ev.dataTransfer.effectAllowed = 'copy';
+return;
+}
 const row = ev.target.closest('.sim-team-row');
 if (!row || row.getAttribute('draggable') !== 'true') return;
 dragSimPid = row.getAttribute('data-player-id');
@@ -3019,6 +3267,105 @@ const pOnly = window.allPlayersData.find((x) => x.id === pid);
 if (pOnly && pOnly.simTeam === toTeam) return;
 await window.setPlayerSimTeam(pid, toTeam);
 });
+}
+
+// 전술 보드: 필드 드래그·칩 드롭·기본 포메이션
+if (typeof window !== 'undefined' && !window.__simTacticalUiBound) {
+window.__simTacticalUiBound = true;
+window.resetSimFormationDefaults = () => {
+const rawA = getSimMatchRoster('A');
+const rawB = getSimMatchRoster('B');
+const padRA = padSimRosterWithBots(rawA, 'A');
+const padRB = padSimRosterWithBots(rawB, 'B');
+window.simFieldPositions.A = {};
+window.simFieldPositions.B = {};
+ensureSimFieldPositions(padRA.roster, padRB.roster);
+window.drawSimTacticalBoard();
+};
+document.getElementById('btnSimFormationReset')?.addEventListener('click', () => window.resetSimFormationDefaults());
+let __simTacticalDrag = null;
+function __simTacticalLogicalXY(canvas, clientX, clientY) {
+const rect = canvas.getBoundingClientRect();
+const dpr = Math.min(2, window.devicePixelRatio || 1);
+const lw = canvas.width / dpr;
+const lh = canvas.height / dpr;
+const x = ((clientX - rect.left) / rect.width) * lw;
+const y = ((clientY - rect.top) / rect.height) * lh;
+return { x, y, lw, lh };
+}
+function __simTacticalHit(x, y, lw, lh) {
+const px0 = 12;
+const py0 = 10;
+const pw = lw - 24;
+const ph = lh - 36;
+const padRA = padSimRosterWithBots(getSimMatchRoster('A'), 'A');
+const padRB = padSimRosterWithBots(getSimMatchRoster('B'), 'B');
+for (const team of ['A', 'B']) {
+const roster = team === 'A' ? padRA.roster : padRB.roster;
+for (let i = 0; i < roster.length; i++) {
+const p = roster[i];
+const b = window.simFieldPositions[team][p.id];
+if (!b) continue;
+const px = px0 + b.nx * pw;
+const py = py0 + b.ny * ph;
+if (Math.hypot(x - px, y - py) < 18) return { team, pid: p.id };
+}
+}
+return null;
+}
+const __tacCan = document.getElementById('simTacticalCanvas');
+if (__tacCan) {
+__tacCan.addEventListener('pointerdown', (e) => {
+if (e.button !== undefined && e.button !== 0) return;
+const o = __simTacticalLogicalXY(__tacCan, e.clientX, e.clientY);
+const h = __simTacticalHit(o.x, o.y, o.lw, o.lh);
+if (h) {
+__simTacticalDrag = h;
+try { __tacCan.setPointerCapture(e.pointerId); } catch (err) {}
+}
+});
+__tacCan.addEventListener('pointermove', (e) => {
+if (!__simTacticalDrag) return;
+const o = __simTacticalLogicalXY(__tacCan, e.clientX, e.clientY);
+const px0 = 12;
+const py0 = 10;
+const pw = o.lw - 24;
+const ph = o.lh - 36;
+let nx = (o.x - px0) / pw;
+let ny = (o.y - py0) / ph;
+nx = Math.max(0.03, Math.min(0.97, nx));
+ny = Math.max(0.06, Math.min(0.94, ny));
+window.simFieldPositions[__simTacticalDrag.team][__simTacticalDrag.pid] = { nx, ny };
+window.drawSimTacticalBoard();
+});
+const __tacUp = () => {
+if (__simTacticalDrag) {
+saveSimFieldPositionsToStorage();
+__simTacticalDrag = null;
+}
+};
+__tacCan.addEventListener('pointerup', __tacUp);
+__tacCan.addEventListener('pointercancel', __tacUp);
+__tacCan.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; });
+__tacCan.addEventListener('drop', (e) => {
+e.preventDefault();
+const pid = e.dataTransfer.getData('text/sim-player');
+const team = e.dataTransfer.getData('text/sim-team');
+if (!pid || (team !== 'A' && team !== 'B')) return;
+const o = __simTacticalLogicalXY(__tacCan, e.clientX, e.clientY);
+const px0 = 12;
+const py0 = 10;
+const pw = o.lw - 24;
+const ph = o.lh - 36;
+let nx = (o.x - px0) / pw;
+let ny = (o.y - py0) / ph;
+nx = Math.max(0.03, Math.min(0.97, nx));
+ny = Math.max(0.06, Math.min(0.94, ny));
+window.simFieldPositions[team][pid] = { nx, ny };
+saveSimFieldPositionsToStorage();
+window.drawSimTacticalBoard();
+});
+}
 }
 
 // 이벤트 리스너 세팅 등 모든 준비가 끝난 후 마지막에 시동

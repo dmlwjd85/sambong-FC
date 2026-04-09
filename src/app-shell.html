@@ -451,8 +451,8 @@
 </div>
 </div>
 
-<div id="tabSim" class="hidden space-y-6">
-<div class="glass-panel p-4 sm:p-8 rounded-3xl border-t-4 border-t-amber-500 relative overflow-hidden">
+<div id="tabSim" class="hidden space-y-6 w-full min-w-0 max-w-[100vw] overflow-x-hidden box-border">
+<div class="glass-panel p-3 sm:p-8 rounded-3xl border-t-4 border-t-amber-500 relative overflow-hidden max-w-full min-w-0">
 <div class="absolute -top-24 -right-10 w-72 h-72 bg-amber-600/15 rounded-full blur-3xl pointer-events-none"></div>
 <div class="relative z-10">
 <h3 class="text-2xl sm:text-3xl font-display text-amber-400 mb-2 flex items-center gap-3">
@@ -462,23 +462,44 @@
 <span class="text-amber-200/90 font-bold">5vs5 풋살</span> · 시뮬레이터 시간 <span class="text-amber-300 font-bold">전반 20분 + 후반 20분</span>이며, 실제 시청은 <span class="text-amber-200 font-bold">전·후반 각 2분</span> 길이로 비례 압축되어 재생됩니다. <span class="text-emerald-300">로그인한 학생 누구나</span> 프로필·라커·아래 팀 분류에서 레드/블루를 자유롭게 구성합니다. 인원이 부족하면 <span class="text-emerald-300">랜덤 보강</span>(포지션 감안) 또는 시뮬 <span class="text-slate-400">자동 보조</span>로 연습할 수 있습니다. 화면은 위쪽 <span class="text-amber-200/90">경기장</span>과 아래 <span class="text-amber-200/90">텍스트 중계</span>입니다.
 </p>
 
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-4">
-<div class="rounded-2xl border border-red-900/50 bg-red-950/30 p-4">
-<div class="flex items-center justify-between mb-2 border-b border-red-800/40 pb-2">
-<span class="font-display text-red-400 text-lg">팀 A (레드)</span>
-<input type="text" id="simTeamAName" data-sim-team="A" name="simMatchTeamA" maxlength="20" autocomplete="off" class="w-40 sm:w-48 bg-slate-900/80 border border-red-700/50 rounded-lg px-2 py-1 text-sm text-white" placeholder="팀 이름" value="삼봉 레드"/>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 min-w-0">
+<div class="rounded-2xl border border-red-900/50 bg-red-950/30 p-3 sm:p-4 min-w-0">
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2 border-b border-red-800/40 pb-2 min-w-0">
+<span class="font-display text-red-400 text-base sm:text-lg shrink-0">팀 A (레드)</span>
+<input type="text" id="simTeamAName" data-sim-team="A" name="simMatchTeamA" maxlength="20" autocomplete="off" class="w-full min-w-0 sm:w-48 bg-slate-900/80 border border-red-700/50 rounded-lg px-2 py-1 text-sm text-white" placeholder="팀 이름" value="삼봉 레드"/>
 </div>
 <p class="text-[10px] text-slate-500 mb-2" id="simCountA">대기 중…</p>
 </div>
-<div class="rounded-2xl border border-blue-900/50 bg-blue-950/30 p-4">
-<div class="flex items-center justify-between mb-2 border-b border-blue-800/40 pb-2">
-<span class="font-display text-blue-400 text-lg">팀 B (블루)</span>
-<input type="text" id="simTeamBName" data-sim-team="B" name="simMatchTeamB" maxlength="20" autocomplete="off" class="w-40 sm:w-48 bg-slate-900/80 border border-blue-700/50 rounded-lg px-2 py-1 text-sm text-white" placeholder="팀 이름" value="삼봉 블루"/>
+<div class="rounded-2xl border border-blue-900/50 bg-blue-950/30 p-3 sm:p-4 min-w-0">
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2 border-b border-blue-800/40 pb-2 min-w-0">
+<span class="font-display text-blue-400 text-base sm:text-lg shrink-0">팀 B (블루)</span>
+<input type="text" id="simTeamBName" data-sim-team="B" name="simMatchTeamB" maxlength="20" autocomplete="off" class="w-full min-w-0 sm:w-48 bg-slate-900/80 border border-blue-700/50 rounded-lg px-2 py-1 text-sm text-white" placeholder="팀 이름" value="삼봉 블루"/>
 </div>
 <p class="text-[10px] text-slate-500 mb-2" id="simCountB">대기 중…</p>
 </div>
 </div>
-<div id="simTeamBoardTab" class="rounded-2xl border border-amber-700/35 bg-slate-900/50 p-4 mb-4 shadow-inner"></div>
+<div id="simTeamBoardTab" class="rounded-2xl border border-amber-700/35 bg-slate-900/50 p-3 sm:p-4 mb-4 shadow-inner min-w-0 max-w-full overflow-x-hidden"></div>
+
+<div id="simTacticalSection" class="rounded-2xl border border-cyan-800/40 bg-slate-950/70 p-3 sm:p-4 mb-4 shadow-inner min-w-0 max-w-full overflow-x-hidden">
+<p class="text-xs font-bold text-cyan-300 mb-2 flex flex-wrap items-center gap-2"><i class="fa-solid fa-chess-board"></i> 전술 보드 <span class="text-[10px] font-normal text-slate-500">출전 명단을 필드로 드래그해 배치 · 로컬 저장</span></p>
+<div class="flex flex-col gap-2 mb-2 min-w-0">
+<div class="min-w-0">
+<span class="text-[10px] font-bold text-red-400 mr-2">레드</span>
+<div id="simTacticalStripA" class="flex gap-1 overflow-x-auto overflow-y-hidden pb-1 sim-tactical-strip -mx-0.5 px-0.5 min-h-[2.25rem]"></div>
+</div>
+<div class="min-w-0">
+<span class="text-[10px] font-bold text-blue-400 mr-2">블루</span>
+<div id="simTacticalStripB" class="flex gap-1 overflow-x-auto overflow-y-hidden pb-1 sim-tactical-strip -mx-0.5 px-0.5 min-h-[2.25rem]"></div>
+</div>
+</div>
+<div class="relative w-full max-w-full overflow-hidden rounded-xl border border-emerald-800/40 bg-[#0a1210] touch-manipulation">
+<canvas id="simTacticalCanvas" width="800" height="360" class="w-full h-auto max-h-[min(48vh,440px)] object-contain block mx-auto select-none"></canvas>
+</div>
+<div class="flex flex-wrap gap-2 mt-2">
+<button type="button" id="btnSimFormationReset" class="text-[10px] sm:text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 border border-slate-600 hover:bg-slate-700">기본 포메이션</button>
+</div>
+<p class="text-[9px] text-slate-500 mt-1.5 leading-snug">필드 위 원을 드래그해 위치를 바꿉니다. 경기 중에는 아래 경기장에서 포지션·능력치 반영 움직임이 표시됩니다.</p>
+</div>
 
 <div id="simClockWrap" class="hidden mb-3 flex justify-center">
 <div id="simMatchClock" class="font-mono text-xl sm:text-2xl text-amber-300 bg-black/70 px-6 py-2.5 rounded-xl border border-amber-600/50 shadow-lg tracking-widest">전반 00:00</div>
@@ -489,7 +510,7 @@
 <button type="button" onclick="window.simClearLog()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold px-3 py-2 rounded-lg border border-slate-600">중계 지우기</button>
 </div>
 
-<div id="simScoreBar" class="hidden mb-3 flex flex-wrap items-center justify-center gap-4 font-display text-2xl sm:text-3xl text-white bg-black/40 rounded-xl py-3 px-4 border border-amber-700/40">
+<div id="simScoreBar" class="hidden mb-3 flex flex-wrap items-center justify-center gap-2 sm:gap-4 font-display text-xl sm:text-3xl text-white bg-black/40 rounded-xl py-2 sm:py-3 px-2 sm:px-4 border border-amber-700/40 max-w-full min-w-0">
 <span id="simScoreAName" class="text-red-400"></span>
 <span id="simScoreNums" class="text-fut-gold">0 - 0</span>
 <span id="simScoreBName" class="text-blue-400"></span>
@@ -498,14 +519,14 @@
 <div id="simPostMatchStats" class="hidden mb-3 rounded-xl border border-amber-600/40 bg-gradient-to-br from-slate-900/95 to-black/80 p-3 shadow-lg"></div>
 
 <!-- 시뮬레이션: 상단 경기장(캔버스) / 하단 텍스트 중계 -->
-<div id="simLiveSplit" class="flex flex-col gap-3 w-full min-h-[min(78vh,820px)]">
-<div id="simPitchPanel" class="flex flex-col rounded-2xl border border-emerald-500/30 bg-gradient-to-b from-[#0c1810] to-[#050a08] shadow-[0_0_32px_rgba(16,185,129,0.12)] overflow-hidden shrink-0 h-[min(42vh,400px)] min-h-[200px] ring-1 ring-emerald-900/40">
-<div class="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-black/50 via-emerald-950/40 to-black/50 border-b border-emerald-800/60">
-<span class="text-[11px] text-emerald-300 font-bold tracking-wide drop-shadow">경기장 · 공 진행</span>
-<span id="simPitchBadge" class="text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-slate-800 text-slate-300">대기</span>
+<div id="simLiveSplit" class="flex flex-col gap-3 w-full min-w-0 max-w-full min-h-[min(78vh,820px)] overflow-x-hidden box-border">
+<div id="simPitchPanel" class="flex flex-col rounded-2xl border border-emerald-500/30 bg-gradient-to-b from-[#0c1810] to-[#050a08] shadow-[0_0_32px_rgba(16,185,129,0.12)] overflow-hidden shrink-0 min-h-[200px] max-h-[min(46vh,420px)] h-[min(42vh,400px)] w-full max-w-full ring-1 ring-emerald-900/40 box-border">
+<div class="flex items-center justify-between px-2 sm:px-3 py-2 bg-gradient-to-r from-black/50 via-emerald-950/40 to-black/50 border-b border-emerald-800/60 gap-2 min-w-0">
+<span class="text-[10px] sm:text-[11px] text-emerald-300 font-bold tracking-wide drop-shadow truncate">경기장 · 포지션 움직임</span>
+<span id="simPitchBadge" class="text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 shrink-0">대기</span>
 </div>
-<div class="relative flex-1 min-h-[160px] flex items-center justify-center p-2">
-<canvas id="simPitchCanvas" width="800" height="360" class="w-full h-full max-h-[min(38vh,360px)] object-contain"></canvas>
+<div class="relative flex-1 min-h-[160px] min-w-0 flex items-center justify-center p-1 sm:p-2 overflow-hidden">
+<canvas id="simPitchCanvas" width="800" height="360" class="w-full max-w-full h-auto max-h-[min(38vh,360px)] object-contain object-center"></canvas>
 </div>
 </div>
 <div class="flex flex-col flex-1 min-h-0 min-h-[240px]">
