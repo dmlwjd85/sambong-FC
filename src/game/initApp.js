@@ -1930,33 +1930,23 @@ ctx.fillStyle = 'rgba(0,0,0,0.5)';
 ctx.fillRect(px0 - 3, py0 + ph * 0.32, 3, ph * 0.36);
 ctx.fillRect(px0 + pw, py0 + ph * 0.32, 3, ph * 0.36);
 
-if (opts.plA && opts.plB && opts.plA.length && opts.plB.length) {
-drawSimPlayersOnPitch(ctx, px0, py0, pw, ph, opts);
-}
-
 const chY = { left: 0.22, center: 0.5, right: 0.78 };
 const lane = chY[opts.channel] ?? 0.5;
-let ballX = midX;
 const attackA = opts.attackA;
-if (opts.phase === 'build') ballX = attackA ? px0 + pw * 0.28 : px0 + pw * 0.72;
-else if (opts.phase === 'progress') ballX = attackA ? px0 + pw * 0.55 : px0 + pw * 0.45;
-else ballX = attackA ? px0 + pw * 0.82 : px0 + pw * 0.18;
+let ballNx;
+if (opts.phase === 'build') ballNx = attackA ? 0.28 : 0.72;
+else if (opts.phase === 'progress') ballNx = attackA ? 0.55 : 0.45;
+else ballNx = attackA ? 0.82 : 0.18;
+const ballNy = lane;
+const ballX = px0 + pw * ballNx;
+const ballY = py0 + ph * ballNy;
 
-const ballY = py0 + ph * lane;
+if (opts.plA && opts.plB && opts.plA.length && opts.plB.length) {
+drawSimPlayersOnPitch(ctx, px0, py0, pw, ph, { ...opts, ballNx, ballNy });
+}
+
 const oc = opts.outcome === 'success' ? '#4ade80' : opts.outcome === 'fail' ? '#f87171' : '#fb923c';
-
-ctx.fillStyle = '#facc15';
-ctx.strokeStyle = '#422006';
-ctx.lineWidth = 1;
-ctx.beginPath();
-ctx.arc(ballX, ballY, 7, 0, Math.PI * 2);
-ctx.fill();
-ctx.stroke();
-ctx.strokeStyle = oc;
-ctx.lineWidth = 3;
-ctx.beginPath();
-ctx.arc(ballX, ballY, 11, 0, Math.PI * 2);
-ctx.stroke();
+drawSoccerBallSprite(ctx, ballX, ballY, Math.max(7, Math.min(11, pw * 0.018)), oc);
 
 const gaW = pw * 0.13;
 const goalTargetX = attackA ? px0 + pw - gaW * 0.45 : px0 + gaW * 0.45;
@@ -2104,55 +2094,87 @@ if (!plB.some((p) => p.id === id)) delete window.simFieldPositions.B[id];
 saveSimFieldPositionsToStorage();
 }
 
-/** 중계 프레임용: 포지션·공 흐름·시간에 따른 미세 이동(정규화 좌표 오프셋) */
-function simOrganicOffsetNorm(p, teamIsA, o) {
+/** 공격/수비·공 위치·채널에 따라 홈에서 벗어나 상대 진영과 섞이는 실시간 좌표(정규화 0~1) */
+function simPlayerLiveNorm(p, teamIsA, home, o) {
 const pos = p.pos || '미정';
+const ballNx = typeof o.ballNx === 'number' ? o.ballNx : 0.5;
+const ballNy = typeof o.ballNy === 'number' ? o.ballNy : 0.5;
 const attackA = o.attackA;
 const channel = o.channel || 'center';
 const phase = o.phase || 'build';
-const simT = ((o.halfIdx || 0) * 1200 + (o.simSec || 0)) * 0.5 + (String(p.id).length % 7);
-const t = simT * 0.035;
-const cy = channel === 'left' ? -0.11 : channel === 'right' ? 0.11 : 0;
-const atkTeam = attackA ? 'A' : 'B';
-const myTeam = teamIsA ? 'A' : 'B';
-const attacking = atkTeam === myTeam;
-const ovrF = (getOVR(p) / 99) * 0.55 + 0.45;
-let nx = 0;
-let ny = 0;
-if (pos === 'Goleiro') {
-nx = (attacking ? 0.018 : -0.012) * ovrF;
-ny = cy * 0.55 + Math.sin(t * 0.65) * 0.042;
-} else if (pos === 'Fixo') {
-nx = (attacking ? 0.04 : -0.028) * (phase === 'danger' ? 1.15 : 1) * ovrF;
-ny = cy * 0.28 + Math.sin(t * 1.05 + 0.8) * 0.038;
-} else if (pos === 'Ala') {
-nx = (attacking ? 0.055 : -0.032) * ovrF;
-ny = (channel === 'left' ? -0.12 : channel === 'right' ? 0.12 : cy) * 0.75 + Math.sin(t + 1.2) * 0.048;
-} else if (pos === 'Pivo') {
-nx = (attacking ? 0.075 : -0.045) * ovrF;
-ny = Math.sin(t * 0.88 + 0.3) * 0.052;
+const t = ((o.halfIdx || 0) * 1200 + (o.simSec || 0)) * 0.09 + (String(p.id).length % 11) * 0.37;
+const weAttack = (attackA && teamIsA) || (!attackA && !teamIsA);
+const phZ = phase === 'danger' ? 1.35 : phase === 'progress' ? 1.05 : 0.82;
+const cyShift = channel === 'left' ? -0.14 : channel === 'right' ? 0.14 : 0;
+let nx = home.nx;
+let ny = home.ny;
+const wBall = pos === 'Goleiro' ? 0.18 : pos === 'Fixo' ? 0.38 : pos === 'Ala' ? 0.52 : pos === 'Pivo' ? 0.58 : 0.42;
+nx += (ballNx - nx) * wBall * 0.55 * phZ;
+ny += (ballNy - ny) * wBall * 0.5 * phZ;
+ny += cyShift * 0.2 * (weAttack ? 1 : 0.65);
+if (weAttack) {
+const push = (pos === 'Goleiro' ? 0.03 : pos === 'Fixo' ? 0.1 : pos === 'Pivo' ? 0.16 : 0.12) * phZ;
+nx += teamIsA ? push : -push;
 } else {
-nx = Math.sin(t * 0.55) * 0.028 * ovrF;
-ny = cy * 0.35 + Math.cos(t * 0.75) * 0.04;
+const drop = (pos === 'Goleiro' ? 0.02 : 0.08) * phZ;
+nx += teamIsA ? -drop : drop;
+ny += (0.5 - ny) * 0.12 * phZ;
 }
-if (!teamIsA) nx = -nx;
-return { dx: nx * 0.9, dy: ny * 0.9 };
+if (phase === 'danger' && pos !== 'Goleiro') {
+nx += (ballNx - nx) * 0.22;
+ny += (ballNy - ny) * 0.18;
+}
+const ovrJ = (getOVR(p) / 99) * 0.045;
+nx += Math.sin(t + (teamIsA ? 0 : 2)) * ovrJ;
+ny += Math.cos(t * 0.85 + (pos === 'Ala' ? 1 : 0)) * ovrJ * 1.1;
+nx += Math.sin(t * 0.4) * 0.028;
+ny += Math.cos(t * 0.55) * 0.026;
+nx = Math.max(0.03, Math.min(0.97, nx));
+ny = Math.max(0.06, Math.min(0.94, ny));
+return { nx, ny };
+}
+
+/** 캔버스용 축구공 스프라이트(원형·패널 패턴) */
+function drawSoccerBallSprite(ctx, x, y, radius, ringColor) {
+ctx.save();
+ctx.beginPath();
+ctx.arc(x, y, radius, 0, Math.PI * 2);
+const grd = ctx.createRadialGradient(x - radius * 0.3, y - radius * 0.3, 0, x, y, radius * 1.2);
+grd.addColorStop(0, '#ffffff');
+grd.addColorStop(0.55, '#f1f5f9');
+grd.addColorStop(1, '#cbd5e1');
+ctx.fillStyle = grd;
+ctx.fill();
+ctx.strokeStyle = '#334155';
+ctx.lineWidth = Math.max(1, radius * 0.12);
+ctx.stroke();
+ctx.fillStyle = '#0f172a';
+for (let i = 0; i < 5; i++) {
+const a = (i / 5) * Math.PI * 2 - Math.PI / 2 + 0.4;
+ctx.beginPath();
+ctx.arc(x + Math.cos(a) * radius * 0.42, y + Math.sin(a) * radius * 0.42, radius * 0.2, 0, Math.PI * 2);
+ctx.fill();
+}
+ctx.beginPath();
+ctx.arc(x + radius * 0.15, y - radius * 0.35, radius * 0.12, 0, Math.PI * 2);
+ctx.fillStyle = 'rgba(15,23,42,0.75)';
+ctx.fill();
+ctx.beginPath();
+ctx.arc(x, y, radius + 2.5, 0, Math.PI * 2);
+ctx.strokeStyle = ringColor || 'rgba(251,146,60,0.9)';
+ctx.lineWidth = 2;
+ctx.stroke();
+ctx.restore();
 }
 
 function drawSimPlayersOnPitch(ctx, px0, py0, pw, ph, opts) {
 const plA = opts.plA;
 const plB = opts.plB;
 if (!plA || !plB || !plA.length || !plB.length) return;
-const halfIdx = opts.halfIdx ?? 0;
-const simSec = opts.simSec ?? 0;
 const drawOne = (p, team) => {
 const teamIsA = team === 'A';
 const base = window.simFieldPositions[team][p.id] || { nx: teamIsA ? 0.25 : 0.75, ny: 0.5 };
-const off = simOrganicOffsetNorm(p, teamIsA, { ...opts, halfIdx, simSec });
-let nx = base.nx + off.dx;
-let ny = base.ny + off.dy;
-nx = Math.max(0.04, Math.min(0.96, nx));
-ny = Math.max(0.08, Math.min(0.92, ny));
+const { nx, ny } = simPlayerLiveNorm(p, teamIsA, base, opts);
 const x = px0 + nx * pw;
 const y = py0 + ny * ph;
 const col = teamIsA ? 'rgba(248,113,113,0.92)' : 'rgba(96,165,250,0.92)';
@@ -2233,7 +2255,9 @@ channel: 'center',
 phase: 'build',
 outcome: 'neutral',
 halfIdx: 0,
-simSec: 0
+simSec: 0,
+ballNx: 0.5,
+ballNy: 0.5
 });
 };
 
