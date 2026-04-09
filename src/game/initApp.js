@@ -1948,14 +1948,39 @@ if (hp) {
 const teamIsA = opts.plA.some((x) => x.id === hp.id);
 const base = window.simFieldPositions[teamIsA ? 'A' : 'B'][hp.id] || { nx: teamIsA ? 0.25 : 0.75, ny: 0.5 };
 const hPos = simPlayerLiveNorm(hp, teamIsA, base, { ...opts, ballNx: baseBallNx, ballNy: baseBallNy });
-const fwd = opts.attackA ? 1 : -1;
-ballNx = Math.max(0.04, Math.min(0.96, hPos.nx + fwd * 0.046));
-ballNy = Math.max(0.06, Math.min(0.94, hPos.ny + (baseBallNy - hPos.ny) * 0.38));
+const towardGoal = teamIsA ? 1 : -1;
+ballNx = Math.max(0.03, Math.min(0.97, hPos.nx + towardGoal * 0.007));
+ballNy = Math.max(0.06, Math.min(0.94, hPos.ny));
 }
 }
 const portraitMap = plAll.length ? await buildSimPitchPortraitMap(plAll) : new Map();
 const ballX = px0 + pw * ballNx;
 const ballY = py0 + ph * ballNy;
+
+const flow = opts.ballFlowTrail || [];
+if (flow.length >= 2) {
+ctx.save();
+ctx.strokeStyle = 'rgba(250, 204, 21, 0.55)';
+ctx.lineWidth = 2.6;
+ctx.lineJoin = 'round';
+ctx.setLineDash([5, 4]);
+ctx.beginPath();
+flow.forEach((pt, i) => {
+const tx = px0 + pt.nx * pw;
+const ty = py0 + pt.ny * ph;
+if (i === 0) ctx.moveTo(tx, ty);
+else ctx.lineTo(tx, ty);
+});
+ctx.stroke();
+ctx.setLineDash([]);
+flow.forEach((pt) => {
+ctx.beginPath();
+ctx.arc(px0 + pt.nx * pw, py0 + pt.ny * ph, 3.2, 0, Math.PI * 2);
+ctx.fillStyle = 'rgba(251, 191, 36, 0.92)';
+ctx.fill();
+});
+ctx.restore();
+}
 
 if (opts.plA && opts.plB && opts.plA.length && opts.plB.length) {
 drawSimPlayersOnPitch(ctx, px0, py0, pw, ph, { ...opts, ballNx, ballNy, portraitMap });
@@ -2066,12 +2091,13 @@ localStorage.setItem(SIM_FIELD_LS_KEY, JSON.stringify(window.simFieldPositions))
 }
 loadSimFieldPositionsFromStorage();
 
+/** 기본 포메이션: 레드 기준 — 공격 시 픽소는 중앙선 부근, 측면·피보는 넓고 전진 */
 const SIM_DEFAULT_SLOTS_A = [
-{ nx: 0.11, ny: 0.5 },
-{ nx: 0.22, ny: 0.28 },
-{ nx: 0.26, ny: 0.5 },
-{ nx: 0.22, ny: 0.72 },
-{ nx: 0.42, ny: 0.5 }
+{ nx: 0.1, ny: 0.5 },
+{ nx: 0.48, ny: 0.5 },
+{ nx: 0.3, ny: 0.16 },
+{ nx: 0.3, ny: 0.84 },
+{ nx: 0.54, ny: 0.48 }
 ];
 const SIM_DEFAULT_SLOTS_B = SIM_DEFAULT_SLOTS_A.map((s) => ({ nx: 1 - s.nx, ny: s.ny }));
 
@@ -2129,18 +2155,28 @@ nx += (ballNx - nx) * wBall * 0.55 * phZ;
 ny += (ballNy - ny) * wBall * 0.5 * phZ;
 ny += cyShift * 0.2 * (weAttack ? 1 : 0.65);
 if (weAttack) {
-const push = (pos === 'Goleiro' ? 0.03 : pos === 'Fixo' ? 0.1 : pos === 'Pivo' ? 0.16 : 0.12) * phZ;
+const push = (pos === 'Goleiro' ? 0.03 : pos === 'Fixo' ? 0.08 : pos === 'Pivo' ? 0.18 : 0.14) * phZ;
 nx += teamIsA ? push : -push;
-if (pos !== 'Goleiro') {
-const wingSpread = 0.26 * phZ;
+if (pos === 'Fixo') {
+const midLine = teamIsA ? 0.5 : 0.5;
+nx += (midLine - nx) * 0.42 * phZ;
+ny += (0.5 - ny) * 0.22 * phZ;
+} else if (pos !== 'Goleiro') {
+const wingSpread = 0.34 * phZ;
 ny += (home.ny - 0.5) * wingSpread;
 const sideBias = Math.abs(home.ny - 0.5);
-nx += (teamIsA ? 1 : -1) * sideBias * 0.07 * phZ;
+nx += (teamIsA ? 1 : -1) * (0.1 * phZ + sideBias * 0.09 * phZ);
+if (pos === 'Ala' || pos === 'Pivo') {
+nx += (teamIsA ? 1 : -1) * 0.06 * phZ;
+}
 }
 } else {
-const drop = (pos === 'Goleiro' ? 0.02 : 0.08) * phZ;
+const drop = (pos === 'Goleiro' ? 0.02 : pos === 'Fixo' ? 0.1 : 0.07) * phZ;
 nx += teamIsA ? -drop : drop;
-ny += (0.5 - ny) * 0.12 * phZ;
+ny += (0.5 - ny) * 0.26 * phZ;
+if (pos !== 'Goleiro' && pos !== 'Fixo') {
+nx += (teamIsA ? -1 : 1) * 0.03 * phZ;
+}
 }
 if (phase === 'danger' && pos !== 'Goleiro') {
 nx += (ballNx - nx) * 0.22;
@@ -2154,6 +2190,22 @@ ny += Math.cos(t * 0.55) * 0.026;
 nx = Math.max(0.03, Math.min(0.97, nx));
 ny = Math.max(0.06, Math.min(0.94, ny));
 return { nx, ny };
+}
+
+/** 볼 소유자 정규화 좌표(중계 캔버스·연속 공 흐름 점과 동일 기준) */
+function simHolderBallNorm(holder, opts) {
+if (!holder || !opts.plA || !opts.plB) return { nx: 0.5, ny: 0.5 };
+const teamIsA = opts.plA.some((x) => x.id === holder.id);
+const base = window.simFieldPositions[teamIsA ? 'A' : 'B'][holder.id] || { nx: teamIsA ? 0.25 : 0.75, ny: 0.5 };
+const chY = { left: 0.22, center: 0.5, right: 0.78 };
+const lane = chY[opts.channel] ?? 0.5;
+const attackA = opts.attackA;
+let baseBallNx;
+if (opts.phase === 'build') baseBallNx = attackA ? 0.28 : 0.72;
+else if (opts.phase === 'progress') baseBallNx = attackA ? 0.55 : 0.45;
+else baseBallNx = attackA ? 0.82 : 0.18;
+const baseBallNy = lane;
+return simPlayerLiveNorm(holder, teamIsA, base, { ...opts, ballNx: baseBallNx, ballNy: baseBallNy });
 }
 
 /** 시뮬 피치: 프로필 이미지 URL별 로드 캐시 */
@@ -2521,7 +2573,11 @@ if (el) el.textContent = `${halfLabel} ${String(m).padStart(2, '0')}:${String(s)
 /** 중계 텍스트(하단) + 상단 경기장 캔버스 갱신 */
 const append = async (line, pitchOpts) => {
 if (!logEl) return;
-if (pitchOpts) await drawSimPitchLive(pitchOpts);
+if (pitchOpts) {
+applySimChainAndFlow(pitchOpts);
+await drawSimPitchLive({ ...pitchOpts, ballFlowTrail: [...simBallFlowTrail] });
+if (pitchOpts.isGoalShot) simBallFlowTrail = [];
+}
 const tImg = await simBroadcastTextToImage(line);
 logEl.appendChild(tImg);
 logEl.scrollTo({ top: logEl.scrollHeight, behavior: 'smooth' });
@@ -2539,6 +2595,58 @@ if (u < 0.76) return 'right';
 return 'center';
 };
 let sideAttackMomentum = 0;
+/** 공격 측 연속 성공(패스·드리블 등) — 4회 이상이면 다음 슛에 보너스 */
+let simChainSuccess = 0;
+/** 연속 패스·드리블 궤적(정규화 좌표, 캔버스 점선) */
+let simBallFlowTrail = [];
+/** 공격 실패 시 다음 이벤트 공격 방향(상대 턴) */
+let possessionNextAttackA = null;
+
+function applySimChainAndFlow(opts) {
+if (opts.isGoalShot) {
+if (opts.ballHolderId && opts.plA && opts.plB) {
+const gHolder = [...opts.plA, ...opts.plB].find((p) => p.id === opts.ballHolderId);
+if (gHolder) {
+const { nx, ny } = simHolderBallNorm(gHolder, opts);
+simBallFlowTrail.push({ nx, ny });
+if (simBallFlowTrail.length > 12) simBallFlowTrail.shift();
+}
+}
+simChainSuccess = 0;
+return;
+}
+if (!opts.ballHolderId || !opts.plA || !opts.plB) return;
+const holder = [...opts.plA, ...opts.plB].find((p) => p.id === opts.ballHolderId);
+if (!holder) return;
+const atk = opts.attackA ? opts.plA : opts.plB;
+const atkSet = new Set(atk.map((p) => p.id));
+const holderIsAtk = atkSet.has(holder.id);
+if (opts.outcome === 'success' && holderIsAtk) {
+simChainSuccess++;
+const { nx, ny } = simHolderBallNorm(holder, opts);
+simBallFlowTrail.push({ nx, ny });
+if (simBallFlowTrail.length > 12) simBallFlowTrail.shift();
+return;
+}
+if (opts.outcome === 'neutral' && holderIsAtk) {
+const { nx, ny } = simHolderBallNorm(holder, opts);
+simBallFlowTrail.push({ nx, ny });
+if (simBallFlowTrail.length > 12) simBallFlowTrail.shift();
+return;
+}
+if (opts.outcome === 'fail') {
+simChainSuccess = 0;
+const { nx, ny } = simHolderBallNorm(holder, opts);
+simBallFlowTrail = [{ nx, ny }];
+possessionNextAttackA = !opts.attackA;
+return;
+}
+if (opts.outcome === 'neutral' && !holderIsAtk) {
+simChainSuccess = 0;
+const { nx, ny } = simHolderBallNorm(holder, opts);
+simBallFlowTrail = [{ nx, ny }];
+}
+}
 
 const trySecondEvent = async (halfIdx, simSec) => {
 const halfLabel = halfIdx === 0 ? '전반' : '후반';
@@ -2547,7 +2655,11 @@ const ss = String(simSec % 60).padStart(2, '0');
 const prefix = `[${halfLabel} ${mm}:${ss}]`;
 if (Math.random() > SIM_EVENT_PROB_PER_SEC) return;
 
-const attackA = Math.random() < ratio + (Math.random() * 0.08 - 0.04);
+let attackA = Math.random() < ratio + (Math.random() * 0.08 - 0.04);
+if (possessionNextAttackA !== null) {
+attackA = possessionNextAttackA;
+possessionNextAttackA = null;
+}
 const atk = attackA ? plA : plB;
 const def = attackA ? plB : plA;
 const atkName = attackA ? teamAName : teamBName;
@@ -2556,7 +2668,7 @@ const strAtk = attackA ? strA : strB;
 const strDef = attackA ? strB : strA;
 
 let ch = pickSimChannel();
-const pitch = (phase, outcome, chOverride, ballHolder) => ({
+const pitch = (phase, outcome, chOverride, ballHolder, extra) => ({
 attackA,
 channel: chOverride !== undefined ? chOverride : ch,
 phase,
@@ -2565,7 +2677,8 @@ plA,
 plB,
 halfIdx,
 simSec,
-ballHolderId: ballHolder && ballHolder.id ? ballHolder.id : null
+ballHolderId: ballHolder && ballHolder.id ? ballHolder.id : null,
+isGoalShot: !!(extra && extra.isGoalShot)
 });
 
 const passOk = (a, b) => {
@@ -2597,13 +2710,14 @@ const shot = getOVR(finisher) + Math.random() * 14 + sideAttackMomentum * 2;
 const save = getOVR(gk) * 1.06 + Math.random() * 11;
 const bias = (strAtk - strDef) * 0.017;
 const sideGoalBonus = 0.95;
-if (shot + bias + sideGoalBonus > save + 8) {
+const chainShotBonus = simChainSuccess >= 4 ? 28 : 0;
+if (shot + bias + sideGoalBonus + chainShotBonus > save + 8) {
 if (attackA) sa++; else sb++;
 updScore();
 bumpStat('goals', finisher.id);
 bumpStat('assists', w.id);
 sideAttackMomentum *= 0.2;
-await append(`${prefix} ⚽ 골! [컷백→슛] ${finisher.name} 마무리! (${sa}-${sb})`, pitch('danger', 'success', sideCh, finisher));
+await append(`${prefix} ⚽ 골! [컷백→슛] ${finisher.name} 마무리! (${sa}-${sb})`, pitch('danger', 'success', sideCh, finisher, { isGoalShot: true }));
 } else if (shot + bias > save - 2) {
 bumpStat('saves', gk.id);
 sideAttackMomentum *= 0.45;
@@ -2639,13 +2753,14 @@ const fast = atk.filter((x) => x.pos === 'Pivo' || x.pos === 'Ala' || x.pos === 
 const runner = fast.length ? pick(fast) : pick(atk);
 const gk = gkOf(def);
 const duel = getOVR(runner) - getOVR(gk) * 0.82 + Math.random() * 10 + (strAtk - strDef) * 0.02;
+const chainShotBonusCa = simChainSuccess >= 4 ? 14 : 0;
 await append(`${prefix} ${atkName}: 역습! ${runner.name} vs ${defName} 골레이로 ${gk.name} 1대1.`, pitch('danger', 'neutral', ch, runner));
-if (duel > 7.2 && Math.random() < 0.4) {
+if (duel + chainShotBonusCa > 7.2 && Math.random() < 0.4) {
 if (attackA) sa++; else sb++;
 updScore();
 bumpStat('goals', runner.id);
 sideAttackMomentum *= 0.28;
-await append(`${prefix} ⚽ ${runner.name} 침착하게 마무리! 역습 골! (${sa}-${sb})`, pitch('danger', 'success', ch, runner));
+await append(`${prefix} ⚽ ${runner.name} 침착하게 마무리! 역습 골! (${sa}-${sb})`, pitch('danger', 'success', ch, runner, { isGoalShot: true }));
 } else if (duel > 3.8 && Math.random() < 0.58) {
 bumpStat('saves', gk.id);
 await append(`${prefix} ${defName}: ${gk.name} 각도 좁혀 1대1 선방.`, pitch('danger', 'fail', ch, gk));
@@ -2719,7 +2834,8 @@ const shot = getOVR(p) + Math.random() * 14 + sideAttackMomentum * 1.85;
 const save = getOVR(gk) * 1.06 + Math.random() * 11;
 const bias = (strAtk - strDef) * 0.017;
 const sideGoalBonus = (ch === 'left' || ch === 'right') ? 0.85 : 0;
-if (shot + bias + sideGoalBonus > save + 8) {
+const chainShotBonus = simChainSuccess >= 4 ? 28 : 0;
+if (shot + bias + sideGoalBonus + chainShotBonus > save + 8) {
 if (attackA) sa++; else sb++;
 updScore();
 const mates = atk.filter((x) => x.id !== p.id);
@@ -2727,7 +2843,7 @@ const assi = mates.length ? pick(mates) : null;
 bumpStat('goals', p.id);
 if (assi) bumpStat('assists', assi.id);
 sideAttackMomentum *= 0.22;
-await append(`${prefix} ⚽ 골! ${atkName} [${zp}] ${p.name}, 페널티 에어리어 슛 성공. ${defName} ${gk.name} 무력화. (${sa}-${sb})`, pitch('danger', 'success', ch, p));
+await append(`${prefix} ⚽ 골! ${atkName} [${zp}] ${p.name}, 페널티 에어리어 슛 성공. ${defName} ${gk.name} 무력화. (${sa}-${sb})`, pitch('danger', 'success', ch, p, { isGoalShot: true }));
 } else if (shot + bias > save - 2) {
 bumpStat('saves', gk.id);
 sideAttackMomentum *= 0.5;
