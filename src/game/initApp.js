@@ -2507,8 +2507,8 @@ simStats[cat][id] = (simStats[cat][id] || 0) + 1;
 const SIM_HALF_SEC = 20 * 60;
 /** 실제로 한 하프를 보는 시간(ms): 2분 → 시뮬 1초당 실제 경과 */
 const MS_PER_SIM_SEC = (2 * 60 * 1000) / SIM_HALF_SEC;
-/** 하프당 중계 이벤트 기대치 유지(구 2분하프·초당 0.16과 동일 스케일) */
-const SIM_EVENT_PROB_PER_SEC = (120 * 0.16) / SIM_HALF_SEC;
+/** 하프당 중계 이벤트 기대치(패턴·역습 등 노출을 위해 소폭 상향) */
+const SIM_EVENT_PROB_PER_SEC = (120 * 0.19) / SIM_HALF_SEC;
 
 const setMatchClock = (halfIdx, simSec) => {
 const el = document.getElementById('simMatchClock');
@@ -2568,12 +2568,6 @@ simSec,
 ballHolderId: ballHolder && ballHolder.id ? ballHolder.id : null
 });
 
-if (Math.random() < 0.05) {
-ch = Math.random() < 0.5 ? 'left' : 'right';
-await append(`${prefix} [킥 인] ${ch === 'left' ? '왼쪽' : '오른쪽'} 사이드라인 인플레이. ${atkName}이 터치 후 짧은 패스로 전개를 이어갑니다.`, pitch('build', Math.random() < 0.58 ? 'success' : 'neutral'));
-return;
-}
-
 const passOk = (a, b) => {
 const t = 0.4 + (getOVR(a) + getOVR(b)) / 420 + (strAtk - strDef) * 0.0012;
 return Math.random() < Math.min(0.9, Math.max(0.12, t));
@@ -2582,6 +2576,105 @@ const dribOk = (o, d) => {
 const t = 0.35 + (getOVR(o) - getOVR(d)) * 0.007 + 0.06;
 return Math.random() < Math.min(0.88, Math.max(0.12, t));
 };
+
+/** 사이드 돌파 → 컷백 → 슛 (중계 3연속, 볼 소유자와 문구 일치) */
+const runSideCutbackShotCombo = async () => {
+const sideCh = Math.random() < 0.5 ? 'left' : 'right';
+const wingPool = atk.filter((x) => x.pos === 'Ala' || x.pos === '미정' || x.pos === 'Pivo');
+const w = wingPool.length ? pick(wingPool) : pick(atk);
+const atkOthers = atk.filter((x) => x.id !== w.id);
+const finisher = atkOthers.length ? pick(atkOthers) : w;
+const gk = gkOf(def);
+const defOut = def.filter((x) => x.id !== gk.id);
+const blk = defOut.length ? pick(defOut) : pick(def);
+const sideLabel = sideCh === 'left' ? '왼쪽' : '오른쪽';
+sideAttackMomentum = Math.min(1, sideAttackMomentum + 0.35);
+await append(`${prefix} ${atkName}: [사이드 돌파] ${w.name}가 ${sideLabel} 측면으로 깊이 침투합니다.`, pitch('progress', 'success', sideCh, w));
+bumpStat('keypass', w.id);
+await append(`${prefix} ${atkName}: ${w.name} 엔드라인 앞 컷백! ${finisher.name}가 중앙으로 받아 슛 타이밍.`, pitch('danger', 'success', sideCh, finisher));
+const zp = simPosShort(finisher);
+const shot = getOVR(finisher) + Math.random() * 14 + sideAttackMomentum * 2;
+const save = getOVR(gk) * 1.06 + Math.random() * 11;
+const bias = (strAtk - strDef) * 0.017;
+const sideGoalBonus = 0.95;
+if (shot + bias + sideGoalBonus > save + 8) {
+if (attackA) sa++; else sb++;
+updScore();
+bumpStat('goals', finisher.id);
+bumpStat('assists', w.id);
+sideAttackMomentum *= 0.2;
+await append(`${prefix} ⚽ 골! [컷백→슛] ${finisher.name} 마무리! (${sa}-${sb})`, pitch('danger', 'success', sideCh, finisher));
+} else if (shot + bias > save - 2) {
+bumpStat('saves', gk.id);
+sideAttackMomentum *= 0.45;
+await append(`${prefix} ${defName}: ${finisher.name} 컷백 후 슛, ${gk.name} 선방.`, pitch('danger', 'fail', sideCh, gk));
+} else {
+sideAttackMomentum *= 0.5;
+await append(`${prefix} ${defName}: ${blk.name}가 ${finisher.name} 슛을 막습니다.`, pitch('danger', 'fail', sideCh, blk));
+}
+};
+
+/** 골레이로 롱 드로잉 → 상대 진영 사이드 직접 연결 */
+const runGkLongToFlankCombo = async () => {
+const sideCh = Math.random() < 0.5 ? 'left' : 'right';
+const gk = gkOf(atk);
+const flankPool = atk.filter((x) => x.id !== gk.id && (x.pos === 'Ala' || x.pos === '미정'));
+const target = flankPool.length ? pick(flankPool) : pick(atk.filter((x) => x.id !== gk.id));
+const ok = passOk(gk, target);
+const sideLabel = sideCh === 'left' ? '왼쪽' : '오른쪽';
+if (ok) {
+bumpStat('keypass', gk.id);
+sideAttackMomentum = Math.min(1, sideAttackMomentum + 0.28);
+await append(`${prefix} ${atkName}: 골레이로 ${gk.name} 롱 드로잉! 상대 진영 ${sideLabel} 사이드로 ${target.name}에게 직접 연결합니다.`, pitch('progress', 'success', sideCh, target));
+} else {
+const intr = pick(def);
+await append(`${prefix} ${defName}: ${gk.name} 롱 드로잉이 ${intr.name} 앞에서 끊깁니다.`, pitch('build', 'fail', undefined, intr));
+}
+};
+
+/** 역습: 공격수 vs 상대 골레이로 1대1 */
+const runCounterAttackGk1v1 = async () => {
+const ch = pickSimChannel();
+const fast = atk.filter((x) => x.pos === 'Pivo' || x.pos === 'Ala' || x.pos === '미정');
+const runner = fast.length ? pick(fast) : pick(atk);
+const gk = gkOf(def);
+const duel = getOVR(runner) - getOVR(gk) * 0.82 + Math.random() * 10 + (strAtk - strDef) * 0.02;
+await append(`${prefix} ${atkName}: 역습! ${runner.name} vs ${defName} 골레이로 ${gk.name} 1대1.`, pitch('danger', 'neutral', ch, runner));
+if (duel > 7.2 && Math.random() < 0.4) {
+if (attackA) sa++; else sb++;
+updScore();
+bumpStat('goals', runner.id);
+sideAttackMomentum *= 0.28;
+await append(`${prefix} ⚽ ${runner.name} 침착하게 마무리! 역습 골! (${sa}-${sb})`, pitch('danger', 'success', ch, runner));
+} else if (duel > 3.8 && Math.random() < 0.58) {
+bumpStat('saves', gk.id);
+await append(`${prefix} ${defName}: ${gk.name} 각도 좁혀 1대1 선방.`, pitch('danger', 'fail', ch, gk));
+} else {
+const tack = def.find((x) => x.pos === 'Fixo') || pick(def.filter((x) => x.id !== gk.id));
+await append(`${prefix} ${defName}: ${tack.name} 추격으로 ${runner.name}의 슛 기회 차단.`, pitch('build', 'fail', undefined, tack));
+}
+};
+
+const patternRoll = Math.random();
+if (patternRoll < 0.15) {
+await runSideCutbackShotCombo();
+return;
+}
+if (patternRoll < 0.27) {
+await runGkLongToFlankCombo();
+return;
+}
+if (patternRoll < 0.36) {
+await runCounterAttackGk1v1();
+return;
+}
+
+if (Math.random() < 0.05) {
+ch = Math.random() < 0.5 ? 'left' : 'right';
+const touch = pick(atk);
+await append(`${prefix} [킥 인] ${ch === 'left' ? '왼쪽' : '오른쪽'} 사이드라인 인플레이. ${touch.name}가 터치 후 짧은 패스로 전개합니다.`, pitch('build', Math.random() < 0.58 ? 'success' : 'neutral', ch, touch));
+return;
+}
 
 const r = Math.random();
 
@@ -2596,10 +2689,10 @@ if (ok) {
 bumpStat('keypass', p1.id);
 const ph = Math.random() < 0.42 ? 'danger' : 'progress';
 if (ch === 'left' || ch === 'right') sideAttackMomentum = Math.min(1, sideAttackMomentum + 0.12);
-await append(`${prefix} ${atkName}: ${sideHint}[${z1}] ${p1.name}가 [${z2}] ${p2.name}에게 패스 연결. 성공.`, pitch(ph, 'success', undefined, p2));
+await append(`${prefix} ${atkName}: ${sideHint}[${z1}] ${p1.name}→${p2.name} 패스. ${p2.name}가 받아 볼 소유.`, pitch(ph, 'success', undefined, p2));
 } else {
 const intr = pick(def);
-await append(`${prefix} ${atkName}: ${sideHint}[${z1}] ${p1.name} → ${p2.name} 패스 실패. [${simPosShort(intr)}] ${intr.name} 차단.`, pitch('progress', 'fail', undefined, intr));
+await append(`${prefix} ${atkName}: ${sideHint}[${z1}] ${p1.name}→${p2.name} 패스 시도. ${intr.name}(${simPosShort(intr)})가 끊어 볼 소유.`, pitch('progress', 'fail', undefined, intr));
 }
 } else if (r < 0.42) {
 ch = pickSimChannel();
@@ -2613,7 +2706,7 @@ if (ok) {
 if (ch === 'left' || ch === 'right') sideAttackMomentum = Math.min(1, sideAttackMomentum + 0.32);
 await append(`${prefix} ${atkName}: ${sideTag}[${zo}] ${o.name}, ${d.name}(${zd})를 제치고 사이드 돌파 성공. 골대를 바라보며 전진합니다.`, pitch(Math.random() < 0.55 ? 'danger' : 'progress', 'success', undefined, o));
 } else {
-await append(`${prefix} ${atkName}: ${sideTag}[${zo}] ${o.name} 드리블 돌파 실패. ${d.name}(${zd}) 압박.`, pitch('build', 'fail', undefined, o));
+await append(`${prefix} ${atkName}: ${sideTag}[${zo}] ${o.name} 드리블 돌파 실패. ${d.name}(${zd})가 압박해 볼 탈취.`, pitch('build', 'fail', undefined, d));
 }
 } else if (r < 0.62) {
 ch = pickSimChannel();
@@ -2653,9 +2746,9 @@ const ok = passOk(wx, tgt);
 if (ok) {
 bumpStat('keypass', wx.id);
 sideAttackMomentum = Math.min(1, sideAttackMomentum + 0.4);
-await append(`${prefix} ${atkName}: ${ch === 'left' ? '왼쪽' : '오른쪽'} 측면에서 ${wx.name}가 골문 쪽으로 컷백 패스. [${simPosShort(tgt)}] ${tgt.name}가 받아 전개.`, pitch('danger', 'success', ch, tgt));
+await append(`${prefix} ${atkName}: [사이드→컷백] ${ch === 'left' ? '왼쪽' : '오른쪽'} ${wx.name}가 골문 쪽 컷백, ${tgt.name}(${simPosShort(tgt)})가 받아 볼 소유·슛 준비.`, pitch('danger', 'success', ch, tgt));
 } else {
-await append(`${prefix} ${atkName}: ${wx.name}의 컷백 패스 시도가 수비에 걸립니다.`, pitch('progress', 'fail', ch, wx));
+await append(`${prefix} ${atkName}: ${wx.name} 컷백 시도가 걸립니다. ${wx.name}가 볼 붙잡음.`, pitch('progress', 'fail', ch, wx));
 }
 } else if (r < 0.88) {
 ch = pickSimChannel();
@@ -2675,9 +2768,10 @@ const lon = atkNoGk.length ? pick(atkNoGk) : pick(atk);
 const ok = passOk(gk, lon);
 if (ok) {
 bumpStat('keypass', gk.id);
-await append(`${prefix} ${atkName}: 골키퍼 ${gk.name} 롱킥 → ${lon.name}(${simPosShort(lon)}) 연결.`, pitch('build', 'success', undefined, lon));
+await append(`${prefix} ${atkName}: 골레이로 ${gk.name} 롱 드로잉 → ${lon.name}(${simPosShort(lon)}) 연결. ${lon.name}가 볼 소유.`, pitch('build', 'success', undefined, lon));
 } else {
-await append(`${prefix} ${atkName}: 골키퍼 ${gk.name} 배급 차단.`, pitch('build', 'fail', undefined, gk));
+const intr = pick(def);
+await append(`${prefix} ${defName}: ${gk.name} 롱킥이 ${intr.name}에게 걸립니다. ${intr.name}가 볼 소유.`, pitch('build', 'fail', undefined, intr));
 }
 } else {
 ch = pickSimChannel();
