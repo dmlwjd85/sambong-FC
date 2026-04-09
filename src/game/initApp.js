@@ -2557,10 +2557,9 @@ simStats[cat][id] = (simStats[cat][id] || 0) + 1;
 
 /** 시뮬레이터 한 하프 길이(초): 20분 */
 const SIM_HALF_SEC = 20 * 60;
-/** 실제로 한 하프를 보는 시간(ms): 2분 → 시뮬 1초당 실제 경과 */
-const MS_PER_SIM_SEC = (2 * 60 * 1000) / SIM_HALF_SEC;
-/** 하프당 중계 이벤트 기대치(패턴·역습 등 노출을 위해 소폭 상향) */
-const SIM_EVENT_PROB_PER_SEC = (120 * 0.19) / SIM_HALF_SEC;
+/** 한 하프 실제 시청 시간 2분 — 상황은 3초마다 1회 */
+const SITUATION_INTERVAL_MS = 3000;
+const SITUATIONS_PER_HALF = Math.max(1, Math.floor((2 * 60 * 1000) / SITUATION_INTERVAL_MS));
 
 const setMatchClock = (halfIdx, simSec) => {
 const el = document.getElementById('simMatchClock');
@@ -2594,8 +2593,7 @@ if (u < 0.38) return 'left';
 if (u < 0.76) return 'right';
 return 'center';
 };
-let sideAttackMomentum = 0;
-/** 공격 측 연속 성공(패스·드리블 등) — 4회 이상이면 다음 슛에 보너스 */
+/** 공격 측 연속 성공 — 2·3·4연속일 때 골 확률 가중 */
 let simChainSuccess = 0;
 /** 연속 패스·드리블 궤적(정규화 좌표, 캔버스 점선) */
 let simBallFlowTrail = [];
@@ -2648,12 +2646,12 @@ simBallFlowTrail = [{ nx, ny }];
 }
 }
 
-const trySecondEvent = async (halfIdx, simSec) => {
+/** 3초마다 1회: 50% 성공/실패, 연속 성공 2·3·4회차에서 골 확률 상승, 공 흐름은 simBallFlowTrail로 연결 */
+const tryOneSituation = async (halfIdx, simSec) => {
 const halfLabel = halfIdx === 0 ? '전반' : '후반';
 const mm = String(Math.floor(simSec / 60)).padStart(2, '0');
 const ss = String(simSec % 60).padStart(2, '0');
 const prefix = `[${halfLabel} ${mm}:${ss}]`;
-if (Math.random() > SIM_EVENT_PROB_PER_SEC) return;
 
 let attackA = Math.random() < ratio + (Math.random() * 0.08 - 0.04);
 if (possessionNextAttackA !== null) {
@@ -2664,8 +2662,6 @@ const atk = attackA ? plA : plB;
 const def = attackA ? plB : plA;
 const atkName = attackA ? teamAName : teamBName;
 const defName = attackA ? teamBName : teamAName;
-const strAtk = attackA ? strA : strB;
-const strDef = attackA ? strB : strA;
 
 let ch = pickSimChannel();
 const pitch = (phase, outcome, chOverride, ballHolder, extra) => ({
@@ -2681,229 +2677,69 @@ ballHolderId: ballHolder && ballHolder.id ? ballHolder.id : null,
 isGoalShot: !!(extra && extra.isGoalShot)
 });
 
-const passOk = (a, b) => {
-const t = 0.4 + (getOVR(a) + getOVR(b)) / 420 + (strAtk - strDef) * 0.0012;
-return Math.random() < Math.min(0.9, Math.max(0.12, t));
-};
-const dribOk = (o, d) => {
-const t = 0.35 + (getOVR(o) - getOVR(d)) * 0.007 + 0.06;
-return Math.random() < Math.min(0.88, Math.max(0.12, t));
-};
+const sideHint = ch === 'left' ? '왼쪽 측면' : ch === 'right' ? '오른쪽 측면' : '중앙';
+const success = Math.random() < 0.5;
 
-/** 사이드 돌파 → 컷백 → 슛 (중계 3연속, 볼 소유자와 문구 일치) */
-const runSideCutbackShotCombo = async () => {
-const sideCh = Math.random() < 0.5 ? 'left' : 'right';
-const wingPool = atk.filter((x) => x.pos === 'Ala' || x.pos === '미정' || x.pos === 'Pivo');
-const w = wingPool.length ? pick(wingPool) : pick(atk);
-const atkOthers = atk.filter((x) => x.id !== w.id);
-const finisher = atkOthers.length ? pick(atkOthers) : w;
-const gk = gkOf(def);
-const defOut = def.filter((x) => x.id !== gk.id);
-const blk = defOut.length ? pick(defOut) : pick(def);
-const sideLabel = sideCh === 'left' ? '왼쪽' : '오른쪽';
-sideAttackMomentum = Math.min(1, sideAttackMomentum + 0.35);
-await append(`${prefix} ${atkName}: [사이드 돌파] ${w.name}가 ${sideLabel} 측면으로 깊이 침투합니다.`, pitch('progress', 'success', sideCh, w));
-bumpStat('keypass', w.id);
-await append(`${prefix} ${atkName}: ${w.name} 엔드라인 앞 컷백! ${finisher.name}가 중앙으로 받아 슛 타이밍.`, pitch('danger', 'success', sideCh, finisher));
-const zp = simPosShort(finisher);
-const shot = getOVR(finisher) + Math.random() * 14 + sideAttackMomentum * 2;
-const save = getOVR(gk) * 1.06 + Math.random() * 11;
-const bias = (strAtk - strDef) * 0.017;
-const sideGoalBonus = 0.95;
-const chainShotBonus = simChainSuccess >= 4 ? 28 : 0;
-if (shot + bias + sideGoalBonus + chainShotBonus > save + 8) {
-if (attackA) sa++; else sb++;
-updScore();
-bumpStat('goals', finisher.id);
-bumpStat('assists', w.id);
-sideAttackMomentum *= 0.2;
-await append(`${prefix} ⚽ 골! [컷백→슛] ${finisher.name} 마무리! (${sa}-${sb})`, pitch('danger', 'success', sideCh, finisher, { isGoalShot: true }));
-} else if (shot + bias > save - 2) {
-bumpStat('saves', gk.id);
-sideAttackMomentum *= 0.45;
-await append(`${prefix} ${defName}: ${finisher.name} 컷백 후 슛, ${gk.name} 선방.`, pitch('danger', 'fail', sideCh, gk));
-} else {
-sideAttackMomentum *= 0.5;
-await append(`${prefix} ${defName}: ${blk.name}가 ${finisher.name} 슛을 막습니다.`, pitch('danger', 'fail', sideCh, blk));
-}
-};
-
-/** 골레이로 롱 드로잉 → 상대 진영 사이드 직접 연결 */
-const runGkLongToFlankCombo = async () => {
-const sideCh = Math.random() < 0.5 ? 'left' : 'right';
-const gk = gkOf(atk);
-const flankPool = atk.filter((x) => x.id !== gk.id && (x.pos === 'Ala' || x.pos === '미정'));
-const target = flankPool.length ? pick(flankPool) : pick(atk.filter((x) => x.id !== gk.id));
-const ok = passOk(gk, target);
-const sideLabel = sideCh === 'left' ? '왼쪽' : '오른쪽';
-if (ok) {
-bumpStat('keypass', gk.id);
-sideAttackMomentum = Math.min(1, sideAttackMomentum + 0.28);
-await append(`${prefix} ${atkName}: 골레이로 ${gk.name} 롱 드로잉! 상대 진영 ${sideLabel} 사이드로 ${target.name}에게 직접 연결합니다.`, pitch('progress', 'success', sideCh, target));
-} else {
+if (!success) {
 const intr = pick(def);
-await append(`${prefix} ${defName}: ${gk.name} 롱 드로잉이 ${intr.name} 앞에서 끊깁니다.`, pitch('build', 'fail', undefined, intr));
+const failKinds = [
+`${prefix} ${atkName}: ${sideHint} 패스 루트 차단. ${intr.name}가 볼 소유.`,
+`${prefix} ${atkName}: ${sideHint} 전개 시도 무산. ${intr.name}(${simPosShort(intr)}) 인터셉트.`,
+`${prefix} ${defName}: ${intr.name} 앞에서 공 끊김. ${atkName} 공격 종료.`
+];
+await append(failKinds[Math.floor(Math.random() * failKinds.length)], pitch('progress', 'fail', ch, intr));
+return;
 }
-};
 
-/** 역습: 공격수 vs 상대 골레이로 1대1 */
-const runCounterAttackGk1v1 = async () => {
-const ch = pickSimChannel();
-const fast = atk.filter((x) => x.pos === 'Pivo' || x.pos === 'Ala' || x.pos === '미정');
-const runner = fast.length ? pick(fast) : pick(atk);
+const nextChain = simChainSuccess + 1;
+let goalProb = 0;
+if (nextChain === 2) goalProb = 0.28;
+else if (nextChain === 3) goalProb = 0.44;
+else if (nextChain >= 4) goalProb = 0.58;
+const rollGoal = nextChain >= 2 && Math.random() < goalProb;
+
+const atkField = atk.filter((p) => p.pos !== 'Goleiro');
+const actor = atkField.length ? pick(atkField) : pick(atk);
 const gk = gkOf(def);
-const duel = getOVR(runner) - getOVR(gk) * 0.82 + Math.random() * 10 + (strAtk - strDef) * 0.02;
-const chainShotBonusCa = simChainSuccess >= 4 ? 14 : 0;
-await append(`${prefix} ${atkName}: 역습! ${runner.name} vs ${defName} 골레이로 ${gk.name} 1대1.`, pitch('danger', 'neutral', ch, runner));
-if (duel + chainShotBonusCa > 7.2 && Math.random() < 0.4) {
+
+if (rollGoal) {
 if (attackA) sa++; else sb++;
 updScore();
-bumpStat('goals', runner.id);
-sideAttackMomentum *= 0.28;
-await append(`${prefix} ⚽ ${runner.name} 침착하게 마무리! 역습 골! (${sa}-${sb})`, pitch('danger', 'success', ch, runner, { isGoalShot: true }));
-} else if (duel > 3.8 && Math.random() < 0.58) {
-bumpStat('saves', gk.id);
-await append(`${prefix} ${defName}: ${gk.name} 각도 좁혀 1대1 선방.`, pitch('danger', 'fail', ch, gk));
-} else {
-const tack = def.find((x) => x.pos === 'Fixo') || pick(def.filter((x) => x.id !== gk.id));
-await append(`${prefix} ${defName}: ${tack.name} 추격으로 ${runner.name}의 슛 기회 차단.`, pitch('build', 'fail', undefined, tack));
-}
-};
-
-const patternRoll = Math.random();
-if (patternRoll < 0.15) {
-await runSideCutbackShotCombo();
-return;
-}
-if (patternRoll < 0.27) {
-await runGkLongToFlankCombo();
-return;
-}
-if (patternRoll < 0.36) {
-await runCounterAttackGk1v1();
+bumpStat('goals', actor.id);
+const mates = atk.filter((x) => x.id !== actor.id);
+const assi = mates.length ? pick(mates) : null;
+if (assi) bumpStat('assists', assi.id);
+await append(`${prefix} ⚽ 골! ${atkName} ${actor.name} 결승 슛 성공. ${defName} ${gk.name} (${sa}-${sb})`, pitch('danger', 'success', ch, actor, { isGoalShot: true }));
 return;
 }
 
-if (Math.random() < 0.05) {
-ch = Math.random() < 0.5 ? 'left' : 'right';
-const touch = pick(atk);
-await append(`${prefix} [킥 인] ${ch === 'left' ? '왼쪽' : '오른쪽'} 사이드라인 인플레이. ${touch.name}가 터치 후 짧은 패스로 전개합니다.`, pitch('build', Math.random() < 0.58 ? 'success' : 'neutral', ch, touch));
-return;
-}
+const kind = Math.floor(Math.random() * 5);
 
-const r = Math.random();
-
-if (r < 0.22) {
-ch = pickSimChannel();
+if (kind === 0) {
 const [p1, p2] = simPickTwoDistinct(atk);
-const ok = passOk(p1, p2);
 const z1 = simPosShort(p1);
 const z2 = simPosShort(p2);
-const sideHint = ch === 'left' ? '왼쪽 측면·' : ch === 'right' ? '오른쪽 측면·' : '';
-if (ok) {
 bumpStat('keypass', p1.id);
-const ph = Math.random() < 0.42 ? 'danger' : 'progress';
-if (ch === 'left' || ch === 'right') sideAttackMomentum = Math.min(1, sideAttackMomentum + 0.12);
-await append(`${prefix} ${atkName}: ${sideHint}[${z1}] ${p1.name}→${p2.name} 패스. ${p2.name}가 받아 볼 소유.`, pitch(ph, 'success', undefined, p2));
-} else {
-const intr = pick(def);
-await append(`${prefix} ${atkName}: ${sideHint}[${z1}] ${p1.name}→${p2.name} 패스 시도. ${intr.name}(${simPosShort(intr)})가 끊어 볼 소유.`, pitch('progress', 'fail', undefined, intr));
-}
-} else if (r < 0.42) {
-ch = pickSimChannel();
-const o = pick(atk);
-const d = pick(def);
-const ok = dribOk(o, d);
-const zo = simPosShort(o);
-const zd = simPosShort(d);
-const sideTag = ch === 'left' || ch === 'right' ? `${ch === 'left' ? '왼쪽' : '오른쪽'} 측면 ` : '';
-if (ok) {
-if (ch === 'left' || ch === 'right') sideAttackMomentum = Math.min(1, sideAttackMomentum + 0.32);
-await append(`${prefix} ${atkName}: ${sideTag}[${zo}] ${o.name}, ${d.name}(${zd})를 제치고 사이드 돌파 성공. 골대를 바라보며 전진합니다.`, pitch(Math.random() < 0.55 ? 'danger' : 'progress', 'success', undefined, o));
-} else {
-await append(`${prefix} ${atkName}: ${sideTag}[${zo}] ${o.name} 드리블 돌파 실패. ${d.name}(${zd})가 압박해 볼 탈취.`, pitch('build', 'fail', undefined, d));
-}
-} else if (r < 0.62) {
-ch = pickSimChannel();
-const p = pick(atk);
-const gk = gkOf(def);
-const defOut = def.filter((x) => x.id !== gk.id);
-const blk = defOut.length ? pick(defOut) : pick(def);
-const zp = simPosShort(p);
-const shot = getOVR(p) + Math.random() * 14 + sideAttackMomentum * 1.85;
-const save = getOVR(gk) * 1.06 + Math.random() * 11;
-const bias = (strAtk - strDef) * 0.017;
-const sideGoalBonus = (ch === 'left' || ch === 'right') ? 0.85 : 0;
-const chainShotBonus = simChainSuccess >= 4 ? 28 : 0;
-if (shot + bias + sideGoalBonus + chainShotBonus > save + 8) {
-if (attackA) sa++; else sb++;
-updScore();
-const mates = atk.filter((x) => x.id !== p.id);
-const assi = mates.length ? pick(mates) : null;
-bumpStat('goals', p.id);
-if (assi) bumpStat('assists', assi.id);
-sideAttackMomentum *= 0.22;
-await append(`${prefix} ⚽ 골! ${atkName} [${zp}] ${p.name}, 페널티 에어리어 슛 성공. ${defName} ${gk.name} 무력화. (${sa}-${sb})`, pitch('danger', 'success', ch, p, { isGoalShot: true }));
-} else if (shot + bias > save - 2) {
-bumpStat('saves', gk.id);
-sideAttackMomentum *= 0.5;
-await append(`${prefix} ${defName}: 골키퍼 ${gk.name}, [${zp}] ${p.name} 슛 선방.`, pitch('danger', 'fail', ch, gk));
-} else {
-sideAttackMomentum *= 0.55;
-await append(`${prefix} ${defName}: [${simPosShort(blk)}] ${blk.name} 슛 블록. ${p.name}(${zp}).`, pitch('danger', 'fail', ch, blk));
-}
-} else if (r < 0.78) {
-ch = Math.random() < 0.5 ? 'left' : 'right';
-const w = atk.filter((x) => x.pos === 'Ala' || x.pos === '미정');
-const wx = w.length ? pick(w) : pick(atk);
-const atkOthers = atk.filter((x) => x.id !== wx.id);
-const tgt = atkOthers.length ? pick(atkOthers) : wx;
-const ok = passOk(wx, tgt);
-if (ok) {
+await append(`${prefix} ${atkName}: ${sideHint} [${z1}]${p1.name}→[${z2}]${p2.name} 패스 성공. ${p2.name}가 볼 소유.`, pitch('progress', 'success', ch, p2));
+} else if (kind === 1) {
+bumpStat('keypass', actor.id);
+await append(`${prefix} ${atkName}: ${sideHint} ${actor.name} 돌파·전진 성공.`, pitch('progress', 'success', ch, actor));
+} else if (kind === 2) {
+const w = atk.filter((x) => x.pos === 'Ala' || x.pos === '미정' || x.pos === 'Pivo');
+const wx = w.length ? pick(w) : actor;
+const others = atk.filter((x) => x.id !== wx.id);
+const tgt = others.length ? pick(others) : wx;
 bumpStat('keypass', wx.id);
-sideAttackMomentum = Math.min(1, sideAttackMomentum + 0.4);
-await append(`${prefix} ${atkName}: [사이드→컷백] ${ch === 'left' ? '왼쪽' : '오른쪽'} ${wx.name}가 골문 쪽 컷백, ${tgt.name}(${simPosShort(tgt)})가 받아 볼 소유·슛 준비.`, pitch('danger', 'success', ch, tgt));
+await append(`${prefix} ${atkName}: ${wx.name} 컷백 연결, ${tgt.name}가 받아 전개 성공.`, pitch('danger', 'success', ch, tgt));
+} else if (kind === 3) {
+const gkA = gkOf(atk);
+const lonPool = atk.filter((x) => x.id !== gkA.id);
+const lon = lonPool.length ? pick(lonPool) : actor;
+bumpStat('keypass', gkA.id);
+await append(`${prefix} ${atkName}: 골레이로 ${gkA.name} 롱 드로잉 ${lon.name} 연결 성공.`, pitch('build', 'success', ch, lon));
 } else {
-await append(`${prefix} ${atkName}: ${wx.name} 컷백 시도가 걸립니다. ${wx.name}가 볼 붙잡음.`, pitch('progress', 'fail', ch, wx));
-}
-} else if (r < 0.88) {
-ch = pickSimChannel();
-const df = def.find((x) => x.pos === 'Fixo') || pick(def);
-const at = pick(atk);
-const ok = Math.random() < 0.35 + (getOVR(df) - getOVR(at)) * 0.006;
-if (ok) {
-await append(`${prefix} ${defName}: [픽소] ${df.name} 태클 성공. ${at.name}(${simPosShort(at)})에서 공 탈취.`, pitch('build', 'fail', undefined, df));
-} else {
-await append(`${prefix} ${atkName}: [${simPosShort(at)}] ${at.name}, ${df.name}(픽소) 태클 회피.`, pitch('progress', 'success', undefined, at));
-}
-} else if (r < 0.94) {
-ch = pickSimChannel();
-const gk = gkOf(atk);
-const atkNoGk = atk.filter((x) => x.id !== gk.id);
-const lon = atkNoGk.length ? pick(atkNoGk) : pick(atk);
-const ok = passOk(gk, lon);
-if (ok) {
-bumpStat('keypass', gk.id);
-await append(`${prefix} ${atkName}: 골레이로 ${gk.name} 롱 드로잉 → ${lon.name}(${simPosShort(lon)}) 연결. ${lon.name}가 볼 소유.`, pitch('build', 'success', undefined, lon));
-} else {
-const intr = pick(def);
-await append(`${prefix} ${defName}: ${gk.name} 롱킥이 ${intr.name}에게 걸립니다. ${intr.name}가 볼 소유.`, pitch('build', 'fail', undefined, intr));
-}
-} else {
-ch = pickSimChannel();
-const r2 = Math.random();
-if (r2 < 0.42) {
-const pv = atk.find((x) => x.pos === 'Pivo') || pick(atk);
-const keep = Math.random() < 0.52 + getOVR(pv) * 0.002;
-if (keep) {
-await append(`${prefix} ${atkName}: [피보] ${pv.name} 페널티 호라이즌에서 볼 유지·컷백 패스 연계 시도.`, pitch('danger', 'success', undefined, pv));
-} else {
-await append(`${prefix} ${atkName}: [피보] ${pv.name} 턴 실패. ${defName} 수비.`, pitch('build', 'fail', undefined, pv));
-}
-} else {
-const fx = def.find((x) => x.pos === 'Fixo') || pick(def);
-await append(`${prefix} ${defName}: [픽소] ${fx.name} 페널티 프론트 클리어.`, pitch('danger', 'neutral', undefined, fx));
-}
+bumpStat('keypass', actor.id);
+await append(`${prefix} ${atkName}: ${sideHint} ${actor.name} 볼 유지·링 연계 성공.`, pitch('progress', 'success', ch, actor));
 }
 };
 
@@ -2914,14 +2750,15 @@ if (usedBots) {
 await append(`[연습 모드] 실제 소속 인원이 5명 미만인 팀은 자동 보조 선수로 채워 5vs5로 진행합니다. (가상 인원은 기록에 반영되지 않습니다)`, kickPitch);
 }
 await append(`전력 요약: ${teamAName} 출전 OVR 합 ${strA}  |  ${teamBName} 출전 OVR 합 ${strB}`, kickPitch);
-await append(`[전반 00:00] 킥오프 — 좁은 풋살 코트에서 공이 굴러갑니다.`, kickPitch);
+await append(`[전반 00:00] 킥오프 — 중계는 약 3초마다 한 상황씩 전개되며, 각 상황은 50% 성공/실패입니다. 연속 성공 2·3·4회차마다 골 확률이 높아집니다.`, kickPitch);
 
 for (let halfIdx = 0; halfIdx < 2; halfIdx++) {
 setMatchClock(halfIdx, 0);
-for (let simSec = 0; simSec < SIM_HALF_SEC; simSec++) {
+for (let si = 0; si < SITUATIONS_PER_HALF; si++) {
+const simSec = Math.min(SIM_HALF_SEC - 1, Math.floor(((si + 1) / SITUATIONS_PER_HALF) * SIM_HALF_SEC));
 setMatchClock(halfIdx, simSec);
-await trySecondEvent(halfIdx, simSec);
-await sleep(MS_PER_SIM_SEC);
+await tryOneSituation(halfIdx, simSec);
+await sleep(SITUATION_INTERVAL_MS);
 }
 setMatchClock(halfIdx, SIM_HALF_SEC);
 const hl = halfIdx === 0 ? '전반' : '후반';
