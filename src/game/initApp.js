@@ -2682,10 +2682,14 @@ const success = Math.random() < 0.5;
 
 if (!success) {
 const intr = pick(def);
+const marker = pick(def.filter((p) => p.id !== intr.id)) || intr;
 const failKinds = [
-`${prefix} ${atkName}: ${sideHint} 패스 루트 차단. ${intr.name}가 볼 소유.`,
-`${prefix} ${atkName}: ${sideHint} 전개 시도 무산. ${intr.name}(${simPosShort(intr)}) 인터셉트.`,
-`${prefix} ${defName}: ${intr.name} 앞에서 공 끊김. ${atkName} 공격 종료.`
+`${prefix} ${atkName} ${sideHint}. ${intr.name}(${simPosShort(intr)})가 발끝으로 끊어냅니다. ${atkName} 연결 아쉽게 무산.`,
+`${prefix} ${defName} ${intr.name}, 상대 패스 루트 읽고 인터셉트! ${atkName}는 한 템포 늦었습니다.`,
+`${prefix} 좁은 코트 ${sideHint}. ${marker.name}에게 시선이 갔다가 ${intr.name}에게 공이 넘어갑니다. ${atkName} 공격 흐름 끊깁니다.`,
+`${prefix} ${atkName} 전진 시도 — ${intr.name}가 몸을 싣고 막아냅니다. 아쉽게 놓치고 맙니다.`,
+`${prefix} ${intr.name}(${simPosShort(intr)}) 스틸 성공. ${defName} 볼 회수, ${atkName}는 다시 빌드업부터.`,
+`${prefix} ${sideHint} 2대1 압박! ${intr.name}가 가로채기에 성공합니다. ${atkName} 패스 타이밍이 살짝 빗나갔습니다.`
 ];
 await append(failKinds[Math.floor(Math.random() * failKinds.length)], pitch('progress', 'fail', ch, intr));
 return;
@@ -2709,37 +2713,79 @@ bumpStat('goals', actor.id);
 const mates = atk.filter((x) => x.id !== actor.id);
 const assi = mates.length ? pick(mates) : null;
 if (assi) bumpStat('assists', assi.id);
-await append(`${prefix} ⚽ 골! ${atkName} ${actor.name} 결승 슛 성공. ${defName} ${gk.name} (${sa}-${sb})`, pitch('danger', 'success', ch, actor, { isGoalShot: true }));
+const df = pick(def.filter((p) => p.id !== gk.id)) || pick(def);
+const goalLines = assi
+? [
+`${prefix} ⚽ 골! ${atkName} ${actor.name}, 페널티 호라이즌에서 마무리! 어시스트 ${assi.name}. ${defName} ${gk.name} 손끝에 닿았지만 들어갑니다. ${sa}-${sb}`,
+`${prefix} ⚽ 들어갑니다! ${assi.name}→${actor.name} 원터치 연결 끝에 골. ${defName} ${df.name}는 막지 못했습니다. ${sa}-${sb}`
+]
+: [
+`${prefix} ⚽ 골! ${actor.name}가 골 앞 혼전을 가르며 강슛. ${defName} ${gk.name} 반응했으나 꺾이지 않습니다. ${sa}-${sb}`,
+`${prefix} ⚽ ${actor.name} 결정적 한 방! 풋살 골문 앞 각도 좁혔는데도 넣습니다. ${gk.name} 아쉬운 실점. ${sa}-${sb}`
+];
+await append(goalLines[Math.floor(Math.random() * goalLines.length)], pitch('danger', 'success', ch, actor, { isGoalShot: true }));
 return;
 }
 
 const kind = Math.floor(Math.random() * 5);
 
+const d1 = pick(def);
+
 if (kind === 0) {
 const [p1, p2] = simPickTwoDistinct(atk);
 const z1 = simPosShort(p1);
 const z2 = simPosShort(p2);
+const mark = pick(def);
 bumpStat('keypass', p1.id);
-await append(`${prefix} ${atkName}: ${sideHint} [${z1}]${p1.name}→[${z2}]${p2.name} 패스 성공. ${p2.name}가 볼 소유.`, pitch('progress', 'success', ch, p2));
+const passOkLines = [
+`${prefix} ${atkName} ${sideHint}. ${p1.name}(${z1})가 ${mark.name}(${simPosShort(mark)}) 압박을 등지고 ${p2.name}(${z2})에게 연결 성공.`,
+`${prefix} 원터치 교환! ${p1.name}→${p2.name}, ${defName} ${d1.name}가 붙기 전에 라인 통과합니다.`,
+`${prefix} ${p1.name}가 ${d1.name}와의 간격 벌리며 ${p2.name}에게. 좁은 코트에서 시야 좋습니다.`
+];
+await append(passOkLines[Math.floor(Math.random() * passOkLines.length)], pitch('progress', 'success', ch, p2));
 } else if (kind === 1) {
+const duel = pick(def);
 bumpStat('keypass', actor.id);
-await append(`${prefix} ${atkName}: ${sideHint} ${actor.name} 돌파·전진 성공.`, pitch('progress', 'success', ch, actor));
+const dribLines = [
+`${prefix} ${atkName} ${sideHint}. ${actor.name}가 ${duel.name}(${simPosShort(duel)})를 제치고 돌파합니다. 발재간 살아 있습니다.`,
+`${prefix} 1대1! ${actor.name} vs ${duel.name} — ${actor.name}가 몸으로 버티며 전진 성공.`,
+`${prefix} ${duel.name}의 태클 타이밍을 피해 ${actor.name}가 빗겨 나갑니다. ${defName} 수비 한 수 무력화.`
+];
+await append(dribLines[Math.floor(Math.random() * dribLines.length)], pitch('progress', 'success', ch, actor));
 } else if (kind === 2) {
 const w = atk.filter((x) => x.pos === 'Ala' || x.pos === '미정' || x.pos === 'Pivo');
 const wx = w.length ? pick(w) : actor;
 const others = atk.filter((x) => x.id !== wx.id);
 const tgt = others.length ? pick(others) : wx;
+const back = pick(def);
 bumpStat('keypass', wx.id);
-await append(`${prefix} ${atkName}: ${wx.name} 컷백 연결, ${tgt.name}가 받아 전개 성공.`, pitch('danger', 'success', ch, tgt));
+const cutLines = [
+`${prefix} ${sideHint} ${wx.name}가 엔드라인 쪽으로 끌고 갔다가 ${back.name}를 앞에 두고 컷백! ${tgt.name}가 받아 전개합니다.`,
+`${prefix} 크로스형 컷백 — ${wx.name}→${tgt.name}. ${defName} ${back.name}가 막으려 했으나 연결됐습니다.`,
+`${prefix} 풋살식 사이드 연계. ${wx.name}가 골라인 근처에서 띄워주고 ${tgt.name}가 중앙에서 이어받습니다.`
+];
+await append(cutLines[Math.floor(Math.random() * cutLines.length)], pitch('danger', 'success', ch, tgt));
 } else if (kind === 3) {
 const gkA = gkOf(atk);
 const lonPool = atk.filter((x) => x.id !== gkA.id);
 const lon = lonPool.length ? pick(lonPool) : actor;
+const high = pick(def);
 bumpStat('keypass', gkA.id);
-await append(`${prefix} ${atkName}: 골레이로 ${gkA.name} 롱 드로잉 ${lon.name} 연결 성공.`, pitch('build', 'success', ch, lon));
+const longLines = [
+`${prefix} 골레이로 ${gkA.name} 롱킥! ${high.name} 라인 위로 넘겨 ${lon.name}가 잡았습니다. 상대 압박 한 번에 벗어납니다.`,
+`${prefix} ${gkA.name}가 손으로 배급 — ${lon.name}에게 직접. ${defName} ${high.name}는 높이 못 올렸습니다.`,
+`${prefix} 풋살에서 보는 롱 드로잉. ${gkA.name}→${lon.name} 연결 성공, 전환 타이밍 좋습니다.`
+];
+await append(longLines[Math.floor(Math.random() * longLines.length)], pitch('build', 'success', ch, lon));
 } else {
+const press = pick(def);
 bumpStat('keypass', actor.id);
-await append(`${prefix} ${atkName}: ${sideHint} ${actor.name} 볼 유지·링 연계 성공.`, pitch('progress', 'success', ch, actor));
+const keepLines = [
+`${prefix} ${atkName} ${sideHint}. ${actor.name}가 ${press.name}의 압박 속에서도 볼 지키며 링으로 연계합니다.`,
+`${prefix} ${press.name}가 붙었지만 ${actor.name}가 몸싸움 이깁니다. 볼 소유 유지 성공.`,
+`${prefix} 좁은 공간, ${actor.name} 침착하게 터치 한 번 줄여서 팀 동료 쪽으로. ${defName} ${press.name} 아쉬운 압박.`
+];
+await append(keepLines[Math.floor(Math.random() * keepLines.length)], pitch('progress', 'success', ch, actor));
 }
 };
 
