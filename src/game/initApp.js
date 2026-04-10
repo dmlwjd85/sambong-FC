@@ -2557,8 +2557,8 @@ simStats[cat][id] = (simStats[cat][id] || 0) + 1;
 
 /** 시뮬레이터 한 하프 길이(초): 20분 */
 const SIM_HALF_SEC = 20 * 60;
-/** 한 하프 실제 시청 시간 2분 — 상황은 3초마다 1회 */
-const SITUATION_INTERVAL_MS = 3000;
+/** 한 하프 실제 시청 시간 2분 — 상황은 5초마다 1회 */
+const SITUATION_INTERVAL_MS = 5000;
 const SITUATIONS_PER_HALF = Math.max(1, Math.floor((2 * 60 * 1000) / SITUATION_INTERVAL_MS));
 
 const setMatchClock = (halfIdx, simSec) => {
@@ -2646,7 +2646,7 @@ simBallFlowTrail = [{ nx, ny }];
 }
 }
 
-/** 3초마다 1회: 50% 성공/실패, 연속 성공 2·3·4회차에서 골 확률 상승, 공 흐름은 simBallFlowTrail로 연결 */
+/** 5초마다 1회: 50% 성공/실패, 연속 성공 2·3·4회차에서 골 확률 상승, 공 흐름은 simBallFlowTrail로 연결 */
 const tryOneSituation = async (halfIdx, simSec) => {
 const halfLabel = halfIdx === 0 ? '전반' : '후반';
 const mm = String(Math.floor(simSec / 60)).padStart(2, '0');
@@ -2750,7 +2750,7 @@ if (usedBots) {
 await append(`[연습 모드] 실제 소속 인원이 5명 미만인 팀은 자동 보조 선수로 채워 5vs5로 진행합니다. (가상 인원은 기록에 반영되지 않습니다)`, kickPitch);
 }
 await append(`전력 요약: ${teamAName} 출전 OVR 합 ${strA}  |  ${teamBName} 출전 OVR 합 ${strB}`, kickPitch);
-await append(`[전반 00:00] 킥오프 — 중계는 약 3초마다 한 상황씩 전개되며, 각 상황은 50% 성공/실패입니다. 연속 성공 2·3·4회차마다 골 확률이 높아집니다.`, kickPitch);
+await append(`[전반 00:00] 킥오프 — 중계는 약 5초마다 한 상황씩 전개되며, 각 상황은 50% 성공/실패입니다. 연속 성공 2·3·4회차마다 골 확률이 높아집니다.`, kickPitch);
 
 for (let halfIdx = 0; halfIdx < 2; halfIdx++) {
 setMatchClock(halfIdx, 0);
