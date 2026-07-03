@@ -1816,52 +1816,92 @@ setTimeout(() => wrap.classList.remove(cls), 1500);
 }
 }
 
-/** 피치 캔버스 위 하이라이트 오버레이 */
+/** 상단 피치·하단 중계가 공유하는 상황 요약 */
+function buildSimSituationMeta(opts, plAll) {
+if (!opts) return null;
+const sideMap = { left: '왼쪽 측면', center: '중앙', right: '오른쪽 측면' };
+const phaseMap = { danger: '페널티 인근', progress: '중앙 전개', build: '빌드업' };
+const outcomeMap = { success: '성공', fail: '실패', neutral: '중립' };
+const dir = opts.attackA ? 'A→B' : 'B→A';
+const sideHint = sideMap[opts.channel] || '중앙';
+const cap = phaseMap[opts.phase] || '빌드업';
+const out = outcomeMap[opts.outcome] || '중립';
+let holderName = '';
+let holderPos = '';
+if (opts.ballHolderId && plAll && plAll.length) {
+const hp = plAll.find((x) => x.id === opts.ballHolderId);
+if (hp) {
+holderName = hp.name || '';
+holderPos = simPosShort(hp);
+}
+}
+let eventTag = '';
+if (opts.broadcastFx === 'goal') eventTag = '⚽ GOAL';
+else if (opts.broadcastFx === 'superSave') eventTag = '🧤 SUPER SAVE';
+else if (opts.broadcastFx === 'keyPass') eventTag = '🎯 KEY PASS';
+const holderPart = holderName ? `볼 ${holderName}${holderPos ? `(${holderPos})` : ''}` : '볼 —';
+const captionLine = `${dir} · ${sideHint} · ${cap} · ${holderPart} · ${out}${eventTag ? ` · ${eventTag}` : ''}`;
+return { dir, sideHint, cap, out, holderName, holderPos, eventTag, captionLine, outcome: opts.outcome, broadcastFx: opts.broadcastFx };
+}
+
+function applySimPitchCaptionMeta(meta) {
+const capEl = document.getElementById('simPitchCaption');
+if (!capEl) return;
+if (!meta || !meta.captionLine) {
+capEl.textContent = '경기 시작 시 상황 요약이 표시됩니다';
+capEl.className = 'text-[10px] sm:text-[11px] text-slate-400 font-semibold leading-snug break-keep';
+return;
+}
+capEl.textContent = meta.captionLine;
+const oc = meta.outcome === 'success' ? 'text-emerald-300'
+: meta.outcome === 'fail' ? 'text-red-300'
+: 'text-amber-200';
+capEl.className = `text-[10px] sm:text-[11px] ${oc} font-semibold leading-snug break-keep`;
+}
+
+/** 피치 캔버스 위 하이라이트 오버레이 (선수 아래 레이어 — 코너·골대 위주) */
 function drawSimPitchFxOverlay(ctx, px0, py0, pw, ph, ballX, ballY, fx, flow, attackA) {
 ctx.save();
 if (fx === 'goal') {
-const grd = ctx.createRadialGradient(ballX, ballY, 4, ballX, ballY, Math.max(pw, ph) * 0.38);
-grd.addColorStop(0, 'rgba(250, 204, 21, 0.62)');
-grd.addColorStop(0.35, 'rgba(34, 197, 94, 0.28)');
+const gx = attackA ? px0 + pw - 6 : px0 + 6;
+const gy = py0 + ph / 2;
+const grd = ctx.createRadialGradient(gx, gy, 4, gx, gy, Math.max(pw, ph) * 0.42);
+grd.addColorStop(0, 'rgba(250, 204, 21, 0.38)');
+grd.addColorStop(0.45, 'rgba(34, 197, 94, 0.16)');
 grd.addColorStop(1, 'rgba(0,0,0,0)');
 ctx.fillStyle = grd;
 ctx.fillRect(px0, py0, pw, ph);
-const gx = attackA ? px0 + pw - 6 : px0 + 6;
-const gy = py0 + ph / 2;
-ctx.strokeStyle = 'rgba(254, 240, 138, 0.92)';
-ctx.lineWidth = 2.8;
-for (let r = 0; r < 4; r++) {
+ctx.strokeStyle = 'rgba(254, 240, 138, 0.75)';
+ctx.lineWidth = 2.2;
+for (let r = 0; r < 3; r++) {
 ctx.beginPath();
-ctx.arc(gx, gy, 12 + r * 11, 0, Math.PI * 2);
+ctx.arc(gx, gy, 10 + r * 10, 0, Math.PI * 2);
 ctx.stroke();
 }
-for (let i = 0; i < 10; i++) {
-const a = (Math.PI * 2 * i) / 10;
-ctx.fillStyle = i % 2 === 0 ? '#fde047' : '#fef9c3';
-ctx.font = 'bold 11px sans-serif';
-ctx.fillText('✦', ballX + Math.cos(a) * (24 + (i % 3) * 4) - 4, ballY + Math.sin(a) * (24 + (i % 3) * 4) + 4);
+for (let i = 0; i < 6; i++) {
+const a = (Math.PI * 2 * i) / 6 + 0.2;
+ctx.fillStyle = i % 2 === 0 ? 'rgba(253, 224, 71, 0.85)' : 'rgba(254, 249, 195, 0.75)';
+ctx.font = 'bold 10px sans-serif';
+ctx.fillText('✦', gx + Math.cos(a) * 22 - 4, gy + Math.sin(a) * 18 + 4);
 }
 } else if (fx === 'superSave') {
 const gx = attackA ? px0 + 8 : px0 + pw - 8;
 const gy = py0 + ph / 2;
-const grd = ctx.createRadialGradient(gx, gy, 2, gx, gy, pw * 0.32);
-grd.addColorStop(0, 'rgba(34, 211, 238, 0.55)');
-grd.addColorStop(0.5, 'rgba(6, 182, 212, 0.2)');
+const grd = ctx.createRadialGradient(gx, gy, 2, gx, gy, pw * 0.28);
+grd.addColorStop(0, 'rgba(34, 211, 238, 0.38)');
+grd.addColorStop(0.5, 'rgba(6, 182, 212, 0.14)');
 grd.addColorStop(1, 'rgba(0,0,0,0)');
 ctx.fillStyle = grd;
 ctx.fillRect(px0, py0, pw, ph);
-ctx.strokeStyle = 'rgba(103, 232, 249, 0.9)';
-ctx.lineWidth = 2.6;
-for (let i = 0; i < 5; i++) {
+ctx.strokeStyle = 'rgba(103, 232, 249, 0.72)';
+ctx.lineWidth = 2.2;
+for (let i = 0; i < 4; i++) {
 ctx.beginPath();
-ctx.arc(gx, gy, 16 + i * 12, -Math.PI * 0.62, Math.PI * 0.62, !attackA);
+ctx.arc(gx, gy, 14 + i * 10, -Math.PI * 0.62, Math.PI * 0.62, !attackA);
 ctx.stroke();
 }
-ctx.font = 'bold 24px "Apple Color Emoji","Segoe UI Emoji",sans-serif';
-ctx.fillText('🧤', gx - 14, gy + 10);
-ctx.fillStyle = 'rgba(224, 242, 254, 0.95)';
-ctx.font = 'bold 10px "Malgun Gothic","Noto Sans KR",sans-serif';
-ctx.fillText('SUPER SAVE', gx - (attackA ? 0 : 52), gy - 28);
+ctx.font = 'bold 20px "Apple Color Emoji","Segoe UI Emoji",sans-serif';
+ctx.fillText('🧤', gx - 12, gy + 8);
 } else if (fx === 'keyPass') {
 if (flow && flow.length >= 2) {
 const a = flow[flow.length - 2];
@@ -1870,44 +1910,35 @@ const ax = px0 + a.nx * pw;
 const ay = py0 + a.ny * ph;
 const bx = px0 + b.nx * pw;
 const by = py0 + b.ny * ph;
-ctx.strokeStyle = 'rgba(192, 132, 252, 0.95)';
-ctx.lineWidth = 4.5;
-ctx.setLineDash([]);
+ctx.strokeStyle = 'rgba(192, 132, 252, 0.55)';
+ctx.lineWidth = 3;
+ctx.setLineDash([6, 4]);
 ctx.beginPath();
 ctx.moveTo(ax, ay);
 ctx.lineTo(bx, by);
 ctx.stroke();
-ctx.fillStyle = 'rgba(167, 139, 250, 0.4)';
-ctx.beginPath();
-ctx.arc(bx, by, 18, 0, Math.PI * 2);
-ctx.fill();
-ctx.strokeStyle = 'rgba(233, 213, 255, 0.85)';
-ctx.lineWidth = 2;
-ctx.beginPath();
-ctx.arc(bx, by, 24, 0, Math.PI * 2);
-ctx.stroke();
+ctx.setLineDash([]);
 }
-ctx.font = 'bold 20px "Apple Color Emoji","Segoe UI Emoji",sans-serif';
-ctx.fillText('🎯', ballX - 24, ballY - 12);
-ctx.fillStyle = 'rgba(233, 213, 255, 0.95)';
-ctx.font = 'bold 9px "Malgun Gothic","Noto Sans KR",sans-serif';
-ctx.fillText('KEY PASS', ballX - 18, ballY + 22);
+ctx.font = 'bold 14px "Apple Color Emoji","Segoe UI Emoji",sans-serif';
+ctx.fillText('🎯', px0 + pw - 22, py0 + 16);
 }
 ctx.restore();
 }
 
-/** 중계 한 줄을 방송용 이미지(img)로 렌더링 — fx: goal | superSave | keyPass */
-function simBroadcastTextToImage(text, fx) {
+/** 중계 한 줄을 방송용 이미지(img)로 렌더링 — fx: goal | superSave | keyPass, meta: 상단 피치와 동일 요약 */
+function simBroadcastTextToImage(text, fx, meta) {
 return new Promise((resolve) => {
 const logBox = document.getElementById('simMatchLog');
 const maxCssW = Math.min(720, Math.max(260, (logBox?.clientWidth || 560) - 8));
 const pad = 14;
 const lineHeight = 22;
+const metaLineHeight = 18;
 const fontSize = 14;
 const dpr = Math.min(2, typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1);
 const fxGoal = fx === 'goal' || (!fx && text.includes('⚽'));
 const fxSave = fx === 'superSave' || text.includes('SUPER SAVE') || text.includes('슈퍼 세이브');
 const fxKp = fx === 'keyPass';
+const hasMeta = !!(meta && meta.captionLine);
 
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
@@ -1929,7 +1960,7 @@ const isTitle = text.includes('━━');
 const isHalftime = text.includes('하프타임') || text.includes('[휴식]');
 const hasFxBanner = isGoal || isSuperSave || isKeyPass;
 
-let cssH = pad * 2 + lines.length * lineHeight + 6 + (hasFxBanner ? 10 : 0);
+let cssH = pad * 2 + lines.length * lineHeight + 6 + (hasFxBanner ? 10 : 0) + (hasMeta ? metaLineHeight + 6 : 0);
 const cssW = maxCssW;
 
 canvas.width = Math.floor(cssW * dpr);
@@ -2003,6 +2034,24 @@ const textY = pad + (hasFxBanner ? 12 : 0);
 lines.forEach((ln, i) => {
 ctx.fillText(ln, pad + 8, textY + i * lineHeight);
 });
+
+if (hasMeta) {
+const metaY = textY + lines.length * lineHeight + 4;
+ctx.fillStyle = 'rgba(0,0,0,0.42)';
+if (typeof ctx.roundRect === 'function') {
+ctx.beginPath();
+ctx.roundRect(pad + 4, metaY, cssW - (pad + 4) * 2, metaLineHeight + 2, 6);
+ctx.fill();
+} else {
+ctx.fillRect(pad + 4, metaY, cssW - (pad + 4) * 2, metaLineHeight + 2);
+}
+const metaColor = meta.outcome === 'success' ? '#86efac'
+: meta.outcome === 'fail' ? '#fca5a5'
+: '#fdba74';
+ctx.fillStyle = metaColor;
+ctx.font = `700 10px "Malgun Gothic","Noto Sans KR",sans-serif`;
+ctx.fillText(meta.captionLine, pad + 10, metaY + 4);
+}
 
 const img = new Image();
 const imgCls = isGoal ? 'sim-broadcast-img sim-broadcast-img--goal'
@@ -2132,10 +2181,11 @@ const ballY = py0 + ph * ballNy;
 const flow = opts.ballFlowTrail || [];
 if (flow.length >= 2) {
 ctx.save();
-ctx.strokeStyle = 'rgba(250, 204, 21, 0.55)';
-ctx.lineWidth = 2.6;
+ctx.globalAlpha = 0.42;
+ctx.strokeStyle = 'rgba(250, 204, 21, 0.7)';
+ctx.lineWidth = 2;
 ctx.lineJoin = 'round';
-ctx.setLineDash([5, 4]);
+ctx.setLineDash([5, 5]);
 ctx.beginPath();
 flow.forEach((pt, i) => {
 const tx = px0 + pt.nx * pw;
@@ -2147,36 +2197,39 @@ ctx.stroke();
 ctx.setLineDash([]);
 flow.forEach((pt) => {
 ctx.beginPath();
-ctx.arc(px0 + pt.nx * pw, py0 + pt.ny * ph, 3.2, 0, Math.PI * 2);
-ctx.fillStyle = 'rgba(251, 191, 36, 0.92)';
+ctx.arc(px0 + pt.nx * pw, py0 + pt.ny * ph, 2.4, 0, Math.PI * 2);
+ctx.fillStyle = 'rgba(251, 191, 36, 0.75)';
 ctx.fill();
 });
 ctx.restore();
 }
 
-if (opts.plA && opts.plB && opts.plA.length && opts.plB.length) {
-drawSimPlayersOnPitch(ctx, px0, py0, pw, ph, { ...opts, ballNx, ballNy, portraitMap });
+if (opts.broadcastFx) {
+drawSimPitchFxOverlay(ctx, px0, py0, pw, ph, ballX, ballY, opts.broadcastFx, flow, attackA);
 }
 
 const oc = opts.outcome === 'success' ? '#4ade80' : opts.outcome === 'fail' ? '#f87171' : '#fb923c';
-drawSoccerBallSprite(ctx, ballX, ballY, Math.max(7, Math.min(11, pw * 0.018)), oc);
-
 const gaW = pw * 0.13;
 const goalTargetX = attackA ? px0 + pw - gaW * 0.45 : px0 + gaW * 0.45;
 const laneT = chY[opts.channel] ?? 0.5;
 const goalTargetY = py0 + ph * (0.35 + laneT * 0.3);
 let ang = Math.atan2(goalTargetY - ballY, goalTargetX - ballX);
-const arrowLen = Math.min(100, pw * 0.32);
+const arrowLen = Math.min(88, pw * 0.28);
 let tipX = ballX + Math.cos(ang) * arrowLen;
 let tipY = ballY + Math.sin(ang) * arrowLen;
+ctx.save();
+ctx.globalAlpha = 0.5;
 ctx.strokeStyle = oc;
-ctx.lineWidth = 3.2;
+ctx.lineWidth = 2;
+ctx.setLineDash([4, 3]);
 ctx.beginPath();
 ctx.moveTo(ballX, ballY);
 ctx.lineTo(tipX, tipY);
 ctx.stroke();
+ctx.setLineDash([]);
+ctx.globalAlpha = 0.65;
 ctx.fillStyle = oc;
-const head = 12;
+const head = 9;
 const backAng = ang + Math.PI;
 ctx.beginPath();
 ctx.moveTo(tipX, tipY);
@@ -2184,17 +2237,33 @@ ctx.lineTo(tipX + Math.cos(backAng + 0.35) * head, tipY + Math.sin(backAng + 0.3
 ctx.lineTo(tipX + Math.cos(backAng - 0.35) * head, tipY + Math.sin(backAng - 0.35) * head);
 ctx.closePath();
 ctx.fill();
+ctx.restore();
 
-if (opts.broadcastFx) {
-drawSimPitchFxOverlay(ctx, px0, py0, pw, ph, ballX, ballY, opts.broadcastFx, flow, attackA);
+drawSoccerBallSprite(ctx, ballX, ballY, Math.max(6, Math.min(9, pw * 0.015)), oc);
+
+if (opts.plA && opts.plB && opts.plA.length && opts.plB.length) {
+drawSimPlayersOnPitch(ctx, px0, py0, pw, ph, { ...opts, ballNx, ballNy, portraitMap, ballHolderId: opts.ballHolderId });
 }
 
-ctx.fillStyle = 'rgba(226, 232, 240, 0.95)';
-ctx.font = '600 11px "Malgun Gothic","Noto Sans KR",sans-serif';
-const cap = opts.phase === 'danger' ? '페널티 인근' : opts.phase === 'progress' ? '중앙 전개' : '빌드업';
-const sideHint = opts.channel === 'left' ? '왼쪽 측면' : opts.channel === 'right' ? '오른쪽 측면' : '중앙';
-const dir = attackA ? 'A→B' : 'B→A';
-ctx.fillText(`${dir} · ${sideHint} · ${cap}`, px0 + 4, py0 + ph + 6);
+const plAllMeta = plAll;
+const meta = buildSimSituationMeta(opts, plAllMeta);
+applySimPitchCaptionMeta(meta);
+
+ctx.fillStyle = 'rgba(15, 23, 42, 0.72)';
+ctx.fillRect(px0, py0 + ph + 1, pw, 14);
+if (meta && meta.captionLine) {
+const metaColor = opts.outcome === 'success' ? 'rgba(134, 239, 172, 0.95)'
+: opts.outcome === 'fail' ? 'rgba(252, 165, 165, 0.95)'
+: 'rgba(253, 186, 116, 0.95)';
+ctx.fillStyle = metaColor;
+ctx.font = '700 9px "Malgun Gothic","Noto Sans KR",sans-serif';
+let shown = meta.captionLine;
+for (let s = meta.captionLine.length; s >= 8; s--) {
+shown = s < meta.captionLine.length ? `${meta.captionLine.slice(0, s)}…` : meta.captionLine;
+if (ctx.measureText(shown).width <= pw - 8) break;
+}
+ctx.fillText(shown, px0 + 4, py0 + ph + 11);
+}
 
 if (badge) {
 if (opts.broadcastFx === 'goal') {
@@ -2257,6 +2326,7 @@ if (badge) {
 badge.textContent = '대기';
 badge.className = 'text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-slate-800 text-slate-300';
 }
+applySimPitchCaptionMeta(null);
 }
 
 const SIM_FIELD_LS_KEY = 'sfc_sim_field_v1';
@@ -2463,6 +2533,7 @@ const plA = opts.plA;
 const plB = opts.plB;
 if (!plA || !plB || !plA.length || !plB.length) return;
 const portraitMap = opts.portraitMap;
+const holderId = opts.ballHolderId || null;
 const maxNameW = Math.max(44, pw * 0.2);
 const drawOne = (p, team) => {
 const teamIsA = team === 'A';
@@ -2470,11 +2541,21 @@ const base = window.simFieldPositions[team][p.id] || { nx: teamIsA ? 0.25 : 0.75
 const { nx, ny } = simPlayerLiveNorm(p, teamIsA, base, opts);
 const x = px0 + nx * pw;
 const y = py0 + ny * ph;
+const isHolder = holderId && p.id === holderId;
 const col = teamIsA ? 'rgba(248,113,113,0.92)' : 'rgba(96,165,250,0.92)';
-const colRing = teamIsA ? 'rgba(127,29,29,0.95)' : 'rgba(30,64,175,0.95)';
-const pr = Math.max(9, Math.min(12, pw * 0.022));
+const colRing = isHolder ? 'rgba(250, 204, 21, 0.98)' : teamIsA ? 'rgba(127,29,29,0.95)' : 'rgba(30,64,175,0.95)';
+const pr = Math.max(10, Math.min(14, pw * 0.024)) * (isHolder ? 1.1 : 1);
 const img = portraitMap && portraitMap.get(p.id);
 ctx.save();
+if (isHolder) {
+ctx.beginPath();
+ctx.arc(x, y, pr + 4, 0, Math.PI * 2);
+ctx.fillStyle = 'rgba(250, 204, 21, 0.22)';
+ctx.fill();
+}
+ctx.shadowColor = 'rgba(0,0,0,0.55)';
+ctx.shadowBlur = isHolder ? 6 : 4;
+ctx.shadowOffsetY = 1;
 ctx.beginPath();
 ctx.arc(x, y, pr, 0, Math.PI * 2);
 ctx.clip();
@@ -2490,29 +2571,47 @@ ctx.textBaseline = 'middle';
 ctx.fillText(emoji, x, y + 1);
 }
 ctx.restore();
+ctx.save();
+ctx.shadowColor = 'transparent';
 ctx.beginPath();
 ctx.arc(x, y, pr, 0, Math.PI * 2);
 ctx.strokeStyle = colRing;
-ctx.lineWidth = 2;
+ctx.lineWidth = isHolder ? 3 : 2;
 ctx.stroke();
+if (isHolder) {
+ctx.beginPath();
+ctx.arc(x, y, pr + 2.5, 0, Math.PI * 2);
+ctx.strokeStyle = 'rgba(254, 240, 138, 0.85)';
+ctx.lineWidth = 1.5;
+ctx.stroke();
+}
+ctx.restore();
 ctx.textAlign = 'center';
 ctx.textBaseline = 'alphabetic';
 ctx.font = '600 7px "Malgun Gothic","Noto Sans KR",sans-serif';
 ctx.fillStyle = 'rgba(226,232,240,0.95)';
 ctx.fillText(String(getOVR(p)), x, y - pr - 5);
 const fullName = String(p.name || '?').trim();
-ctx.font = '600 6.5px "Malgun Gothic","Noto Sans KR",sans-serif';
+ctx.font = isHolder ? '700 7px "Malgun Gothic","Noto Sans KR",sans-serif' : '600 6.5px "Malgun Gothic","Noto Sans KR",sans-serif';
 let shown = fullName;
 for (let s = fullName.length; s >= 1; s--) {
 shown = s < fullName.length ? `${fullName.slice(0, s)}…` : fullName;
 if (ctx.measureText(shown).width <= maxNameW) break;
 }
-ctx.fillStyle = 'rgba(248,250,252,0.96)';
+ctx.fillStyle = isHolder ? 'rgba(254, 249, 195, 0.98)' : 'rgba(248,250,252,0.96)';
 ctx.fillText(shown, x, y + pr + 9);
 ctx.textAlign = 'left';
 };
-plA.forEach((p) => drawOne(p, 'A'));
-plB.forEach((p) => drawOne(p, 'B'));
+const entries = [
+...plA.map((p) => ({ p, team: 'A' })),
+...plB.map((p) => ({ p, team: 'B' }))
+];
+entries.sort((a, b) => {
+const ah = a.p.id === holderId ? 1 : 0;
+const bh = b.p.id === holderId ? 1 : 0;
+return ah - bh;
+});
+entries.forEach(({ p, team }) => drawOne(p, team));
 }
 
 /** 전술 보드 캔버스: 배치 전용(공 없음) */
@@ -2760,6 +2859,8 @@ if (el) el.textContent = `${halfLabel} ${String(m).padStart(2, '0')}:${String(s)
 const append = async (line, pitchOpts) => {
 if (!logEl) return;
 const fx = pitchOpts?.broadcastFx || null;
+const plAll = pitchOpts ? [...(pitchOpts.plA || []), ...(pitchOpts.plB || [])] : [];
+const meta = pitchOpts ? buildSimSituationMeta(pitchOpts, plAll) : null;
 if (pitchOpts) {
 applySimChainAndFlow(pitchOpts);
 await drawSimPitchLive({ ...pitchOpts, ballFlowTrail: [...simBallFlowTrail] });
@@ -2769,7 +2870,7 @@ pulseSimPitchCanvas(fx);
 runSimBroadcastFx(fx, pitchOpts);
 }
 }
-const tImg = await simBroadcastTextToImage(line, fx);
+const tImg = await simBroadcastTextToImage(line, fx, meta);
 logEl.appendChild(tImg);
 logEl.scrollTo({ top: logEl.scrollHeight, behavior: 'smooth' });
 await sleep(fx ? 120 : 42);
