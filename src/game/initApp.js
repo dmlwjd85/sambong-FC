@@ -1769,8 +1769,135 @@ if (line.length) lines.push(line);
 return lines.length ? lines : [''];
 }
 
-/** 중계 한 줄을 방송용 이미지(img)로 렌더링 */
-function simBroadcastTextToImage(text) {
+/** 모의경기 이펙트용 confetti 발사 위치 (피치 캔버스 기준) */
+function getSimFxOrigin(side) {
+const canvas = document.getElementById('simPitchCanvas');
+if (!canvas || typeof window === 'undefined') return { x: 0.5, y: 0.38 };
+const rect = canvas.getBoundingClientRect();
+const nx = side === 'left' ? 0.12 : side === 'right' ? 0.88 : 0.5;
+return {
+x: (rect.left + rect.width * nx) / window.innerWidth,
+y: (rect.top + rect.height * 0.42) / window.innerHeight
+};
+}
+
+/** 골·슈퍼세이브·킬패스 — confetti + 피치 패널 펄스 */
+function runSimBroadcastFx(fx, pitchOpts) {
+if (!fx || typeof confetti !== 'function') return;
+const attackA = !!pitchOpts?.attackA;
+const origin = getSimFxOrigin(
+fx === 'goal' ? (attackA ? 'right' : 'left')
+: fx === 'superSave' ? (attackA ? 'left' : 'right')
+: 'center'
+);
+const base = { origin, zIndex: 9999, disableForReducedMotion: true };
+if (fx === 'goal') {
+confetti({ ...base, particleCount: 130, spread: 88, startVelocity: 54, colors: ['#fbbf24', '#22c55e', '#fef08a', '#ffffff', '#fde047'] });
+setTimeout(() => confetti({ ...base, particleCount: 85, spread: 105, startVelocity: 40, scalar: 1.15, colors: ['#eab308', '#4ade80', '#fde047'] }), 160);
+setTimeout(() => confetti({ ...base, particleCount: 55, spread: 65, origin: { x: origin.x, y: Math.max(0.05, origin.y - 0.06) }, colors: ['#ffffff', '#fbbf24', '#86efac'] }), 340);
+} else if (fx === 'superSave') {
+confetti({ ...base, particleCount: 95, spread: 58, startVelocity: 44, scalar: 0.98, colors: ['#22d3ee', '#67e8f9', '#e0f2fe', '#ffffff', '#06b6d4'] });
+setTimeout(() => confetti({ ...base, particleCount: 65, spread: 72, angle: 90, startVelocity: 32, colors: ['#0891b2', '#a5f3fc', '#ffffff'] }), 200);
+} else if (fx === 'keyPass') {
+confetti({ ...base, particleCount: 50, spread: 52, startVelocity: 32, scalar: 0.88, colors: ['#c084fc', '#a78bfa', '#fbbf24', '#ffffff', '#e9d5ff'] });
+setTimeout(() => confetti({ ...base, particleCount: 28, spread: 40, startVelocity: 22, scalar: 0.75, colors: ['#ddd6fe', '#fcd34d'] }), 180);
+}
+}
+
+function pulseSimPitchCanvas(fx) {
+const canvas = document.getElementById('simPitchCanvas');
+const wrap = canvas?.parentElement;
+if (!wrap) return;
+wrap.classList.remove('sim-pitch-fx-goal', 'sim-pitch-fx-save', 'sim-pitch-fx-kp');
+const cls = fx === 'goal' ? 'sim-pitch-fx-goal' : fx === 'superSave' ? 'sim-pitch-fx-save' : fx === 'keyPass' ? 'sim-pitch-fx-kp' : null;
+if (cls) {
+wrap.classList.add(cls);
+setTimeout(() => wrap.classList.remove(cls), 1500);
+}
+}
+
+/** 피치 캔버스 위 하이라이트 오버레이 */
+function drawSimPitchFxOverlay(ctx, px0, py0, pw, ph, ballX, ballY, fx, flow, attackA) {
+ctx.save();
+if (fx === 'goal') {
+const grd = ctx.createRadialGradient(ballX, ballY, 4, ballX, ballY, Math.max(pw, ph) * 0.38);
+grd.addColorStop(0, 'rgba(250, 204, 21, 0.62)');
+grd.addColorStop(0.35, 'rgba(34, 197, 94, 0.28)');
+grd.addColorStop(1, 'rgba(0,0,0,0)');
+ctx.fillStyle = grd;
+ctx.fillRect(px0, py0, pw, ph);
+const gx = attackA ? px0 + pw - 6 : px0 + 6;
+const gy = py0 + ph / 2;
+ctx.strokeStyle = 'rgba(254, 240, 138, 0.92)';
+ctx.lineWidth = 2.8;
+for (let r = 0; r < 4; r++) {
+ctx.beginPath();
+ctx.arc(gx, gy, 12 + r * 11, 0, Math.PI * 2);
+ctx.stroke();
+}
+for (let i = 0; i < 10; i++) {
+const a = (Math.PI * 2 * i) / 10;
+ctx.fillStyle = i % 2 === 0 ? '#fde047' : '#fef9c3';
+ctx.font = 'bold 11px sans-serif';
+ctx.fillText('✦', ballX + Math.cos(a) * (24 + (i % 3) * 4) - 4, ballY + Math.sin(a) * (24 + (i % 3) * 4) + 4);
+}
+} else if (fx === 'superSave') {
+const gx = attackA ? px0 + 8 : px0 + pw - 8;
+const gy = py0 + ph / 2;
+const grd = ctx.createRadialGradient(gx, gy, 2, gx, gy, pw * 0.32);
+grd.addColorStop(0, 'rgba(34, 211, 238, 0.55)');
+grd.addColorStop(0.5, 'rgba(6, 182, 212, 0.2)');
+grd.addColorStop(1, 'rgba(0,0,0,0)');
+ctx.fillStyle = grd;
+ctx.fillRect(px0, py0, pw, ph);
+ctx.strokeStyle = 'rgba(103, 232, 249, 0.9)';
+ctx.lineWidth = 2.6;
+for (let i = 0; i < 5; i++) {
+ctx.beginPath();
+ctx.arc(gx, gy, 16 + i * 12, -Math.PI * 0.62, Math.PI * 0.62, !attackA);
+ctx.stroke();
+}
+ctx.font = 'bold 24px "Apple Color Emoji","Segoe UI Emoji",sans-serif';
+ctx.fillText('🧤', gx - 14, gy + 10);
+ctx.fillStyle = 'rgba(224, 242, 254, 0.95)';
+ctx.font = 'bold 10px "Malgun Gothic","Noto Sans KR",sans-serif';
+ctx.fillText('SUPER SAVE', gx - (attackA ? 0 : 52), gy - 28);
+} else if (fx === 'keyPass') {
+if (flow && flow.length >= 2) {
+const a = flow[flow.length - 2];
+const b = flow[flow.length - 1];
+const ax = px0 + a.nx * pw;
+const ay = py0 + a.ny * ph;
+const bx = px0 + b.nx * pw;
+const by = py0 + b.ny * ph;
+ctx.strokeStyle = 'rgba(192, 132, 252, 0.95)';
+ctx.lineWidth = 4.5;
+ctx.setLineDash([]);
+ctx.beginPath();
+ctx.moveTo(ax, ay);
+ctx.lineTo(bx, by);
+ctx.stroke();
+ctx.fillStyle = 'rgba(167, 139, 250, 0.4)';
+ctx.beginPath();
+ctx.arc(bx, by, 18, 0, Math.PI * 2);
+ctx.fill();
+ctx.strokeStyle = 'rgba(233, 213, 255, 0.85)';
+ctx.lineWidth = 2;
+ctx.beginPath();
+ctx.arc(bx, by, 24, 0, Math.PI * 2);
+ctx.stroke();
+}
+ctx.font = 'bold 20px "Apple Color Emoji","Segoe UI Emoji",sans-serif';
+ctx.fillText('🎯', ballX - 24, ballY - 12);
+ctx.fillStyle = 'rgba(233, 213, 255, 0.95)';
+ctx.font = 'bold 9px "Malgun Gothic","Noto Sans KR",sans-serif';
+ctx.fillText('KEY PASS', ballX - 18, ballY + 22);
+}
+ctx.restore();
+}
+
+/** 중계 한 줄을 방송용 이미지(img)로 렌더링 — fx: goal | superSave | keyPass */
+function simBroadcastTextToImage(text, fx) {
 return new Promise((resolve) => {
 const logBox = document.getElementById('simMatchLog');
 const maxCssW = Math.min(720, Math.max(260, (logBox?.clientWidth || 560) - 8));
@@ -1778,6 +1905,9 @@ const pad = 14;
 const lineHeight = 22;
 const fontSize = 14;
 const dpr = Math.min(2, typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1);
+const fxGoal = fx === 'goal' || (!fx && text.includes('⚽'));
+const fxSave = fx === 'superSave' || text.includes('SUPER SAVE') || text.includes('슈퍼 세이브');
+const fxKp = fx === 'keyPass';
 
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
@@ -1792,11 +1922,14 @@ return;
 ctx.font = `600 ${fontSize}px "Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif`;
 const innerW = maxCssW - pad * 2 - 6;
 const lines = wrapSimBroadcastLines(ctx, text, innerW);
-const isGoal = text.includes('⚽');
+const isGoal = fxGoal;
+const isSuperSave = fxSave;
+const isKeyPass = fxKp;
 const isTitle = text.includes('━━');
 const isHalftime = text.includes('하프타임') || text.includes('[휴식]');
+const hasFxBanner = isGoal || isSuperSave || isKeyPass;
 
-let cssH = pad * 2 + lines.length * lineHeight + 6;
+let cssH = pad * 2 + lines.length * lineHeight + 6 + (hasFxBanner ? 10 : 0);
 const cssW = maxCssW;
 
 canvas.width = Math.floor(cssW * dpr);
@@ -1805,8 +1938,17 @@ ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
 const grd = ctx.createLinearGradient(0, 0, cssW, cssH);
 if (isGoal) {
-grd.addColorStop(0, '#14532d');
+grd.addColorStop(0, '#166534');
+grd.addColorStop(0.45, '#14532d');
 grd.addColorStop(1, '#052e16');
+} else if (isSuperSave) {
+grd.addColorStop(0, '#0e7490');
+grd.addColorStop(0.5, '#164e63');
+grd.addColorStop(1, '#083344');
+} else if (isKeyPass) {
+grd.addColorStop(0, '#5b21b6');
+grd.addColorStop(0.5, '#4c1d95');
+grd.addColorStop(1, '#2e1065');
 } else if (isTitle) {
 grd.addColorStop(0, '#1e293b');
 grd.addColorStop(1, '#0f172a');
@@ -1826,18 +1968,48 @@ ctx.fill();
 ctx.fillRect(0, 0, cssW, cssH);
 }
 
-ctx.fillStyle = isGoal ? '#fbbf24' : isHalftime ? '#a5b4fc' : '#e8c271';
-ctx.fillRect(0, 0, 5, cssH);
+if (hasFxBanner) {
+ctx.strokeStyle = isGoal ? 'rgba(250, 204, 21, 0.75)' : isSuperSave ? 'rgba(34, 211, 238, 0.75)' : 'rgba(192, 132, 252, 0.75)';
+ctx.lineWidth = 2;
+if (typeof ctx.roundRect === 'function') {
+ctx.beginPath();
+ctx.roundRect(1, 1, cssW - 2, cssH - 2, 9);
+ctx.stroke();
+}
+for (let i = 0; i < 6; i++) {
+const sx = 8 + (i * (cssW - 16)) / 5;
+ctx.fillStyle = isGoal ? 'rgba(253, 224, 71, 0.55)' : isSuperSave ? 'rgba(165, 243, 252, 0.5)' : 'rgba(216, 180, 254, 0.5)';
+ctx.beginPath();
+ctx.arc(sx, cssH - 6, 2.2, 0, Math.PI * 2);
+ctx.fill();
+}
+}
 
-ctx.fillStyle = isGoal ? '#fef9c3' : '#f1f5f9';
+const barColor = isGoal ? '#fbbf24' : isSuperSave ? '#22d3ee' : isKeyPass ? '#c084fc' : isHalftime ? '#a5b4fc' : '#e8c271';
+ctx.fillStyle = barColor;
+ctx.fillRect(0, 0, 6, cssH);
+
+if (hasFxBanner) {
+const badge = isGoal ? '⚽ GOAL!' : isSuperSave ? '🧤 SUPER SAVE' : '🎯 KEY PASS';
+ctx.font = `800 11px "Malgun Gothic","Noto Sans KR",sans-serif`;
+ctx.fillStyle = isGoal ? '#fef08a' : isSuperSave ? '#cffafe' : '#ede9fe';
+ctx.fillText(badge, pad + 8, pad - 2);
+}
+
+ctx.fillStyle = isGoal ? '#fef9c3' : isSuperSave ? '#ecfeff' : isKeyPass ? '#f3e8ff' : '#f1f5f9';
 ctx.font = `600 ${fontSize}px "Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif`;
 ctx.textBaseline = 'top';
+const textY = pad + (hasFxBanner ? 12 : 0);
 lines.forEach((ln, i) => {
-ctx.fillText(ln, pad + 8, pad + i * lineHeight);
+ctx.fillText(ln, pad + 8, textY + i * lineHeight);
 });
 
 const img = new Image();
-img.className = 'sim-broadcast-img w-full h-auto rounded-lg shadow-md border border-amber-900/30 select-none';
+const imgCls = isGoal ? 'sim-broadcast-img sim-broadcast-img--goal'
+: isSuperSave ? 'sim-broadcast-img sim-broadcast-img--save'
+: isKeyPass ? 'sim-broadcast-img sim-broadcast-img--kp'
+: 'sim-broadcast-img';
+img.className = `${imgCls} w-full h-auto rounded-lg shadow-md border select-none`;
 img.alt = text;
 img.draggable = false;
 img.src = canvas.toDataURL('image/png');
@@ -2013,6 +2185,10 @@ ctx.lineTo(tipX + Math.cos(backAng - 0.35) * head, tipY + Math.sin(backAng - 0.3
 ctx.closePath();
 ctx.fill();
 
+if (opts.broadcastFx) {
+drawSimPitchFxOverlay(ctx, px0, py0, pw, ph, ballX, ballY, opts.broadcastFx, flow, attackA);
+}
+
 ctx.fillStyle = 'rgba(226, 232, 240, 0.95)';
 ctx.font = '600 11px "Malgun Gothic","Noto Sans KR",sans-serif';
 const cap = opts.phase === 'danger' ? '페널티 인근' : opts.phase === 'progress' ? '중앙 전개' : '빌드업';
@@ -2021,6 +2197,16 @@ const dir = attackA ? 'A→B' : 'B→A';
 ctx.fillText(`${dir} · ${sideHint} · ${cap}`, px0 + 4, py0 + ph + 6);
 
 if (badge) {
+if (opts.broadcastFx === 'goal') {
+badge.textContent = '⚽ GOAL!';
+badge.className = 'text-[11px] font-black px-2.5 py-0.5 rounded-md bg-yellow-900/90 text-yellow-100 border border-yellow-400/70 sim-badge-pulse';
+} else if (opts.broadcastFx === 'superSave') {
+badge.textContent = '🧤 SUPER SAVE';
+badge.className = 'text-[11px] font-black px-2.5 py-0.5 rounded-md bg-cyan-900/90 text-cyan-100 border border-cyan-400/70 sim-badge-pulse';
+} else if (opts.broadcastFx === 'keyPass') {
+badge.textContent = '🎯 KEY PASS';
+badge.className = 'text-[11px] font-black px-2.5 py-0.5 rounded-md bg-purple-900/90 text-purple-100 border border-purple-400/70 sim-badge-pulse';
+} else {
 const out = opts.outcome === 'success' ? '성공' : opts.outcome === 'fail' ? '실패' : '중립';
 badge.textContent = `진행: ${out}`;
 badge.className = opts.outcome === 'success'
@@ -2028,6 +2214,7 @@ badge.className = opts.outcome === 'success'
 : opts.outcome === 'fail'
 ? 'text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-red-900/80 text-red-200 border border-red-600/50'
 : 'text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-amber-900/70 text-amber-100 border border-amber-600/40';
+}
 }
 }
 
@@ -2572,15 +2759,20 @@ if (el) el.textContent = `${halfLabel} ${String(m).padStart(2, '0')}:${String(s)
 /** 중계 텍스트(하단) + 상단 경기장 캔버스 갱신 */
 const append = async (line, pitchOpts) => {
 if (!logEl) return;
+const fx = pitchOpts?.broadcastFx || null;
 if (pitchOpts) {
 applySimChainAndFlow(pitchOpts);
 await drawSimPitchLive({ ...pitchOpts, ballFlowTrail: [...simBallFlowTrail] });
 if (pitchOpts.isGoalShot) simBallFlowTrail = [];
+if (fx) {
+pulseSimPitchCanvas(fx);
+runSimBroadcastFx(fx, pitchOpts);
 }
-const tImg = await simBroadcastTextToImage(line);
+}
+const tImg = await simBroadcastTextToImage(line, fx);
 logEl.appendChild(tImg);
 logEl.scrollTo({ top: logEl.scrollHeight, behavior: 'smooth' });
-await sleep(42);
+await sleep(fx ? 120 : 42);
 };
 
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -2674,7 +2866,8 @@ plB,
 halfIdx,
 simSec,
 ballHolderId: ballHolder && ballHolder.id ? ballHolder.id : null,
-isGoalShot: !!(extra && extra.isGoalShot)
+isGoalShot: !!(extra && extra.isGoalShot),
+broadcastFx: extra && extra.broadcastFx ? extra.broadcastFx : null
 });
 
 const sideHint = ch === 'left' ? '왼쪽 측면' : ch === 'right' ? '오른쪽 측면' : '중앙';
@@ -2723,7 +2916,20 @@ const goalLines = assi
 `${prefix} ⚽ 골! ${actor.name}가 골 앞 혼전을 가르며 강슛. ${defName} ${gk.name} 반응했으나 꺾이지 않습니다. ${sa}-${sb}`,
 `${prefix} ⚽ ${actor.name} 결정적 한 방! 풋살 골문 앞 각도 좁혔는데도 넣습니다. ${gk.name} 아쉬운 실점. ${sa}-${sb}`
 ];
-await append(goalLines[Math.floor(Math.random() * goalLines.length)], pitch('danger', 'success', ch, actor, { isGoalShot: true }));
+await append(goalLines[Math.floor(Math.random() * goalLines.length)], pitch('danger', 'success', ch, actor, { isGoalShot: true, broadcastFx: 'goal' }));
+return;
+}
+
+const saveProb = nextChain >= 4 ? 0.38 : nextChain >= 3 ? 0.28 : nextChain >= 2 ? 0.18 : 0;
+const rollSuperSave = nextChain >= 2 && !rollGoal && Math.random() < saveProb;
+if (rollSuperSave) {
+bumpStat('saves', gk.id);
+const saveLines = [
+`${prefix} 🧤 SUPER SAVE! ${defName} ${gk.name}가 ${actor.name}의 결정적 슈팅을 막아냅니다!`,
+`${prefix} 🧤 슈퍼 세이브! ${gk.name} 리플렉스로 ${actor.name} 강슛을 걷어냈습니다.`,
+`${prefix} 🧤 ${gk.name}의 기적 같은 선방! ${atkName} ${actor.name} — ${gk.name}가 코트를 살렸습니다.`
+];
+await append(saveLines[Math.floor(Math.random() * saveLines.length)], pitch('danger', 'neutral', ch, gk, { broadcastFx: 'superSave' }));
 return;
 }
 
@@ -2742,7 +2948,7 @@ const passOkLines = [
 `${prefix} 원터치 교환! ${p1.name}→${p2.name}, ${defName} ${d1.name}가 붙기 전에 라인 통과합니다.`,
 `${prefix} ${p1.name}가 ${d1.name}와의 간격 벌리며 ${p2.name}에게. 좁은 코트에서 시야 좋습니다.`
 ];
-await append(passOkLines[Math.floor(Math.random() * passOkLines.length)], pitch('progress', 'success', ch, p2));
+await append(passOkLines[Math.floor(Math.random() * passOkLines.length)], pitch('progress', 'success', ch, p2, { broadcastFx: 'keyPass' }));
 } else if (kind === 1) {
 const duel = pick(def);
 bumpStat('keypass', actor.id);
@@ -2751,7 +2957,7 @@ const dribLines = [
 `${prefix} 1대1! ${actor.name} vs ${duel.name} — ${actor.name}가 몸으로 버티며 전진 성공.`,
 `${prefix} ${duel.name}의 태클 타이밍을 피해 ${actor.name}가 빗겨 나갑니다. ${defName} 수비 한 수 무력화.`
 ];
-await append(dribLines[Math.floor(Math.random() * dribLines.length)], pitch('progress', 'success', ch, actor));
+await append(dribLines[Math.floor(Math.random() * dribLines.length)], pitch('progress', 'success', ch, actor, { broadcastFx: 'keyPass' }));
 } else if (kind === 2) {
 const w = atk.filter((x) => x.pos === 'Ala' || x.pos === '미정' || x.pos === 'Pivo');
 const wx = w.length ? pick(w) : actor;
@@ -2764,7 +2970,7 @@ const cutLines = [
 `${prefix} 크로스형 컷백 — ${wx.name}→${tgt.name}. ${defName} ${back.name}가 막으려 했으나 연결됐습니다.`,
 `${prefix} 풋살식 사이드 연계. ${wx.name}가 골라인 근처에서 띄워주고 ${tgt.name}가 중앙에서 이어받습니다.`
 ];
-await append(cutLines[Math.floor(Math.random() * cutLines.length)], pitch('danger', 'success', ch, tgt));
+await append(cutLines[Math.floor(Math.random() * cutLines.length)], pitch('danger', 'success', ch, tgt, { broadcastFx: 'keyPass' }));
 } else if (kind === 3) {
 const gkA = gkOf(atk);
 const lonPool = atk.filter((x) => x.id !== gkA.id);
@@ -2776,7 +2982,7 @@ const longLines = [
 `${prefix} ${gkA.name}가 손으로 배급 — ${lon.name}에게 직접. ${defName} ${high.name}는 높이 못 올렸습니다.`,
 `${prefix} 풋살에서 보는 롱 드로잉. ${gkA.name}→${lon.name} 연결 성공, 전환 타이밍 좋습니다.`
 ];
-await append(longLines[Math.floor(Math.random() * longLines.length)], pitch('build', 'success', ch, lon));
+await append(longLines[Math.floor(Math.random() * longLines.length)], pitch('build', 'success', ch, lon, { broadcastFx: 'keyPass' }));
 } else {
 const press = pick(def);
 bumpStat('keypass', actor.id);
@@ -2785,7 +2991,7 @@ const keepLines = [
 `${prefix} ${press.name}가 붙었지만 ${actor.name}가 몸싸움 이깁니다. 볼 소유 유지 성공.`,
 `${prefix} 좁은 공간, ${actor.name} 침착하게 터치 한 번 줄여서 팀 동료 쪽으로. ${defName} ${press.name} 아쉬운 압박.`
 ];
-await append(keepLines[Math.floor(Math.random() * keepLines.length)], pitch('progress', 'success', ch, actor));
+await append(keepLines[Math.floor(Math.random() * keepLines.length)], pitch('progress', 'success', ch, actor, { broadcastFx: 'keyPass' }));
 }
 };
 

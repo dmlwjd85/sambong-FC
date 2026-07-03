@@ -156,3 +156,70 @@ input[type="number"] { -moz-appearance: textfield; }
 .achieved-card { border-color: #e8c271; background-color: rgba(232, 194, 113, 0.1); box-shadow: 0 0 15px rgba(232, 194, 113, 0.2); }
 .unachieved-card { opacity: 0.6; filter: grayscale(80%); border-color: rgba(255,255,255,0.1); }
 .unachieved-card:hover { opacity: 0.9; filter: grayscale(40%); }
+
+/* 모의경기: 골·슈퍼세이브·킬패스 이펙트 */
+.sim-pitch-fx-goal {
+  animation: simPitchGoalPulse 1.4s ease-out;
+  box-shadow: 0 0 28px rgba(250, 204, 21, 0.55), inset 0 0 12px rgba(34, 197, 94, 0.25);
+  border-radius: 0.5rem;
+}
+.sim-pitch-fx-save {
+  animation: simPitchSavePulse 1.4s ease-out;
+  box-shadow: 0 0 26px rgba(34, 211, 238, 0.5), inset 0 0 10px rgba(6, 182, 212, 0.2);
+  border-radius: 0.5rem;
+}
+.sim-pitch-fx-kp {
+  animation: simPitchKpPulse 1.2s ease-out;
+  box-shadow: 0 0 22px rgba(192, 132, 252, 0.45), inset 0 0 8px rgba(167, 139, 250, 0.2);
+  border-radius: 0.5rem;
+}
+@keyframes simPitchGoalPulse {
+  0% { transform: scale(1); filter: brightness(1); }
+  25% { transform: scale(1.015); filter: brightness(1.35); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+@keyframes simPitchSavePulse {
+  0% { transform: scale(1); filter: brightness(1); }
+  30% { transform: scale(1.012); filter: brightness(1.25) hue-rotate(-8deg); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+@keyframes simPitchKpPulse {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.008); }
+  100% { transform: scale(1); }
+}
+.sim-badge-pulse { animation: simBadgePop 0.9s ease-out; }
+@keyframes simBadgePop {
+  0% { transform: scale(0.85); opacity: 0.6; }
+  40% { transform: scale(1.12); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.sim-broadcast-img--goal {
+  border-color: rgba(250, 204, 21, 0.65) !important;
+  animation: simBroadcastGoalIn 0.85s ease-out;
+  box-shadow: 0 4px 24px rgba(34, 197, 94, 0.35), 0 0 12px rgba(250, 204, 21, 0.25);
+}
+.sim-broadcast-img--save {
+  border-color: rgba(34, 211, 238, 0.65) !important;
+  animation: simBroadcastSaveIn 0.8s ease-out;
+  box-shadow: 0 4px 20px rgba(6, 182, 212, 0.35);
+}
+.sim-broadcast-img--kp {
+  border-color: rgba(192, 132, 252, 0.65) !important;
+  animation: simBroadcastKpIn 0.75s ease-out;
+  box-shadow: 0 4px 18px rgba(124, 58, 237, 0.3);
+}
+@keyframes simBroadcastGoalIn {
+  0% { transform: translateY(8px) scale(0.96); opacity: 0.5; }
+  50% { transform: translateY(-2px) scale(1.02); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+@keyframes simBroadcastSaveIn {
+  0% { transform: translateX(-6px); opacity: 0.55; }
+  60% { transform: translateX(2px); opacity: 1; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+@keyframes simBroadcastKpIn {
+  0% { transform: scale(0.94); opacity: 0.6; }
+  100% { transform: scale(1); opacity: 1; }
+}
