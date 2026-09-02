@@ -117,26 +117,63 @@ box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
 }
 .fut-portrait-frame {
 background:
-  linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.45) 100%),
-  radial-gradient(ellipse at 50% 80%, rgba(0,0,0,0.2), transparent 70%);
+  linear-gradient(180deg, transparent 48%, rgba(0,0,0,0.38) 100%),
+  radial-gradient(ellipse at 50% 42%, rgba(255,255,255,0.08), transparent 62%);
 border-radius: 0.75rem;
 overflow: hidden;
 }
 .fut-portrait-img {
-width: 7.4rem; height: 9.6rem;
-object-fit: cover; object-position: top center;
+width: 100%; height: 100%;
+object-fit: cover; object-position: center 28%;
 border-radius: 0.65rem;
 border: 2px solid rgba(255,255,255,0.35);
 box-shadow: 0 10px 22px rgba(0,0,0,0.45), 0 0 0 1px rgba(0,0,0,0.25);
 filter: saturate(1.08) contrast(1.05);
 }
 .fut-portrait-fallback {
-width: 7.4rem; height: 9.6rem;
+width: 100%; height: 100%;
 border-radius: 0.65rem;
-display: flex; align-items: flex-end; justify-content: center;
+display: flex; align-items: center; justify-content: center;
 font-size: 4.4rem; line-height: 1;
 border: 2px solid rgba(255,255,255,0.28);
 box-shadow: inset 0 -18px 28px rgba(0,0,0,0.35);
+}
+.manga-face { display: inline-flex; align-items: center; justify-content: center; overflow: hidden; line-height: 0; }
+.manga-face-img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.manga-face-pos-m { object-position: center 70%; transform: scale(1.28); transform-origin: center 32%; }
+.manga-face-pos-f { object-position: center 50%; transform: scale(1.18); transform-origin: center 38%; }
+.manga-face-card {
+width: 100%; height: 100%;
+border-radius: 0.65rem;
+border: 2px solid rgba(255,255,255,0.35);
+box-shadow: 0 10px 22px rgba(0,0,0,0.45), 0 0 0 1px rgba(0,0,0,0.25);
+}
+.fut-portrait-frame .manga-face-card,
+.fut-portrait-frame .fut-portrait-img {
+width: 100%;
+height: 100%;
+}
+.manga-face-mini {
+width: 3.6rem; height: 3.9rem;
+border-radius: 0.4rem;
+border: 1px solid rgba(255,255,255,0.35);
+box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+}
+.manga-face-xl {
+width: 4.2rem; height: 5.2rem;
+border-radius: 0.5rem;
+border: 1px solid rgba(255,255,255,0.3);
+box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+.manga-face-md {
+width: 2.5rem; height: 2.5rem;
+border-radius: 50%;
+border: 1px solid rgba(255,255,255,0.25);
+}
+.manga-face-sm {
+width: 2rem; height: 2rem;
+border-radius: 50%;
+border: 1px solid rgba(255,255,255,0.25);
 }
 .fut-portrait-fallback.kit-m,
 .kit-m { background: linear-gradient(180deg, #1e3a5f 0%, #0f172a 55%, #14532d 100%); }
@@ -234,7 +271,7 @@ white-space: nowrap; z-index: 2;
 }
 .fut-mini .fut-mini-portrait img,
 .fut-mini-portrait-img {
-  width: 3.6rem; height: 4.6rem; object-fit: cover; object-position: top;
+  width: 3.6rem; height: 4.6rem; object-fit: cover; object-position: center 28%;
   border-radius: 0.4rem; border: 1px solid rgba(255,255,255,0.35);
   box-shadow: 0 4px 10px rgba(0,0,0,0.35);
 }

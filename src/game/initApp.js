@@ -2,6 +2,7 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, writeBatch, getDocs, deleteDoc, deleteField, increment } from 'firebase/firestore';
 import confetti from 'canvas-confetti';
+import { getMangaFaceHtml } from './mangaFace.js';
 
 // Vite 빌드 시 .env의 VITE_APP_ID 사용, 없으면 기본값 (기존 단일 HTML과 동일)
 const appId = import.meta.env.VITE_APP_ID || (typeof globalThis.__app_id !== 'undefined' ? globalThis.__app_id : 'sambong-futsal-ultimate'); 
@@ -406,32 +407,25 @@ return '';
 }
 
 /**
- * 선수 얼굴: 얼굴 아이템(레전드) > 이모지
+ * 선수 얼굴: 업로드 사진·얼굴 아이템 > 축구만화 기본 얼굴
  * variant: locker | detail | sm | md | xl
  */
 function getAvatarHtml(p, variant) {
 const url = getPortraitUrl(p);
 const boxes = {
-locker: { img: 'fut-mini-portrait-img', emoji: 'text-4xl drop-shadow-md inline-flex items-end justify-center leading-none' },
-detail: { img: 'fut-portrait-img', emoji: 'fut-portrait-fallback' },
-card: { img: 'fut-portrait-img', emoji: 'fut-portrait-fallback' },
-sm: { img: 'w-8 h-8 min-w-[2rem] min-h-[2rem] rounded-full object-cover border border-white/25', emoji: 'text-base sm:text-lg inline-flex items-center justify-center' },
-md: { img: 'w-10 h-10 min-w-[2.5rem] min-h-[2.5rem] rounded-full object-cover border border-white/25', emoji: 'text-2xl inline-flex items-center justify-center' },
-xl: { img: 'w-16 h-16 min-w-[4rem] min-h-[4rem] rounded-lg object-cover object-top border border-white/25', emoji: 'text-4xl drop-shadow-md mb-2 inline-flex items-center justify-center' }
+locker: { img: 'fut-mini-portrait-img' },
+detail: { img: 'fut-portrait-img' },
+card: { img: 'fut-portrait-img' },
+sm: { img: 'w-8 h-8 min-w-[2rem] min-h-[2rem] rounded-full object-cover object-center border border-white/25' },
+md: { img: 'w-10 h-10 min-w-[2.5rem] min-h-[2.5rem] rounded-full object-cover object-center border border-white/25' },
+xl: { img: 'w-16 h-16 min-w-[4rem] min-h-[4rem] rounded-lg object-cover object-center border border-white/25' }
 };
 const b = boxes[variant] || boxes.md;
-const isGirl = (p.gender || GENDER_MAP[p.name]) === 'F';
 if (url) {
 return `<img src="${escapeAttr(url)}" alt="" class="${b.img}" loading="lazy" decoding="async"/>`;
 }
-const emoji = isGirl ? '👧' : '👦';
-if (variant === 'detail' || variant === 'card') {
-return `<span class="${b.emoji} ${isGirl ? 'kit-f' : 'kit-m'}">${emoji}</span>`;
-}
-if (variant === 'locker') {
-return `<span class="inline-flex w-14 h-[4.4rem] items-end justify-center rounded-md ${isGirl ? 'kit-f' : 'kit-m'} border border-white/20">${emoji}</span>`;
-}
-return `<span class="${b.emoji}">${emoji}</span>`;
+const gender = (p.gender || GENDER_MAP[p.name]) === 'F' ? 'F' : 'M';
+return getMangaFaceHtml({ ...p, gender }, variant);
 }
 
 window.switchTab = (tabId) => {
@@ -583,7 +577,7 @@ return `
                      <div class="mini-card fut-mini ${tier.cardClass} flex flex-col items-center p-2 rounded-xl border-2 ${borderClass} cursor-pointer ${isSelected ? 'selected' : ''} ${isChecked ? 'checked-in' : 'checked-out'}" onclick="window.selectPlayer('${p.id}')">
                          <input type="checkbox" class="locker-checkbox absolute top-1.5 left-1.5 w-5 h-5 shadow-lg z-10" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); window.toggleCheck('${p.id}')">
                          <div class="absolute top-1 right-1 ${tier.class} text-[8px] font-black px-1.5 py-0.5 rounded shadow whitespace-nowrap tracking-wide">${tier.name.split(' ')[0]}</div>
-                         <div class="flex items-end justify-center min-h-[4.6rem] mt-3">${getAvatarHtml(p, 'locker')}</div>
+                         <div class="flex items-center justify-center min-h-[3.9rem] mt-3">${getAvatarHtml(p, 'locker')}</div>
                          <div class="fut-mini-ovr-plate fut-mini-ovr text-[1.55rem] font-bold leading-none text-current drop-shadow mt-1">${ovr}</div>
                          <div class="flex flex-col items-center mt-0.5 w-full px-0.5">
                          <span class="text-[9px] font-black ${getPosColor(p.pos)} tracking-wider">${posText}</span>
