@@ -231,6 +231,24 @@ input[type="number"] { -moz-appearance: textfield; }
 .nav-tab:hover { color: #e2e8f0; border-bottom-color: #475569; }
 .nav-tab.active { color: #38ff8e; border-bottom-color: #38ff8e; font-weight: bold; text-shadow: 0 0 10px rgba(56,255,142,0.4); }
 
+.app-tab {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  color: #64748b; font-size: 10px; font-weight: 800; letter-spacing: 0.04em;
+  background: transparent; border: 0; cursor: pointer;
+}
+.app-tab i { color: inherit; }
+.app-tab.active { color: #38ff8e; text-shadow: 0 0 10px rgba(56,255,142,0.35); }
+.subhub-chip {
+  flex-shrink: 0; font-size: 11px; font-weight: 800;
+  padding: 6px 12px; border-radius: 999px;
+  border: 1px solid rgba(148,163,184,0.35);
+  background: rgba(15,23,42,0.7); color: #cbd5e1;
+}
+.subhub-chip.active {
+  background: linear-gradient(180deg, #14532d, #052e16);
+  border-color: rgba(56,255,142,0.55); color: #bbf7d0;
+}
+
 .achieved-card { border-color: #e8c271; background-color: rgba(232, 194, 113, 0.1); box-shadow: 0 0 15px rgba(232, 194, 113, 0.2); }
 .unachieved-card { opacity: 0.6; filter: grayscale(80%); border-color: rgba(255,255,255,0.1); }
 .unachieved-card:hover { opacity: 0.9; filter: grayscale(40%); }

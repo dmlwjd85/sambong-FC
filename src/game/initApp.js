@@ -111,6 +111,40 @@ d.innerHTML = `<div class="bg-pitch-panel p-6 sm:p-8 rounded-3xl border-2 border
 document.body.appendChild(d); document.getElementById('bYes').onclick = () => { d.remove(); r(true); }; document.getElementById('bNo').onclick = () => { d.remove(); r(false); };
 });
 
+/** 금액 입력 모달 (스마트폰 퀵칩) */
+window.pickBongStake = ({ title, label, odds, wallet, max }) => new Promise((r) => {
+const cap = Math.max(0, Math.min(Number(max) || 0, Number(wallet) || 0));
+const d = document.createElement('div');
+d.className = 'fixed inset-0 z-[6000] flex items-center justify-center bg-black/80 px-4';
+const chips = [10, 20, 50, 100].filter((n) => n <= cap);
+d.innerHTML = `<div class="bg-pitch-panel p-6 rounded-3xl border-2 border-red-500/70 max-w-sm w-full text-center space-y-3 shadow-2xl">
+<h3 class="text-xl font-display text-white">${title || '베팅'}</h3>
+<p class="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed break-keep">${label}<br>배당 <b class="text-fut-gold">${Number(odds).toFixed(2)}x</b> · 보유 <b class="text-fut-gold">${wallet}</b> B</p>
+<div class="flex flex-wrap justify-center gap-2">${chips.map((n) => `<button type="button" data-chip="${n}" class="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-600 text-xs font-black text-white">${n} B</button>`).join('')}${cap > 0 ? `<button type="button" data-chip="${cap}" class="px-3 py-1.5 rounded-lg bg-red-900/70 border border-red-500 text-xs font-black text-white">전액</button>` : ''}</div>
+<input id="stakeAmt" type="number" min="1" max="${cap}" inputmode="numeric" value="${Math.min(10, cap)}" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-3 py-2.5 text-center text-white font-black text-lg"/>
+<p id="stakePayoutHint" class="text-[11px] text-emerald-300"></p>
+<div class="flex gap-3 pt-1"><button id="bNo" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2.5 rounded-xl w-full">취소</button><button id="bYes" class="bg-red-600 hover:bg-red-500 text-white font-bold py-2.5 rounded-xl w-full">걸기</button></div>
+</div>`;
+document.body.appendChild(d);
+const inp = d.querySelector('#stakeAmt');
+const hint = d.querySelector('#stakePayoutHint');
+const paintHint = () => {
+const n = Math.floor(Number(inp.value) || 0);
+hint.textContent = n > 0 ? `적중 시 약 ${Math.floor(n * Number(odds))} B 지급` : '금액을 입력하세요';
+};
+paintHint();
+inp.addEventListener('input', paintHint);
+d.querySelectorAll('[data-chip]').forEach((btn) => {
+btn.onclick = () => { inp.value = btn.getAttribute('data-chip'); paintHint(); };
+});
+d.querySelector('#bYes').onclick = () => {
+const n = Math.floor(Number(inp.value));
+d.remove();
+r(Number.isFinite(n) && n > 0 ? n : 0);
+};
+d.querySelector('#bNo').onclick = () => { d.remove(); r(0); };
+});
+
 const checkAuthReady = () => {
 if (!auth || !auth.currentUser) {
 throw new Error("서버와의 연결이 끊어졌거나 인증되지 않았습니다. 새로고침 해주세요.");
@@ -401,13 +435,10 @@ return `<span class="${b.emoji}">${emoji}</span>`;
 }
 
 window.switchTab = (tabId) => {
-['tabWorkspace', 'tabTips', 'tabShop', 'tabAchievements', 'tabRank', 'tabCompare', 'tabSim', 'tabGuide', 'tabMaster', 'tabMasterStats'].forEach(id => {
+['tabWorkspace', 'tabTips', 'tabShop', 'tabAchievements', 'tabRank', 'tabCompare', 'tabSim', 'tabGuide', 'tabMaster', 'tabMasterStats', 'tabBet'].forEach(id => {
 document.getElementById(id)?.classList.add('hidden');
-document.getElementById('btn' + id.charAt(0).toUpperCase() + id.slice(1))?.classList.remove('active');
 });
 document.getElementById(tabId)?.classList.remove('hidden');
-const targetBtn = document.getElementById('btn' + tabId.charAt(0).toUpperCase() + tabId.slice(1));
-if(targetBtn) { targetBtn.classList.add('active'); targetBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); }
 
 const leftPanel = document.getElementById('leftCardPanel');
 const rightPanel = document.getElementById('rightContentPanel');
@@ -437,7 +468,78 @@ if(tabId === 'tabCompare') window.renderCompareList();
 if(tabId === 'tabSim') window.renderSimMatchTab();
 if(tabId === 'tabMaster') renderMasterDashboard();
 if(tabId === 'tabMasterStats') window.renderMasterStats();
+if(tabId === 'tabBet') {
+window.renderWorldCupBetBoard();
+window.ensureWcBoardPublished?.();
+}
+updateNavBongChip();
 };
+
+window.appNav = { hub: 'home', sub: null };
+
+function getAppHubChips(hub) {
+if (hub === 'career') {
+return [
+{ id: 'tabShop', label: '상점' },
+{ id: 'tabAchievements', label: '트로피' },
+{ id: 'tabCompare', label: '비교' }
+];
+}
+if (hub === 'more') {
+const chips = [
+{ id: 'tabTips', label: '소식' },
+{ id: 'tabRank', label: '전당' },
+{ id: 'tabGuide', label: '안내' }
+];
+if (window.playerState && window.playerState.isGM) {
+chips.push({ id: 'tabMaster', label: '현황판' });
+chips.push({ id: 'tabMasterStats', label: '스탯' });
+}
+return chips;
+}
+return [];
+}
+
+window.switchAppTab = (hub, subTabId) => {
+const defaults = { home: 'tabWorkspace', match: 'tabSim', career: 'tabShop', bet: 'tabBet', more: (window.playerState && window.playerState.isGM) ? 'tabMaster' : 'tabTips' };
+const hubKey = hub || 'home';
+if (window.appNav.hub !== hubKey) window.appNav.sub = null;
+window.appNav.hub = hubKey;
+const chips = getAppHubChips(hubKey);
+let page = subTabId || null;
+if (!page && window.appNav.sub && chips.some((c) => c.id === window.appNav.sub)) page = window.appNav.sub;
+if (!page) page = defaults[hubKey];
+window.appNav.sub = chips.length ? page : null;
+
+document.querySelectorAll('#appBottomNav .app-tab').forEach((btn) => {
+btn.classList.toggle('active', btn.getAttribute('data-app-hub') === hubKey);
+});
+const subNav = document.getElementById('subHubNav');
+const subChips = document.getElementById('subHubChips');
+if (chips.length && subNav && subChips) {
+subNav.classList.remove('hidden');
+subChips.innerHTML = chips.map((c) => `<button type="button" class="subhub-chip ${c.id === page ? 'active' : ''}" onclick="window.switchAppTab('${hubKey}','${c.id}')">${c.label}</button>`).join('');
+} else {
+subNav?.classList.add('hidden');
+if (subChips) subChips.innerHTML = '';
+}
+window.switchTab(page);
+};
+
+function updateNavBongChip() {
+const pid = window.playerState && !window.playerState.isGuest && !window.playerState.isGM ? window.playerState.id : (window.selectedPlayerId || '');
+const p = (window.allPlayersData || []).find((x) => x.id === pid);
+const bong = p ? (Number(p.bong) || 0) : (window.playerState && Number(window.playerState.bong) || 0);
+const chip = document.getElementById('navBongChip');
+const val = document.getElementById('navBongValue');
+const betVal = document.getElementById('betWalletBong');
+if (val) val.textContent = String(bong);
+if (betVal) betVal.textContent = String(bong);
+if (chip) {
+if (window.playerState && !window.playerState.isGuest) chip.classList.remove('hidden');
+else chip.classList.add('hidden');
+}
+}
 
 function renderDailyTip() {
 const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
@@ -1912,6 +2014,21 @@ window.renderSimTacticalStrips();
 window.drawSimTacticalBoard();
 const slog = document.getElementById('simMatchLog');
 if (slog && slog.children.length === 0) resetSimPitchCanvas();
+const brief = document.getElementById('simPrematchBrief');
+if (brief && padTA.roster.length && padTB.roster.length) {
+const oa = Math.round(padTA.roster.reduce((s, p) => s + getOVR(p), 0) / padTA.roster.length);
+const ob = Math.round(padTB.roster.reduce((s, p) => s + getOVR(p), 0) / padTB.roster.length);
+const starA = [...padTA.roster].sort((a, b) => getOVR(b) - getOVR(a))[0];
+const starB = [...padTB.roster].sort((a, b) => getOVR(b) - getOVR(a))[0];
+const fav = oa === ob ? '팽팽한 전력' : (oa > ob ? `레드가 OVR ${oa - ob} 우세` : `블루가 OVR ${ob - oa} 우세`);
+brief.innerHTML = `<div class="flex flex-wrap items-center justify-between gap-2 mb-2"><span class="text-[10px] font-black tracking-widest text-amber-300">PRE-MATCH BRIEFING</span><span class="text-[10px] text-slate-400">${fav}</span></div>
+<div class="grid grid-cols-3 gap-2 text-center mb-2">
+<div><div class="text-red-300 font-black text-lg">${oa}</div><div class="text-[9px] text-slate-500">레드 평균</div></div>
+<div class="text-[10px] text-slate-400 self-center">VS</div>
+<div><div class="text-blue-300 font-black text-lg">${ob}</div><div class="text-[9px] text-slate-500">블루 평균</div></div>
+</div>
+<p class="text-[11px] text-slate-300">핵심 매치업: <b class="text-red-200">${escapeHtml(starA.name)}</b> (OVR ${getOVR(starA)}) vs <b class="text-blue-200">${escapeHtml(starB.name)}</b> (OVR ${getOVR(starB)}). 슈팅은 슈팅/반사신경, 패스는 패스/가로채기 맞대결로 판정됩니다.</p>`;
+}
 };
 
 /** 중계 문장을 자동 줄바꿈 (캔버스 폭 기준) */
@@ -2901,8 +3018,8 @@ sorted.push(bot);
 return { roster: sorted, bots };
 }
 
-/** 모의경기 종료 후 골·어시·킬패스·세이브 요약 패널 */
-function renderSimPostMatchStats(plA, plB, teamAName, teamBName, simStats) {
+/** 모의경기 종료 후 평점·xG·골·어시·킬패스·세이브 요약 (FM 스타일) */
+function renderSimPostMatchStats(plA, plB, teamAName, teamBName, simStats, live, ratings) {
 const el = document.getElementById('simPostMatchStats');
 if (!el) return;
 const goals = simStats.goals || {};
@@ -2915,19 +3032,25 @@ const g = goals[p.id] || 0;
 const a = assists[p.id] || 0;
 const k = keypass[p.id] || 0;
 const s = saves[p.id] || 0;
-if (g + a + k + s === 0) return null;
+const rating = Number((ratings && ratings[p.id]) || 6.5);
 const inA = plA.some((x) => x.id === p.id);
-return { p, g, a, k, s, teamTag: inA ? teamAName : teamBName, teamCls: inA ? 'text-red-400' : 'text-blue-400' };
-}).filter(Boolean);
-rows.sort((x, y) => y.g - x.g || y.a - x.a || y.k - x.k || y.s - x.s || String(x.p.name).localeCompare(String(y.p.name), 'ko'));
-if (!rows.length) {
-el.classList.add('hidden');
-el.innerHTML = '';
-return;
-}
-const head = `<div class="flex flex-wrap items-center gap-2 mb-2 border-b border-amber-700/30 pb-2"><i class="fa-solid fa-chart-simple text-amber-400"></i><span class="text-sm font-bold text-amber-200">이번 경기 기록 요약</span><span class="text-[10px] text-slate-500">(모의 시뮬 · 서버 미반영)</span></div>`;
-const table = `<div class="overflow-x-auto"><table class="w-full text-[11px] sm:text-xs text-left border-collapse"><thead><tr class="text-slate-400 border-b border-slate-700"><th class="py-1.5 pr-2">팀</th><th class="py-1.5 pr-2">선수</th><th class="py-1.5 text-center" title="골">⚽</th><th class="py-1.5 text-center" title="어시스트">🅰️</th><th class="py-1.5 text-center" title="킬패스">KP</th><th class="py-1.5 text-center" title="세이브">🧤</th></tr></thead><tbody>${rows.map((r) => `<tr class="border-b border-slate-800/80 hover:bg-slate-800/40"><td class="py-1.5 pr-2 font-bold ${r.teamCls} truncate max-w-[5.5rem]">${escapeAttr(r.teamTag)}</td><td class="py-1.5 pr-2 text-white font-bold truncate max-w-[8rem]">${escapeAttr(r.p.name)}</td><td class="py-1.5 text-center text-fut-gold font-oswald">${r.g}</td><td class="py-1.5 text-center text-emerald-300">${r.a}</td><td class="py-1.5 text-center text-cyan-300">${r.k}</td><td class="py-1.5 text-center text-orange-300">${r.s}</td></tr>`).join('')}</tbody></table></div>`;
-el.innerHTML = head + table;
+return { p, g, a, k, s, rating, teamTag: inA ? teamAName : teamBName, teamCls: inA ? 'text-red-400' : 'text-blue-400' };
+});
+rows.sort((x, y) => y.rating - x.rating || y.g - x.g || String(x.p.name).localeCompare(String(y.p.name), 'ko'));
+const motm = rows[0];
+const tot = (live?.possA || 0) + (live?.possB || 0) || 1;
+const pa = Math.round((100 * (live?.possA || 0)) / tot);
+const hudLine = live
+? `<div class="grid grid-cols-3 gap-2 text-center mb-3 text-[10px]">
+<div class="rounded-lg bg-black/40 py-1.5"><div class="text-slate-500">점유</div><div class="font-black text-emerald-300">${pa}-${100 - pa}</div></div>
+<div class="rounded-lg bg-black/40 py-1.5"><div class="text-slate-500">슈팅(유효)</div><div class="font-black text-amber-200">${live.shotA || 0}-${live.shotB || 0} (${live.onA || 0}-${live.onB || 0})</div></div>
+<div class="rounded-lg bg-black/40 py-1.5"><div class="text-slate-500">xG</div><div class="font-black text-cyan-200">${(live.xgA || 0).toFixed(2)}-${(live.xgB || 0).toFixed(2)}</div></div>
+</div>`
+: '';
+const motmHtml = motm ? `<p class="text-[11px] text-fut-gold mb-2">MOTM <b>${escapeAttr(motm.p.name)}</b> · 평점 ${motm.rating.toFixed(1)}</p>` : '';
+const head = `<div class="flex flex-wrap items-center gap-2 mb-2 border-b border-amber-700/30 pb-2"><i class="fa-solid fa-chart-simple text-amber-400"></i><span class="text-sm font-bold text-amber-200">풀타임 분석</span><span class="text-[10px] text-slate-500">(모의 시뮬 · 서버 미반영)</span></div>`;
+const table = `<div class="overflow-x-auto"><table class="w-full text-[11px] sm:text-xs text-left border-collapse"><thead><tr class="text-slate-400 border-b border-slate-700"><th class="py-1.5 pr-2">팀</th><th class="py-1.5 pr-2">선수</th><th class="py-1.5 text-center">평점</th><th class="py-1.5 text-center" title="골">⚽</th><th class="py-1.5 text-center" title="어시스트">🅰️</th><th class="py-1.5 text-center" title="킬패스">KP</th><th class="py-1.5 text-center" title="세이브">🧤</th></tr></thead><tbody>${rows.map((r) => `<tr class="border-b border-slate-800/80 hover:bg-slate-800/40"><td class="py-1.5 pr-2 font-bold ${r.teamCls} truncate max-w-[5.5rem]">${escapeAttr(r.teamTag)}</td><td class="py-1.5 pr-2 text-white font-bold truncate max-w-[8rem]">${escapeAttr(r.p.name)}</td><td class="py-1.5 text-center font-black ${r.rating >= 8 ? 'text-fut-gold' : (r.rating >= 7 ? 'text-emerald-300' : 'text-slate-300')}">${r.rating.toFixed(1)}</td><td class="py-1.5 text-center text-fut-gold font-oswald">${r.g || ''}</td><td class="py-1.5 text-center text-emerald-300">${r.a || ''}</td><td class="py-1.5 text-center text-cyan-300">${r.k || ''}</td><td class="py-1.5 text-center text-orange-300">${r.s || ''}</td></tr>`).join('')}</tbody></table></div>`;
+el.innerHTML = head + motmHtml + hudLine + table;
 el.classList.remove('hidden');
 }
 
@@ -2936,6 +3059,7 @@ const log = document.getElementById('simMatchLog');
 if (log) log.innerHTML = '';
 document.getElementById('simScoreBar')?.classList.add('hidden');
 document.getElementById('simClockWrap')?.classList.add('hidden');
+document.getElementById('simLiveHud')?.classList.add('hidden');
 const post = document.getElementById('simPostMatchStats');
 if (post) {
 post.classList.add('hidden');
@@ -2997,6 +3121,31 @@ updScore();
 const strA = plA.reduce((s, p) => s + getOVR(p), 0);
 const strB = plB.reduce((s, p) => s + getOVR(p), 0);
 const ratio = strA + strB > 0 ? strA / (strA + strB) : 0.5;
+const mentA = document.getElementById('simMentalityA')?.value || 'balanced';
+const mentB = document.getElementById('simMentalityB')?.value || 'balanced';
+const mentDelta = (code) => (code === 'attack' ? 0.07 : code === 'defend' ? -0.06 : 0);
+const live = { possA: 0, possB: 0, shotA: 0, shotB: 0, onA: 0, onB: 0, xgA: 0, xgB: 0 };
+const ratings = {};
+const bumpRating = (id, d) => { if (!id) return; ratings[id] = Math.max(5.2, Math.min(9.8, (ratings[id] || 6.5) + d)); };
+const teamMean = (arr, key) => arr.length ? arr.reduce((s, p) => s + getStat(p, key), 0) / arr.length : STAT_BASE;
+const clash = (atkV, defV) => {
+const a = Number(atkV) / 99;
+const d = Number(defV) / 99;
+return Math.max(0.16, Math.min(0.84, 0.47 + (a - d) * 0.44 + (Math.random() * 0.1 - 0.05)));
+};
+const paintHud = () => {
+const hud = document.getElementById('simLiveHud');
+if (hud) hud.classList.remove('hidden');
+const tot = live.possA + live.possB || 1;
+const pa = Math.round((100 * live.possA) / tot);
+const possEl = document.getElementById('simHudPoss');
+if (possEl) possEl.textContent = `${pa}-${100 - pa}`;
+const shEl = document.getElementById('simHudShots');
+if (shEl) shEl.textContent = `${live.shotA}-${live.shotB} (${live.onA}-${live.onB})`;
+const xgEl = document.getElementById('simHudXg');
+if (xgEl) xgEl.textContent = `${live.xgA.toFixed(2)}-${live.xgB.toFixed(2)}`;
+};
+paintHud();
 
 const simStats = { goals: {}, assists: {}, keypass: {}, saves: {} };
 const bumpStat = (cat, id) => {
@@ -3102,18 +3251,22 @@ simBallFlowTrail = [{ nx, ny }];
 }
 }
 
-/** 5초마다 1회: 50% 성공/실패, 연속 성공 2·3·4회차에서 골 확률 상승, 공 흐름은 simBallFlowTrail로 연결 */
+/** 5초마다 1회: 패스/가로채기·드리블/수비·슈팅/반사신경 맞대결. 연속 성공 시 슈팅 기회와 xG가 올라갑니다. */
 const tryOneSituation = async (halfIdx, simSec) => {
 const halfLabel = halfIdx === 0 ? '전반' : '후반';
 const mm = String(Math.floor(simSec / 60)).padStart(2, '0');
 const ss = String(simSec % 60).padStart(2, '0');
 const prefix = `[${halfLabel} ${mm}:${ss}]`;
 
-let attackA = Math.random() < ratio + (Math.random() * 0.08 - 0.04);
+const wrkBias = (teamMean(plA, 'wrk') - teamMean(plB, 'wrk')) / (halfIdx === 1 ? 550 : 750);
+let pAtk = ratio + mentDelta(mentA) - mentDelta(mentB) + wrkBias;
+let attackA = Math.random() < Math.max(0.28, Math.min(0.72, pAtk + (Math.random() * 0.06 - 0.03)));
 if (possessionNextAttackA !== null) {
 attackA = possessionNextAttackA;
 possessionNextAttackA = null;
 }
+if (attackA) live.possA++; else live.possB++;
+paintHud();
 const atk = attackA ? plA : plB;
 const def = attackA ? plB : plA;
 const atkName = attackA ? teamAName : teamBName;
@@ -3134,12 +3287,37 @@ isGoalShot: !!(extra && extra.isGoalShot),
 broadcastFx: extra && extra.broadcastFx ? extra.broadcastFx : null
 });
 
+const atkField = atk.filter((p) => p.pos !== 'Goleiro');
+const pickAtk = () => {
+const pool = atkField.length ? atkField : atk;
+const weights = pool.map((p) => {
+let w = 1 + getStat(p, 'wrk') / 90;
+if (p.pos === 'Pivo') w += 1.35;
+else if (p.pos === 'Ala') w += 0.55;
+else if (p.pos === 'Fixo') w += 0.12;
+return w;
+});
+const sum = weights.reduce((a, b) => a + b, 0) || 1;
+let r = Math.random() * sum;
+for (let i = 0; i < pool.length; i++) {
+r -= weights[i];
+if (r <= 0) return pool[i];
+}
+return pool[pool.length - 1];
+};
+const actor = pickAtk();
+const gk = gkOf(def);
+
 const sideHint = ch === 'left' ? '왼쪽 측면' : ch === 'right' ? '오른쪽 측면' : '중앙';
-const success = Math.random() < 0.5;
+const atkCtrl = teamMean(atk, 'pas') * 0.55 + teamMean(atk, 'dri') * 0.45 + (mentDelta(attackA ? mentA : mentB) * 40);
+const defCtrl = teamMean(def, 'int') * 0.5 + teamMean(def, 'def') * 0.5 - (mentDelta(attackA ? mentB : mentA) * 20);
+const success = Math.random() < clash(atkCtrl, defCtrl);
 
 if (!success) {
 const intr = pick(def);
 const marker = pick(def.filter((p) => p.id !== intr.id)) || intr;
+bumpRating(intr.id, 0.22);
+bumpRating(actor.id, -0.06);
 const failKinds = [
 `${prefix} ${atkName} ${sideHint}. ${intr.name}(${simPosShort(intr)})가 발끝으로 끊어냅니다. ${atkName} 연결 아쉽게 무산.`,
 `${prefix} ${defName} ${intr.name}, 상대 패스 루트 읽고 인터셉트! ${atkName}는 한 템포 늦었습니다.`,
@@ -3153,23 +3331,34 @@ return;
 }
 
 const nextChain = simChainSuccess + 1;
-let goalProb = 0;
-if (nextChain === 2) goalProb = 0.28;
-else if (nextChain === 3) goalProb = 0.44;
-else if (nextChain >= 4) goalProb = 0.58;
-const rollGoal = nextChain >= 2 && Math.random() < goalProb;
+const shotChance = nextChain >= 4 ? 0.70 : nextChain === 3 ? 0.48 : nextChain === 2 ? 0.28 : 0;
+const isShot = shotChance > 0 && Math.random() < shotChance;
 
-const atkField = atk.filter((p) => p.pos !== 'Goleiro');
-const actor = atkField.length ? pick(atkField) : pick(atk);
-const gk = gkOf(def);
+if (isShot) {
+const actorSho = getStat(actor, 'sho') + getStat(actor, 'cmp') * 0.25 + getStat(actor, 'pst') * 0.15;
+const gkRef = getStat(gk, 'ref') + getStat(gk, 'pst') * 0.2;
+const shotQuality = clash(actorSho + nextChain * 3, gkRef);
+let xg = (nextChain >= 4 ? 0.36 : nextChain === 3 ? 0.24 : 0.14) * shotQuality;
+if ((attackA ? mentA : mentB) === 'attack') xg *= 1.12;
+if ((attackA ? mentB : mentA) === 'defend') xg *= 0.88;
+xg = Math.max(0.05, Math.min(0.48, xg));
+if (attackA) { live.shotA++; live.xgA += xg; } else { live.shotB++; live.xgB += xg; }
+paintHud();
+const rollGoal = Math.random() < xg;
 
 if (rollGoal) {
-if (attackA) sa++; else sb++;
+if (attackA) { sa++; live.onA++; } else { sb++; live.onB++; }
 updScore();
+paintHud();
 bumpStat('goals', actor.id);
+bumpRating(actor.id, 1.05);
+bumpRating(gk.id, -0.28);
 const mates = atk.filter((x) => x.id !== actor.id);
 const assi = mates.length ? pick(mates) : null;
-if (assi) bumpStat('assists', assi.id);
+if (assi) {
+bumpStat('assists', assi.id);
+bumpRating(assi.id, 0.38);
+}
 const df = pick(def.filter((p) => p.id !== gk.id)) || pick(def);
 const goalLines = assi
 ? [
@@ -3184,12 +3373,15 @@ await append(goalLines[Math.floor(Math.random() * goalLines.length)], pitch('dan
 return;
 }
 
-const saveProb = nextChain >= 4 ? 0.38 : nextChain >= 3 ? 0.28 : nextChain >= 2 ? 0.18 : 0;
-const rollSuperSave = nextChain >= 2 && !rollGoal && Math.random() < saveProb;
-if (rollSuperSave) {
+const saveProb = Math.max(0.18, Math.min(0.62, clash(gkRef, actorSho)));
+if (Math.random() < saveProb) {
+if (attackA) live.onA++; else live.onB++;
+paintHud();
 bumpStat('saves', gk.id);
+bumpRating(gk.id, 0.72);
+bumpRating(actor.id, 0.12);
 const saveLines = [
-`${prefix} 🧤 SUPER SAVE! ${defName} ${gk.name}가 ${actor.name}의 결정적 슈팅을 막아냅니다!`,
+`${prefix} 🧤 SUPER SAVE! ${defName} ${gk.name}가 ${actor.name}의 결정적 슈팅을 막아냅니다! (xG ${xg.toFixed(2)})`,
 `${prefix} 🧤 슈퍼 세이브! ${gk.name} 리플렉스로 ${actor.name} 강슛을 걷어냈습니다.`,
 `${prefix} 🧤 ${gk.name}의 기적 같은 선방! ${atkName} ${actor.name} — ${gk.name}가 코트를 살렸습니다.`
 ];
@@ -3197,8 +3389,17 @@ await append(saveLines[Math.floor(Math.random() * saveLines.length)], pitch('dan
 return;
 }
 
-const kind = Math.floor(Math.random() * 5);
+bumpRating(actor.id, -0.08);
+const missLines = [
+`${prefix} ${actor.name}의 슈팅! 골문을 살짝 벗어납니다. (xG ${xg.toFixed(2)})`,
+`${prefix} ${sideHint}에서 ${actor.name} 감아차기 — ${gk.name}가 손 쓸 필요 없이 아웃.`,
+`${prefix} ${actor.name} vs ${gk.name}, 각도는 좋았으나 빗맞습니다. ${defName} 한숨 돌립니다.`
+];
+await append(missLines[Math.floor(Math.random() * missLines.length)], pitch('danger', 'fail', ch, actor));
+return;
+}
 
+const kind = Math.floor(Math.random() * 5);
 const d1 = pick(def);
 
 if (kind === 0) {
@@ -3207,6 +3408,7 @@ const z1 = simPosShort(p1);
 const z2 = simPosShort(p2);
 const mark = pick(def);
 bumpStat('keypass', p1.id);
+bumpRating(p1.id, 0.12);
 const passOkLines = [
 `${prefix} ${atkName} ${sideHint}. ${p1.name}(${z1})가 ${mark.name}(${simPosShort(mark)}) 압박을 등지고 ${p2.name}(${z2})에게 연결 성공.`,
 `${prefix} 원터치 교환! ${p1.name}→${p2.name}, ${defName} ${d1.name}가 붙기 전에 라인 통과합니다.`,
@@ -3215,7 +3417,15 @@ const passOkLines = [
 await append(passOkLines[Math.floor(Math.random() * passOkLines.length)], pitch('progress', 'success', ch, p2, { broadcastFx: 'keyPass' }));
 } else if (kind === 1) {
 const duel = pick(def);
+const wonDuel = Math.random() < clash(getStat(actor, 'dri') + getStat(actor, 'pac') * 0.2, getStat(duel, 'def') + getStat(duel, 'phy') * 0.2);
+if (!wonDuel) {
+bumpRating(duel.id, 0.2);
+bumpRating(actor.id, -0.05);
+await append(`${prefix} 1대1! ${actor.name} vs ${duel.name} — ${duel.name}가 몸으로 막아 돌파를 차단합니다.`, pitch('progress', 'fail', ch, duel));
+return;
+}
 bumpStat('keypass', actor.id);
+bumpRating(actor.id, 0.14);
 const dribLines = [
 `${prefix} ${atkName} ${sideHint}. ${actor.name}가 ${duel.name}(${simPosShort(duel)})를 제치고 돌파합니다. 발재간 살아 있습니다.`,
 `${prefix} 1대1! ${actor.name} vs ${duel.name} — ${actor.name}가 몸으로 버티며 전진 성공.`,
@@ -3229,6 +3439,7 @@ const others = atk.filter((x) => x.id !== wx.id);
 const tgt = others.length ? pick(others) : wx;
 const back = pick(def);
 bumpStat('keypass', wx.id);
+bumpRating(wx.id, 0.12);
 const cutLines = [
 `${prefix} ${sideHint} ${wx.name}가 엔드라인 쪽으로 끌고 갔다가 ${back.name}를 앞에 두고 컷백! ${tgt.name}가 받아 전개합니다.`,
 `${prefix} 크로스형 컷백 — ${wx.name}→${tgt.name}. ${defName} ${back.name}가 막으려 했으나 연결됐습니다.`,
@@ -3241,6 +3452,7 @@ const lonPool = atk.filter((x) => x.id !== gkA.id);
 const lon = lonPool.length ? pick(lonPool) : actor;
 const high = pick(def);
 bumpStat('keypass', gkA.id);
+bumpRating(gkA.id, 0.1);
 const longLines = [
 `${prefix} 골레이로 ${gkA.name} 롱킥! ${high.name} 라인 위로 넘겨 ${lon.name}가 잡았습니다. 상대 압박 한 번에 벗어납니다.`,
 `${prefix} ${gkA.name}가 손으로 배급 — ${lon.name}에게 직접. ${defName} ${high.name}는 높이 못 올렸습니다.`,
@@ -3250,6 +3462,7 @@ await append(longLines[Math.floor(Math.random() * longLines.length)], pitch('bui
 } else {
 const press = pick(def);
 bumpStat('keypass', actor.id);
+bumpRating(actor.id, 0.08);
 const keepLines = [
 `${prefix} ${atkName} ${sideHint}. ${actor.name}가 ${press.name}의 압박 속에서도 볼 지키며 링으로 연계합니다.`,
 `${prefix} ${press.name}가 붙었지만 ${actor.name}가 몸싸움 이깁니다. 볼 소유 유지 성공.`,
@@ -3260,13 +3473,14 @@ await append(keepLines[Math.floor(Math.random() * keepLines.length)], pitch('pro
 };
 
 const kickPitch = { attackA: true, channel: 'center', phase: 'build', outcome: 'neutral', plA, plB, halfIdx: 0, simSec: 0, ballHolderId: null };
+const mentLabel = (code) => (code === 'attack' ? '공격적' : code === 'defend' ? '수비적' : '밸런스');
 try {
 await append(`━━ ${teamAName} vs ${teamBName} · 모의 풋살 (5vs5, 시뮬 전·후반 각 20분 — 시청은 각 2분 비례) ━━`, kickPitch);
 if (usedBots) {
 await append(`[연습 모드] 실제 소속 인원이 5명 미만인 팀은 자동 보조 선수로 채워 5vs5로 진행합니다. (가상 인원은 기록에 반영되지 않습니다)`, kickPitch);
 }
-await append(`전력 요약: ${teamAName} 출전 OVR 합 ${strA}  |  ${teamBName} 출전 OVR 합 ${strB}`, kickPitch);
-await append(`[전반 00:00] 킥오프 — 중계는 약 5초마다 한 상황씩 전개되며, 각 상황은 50% 성공/실패입니다. 연속 성공 2·3·4회차마다 골 확률이 높아집니다.`, kickPitch);
+await append(`전력 요약: ${teamAName} 출전 OVR 합 ${strA} (${mentLabel(mentA)})  |  ${teamBName} 출전 OVR 합 ${strB} (${mentLabel(mentB)})`, kickPitch);
+await append(`[전반 00:00] 킥오프 — 패스 vs 가로채기, 드리블 vs 수비, 슈팅 vs 반사신경으로 판정합니다. 공격적 템포는 슈팅을 늘리고, 수비적은 실점을 줄입니다.`, kickPitch);
 
 for (let halfIdx = 0; halfIdx < 2; halfIdx++) {
 setMatchClock(halfIdx, 0);
@@ -3280,13 +3494,16 @@ setMatchClock(halfIdx, SIM_HALF_SEC);
 const hl = halfIdx === 0 ? '전반' : '후반';
 await append(`[${hl} 20:00] ${hl} 종료 휘슬`);
 if (halfIdx === 0) {
+const totH = live.possA + live.possB || 1;
+const paH = Math.round((100 * live.possA) / totH);
+await append(`[하프타임] 점유 ${paH}-${100 - paH} · 슈팅 ${live.shotA}-${live.shotB} (${live.onA}-${live.onB}) · xG ${live.xgA.toFixed(2)}-${live.xgB.toFixed(2)} · 스코어 ${sa}-${sb}`);
 await append(`[휴식] 하프타임 — 전술을 가다듬습니다.`);
 }
 }
 
 await append(`━━ 최종 스코어 ${teamAName} ${sa} : ${sb} ${teamBName} ━━`);
 await append(`(모의 시뮬레이션 종료 · 서버 기록·EXP 미반영)`);
-renderSimPostMatchStats(plA, plB, teamAName, teamBName, simStats);
+renderSimPostMatchStats(plA, plB, teamAName, teamBName, simStats, live, ratings);
 } finally {
 if (btn) { btn.disabled = false; btn.classList.remove('opacity-50', 'cursor-not-allowed'); }
 document.getElementById('simTacticalSection')?.classList.remove('hidden');
@@ -3396,6 +3613,205 @@ window.customAlert('⚽ 쇼츠 영상이 성공적으로 세팅되었습니다!\
 console.error(e); 
 window.customAlert(`쇼츠 등록 에러:\n${e.message}`); 
 }
+};
+
+const WC_HOUSE_MARGIN = 0.15;
+const WC_MAX_STAKE = 200;
+function wcOddsFromProb(prob) {
+const adjusted = Math.min(0.95, Number(prob) * (1 + WC_HOUSE_MARGIN));
+return Math.max(1.05, Math.round((1 / adjusted) * 100) / 100);
+}
+function defaultWcBoard() {
+return {
+updatedAt: new Date().toISOString(),
+matches: [
+{
+id: 'kr_r32_2026',
+title: '대한민국 32강 진출 예측',
+subtitle: '메이트 학급 월드컵과 동일 시장',
+kickoffLabel: '2026 월드컵',
+status: 'open',
+result: null,
+options: [
+{ id: 'advance', label: '32강 진출', prob: 0.38, odds: wcOddsFromProb(0.38) },
+{ id: 'eliminate', label: '조별리그 탈락', prob: 0.62, odds: wcOddsFromProb(0.62) }
+]
+},
+{
+id: 'wc2026_final_winner',
+title: '월드컵 우승국',
+subtitle: '재미 예측 · 감독이 결과 확정',
+kickoffLabel: '결승 이후 정산',
+status: 'open',
+result: null,
+options: [
+{ id: 'sa', label: '남미 우승', prob: 0.34, odds: wcOddsFromProb(0.34) },
+{ id: 'eu', label: '유럽 우승', prob: 0.48, odds: wcOddsFromProb(0.48) },
+{ id: 'other', label: '그 외 대륙', prob: 0.18, odds: wcOddsFromProb(0.18) }
+]
+}
+]
+};
+}
+function wcBoardRef() {
+return doc(db, 'artifacts', appId, 'public', 'data', 'config', 'wcBoard');
+}
+function getWcBoard() {
+return window.wcBoard && Array.isArray(window.wcBoard.matches) ? window.wcBoard : defaultWcBoard();
+}
+window.ensureWcBoardPublished = async () => {
+try {
+if (!window.playerState || !window.playerState.isGM) return;
+checkAuthReady();
+const snap = await getDoc(wcBoardRef());
+const data = snap.exists() ? snap.data() : null;
+if (data && Array.isArray(data.matches) && data.matches.length) return;
+await setDoc(wcBoardRef(), defaultWcBoard(), { merge: true });
+} catch (e) { console.error('wcBoard seed', e); }
+};
+window.renderWorldCupBetBoard = () => {
+const el = document.getElementById('wcBetBoard');
+if (!el) return;
+updateNavBongChip();
+const board = getWcBoard();
+const isGM = !!(window.playerState && window.playerState.isGM);
+const isGuest = !window.playerState || window.playerState.isGuest;
+const pid = window.playerState && window.playerState.id;
+const me = (window.allPlayersData || []).find((p) => p.id === pid);
+const myBets = Array.isArray(me && me.wcBets) ? me.wcBets : [];
+const myBong = me ? (Number(me.bong) || 0) : 0;
+const pending = myBets.filter((b) => b && b.status === 'pending');
+const historyHtml = myBets.length ? `<div class="rounded-xl border border-slate-700 bg-black/30 p-3 mb-3">
+<div class="text-[10px] font-black text-slate-400 mb-1">내 베팅 내역</div>
+${myBets.slice().sort((a,b)=>(b.at||0)-(a.at||0)).map((b) => {
+const st = b.status === 'won' ? `적중 +${b.payout||0}B` : (b.status === 'lost' ? '미적중' : '대기');
+const cls = b.status === 'won' ? 'text-emerald-300' : (b.status === 'lost' ? 'text-slate-500' : 'text-amber-300');
+return `<div class="flex justify-between gap-2 text-[11px] py-0.5"><span class="text-white truncate">${escapeHtml(b.label || '')} · ${b.stake}B</span><span class="${cls} shrink-0">${st}</span></div>`;
+}).join('')}
+</div>` : '';
+el.innerHTML = historyHtml + board.matches.map((m) => {
+const st = m.status === 'settled' ? '정산 완료' : (m.status === 'closed' ? '베팅 마감' : '베팅 접수 중');
+const stCls = m.status === 'settled' ? 'text-emerald-300' : (m.status === 'closed' ? 'text-amber-300' : 'text-red-300');
+const resultOpt = (m.options || []).find((o) => o.id === m.result);
+const optHtml = (m.options || []).map((o) => {
+const mine = myBets.find((b) => b.matchId === m.id && b.optionId === o.id);
+const disabled = isGuest || isGM || m.status !== 'open';
+const mark = mine ? `<div class="text-[9px] text-fut-gold mt-1">내 베팅 ${mine.stake}B · ${mine.status === 'won' ? '적중 +'+(mine.payout||0)+'B' : (mine.status === 'lost' ? '미적중' : '대기')}</div>` : '';
+return `<button type="button" ${disabled ? 'disabled' : ''} onclick="window.placeFcWorldCupBet('${m.id}','${o.id}')"
+class="text-left rounded-xl border border-red-500/30 bg-slate-950/70 px-3 py-2 hover:bg-red-950/40 transition ${disabled ? 'opacity-50 cursor-not-allowed' : ''}">
+<div class="text-sm text-white font-black">${o.label}</div>
+<div class="text-[10px] text-red-200/80">분석 ${Math.round((o.prob||0)*100)}% · 배당 ${Number(o.odds).toFixed(2)}x</div>
+${mark}
+</button>`;
+}).join('');
+const gmHtml = isGM ? `<div class="mt-3 pt-3 border-t border-slate-700 space-y-2">
+<div class="flex flex-wrap gap-2">
+<button type="button" class="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-amber-800 text-white" onclick="window.setWcMatchStatus('${m.id}','closed')">마감</button>
+<button type="button" class="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-700 text-white" onclick="window.setWcMatchStatus('${m.id}','open')">재개</button>
+</div>
+<div class="flex flex-wrap items-center gap-2">
+<select id="wcSettle_${m.id}" class="bg-slate-900 border border-slate-600 rounded-lg px-2 py-1 text-xs text-white">${(m.options||[]).map((o)=>`<option value="${o.id}" ${m.result===o.id?'selected':''}>${o.label}</option>`).join('')}</select>
+<button type="button" class="text-[10px] font-black px-3 py-1.5 rounded-lg bg-emerald-700 text-white" onclick="window.settleWcMatch('${m.id}')">결과 확정·지급</button>
+</div>
+</div>` : '';
+return `<article class="rounded-2xl border border-red-800/40 bg-slate-950/50 p-4">
+<div class="flex items-start justify-between gap-2 mb-2">
+<div>
+<h4 class="font-display text-lg text-red-200">${escapeHtml(m.title)}</h4>
+<p class="text-[10px] text-slate-500">${escapeHtml(m.subtitle || '')} · ${escapeHtml(m.kickoffLabel || '')}</p>
+</div>
+<span class="text-[10px] font-black ${stCls} shrink-0">${st}</span>
+</div>
+${resultOpt ? `<p class="text-[11px] text-emerald-300 mb-2">결과: ${escapeHtml(resultOpt.label)}</p>` : ''}
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${optHtml}</div>
+${gmHtml}
+</article>`;
+}).join('') + (isGuest ? '<p class="text-center text-[11px] text-slate-500">게스트는 베팅할 수 없습니다. 선수로 로그인하세요.</p>' : `<p class="text-[10px] text-slate-500 text-center">${pending.length ? `대기 ${pending.length}건 · ` : ''}보유 ${myBong} B · 1회 최대 ${WC_MAX_STAKE} B · 같은 경기에 한 옵션만 가능</p>`);
+};
+
+window.placeFcWorldCupBet = async (matchId, optionId) => {
+try {
+checkAuthReady();
+if (!window.playerState || window.playerState.isGuest || window.playerState.isGM) return;
+const board = getWcBoard();
+const match = (board.matches || []).find((m) => m.id === matchId);
+if (!match || match.status !== 'open') return window.customAlert('지금은 이 경기에 베팅할 수 없습니다.');
+const opt = (match.options || []).find((o) => o.id === optionId);
+if (!opt) return;
+const p = (window.allPlayersData || []).find((x) => x.id === window.playerState.id);
+if (!p) return;
+const bets = Array.isArray(p.wcBets) ? p.wcBets : [];
+if (bets.some((b) => b.matchId === matchId && b.status === 'pending')) {
+return window.customAlert('이미 이 경기에 베팅했습니다. 같은 경기 보험 베팅은 할 수 없어요.');
+}
+const wallet = Number(p.bong) || 0;
+if (wallet < 1) return window.customAlert('봉이 부족합니다.');
+const stake = await window.pickBongStake({
+title: '월드컵 승부예측',
+label: `${match.title}\n${opt.label}`,
+odds: opt.odds,
+wallet,
+max: WC_MAX_STAKE
+});
+if (!stake) return;
+if (stake > WC_MAX_STAKE) return window.customAlert(`1회 최대 ${WC_MAX_STAKE} B까지입니다.`);
+if (stake > wallet) return window.customAlert('봉이 부족합니다.');
+if (!await window.customConfirm(`${opt.label}에 ${stake} B를 걸까요?\n적중 시 약 ${Math.floor(stake * opt.odds)} B 지급`)) return;
+const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
+const bet = { id: `bet_${Date.now()}`, matchId, optionId, label: opt.label, stake, odds: opt.odds, status: 'pending', payout: 0, at: Date.now() };
+await setDoc(docRef, { bong: wallet - stake, wcBets: [...bets, bet] }, { merge: true });
+triggerConfetti();
+window.customAlert(`베팅 접수!\n${opt.label} · ${stake} B × ${Number(opt.odds).toFixed(2)}`);
+} catch (e) { console.error(e); window.customAlert(`베팅 실패:\n${e.message}`); }
+};
+
+window.setWcMatchStatus = async (matchId, status) => {
+try {
+checkAuthReady();
+if (!window.playerState.isGM) return;
+const board = getWcBoard();
+board.matches = (board.matches || []).map((m) => m.id === matchId ? { ...m, status } : m);
+board.updatedAt = new Date().toISOString();
+await setDoc(wcBoardRef(), board, { merge: true });
+} catch (e) { window.customAlert(e.message); }
+};
+
+window.settleWcMatch = async (matchId) => {
+try {
+checkAuthReady();
+if (!window.playerState.isGM) return;
+const pick = document.getElementById('wcSettle_' + matchId)?.value;
+if (!pick) return window.customAlert('결과를 선택하세요.');
+if (!await window.customConfirm('결과를 확정하고 적중자에게 봉을 지급할까요?')) return;
+const board = getWcBoard();
+const match = (board.matches || []).find((m) => m.id === matchId);
+if (!match) return;
+const batch = writeBatch(db);
+(window.allPlayersData || []).forEach((p) => {
+const bets = Array.isArray(p.wcBets) ? p.wcBets : [];
+let bong = Number(p.bong) || 0;
+let changed = false;
+const next = bets.map((b) => {
+if (!b || b.matchId !== matchId || b.status !== 'pending') return b;
+changed = true;
+if (b.optionId === pick) {
+const payout = Math.floor(Number(b.stake) * Number(b.odds));
+bong += payout;
+return { ...b, status: 'won', payout };
+}
+return { ...b, status: 'lost', payout: 0 };
+});
+if (changed) {
+batch.set(doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id)), { bong, wcBets: next }, { merge: true });
+}
+});
+board.matches = board.matches.map((m) => m.id === matchId ? { ...m, status: 'settled', result: pick } : m);
+board.updatedAt = new Date().toISOString();
+batch.set(wcBoardRef(), board, { merge: true });
+await batch.commit();
+triggerConfetti();
+window.customAlert('정산 완료. 적중자에게 봉이 지급되었습니다.');
+} catch (e) { console.error(e); window.customAlert(`정산 실패:\n${e.message}`); }
 };
 
 const triggerConfetti = () => {
@@ -3595,9 +4011,9 @@ if(roleEl) { roleEl.innerText = "✅ 선수 등록 완료"; roleEl.className = "
 if(nameEl) nameEl.innerText = window.playerState.name;
 }
 
-if(isGM) window.switchTab('tabMaster');
+if(isGM) window.switchAppTab('more', 'tabMaster');
 else {
-window.switchTab('tabWorkspace');
+window.switchAppTab('home');
 if(window.selectedPlayerId && window.allPlayersData.length > 0) window.selectPlayer(window.selectedPlayerId);
 }
 
@@ -3756,6 +4172,8 @@ if(isVisible('tabMaster')) renderMasterDashboard();
 if(isVisible('tabCompare')) window.renderCompareList();
 if(isVisible('tabSim')) window.renderSimMatchTab();
 if(isVisible('tabMasterStats')) window.renderMasterStats();
+if(isVisible('tabBet')) window.renderWorldCupBetBoard();
+updateNavBongChip();
 }, (error) => console.error("Players Listen Error:", error));
 
 onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'announcement'), (docSnap) => {
@@ -3798,6 +4216,16 @@ startedAt: data.startedAt || null
 };
 applySeasonChrome();
 }, (error) => console.error("Season Listen Error:", error));
+
+onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'wcBoard'), (docSnap) => {
+const data = docSnap.data();
+if (data && Array.isArray(data.matches) && data.matches.length) {
+window.wcBoard = data;
+} else {
+window.wcBoard = defaultWcBoard();
+}
+if (isVisible('tabBet')) window.renderWorldCupBetBoard();
+}, (error) => console.error("wcBoard Listen Error:", error));
 
 document.getElementById('loadingOverlay')?.classList.add('hidden');
 

@@ -69,42 +69,32 @@
 <div id="mainUI" class="hidden transition-opacity duration-500">
 <!-- 네비게이션 -->
 <nav class="relative lg:sticky top-0 w-full z-[90] bg-pitch-bg/95 backdrop-blur-lg border-b border-emerald-900/50">
-<div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
-<div class="flex items-center justify-between h-16 gap-2 sm:gap-4">
-<div class="flex items-center gap-2 pr-2 border-r border-slate-700/50 flex-shrink-0">
-<i class="fa-solid fa-shield-halved text-xl sm:text-2xl text-fut-gold hidden sm:block"></i>
-<span class="font-display text-lg sm:text-xl text-white tracking-wider pt-1 hidden md:block">SAMBONG</span>
-<span id="navSeasonBadge" class="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black tracking-widest bg-gradient-to-r from-amber-700 to-yellow-500 text-slate-900 border border-yellow-200/40">S2</span>
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+<div class="flex items-center justify-between h-14 gap-2">
+<div class="flex items-center gap-2 min-w-0">
+<i class="fa-solid fa-shield-halved text-xl text-fut-gold"></i>
+<span class="font-display text-lg text-white tracking-wider pt-0.5">SAMBONG</span>
+<span id="navSeasonBadge" class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black tracking-widest bg-gradient-to-r from-amber-700 to-yellow-500 text-slate-900 border border-yellow-200/40">S2</span>
 </div>
-
-<div class="flex items-center space-x-1 sm:space-x-3 text-xs sm:text-sm flex-grow overflow-x-auto hide-scrollbar whitespace-nowrap scroll-smooth">
-<button onclick="window.switchTab('tabWorkspace')" id="btnTabWorkspace" class="nav-tab active pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-person-booth mr-1"></i>라커룸</button>
-<button onclick="window.switchTab('tabSim')" id="btnTabSim" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-futbol mr-1 text-amber-400"></i>모의경기</button>
-<button onclick="window.switchTab('tabTips')" id="btnTabTips" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-lightbulb mr-1 text-orange-400"></i>꿀팁&공지</button>
-<button onclick="window.switchTab('tabShop')" id="btnTabShop" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-hammer mr-1 text-purple-400"></i>상점&강화소</button>
-<button onclick="window.switchTab('tabAchievements')" id="btnTabAchievements" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-medal mr-1 text-yellow-300"></i>도전과제</button>
-<button onclick="window.switchTab('tabRank')" id="btnTabRank" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-trophy mr-1 text-yellow-400"></i>명예의전당</button>
-<button onclick="window.switchTab('tabCompare')" id="btnTabCompare" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-code-compare mr-1 text-pink-400"></i>선수비교</button>
-<button onclick="window.switchTab('tabGuide')" id="btnTabGuide" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 flex-shrink-0"><i class="fa-solid fa-circle-info mr-1 text-cyan-400"></i>이용안내</button>
-<button onclick="window.switchTab('tabMaster')" id="btnTabMaster" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 hidden flex-shrink-0"><i class="fa-solid fa-chart-line mr-1 text-fut-rare"></i>현황판(마스터)</button>
-<button onclick="window.switchTab('tabMasterStats')" id="btnTabMasterStats" class="nav-tab pb-1 pt-2 px-1.5 sm:px-2 hidden flex-shrink-0"><i class="fa-solid fa-list-ol mr-1 text-emerald-400"></i>스탯현황</button>
-</div>
-
-<div class="flex items-center space-x-2 pl-2 border-l border-slate-700/50 flex-shrink-0">
+<div class="flex items-center gap-2 shrink-0">
+<div id="navBongChip" class="flex items-center gap-1 bg-black/40 border border-fut-gold/40 rounded-full px-2.5 py-1 text-[11px] font-black text-fut-gold"><i class="fa-solid fa-coins text-[10px]"></i><span id="navBongValue">0</span> B</div>
 <div id="saveStatus" class="hidden text-[10px] sm:text-xs text-slate-400 items-center gap-1.5 bg-pitch-panel px-2 sm:px-3 py-1.5 rounded-full border border-emerald-800 whitespace-nowrap">
 <span id="playerNameDisplay" class="font-bold text-white hidden lg:block"></span>
 <span id="playerRoleDisplay" class="text-fut-gold font-bold"></span>
 </div>
-<button onclick="window.logout()" class="text-xs bg-slate-800 hover:bg-red-900/50 text-white px-2 sm:px-3 py-1.5 rounded-lg transition border border-slate-600 hover:border-red-500">
+<button onclick="window.logout()" class="text-xs bg-slate-800 hover:bg-red-900/50 text-white px-2 sm:px-3 py-1.5 rounded-lg transition border border-slate-600 hover:border-red-500" aria-label="로그아웃">
 <i class="fa-solid fa-right-from-bracket"></i>
 </button>
 </div>
 </div>
 </div>
+<div id="subHubNav" class="hidden border-t border-emerald-900/40 bg-black/30">
+<div id="subHubChips" class="max-w-7xl mx-auto px-2 py-1.5 flex gap-1 overflow-x-auto hide-scrollbar"></div>
+</div>
 </nav>
 
 <!-- 메인 컨텐츠 영역 -->
-<div class="pt-6 pb-12 px-4 max-w-7xl mx-auto min-h-screen">
+<div class="pt-4 pb-28 px-4 max-w-7xl mx-auto min-h-screen">
 
 <div class="grid lg:grid-cols-12 gap-8 items-start relative w-full transition-all duration-500">
 
@@ -473,12 +463,29 @@
 <div class="glass-panel p-3 sm:p-8 rounded-3xl border-t-4 border-t-amber-500 relative overflow-hidden max-w-full min-w-0">
 <div class="absolute -top-24 -right-10 w-72 h-72 bg-amber-600/15 rounded-full blur-3xl pointer-events-none"></div>
 <div class="relative z-10">
-<h3 class="text-2xl sm:text-3xl font-display text-amber-400 mb-2 flex items-center gap-3">
-<i class="fa-solid fa-clipboard-list"></i> 모의 풋살 시뮬레이션
+<h3 class="text-2xl sm:text-3xl font-display text-amber-400 mb-1 flex items-center gap-3">
+<i class="fa-solid fa-clipboard-list"></i> 매치 센터
 </h3>
-<p class="text-sm text-slate-300 mb-4 break-keep leading-relaxed">
-<span class="text-amber-200/90 font-bold">5vs5 풋살</span> · 시뮬레이터 시간 <span class="text-amber-300 font-bold">전반 20분 + 후반 20분</span>이며, 실제 시청은 <span class="text-amber-200 font-bold">전·후반 각 2분</span> 길이로 비례 압축되어 재생됩니다. <span class="text-emerald-300">로그인한 학생 누구나</span> 프로필·라커·아래 팀 분류에서 레드/블루를 자유롭게 구성합니다. 인원이 부족하면 <span class="text-emerald-300">랜덤 보강</span>(포지션 감안) 또는 시뮬 <span class="text-slate-400">자동 보조</span>로 연습할 수 있습니다. 화면은 위쪽 <span class="text-amber-200/90">경기장</span>과 아래 <span class="text-amber-200/90">텍스트 중계</span>입니다.
-</p>
+<p class="text-[11px] text-slate-400 mb-3">Football Manager 스타일 · 능력치 맞대결 · 점유율/슈팅 트래커</p>
+<div id="simPrematchBrief" class="mb-4 rounded-2xl border border-amber-700/40 bg-gradient-to-br from-slate-950 to-emerald-950/30 p-3 sm:p-4 text-xs text-slate-300 leading-relaxed break-keep">팀을 고른 뒤 경기 시작을 누르면, 전력 비교와 핵심 매치업이 여기에 표시됩니다.</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
+<label class="flex items-center justify-between gap-2 rounded-xl border border-red-800/40 bg-red-950/20 px-3 py-2 text-[11px] text-red-100">
+<span class="font-bold">레드 전술 템포</span>
+<select id="simMentalityA" class="bg-slate-900 border border-red-700/50 rounded-lg px-2 py-1 text-white text-[11px]">
+<option value="defend">수비적</option>
+<option value="balanced" selected>밸런스</option>
+<option value="attack">공격적</option>
+</select>
+</label>
+<label class="flex items-center justify-between gap-2 rounded-xl border border-blue-800/40 bg-blue-950/20 px-3 py-2 text-[11px] text-blue-100">
+<span class="font-bold">블루 전술 템포</span>
+<select id="simMentalityB" class="bg-slate-900 border border-blue-700/50 rounded-lg px-2 py-1 text-white text-[11px]">
+<option value="defend">수비적</option>
+<option value="balanced" selected>밸런스</option>
+<option value="attack">공격적</option>
+</select>
+</label>
+</div>
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 min-w-0">
 <div class="rounded-2xl border border-red-900/50 bg-red-950/30 p-3 sm:p-4 min-w-0">
@@ -533,6 +540,11 @@
 <span id="simScoreNums" class="text-fut-gold">0 - 0</span>
 <span id="simScoreBName" class="text-blue-400"></span>
 </div>
+<div id="simLiveHud" class="hidden mb-3 grid grid-cols-3 gap-2 text-center">
+<div class="rounded-xl bg-black/40 border border-slate-700 py-2"><div class="text-[9px] text-slate-500 font-bold">점유율</div><div id="simHudPoss" class="text-sm font-black text-emerald-300">50-50</div></div>
+<div class="rounded-xl bg-black/40 border border-slate-700 py-2"><div class="text-[9px] text-slate-500 font-bold">슈팅 (유효)</div><div id="simHudShots" class="text-sm font-black text-amber-200">0-0 (0-0)</div></div>
+<div class="rounded-xl bg-black/40 border border-slate-700 py-2"><div class="text-[9px] text-slate-500 font-bold">예상득점 xG</div><div id="simHudXg" class="text-sm font-black text-cyan-200">0.00-0.00</div></div>
+</div>
 
 <div id="simPostMatchStats" class="hidden mb-3 rounded-xl border border-amber-600/40 bg-gradient-to-br from-slate-900/95 to-black/80 p-3 shadow-lg"></div>
 
@@ -556,6 +568,27 @@
 </div>
 </div>
 <p class="text-[10px] text-slate-500 mt-2">※ 모의 결과는 서버 기록에 반영되지 않으며, 재미용 시뮬레이션입니다.</p>
+</div>
+</div>
+</div>
+
+<div id="tabBet" class="hidden space-y-6">
+<div class="glass-panel p-4 sm:p-8 rounded-3xl border-t-4 border-t-red-500 relative overflow-hidden">
+<div class="absolute -top-16 -left-10 w-56 h-56 bg-red-600/15 rounded-full blur-3xl pointer-events-none"></div>
+<div class="relative z-10">
+<div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-4 border-b border-red-900/40 pb-3">
+<div>
+<h3 class="text-2xl sm:text-3xl font-display text-red-400 flex items-center gap-2"><i class="fa-solid fa-ticket"></i> 월드컵 승부예측</h3>
+<p class="text-xs text-slate-400 mt-1 break-keep leading-relaxed">메이트 학급 월드컵과 같은 경기입니다. <b class="text-fut-gold">삼봉FC 봉(B)</b>으로 베팅하고, 감독이 결과를 확정하면 배당만큼 지급됩니다. 배당에는 북메이커 마진이 있어 장기적으로는 손해입니다 — 재미로만!</p>
+</div>
+<div class="text-right bg-slate-950/70 border border-fut-gold/30 rounded-xl px-3 py-2">
+<div class="text-[10px] text-slate-500 font-bold">내 봉</div>
+<div class="font-display text-2xl text-fut-gold"><span id="betWalletBong">0</span> B</div>
+</div>
+</div>
+<div id="wcBetBoard" class="space-y-4">
+<div class="text-center text-slate-500 py-10 text-sm">승부예측 보드를 불러오는 중...</div>
+</div>
 </div>
 </div>
 </div>
@@ -605,6 +638,10 @@
 <div class="bg-gradient-to-r from-slate-900/60 to-emerald-900/30 p-5 rounded-xl border border-emerald-700/50 hover:border-emerald-500/80 transition">
 <h4 class="text-base sm:text-lg font-bold text-emerald-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-bullseye text-red-400"></i> 4. 시즌 2 목표: 매주 조금씩 성장</h4>
 <p class="text-sm text-emerald-100/80 leading-relaxed break-keep">시즌 2는 전원 능력치 55에서 다시 시작합니다. 레벨업 경험치가 높아지고 훈련 연타가 막혀, 토요스포츠데이에 꾸준히 나온 선수가 진짜로 강해집니다. 한 시즌 동안 커리어 카드를 키워보세요.</p>
+</div>
+<div class="bg-gradient-to-r from-red-950/40 to-slate-900/60 p-5 rounded-xl border border-red-700/50 hover:border-red-400 transition">
+<h4 class="text-base sm:text-lg font-bold text-red-300 mb-2 flex items-center gap-2"><i class="fa-solid fa-ticket text-fut-gold"></i> 5. 월드컵 승부예측 (봉 베팅)</h4>
+<p class="text-sm text-slate-300 leading-relaxed break-keep">하단 <b>베팅</b> 탭에서 메이트 학급 월드컵과 같은 경기에 삼봉FC 봉(B)을 걸 수 있습니다. 배당에는 북메이커 마진이 있어 장기적으로는 손해입니다. 결과는 감독님이 확정하면 적중자에게 지급됩니다.</p>
 </div>
 </div>
 </div>
@@ -708,6 +745,31 @@
 </div>
 
 </div>
+
+<nav id="appBottomNav" class="fixed bottom-0 inset-x-0 z-[120] bg-[#07140e]/95 backdrop-blur-xl border-t border-emerald-800/60 pb-[env(safe-area-inset-bottom)]">
+<div class="max-w-lg mx-auto grid grid-cols-5 text-center">
+<button type="button" data-app-hub="home" onclick="window.switchAppTab('home')" class="app-tab py-2.5">
+<i class="fa-solid fa-house text-lg"></i>
+<span>홈</span>
+</button>
+<button type="button" data-app-hub="match" onclick="window.switchAppTab('match')" class="app-tab py-2.5">
+<i class="fa-solid fa-futbol text-lg"></i>
+<span>매치</span>
+</button>
+<button type="button" data-app-hub="career" onclick="window.switchAppTab('career')" class="app-tab py-2.5">
+<i class="fa-solid fa-chart-line text-lg"></i>
+<span>성장</span>
+</button>
+<button type="button" data-app-hub="bet" onclick="window.switchAppTab('bet')" class="app-tab py-2.5">
+<i class="fa-solid fa-ticket text-lg"></i>
+<span>베팅</span>
+</button>
+<button type="button" data-app-hub="more" onclick="window.switchAppTab('more')" class="app-tab py-2.5">
+<i class="fa-solid fa-ellipsis text-lg"></i>
+<span>더보기</span>
+</button>
+</div>
+</nav>
 </div>
 
 </div>
