@@ -7,6 +7,7 @@ export default {
         sans: ['Noto Sans KR', 'sans-serif'],
         display: ['Black Han Sans', 'sans-serif'],
         oswald: ['Oswald', 'sans-serif'],
+        bebas: ['Bebas Neue', 'Oswald', 'sans-serif'],
       },
       colors: {
         'pitch-bg': '#0a1912',

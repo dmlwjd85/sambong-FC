@@ -7,10 +7,14 @@ html, body, #root {
 }
 
 body, #root {
-  background-color: #0a1912;
+  background-color: #07140e;
   color: #f8fafc;
   overflow-x: hidden;
-  background-image: radial-gradient(circle at 50% 0%, #15452d, #0a1912);
+  background-image:
+    radial-gradient(ellipse at 50% -8%, rgba(56, 255, 142, 0.14), transparent 42%),
+    radial-gradient(ellipse at 80% 110%, rgba(232, 194, 113, 0.08), transparent 40%),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.015) 0 2px, transparent 2px 28px),
+    linear-gradient(180deg, #0d2418 0%, #07140e 38%, #050c09 100%);
 }
 h1, h2, h3, .font-display { font-family: 'Black Han Sans', sans-serif; letter-spacing: 1px; }
 
@@ -58,22 +62,75 @@ h1, h2, h3, .font-display { font-family: 'Black Han Sans', sans-serif; letter-sp
 @keyframes rainbow-bg { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
 
 .fut-card {
-clip-path: polygon(10% 0, 90% 0, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0 90%, 0 10%);
-box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 0 10px rgba(255,255,255,0.5);
+clip-path: polygon(8% 0, 92% 0, 100% 8%, 100% 92%, 92% 100%, 8% 100%, 0 92%, 0 8%);
+box-shadow: 0 18px 40px rgba(0,0,0,0.55), inset 0 0 18px rgba(255,255,255,0.22);
 transition: transform 0.3s ease, box-shadow 0.3s ease;
 position: relative;
 }
 .fut-card::after {
-content: ''; position: absolute; top: 2px; left: 2px; right: 2px; bottom: 2px;
-clip-path: polygon(10% 0, 90% 0, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0 90%, 0 10%);
-border: 2px solid rgba(255,255,255,0.3); pointer-events: none;
+content: ''; position: absolute; top: 3px; left: 3px; right: 3px; bottom: 3px;
+clip-path: polygon(8% 0, 92% 0, 100% 8%, 100% 92%, 92% 100%, 8% 100%, 0 92%, 0 8%);
+border: 1.5px solid rgba(255,255,255,0.28); pointer-events: none; z-index: 5;
 }
+.fut-career-card .fut-card-pitch-bg {
+position: absolute; inset: 0; z-index: 0;
+background:
+  linear-gradient(180deg, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.45) 100%),
+  repeating-linear-gradient(90deg, rgba(255,255,255,0.06) 0 2px, transparent 2px 18px),
+  radial-gradient(ellipse at 70% 18%, rgba(255,255,255,0.18), transparent 46%);
+opacity: 0.55;
+}
+.fut-career-card .fut-card-foil {
+position: absolute; inset: -40%; z-index: 1; pointer-events: none;
+background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.28) 48%, transparent 62%);
+animation: cardFoilSweep 5.5s ease-in-out infinite;
+}
+@keyframes cardFoilSweep {
+  0% { transform: translateX(-18%) rotate(12deg); opacity: 0.15; }
+  45% { opacity: 0.55; }
+  100% { transform: translateX(28%) rotate(12deg); opacity: 0.12; }
+}
+.fut-nameplate {
+background: linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.42));
+border-top: 1px solid rgba(255,255,255,0.28);
+border-bottom: 1px solid rgba(0,0,0,0.25);
+box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+}
+.fut-portrait-frame {
+background:
+  linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.45) 100%),
+  radial-gradient(ellipse at 50% 80%, rgba(0,0,0,0.2), transparent 70%);
+border-radius: 0.75rem;
+overflow: hidden;
+}
+.fut-portrait-img {
+width: 7.4rem; height: 9.6rem;
+object-fit: cover; object-position: top center;
+border-radius: 0.65rem;
+border: 2px solid rgba(255,255,255,0.35);
+box-shadow: 0 10px 22px rgba(0,0,0,0.45), 0 0 0 1px rgba(0,0,0,0.25);
+filter: saturate(1.08) contrast(1.05);
+}
+.fut-portrait-fallback {
+width: 7.4rem; height: 9.6rem;
+border-radius: 0.65rem;
+display: flex; align-items: flex-end; justify-content: center;
+font-size: 4.4rem; line-height: 1;
+border: 2px solid rgba(255,255,255,0.28);
+box-shadow: inset 0 -18px 28px rgba(0,0,0,0.35);
+}
+.fut-portrait-fallback.kit-m,
+.kit-m { background: linear-gradient(180deg, #1e3a5f 0%, #0f172a 55%, #14532d 100%); }
+.fut-portrait-fallback.kit-f,
+.kit-f { background: linear-gradient(180deg, #4c1d95 0%, #1e1b4b 55%, #9d174d 100%); }
+.stat-mini-bar { width: 100%; height: 3px; background: rgba(0,0,0,0.28); border-radius: 99px; overflow: hidden; margin-top: 3px; }
+.stat-mini-bar > i { display: block; height: 100%; border-radius: 99px; background: currentColor; opacity: 0.85; }
 
-.card-rookie { background: linear-gradient(135deg, #d4af37 0%, #cd7f32 100%); color: #fff; } 
-.card-semipro { background: linear-gradient(135deg, #e2e2e2 0%, #999999 100%); color: #111; }
-.card-pro { background: linear-gradient(135deg, #fceda1 0%, #e8c271 40%, #b08d41 100%); color: #332305; }
-.card-worldclass { background: linear-gradient(135deg, #9370db 0%, #4b0082 100%); color: #fff; border: 1px solid #d8bfd8; box-shadow: 0 0 20px rgba(138,43,226,0.6); }
-.card-challenger { background: linear-gradient(135deg, #222 0%, #111 100%); color: #fff; border: 2px solid #ffd700; box-shadow: 0 0 30px rgba(255,215,0,0.8); }
+.card-rookie { background: linear-gradient(160deg, #e8c9a0 0%, #b87333 42%, #7c4a1e 100%); color: #fff8e7; } 
+.card-semipro { background: linear-gradient(160deg, #f4f4f5 0%, #c0c0c8 40%, #6b7280 100%); color: #111827; }
+.card-pro { background: linear-gradient(160deg, #fff3c4 0%, #e8c271 38%, #8a6914 100%); color: #2a1a04; }
+.card-worldclass { background: linear-gradient(160deg, #c4b5fd 0%, #6d28d9 40%, #312e81 100%); color: #fff; border: 1px solid #d8bfd8; box-shadow: 0 0 24px rgba(138,43,226,0.55); }
+.card-challenger { background: linear-gradient(160deg, #292524 0%, #0a0a0a 100%); color: #fff; border: 2px solid #ffd700; box-shadow: 0 0 30px rgba(255,215,0,0.8); }
 .card-challenger::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: conic-gradient(transparent, rgba(255,215,0,0.3), transparent 30%); animation: rotate 4s linear infinite; z-index: -1; pointer-events: none; }
 @keyframes rotate { 100% { transform: rotate(1turn); } }
 
@@ -140,10 +197,21 @@ white-space: nowrap; z-index: 2;
 }
 
 .mini-card { position: relative; transition: all 0.2s; overflow: hidden; }
-.mini-card:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 5px 15px rgba(56,255,142,0.3); border-color: #38ff8e; }
-.mini-card.selected { border-color: #e8c271; box-shadow: 0 0 15px rgba(232,194,113,0.6); background-color: rgba(232,194,113,0.1); }
+.mini-card:hover { transform: translateY(-4px) scale(1.04); box-shadow: 0 8px 20px rgba(56,255,142,0.22); border-color: #38ff8e; }
+.mini-card.selected { border-color: #e8c271; box-shadow: 0 0 16px rgba(232,194,113,0.55); }
 .mini-card.checked-in { opacity: 1; }
-.mini-card.checked-out { opacity: 0.5; filter: grayscale(50%); }
+.mini-card.checked-out { opacity: 0.55; filter: grayscale(35%); }
+.fut-mini {
+  background-image: linear-gradient(180deg, rgba(255,255,255,0.12), transparent 38%);
+  min-height: 168px;
+}
+.fut-mini .fut-mini-portrait img,
+.fut-mini-portrait-img {
+  width: 3.6rem; height: 4.6rem; object-fit: cover; object-position: top;
+  border-radius: 0.4rem; border: 1px solid rgba(255,255,255,0.35);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+}
+.fut-mini-ovr { font-family: 'Bebas Neue', Oswald, sans-serif; letter-spacing: 0.04em; }
 
 .locker-checkbox { appearance: none; background-color: rgba(0,0,0,0.5); border: 2px solid #555; border-radius: 4px; display: inline-block; position: relative; cursor: pointer; transition: all 0.2s; }
 .locker-checkbox:checked { background-color: #38ff8e; border-color: #38ff8e; }

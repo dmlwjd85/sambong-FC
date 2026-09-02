@@ -35,6 +35,55 @@ const POS_WEIGHTS = {
 '미정': { core: [], sub: [], coreW: 0, subW: 0, etcW: 1.0 }
 };
 
+/** 시즌 2 기본 능력치 · 일일 기록 한도 */
+const STAT_BASE = 55;
+const STAT_KEYS = ['pac', 'sho', 'pas', 'dri', 'def', 'phy', 'ref', 'int', 'pst', 'dis', 'cmp', 'wrk'];
+const SEASON2_KICKOFF = '2026-09-05';
+const ACTIVITY_DAILY_CAP = { training: 1, matches: 1, goals: 4, assists: 4, keypass: 6, saves: 8 };
+const ACTIVITY_LABEL = { training: '개인 훈련', matches: '경기 출전', goals: '골', assists: '어시스트', keypass: '킬패스', saves: '세이브' };
+window.seasonInfo = window.seasonInfo || { season: 1, started: false, startedAt: null };
+
+const getStat = (p, key) => {
+const n = Number(p?.[key]);
+return Number.isFinite(n) && n > 0 ? Math.min(99, n) : STAT_BASE;
+};
+
+function getKstDateStr() {
+return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+}
+
+function emptyActivityCounts() {
+return { training: 0, matches: 0, goals: 0, assists: 0, keypass: 0, saves: 0 };
+}
+
+function getTodayActivityCounts(p) {
+const today = getKstDateStr();
+const raw = (p && typeof p.activityCounts === 'object' && !Array.isArray(p.activityCounts)) ? p.activityCounts : {};
+if (!p || p.activityDay !== today) return emptyActivityCounts();
+const out = emptyActivityCounts();
+Object.keys(out).forEach((k) => { out[k] = Number(raw[k]) || 0; });
+return out;
+}
+
+function applySeasonChrome() {
+const info = window.seasonInfo || {};
+const started = !!info.started;
+const sub = document.getElementById('loginSeasonSub');
+if (sub) {
+sub.textContent = started
+? 'SEASON 2 개막 · 전원 능력치 55부터 커리어를 키우세요'
+: `시즌 2 개막 예정 · 9월 5일(토) · 전원 능력치 ${STAT_BASE} 스타트`;
+}
+const badge = document.getElementById('navSeasonBadge');
+if (badge) badge.textContent = started ? 'S2 ON' : 'S2';
+const master = document.getElementById('seasonMasterStatus');
+if (master) {
+master.textContent = started
+? `시즌 2가 ${info.startedAt ? new Date(info.startedAt).toLocaleString('ko-KR') : ''}에 개막했습니다. 다시 누르면 전원 55로 한 번 더 리셋됩니다.`
+: `예정일: 2026년 9월 5일(토). 버튼을 누르면 전원이 능력치 ${STAT_BASE}로 다시 시작합니다.`;
+}
+}
+
 const STAT_DESC = {
 'pac': '🏃‍♂️ 속력 (Pace)\n\n단거리 전력 질주 속도와 순간적인 가속도입니다.\n치고 달리기나 수비 복귀 시 가장 먼저 도착할 수 있게 해줍니다.',
 'sho': '⚽ 슈팅 (Shooting)\n\n슈팅 파워와 정확도입니다.\n골대 구석을 찌르는 강력한 슛을 날리거나 골망을 찢을 듯한 파워가 강해집니다.',
@@ -103,9 +152,10 @@ nameInputContainer.classList.add('hidden');
 }
 }
 if (document.readyState === 'loading') {
-window.addEventListener('DOMContentLoaded', setupLoginFormDom);
+window.addEventListener('DOMContentLoaded', () => { setupLoginFormDom(); applySeasonChrome(); });
 } else {
 setupLoginFormDom();
+applySeasonChrome();
 }
 
 const DAILY_TIPS = [
@@ -248,24 +298,25 @@ return Math.min(99, Math.floor(totalOVR));
 const getOVR = (p) => {
 const b = getBonusStats(p).flat;
 const stats = {
-pac: (Number(p.pac)||60)+b.pac, sho: (Number(p.sho)||60)+b.sho, pas: (Number(p.pas)||60)+b.pas,
-dri: (Number(p.dri)||60)+b.dri, def: (Number(p.def)||60)+b.def, phy: (Number(p.phy)||60)+b.phy,
-ref: (Number(p.ref)||60)+b.ref, int: (Number(p.int)||60)+b.int, pst: (Number(p.pst)||60)+b.pst,
-dis: (Number(p.dis)||60)+b.dis, cmp: (Number(p.cmp)||60)+b.cmp, wrk: (Number(p.wrk)||60)+b.wrk
+pac: getStat(p, 'pac')+b.pac, sho: getStat(p, 'sho')+b.sho, pas: getStat(p, 'pas')+b.pas,
+dri: getStat(p, 'dri')+b.dri, def: getStat(p, 'def')+b.def, phy: getStat(p, 'phy')+b.phy,
+ref: getStat(p, 'ref')+b.ref, int: getStat(p, 'int')+b.int, pst: getStat(p, 'pst')+b.pst,
+dis: getStat(p, 'dis')+b.dis, cmp: getStat(p, 'cmp')+b.cmp, wrk: getStat(p, 'wrk')+b.wrk
 };
 return getOVRForPos(stats, p.pos);
 };
 
 const getTierInfo = (ovr) => {
-if(ovr < 70) return { name: '루키 (ROOKIE)', class: 'tier-badge-rookie', cardClass: 'card-rookie' };
-if(ovr < 80) return { name: '세미프로 (SEMI-PRO)', class: 'tier-badge-semipro', cardClass: 'card-semipro' };
-if(ovr < 90) return { name: '프로 (PRO)', class: 'tier-badge-pro', cardClass: 'card-pro' };
-if(ovr < 95) return { name: '월드클래스 (WORLD CLASS)', class: 'tier-badge-worldclass', cardClass: 'card-worldclass' };
+if(ovr < 65) return { name: '루키 (ROOKIE)', class: 'tier-badge-rookie', cardClass: 'card-rookie' };
+if(ovr < 75) return { name: '세미프로 (SEMI-PRO)', class: 'tier-badge-semipro', cardClass: 'card-semipro' };
+if(ovr < 85) return { name: '프로 (PRO)', class: 'tier-badge-pro', cardClass: 'card-pro' };
+if(ovr < 92) return { name: '월드클래스 (WORLD CLASS)', class: 'tier-badge-worldclass', cardClass: 'card-worldclass' };
 return { name: '챌린저 (CHALLENGER)', class: 'tier-badge-challenger', cardClass: 'card-challenger' };
 };
 
-const getWeeklyWage = (ovr) => { return Math.max(50, Math.min(200, Math.floor(50 + ((ovr - 50) / 49) * 150))); };
-const getExpNeeded = (level) => Math.floor(40 + ((Number(level) || 1) * 3));
+const getWeeklyWage = (ovr) => { return Math.max(40, Math.min(160, Math.floor(40 + ((ovr - 50) / 49) * 120))); };
+/** 시즌 2: 레벨당 필요 EXP를 높여 연타 성장 억제 */
+const getExpNeeded = (level) => Math.floor(70 + ((Number(level) || 1) * 8));
 
 /** 기록 취소 등: 차감분만큼 EXP에서 빼고, 부족하면 레벨을 내리며 이전 구간 필요치를 보충함 (processExp와 역연산) */
 function applyExpLoss(p, totalDeduct, updatesObj) {
@@ -327,18 +378,25 @@ return '';
 function getAvatarHtml(p, variant) {
 const url = getPortraitUrl(p);
 const boxes = {
-locker: { img: 'w-14 h-14 min-w-[3.5rem] min-h-[3.5rem]', emoji: 'text-3xl mt-4 mb-1 drop-shadow-md inline-flex items-center justify-center' },
-detail: { img: 'w-[5rem] h-[5rem] min-w-[5rem] min-h-[5rem]', emoji: 'text-[5rem] drop-shadow-xl relative z-10 mb-2 inline-flex items-center justify-center leading-none' },
-sm: { img: 'w-8 h-8 min-w-[2rem] min-h-[2rem]', emoji: 'text-base sm:text-lg inline-flex items-center justify-center' },
-md: { img: 'w-10 h-10 min-w-[2.5rem] min-h-[2.5rem]', emoji: 'text-2xl inline-flex items-center justify-center' },
-xl: { img: 'w-16 h-16 min-w-[4rem] min-h-[4rem]', emoji: 'text-4xl drop-shadow-md mb-2 inline-flex items-center justify-center' }
+locker: { img: 'fut-mini-portrait-img', emoji: 'text-4xl drop-shadow-md inline-flex items-end justify-center leading-none' },
+detail: { img: 'fut-portrait-img', emoji: 'fut-portrait-fallback' },
+card: { img: 'fut-portrait-img', emoji: 'fut-portrait-fallback' },
+sm: { img: 'w-8 h-8 min-w-[2rem] min-h-[2rem] rounded-full object-cover border border-white/25', emoji: 'text-base sm:text-lg inline-flex items-center justify-center' },
+md: { img: 'w-10 h-10 min-w-[2.5rem] min-h-[2.5rem] rounded-full object-cover border border-white/25', emoji: 'text-2xl inline-flex items-center justify-center' },
+xl: { img: 'w-16 h-16 min-w-[4rem] min-h-[4rem] rounded-lg object-cover object-top border border-white/25', emoji: 'text-4xl drop-shadow-md mb-2 inline-flex items-center justify-center' }
 };
 const b = boxes[variant] || boxes.md;
+const isGirl = (p.gender || GENDER_MAP[p.name]) === 'F';
 if (url) {
-// 위키·외부 이미지는 Referer 미전송 시 차단되는 경우가 있어 기본 정책 사용
-return `<img src="${escapeAttr(url)}" alt="" class="rounded-full object-cover border-2 border-white/25 shadow-md ${b.img}" loading="lazy" decoding="async"/>`;
+return `<img src="${escapeAttr(url)}" alt="" class="${b.img}" loading="lazy" decoding="async"/>`;
 }
-const emoji = (p.gender || GENDER_MAP[p.name]) === 'F' ? '👧' : '👦';
+const emoji = isGirl ? '👧' : '👦';
+if (variant === 'detail' || variant === 'card') {
+return `<span class="${b.emoji} ${isGirl ? 'kit-f' : 'kit-m'}">${emoji}</span>`;
+}
+if (variant === 'locker') {
+return `<span class="inline-flex w-14 h-[4.4rem] items-end justify-center rounded-md ${isGirl ? 'kit-f' : 'kit-m'} border border-white/20">${emoji}</span>`;
+}
 return `<span class="${b.emoji}">${emoji}</span>`;
 }
 
@@ -407,7 +465,7 @@ const isChecked = window.checkedInPlayers.has(p.id);
 const isSelected = window.selectedPlayerId === p.id;
 const ovr = getOVR(p); const tier = getTierInfo(ovr);
 let borderClass = 'border-slate-700';
-if(ovr >= 90) borderClass = 'border-purple-500'; else if (ovr >= 80) borderClass = 'border-fut-gold'; else if (ovr >= 70) borderClass = 'border-gray-300';
+if(ovr >= 85) borderClass = 'border-purple-500'; else if (ovr >= 75) borderClass = 'border-fut-gold'; else if (ovr >= 65) borderClass = 'border-gray-300';
 const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
 const st = p.simTeam;
 const canSimEdit = !window.playerState.isGuest;
@@ -422,12 +480,15 @@ simRow = `<div class="w-full mt-1 pt-1 border-t border-slate-700/60" onclick="ev
 simRow = `<div class="mt-0.5 text-[9px] font-bold ${st === 'A' ? 'text-red-400' : 'text-blue-400'}" onclick="event.stopPropagation()">모의 ${st}</div>`;
 }
 return `
-                     <div class="mini-card flex flex-col items-center p-2 rounded-xl bg-pitch-panel border-2 ${borderClass} cursor-pointer ${isSelected ? 'selected' : ''} ${isChecked ? 'checked-in' : 'checked-out'}" onclick="window.selectPlayer('${p.id}')">
+                     <div class="mini-card fut-mini ${tier.cardClass} flex flex-col items-center p-2 rounded-xl border-2 ${borderClass} cursor-pointer ${isSelected ? 'selected' : ''} ${isChecked ? 'checked-in' : 'checked-out'}" onclick="window.selectPlayer('${p.id}')">
                          <input type="checkbox" class="locker-checkbox absolute top-1.5 left-1.5 w-5 h-5 shadow-lg z-10" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); window.toggleCheck('${p.id}')">
-                         <div class="absolute top-1 right-1 ${tier.class} text-[9px] font-bold px-1.5 py-0.5 rounded shadow whitespace-nowrap">${tier.name.split(' ')[0]}</div>
-                         <div class="flex items-center justify-center min-h-[3.5rem]">${getAvatarHtml(p, 'locker')}</div>
-                         <div class="font-oswald text-xl font-bold leading-none text-white">${ovr}</div>
-                         <div class="flex items-center gap-1 mt-1"><span class="text-[10px] font-bold ${getPosColor(p.pos)}">${posText}</span><span class="text-xs font-bold text-slate-300 truncate max-w-[50px]">${p.name}</span></div>
+                         <div class="absolute top-1 right-1 ${tier.class} text-[8px] font-black px-1.5 py-0.5 rounded shadow whitespace-nowrap tracking-wide">${tier.name.split(' ')[0]}</div>
+                         <div class="flex items-end justify-center min-h-[4.6rem] mt-3">${getAvatarHtml(p, 'locker')}</div>
+                         <div class="fut-mini-ovr text-[1.65rem] font-bold leading-none text-current drop-shadow mt-0.5">${ovr}</div>
+                         <div class="flex flex-col items-center mt-0.5 w-full px-0.5">
+                         <span class="text-[9px] font-black ${getPosColor(p.pos)} tracking-wider">${posText}</span>
+                         <span class="text-[11px] font-black text-current truncate max-w-[72px] drop-shadow">${p.name}</span>
+                         </div>
                          ${simRow}
                      </div>`;
 }
@@ -862,7 +923,7 @@ const badge = document.getElementById('detailTierBadge');
 if(badge) { badge.innerText = tier.name; badge.className = `px-2 py-1 rounded border text-[10px] font-bold shadow-md whitespace-nowrap ${tier.class}`; }
 
 const card = document.getElementById('detailFutCard');
-if(card) { card.className = `fut-card w-[300px] h-[460px] p-5 flex flex-col relative shadow-2xl z-10 mx-auto transition-all duration-300 ${tier.cardClass}`; }
+if(card) { card.className = `fut-card fut-career-card w-[320px] h-[530px] p-0 flex flex-col relative shadow-2xl z-10 mx-auto transition-all duration-300 overflow-hidden ${tier.cardClass}`; }
 
 const detailAv = document.getElementById('detailAvatar');
 if (detailAv) detailAv.innerHTML = getAvatarHtml(p, 'detail');
@@ -924,8 +985,9 @@ const stats = [
 
 let gridHtml = '';
 stats.forEach(s => {
-const baseVal = Number(p[s.id]) || 60; const bVal = bonus.flat[s.id] || 0; const totalVal = Math.min(99, baseVal + bVal);
+const baseVal = getStat(p, s.id); const bVal = bonus.flat[s.id] || 0; const totalVal = Math.min(99, baseVal + bVal);
 let bonusBadge = bVal > 0 ? `<span class="text-[9px] text-emerald-400 font-bold leading-none absolute -top-0.5 -right-3.5">+${bVal}</span>` : '';
+const barW = Math.max(8, Math.min(100, totalVal));
 
 const posConfig = POS_WEIGHTS[p.pos];
 let highlightClass = '';
@@ -952,15 +1014,17 @@ gridHtml += `
                              <button onclick="window.modStat('${p.id}', '${s.id}', 1)" class="w-3.5 h-3.5 rounded bg-black/40 hover:bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-plus text-[7px]"></i></button>
                          </div>
                          <span class="font-bold text-[10px] tracking-tight whitespace-nowrap opacity-95 cursor-pointer hover:text-emerald-400 leading-none" onclick="window.showStatDesc('${s.id}')">${s.label} ${labelIcon}</span>
+                         <div class="stat-mini-bar w-10"><i style="width:${barW}%"></i></div>
                      </div>`;
 } else {
 gridHtml += `
                      <div class="flex flex-col items-center justify-center text-current w-full">
                          <div class="relative flex items-center justify-center mb-0.5 ${highlightClass}">
-                             <span class="font-oswald text-xl font-bold leading-none tracking-tight">${totalVal}</span>
+                             <span class="font-bebas text-[1.45rem] font-normal leading-none tracking-tight">${totalVal}</span>
                              ${bonusBadge}
                          </div>
                          <span class="font-bold text-[10px] sm:text-[11px] opacity-95 tracking-tight whitespace-nowrap cursor-pointer hover:text-emerald-400 transition leading-none" onclick="window.showStatDesc('${s.id}')">${s.label} ${labelIcon}</span>
+                         <div class="stat-mini-bar w-10"><i style="width:${barW}%"></i></div>
                      </div>`;
 }
 });
@@ -1002,6 +1066,18 @@ document.getElementById('recBong') && (document.getElementById('recBong').innerT
 document.getElementById('expectedWageDisplay') && (document.getElementById('expectedWageDisplay').innerText = `OVR 주급: ${getWeeklyWage(ovr)} B`);
 document.getElementById('iconEditPos')?.classList.remove('hidden');
 const btnChangePos = document.getElementById('btnChangePos'); if(btnChangePos) btnChangePos.onclick = () => window.changePositionModal(p.id);
+const counts = getTodayActivityCounts(p);
+const hint = document.getElementById('activityQuotaHint');
+if (hint) {
+hint.innerHTML = `오늘 남은 한도 — 훈련 ${counts.training}/${ACTIVITY_DAILY_CAP.training} · 출전 ${counts.matches}/${ACTIVITY_DAILY_CAP.matches} · 골 ${counts.goals}/${ACTIVITY_DAILY_CAP.goals} · 어시 ${counts.assists}/${ACTIVITY_DAILY_CAP.assists}`;
+}
+['training','matches','goals','assists','keypass','saves'].forEach((k) => {
+const btn = document.getElementById('btnAct' + k.charAt(0).toUpperCase() + k.slice(1));
+if (!btn) return;
+const left = Math.max(0, ACTIVITY_DAILY_CAP[k] - (counts[k] || 0));
+btn.classList.toggle('opacity-40', left <= 0);
+btn.classList.toggle('cursor-not-allowed', left <= 0);
+});
 } else {
 document.getElementById('playerTrainingPanel')?.classList.add('hidden');
 document.getElementById('iconEditPos')?.classList.add('hidden');
@@ -1038,9 +1114,9 @@ const statKeys = ['pac', 'sho', 'pas', 'dri', 'def', 'phy', 'ref', 'int', 'pst',
 statKeys.forEach(s => {
 const totalChance = 10 + (bonuses.growth[s] || 0);
 if (Math.random() * 100 < totalChance) {
-const nextVal = Math.min(99, (Number(p[s]) || 60) + 1);
+const nextVal = Math.min(99, getStat(p, s) + 1);
 updatesObj[s] = nextVal;
-if (nextVal > (Number(p[s]) || 60)) increasedStats.push(STAT_NAMES[s].split(' ')[0]);
+if (nextVal > getStat(p, s)) increasedStats.push(STAT_NAMES[s].split(' ')[0]);
 }
 });
 
@@ -1084,12 +1160,7 @@ ctx.lineTo(cx + r * Math.cos(angle), cy + r * Math.sin(angle));
 }
 ctx.stroke();
 
-const statVals = [
-(Number(p.pac)||60)+bonusFlat.pac, (Number(p.sho)||60)+bonusFlat.sho, (Number(p.pas)||60)+bonusFlat.pas, 
-(Number(p.dri)||60)+bonusFlat.dri, (Number(p.def)||60)+bonusFlat.def, (Number(p.phy)||60)+bonusFlat.phy,
-(Number(p.ref)||60)+bonusFlat.ref, (Number(p.int)||60)+bonusFlat.int, (Number(p.pst)||60)+bonusFlat.pst, 
-(Number(p.dis)||60)+bonusFlat.dis, (Number(p.cmp)||60)+bonusFlat.cmp, (Number(p.wrk)||60)+bonusFlat.wrk
-];
+const statVals = STAT_KEYS.map((k) => getStat(p, k) + (bonusFlat[k] || 0));
 
 ctx.beginPath();
 for(let i=0; i<12; i++) {
@@ -1118,8 +1189,22 @@ const p = window.allPlayersData.find(x => x.id === pId);
 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + pId);
 let expGained = 0, updates = {};
 
+if (!window.playerState.isGM) {
+const cap = ACTIVITY_DAILY_CAP[type];
+if (cap != null) {
+const today = getKstDateStr();
+const counts = getTodayActivityCounts(p);
+if ((counts[type] || 0) >= cap) {
+return window.customAlert(`오늘은 [${ACTIVITY_LABEL[type] || type}] 한도(${cap}회)를 모두 사용했습니다.\n시즌 2에서는 매일 조금씩 성장합니다. 내일 다시 기록해주세요!`);
+}
+counts[type] = (counts[type] || 0) + 1;
+updates.activityDay = today;
+updates.activityCounts = counts;
+}
+}
+
 if(type === 'matches') { expGained = 50; updates.matches = (Number(p.matches)||0) + 1; }
-if(type === 'training') { expGained = 30; updates.training = (Number(p.training)||0) + 1; }
+if(type === 'training') { expGained = 25; updates.training = (Number(p.training)||0) + 1; }
 if(type === 'goals') { expGained = 20; updates.goals = (Number(p.goals)||0) + 1; updates.bong = (Number(p.bong)||0) + 3; }
 if(type === 'assists') { expGained = 10; updates.assists = (Number(p.assists)||0) + 1; updates.bong = (Number(p.bong)||0) + 1; }
 if(type === 'keypass') { expGained = 15; updates.keypass = (Number(p.keypass)||0) + 1; updates.bong = (Number(p.bong)||0) + 1; }
@@ -1144,7 +1229,7 @@ const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_
 let expDeduct = 1, updates = {}; 
 
 if(type === 'matches' && (Number(p.matches) || 0) > 0) { expDeduct += 50; updates.matches = Number(p.matches) - 1; }
-else if(type === 'training' && (Number(p.training) || 0) > 0) { expDeduct += 30; updates.training = Number(p.training) - 1; }
+else if(type === 'training' && (Number(p.training) || 0) > 0) { expDeduct += 25; updates.training = Number(p.training) - 1; }
 else if(type === 'goals' && (Number(p.goals) || 0) > 0) { expDeduct += 20; updates.goals = Number(p.goals) - 1; updates.bong = Math.max(0, (Number(p.bong)||0) - 3); }
 else if(type === 'assists' && (Number(p.assists) || 0) > 0) { expDeduct += 10; updates.assists = Number(p.assists) - 1; updates.bong = Math.max(0, (Number(p.bong)||0) - 1); }
 else if(type === 'keypass' && (Number(p.keypass) || 0) > 0) { expDeduct += 15; updates.keypass = Number(p.keypass) - 1; updates.bong = Math.max(0, (Number(p.bong)||0) - 1); }
@@ -1152,6 +1237,16 @@ else if(type === 'saves' && (Number(p.saves) || 0) > 0) { expDeduct += 15; updat
 else return window.customAlert("❌ 차감할 해당 기록이 없습니다.");
 
 if(!await window.customConfirm("방금 입력한 기록을 취소하시겠습니까?\n(해당 활동으로 받은 경험치와 같은 양이 차감되고, 1 EXP 페널티가 추가됩니다.\n부족 시 레벨이 함께 내려갑니다.)")) return;
+
+const today = getKstDateStr();
+if (p.activityDay === today) {
+const counts = getTodayActivityCounts(p);
+if ((counts[type] || 0) > 0) {
+counts[type] -= 1;
+updates.activityDay = today;
+updates.activityCounts = counts;
+}
+}
 
 animateFloatText(`-${expDeduct} EXP`, 'text-red-400', 'confettiOrigin');
 applyExpLoss(p, expDeduct, updates);
@@ -1295,7 +1390,7 @@ try {
 checkAuthReady();
 if(!window.playerState.isGM) return;
 const p = window.allPlayersData.find(x => x.id === pId);
-const newVal = Math.max(1, Math.min(99, (Number(p[statKey]) || 60) + change));
+const newVal = Math.max(1, Math.min(99, getStat(p, statKey) + change));
 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + pId);
 await setDoc(docRef, { [statKey]: newVal }, { merge: true });
 } catch (e) { console.error("modStat Error:", e); window.customAlert(`스탯 수정 에러:\n${e.message}`); }
@@ -1305,7 +1400,7 @@ window.setStat = async (pId, statKey, value) => {
 try {
 checkAuthReady();
 if(!window.playerState.isGM) return;
-const newVal = Math.max(1, Math.min(99, parseInt(value) || 60));
+const newVal = Math.max(1, Math.min(99, parseInt(value) || STAT_BASE));
 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + pId);
 await setDoc(docRef, { [statKey]: newVal }, { merge: true });
 } catch (e) { console.error("setStat Error:", e); window.customAlert(`스탯 설정 에러:\n${e.message}`); }
@@ -1353,7 +1448,7 @@ while(currentExp >= getExpNeeded(currentLv)) { currentExp -= getExpNeeded(curren
 let updatesObj = { exp: currentExp };
 if(leveledUp) {
 updatesObj.level = currentLv;
-if(currentLv % 3 === 0) { ['pac', 'sho', 'pas', 'dri', 'def', 'phy', 'ref', 'int', 'pst', 'dis', 'cmp', 'wrk'].forEach(s => updatesObj[s] = Math.min(99, (Number(p[s])||60) + 1)); }
+if(currentLv % 3 === 0) { STAT_KEYS.forEach(s => updatesObj[s] = Math.min(99, getStat(p, s) + 1)); }
 }
 batch.set(docRef, updatesObj, { merge: true });
 } else if (type === 'bong') { batch.set(docRef, { bong: (Number(p.bong) || 0) + Number(amount) }, { merge: true }); }
@@ -1393,6 +1488,74 @@ batch.set(docRef, { exp: 0, level: 0 }, { merge: true });
 });
 await batch.commit(); triggerConfetti(); window.customAlert("✅ 모든 학생의 레벨과 경험치가 0으로 초기화되었습니다!");
 } catch (e) { console.error("resetAll Error:", e); window.customAlert(`초기화 에러:\n${e.message}`); }
+};
+
+window.startSeason2 = async () => {
+try {
+checkAuthReady();
+if(!window.playerState.isGM) return;
+if(!await window.customConfirm(`시즌 2를 개막할까요?\n\n• 모든 학생 능력치 → ${STAT_BASE}\n• 레벨·EXP·골/어시/훈련/출전 기록 → 0\n• 자산(B)·장비·강화 → 초기화\n• 이름·포지션·나이·얼굴 사진은 유지\n\n예정 개막일: ${SEASON2_KICKOFF} (토)\n이 작업은 되돌릴 수 없습니다.`)) return;
+if(!await window.customConfirm('정말로 시즌 2를 시작합니까?\n전원 데이터가 리셋됩니다.')) return;
+
+const batch = writeBatch(db);
+const resetStats = {};
+STAT_KEYS.forEach((k) => { resetStats[k] = STAT_BASE; });
+window.allPlayersData.forEach((p) => {
+const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
+batch.set(docRef, {
+...resetStats,
+level: 1,
+exp: 0,
+goals: 0,
+assists: 0,
+matches: 0,
+training: 0,
+saves: 0,
+keypass: 0,
+bong: 0,
+lastWageWeek: '',
+inventory: [],
+itemLevels: {},
+equipHead: null,
+equipHandL: null,
+equipHandR: null,
+equipFootL: null,
+equipFootR: null,
+equipFace: null,
+claimedAchievements: [],
+activityDay: '',
+activityCounts: emptyActivityCounts(),
+season: 2,
+simTeam: deleteField(),
+updatedAt: new Date().toISOString()
+}, { merge: true });
+});
+const seasonRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'season');
+batch.set(seasonRef, {
+season: 2,
+title: 'SEASON 2',
+started: true,
+startedAt: new Date().toISOString(),
+kickoffLabel: SEASON2_KICKOFF,
+resetNote: `stats ${STAT_BASE}, records cleared`
+}, { merge: true });
+const eventRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'latest_event');
+batch.set(eventRef, {
+text: '삼봉 FC 시즌 2 개막! 전원 능력치 55부터 다시 성장합니다.',
+timestamp: Date.now()
+}, { merge: true });
+const annRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'announcement');
+batch.set(annRef, {
+text: `🏆 삼봉 FC 시즌 2 개막!\n\n모든 선수가 능력치 ${STAT_BASE}에서 다시 시작합니다.\n개인 훈련·출전은 하루 1회만 기록되고, 골·어시 등에도 일일 한도가 있습니다.\n이번 시즌은 매주 조금씩 성장하는 커리어 모드입니다. 화이팅!`,
+updatedAt: new Date().toISOString()
+}, { merge: true });
+await batch.commit();
+triggerConfetti();
+window.customAlert(`시즌 2가 시작되었습니다!\n전원 능력치 ${STAT_BASE} · 기록 초기화 완료.`);
+} catch (e) {
+console.error('startSeason2 Error:', e);
+window.customAlert(`시즌 2 개막 에러:\n${e.message}`);
+}
 };
 
 window.manualAddBong = async (amount) => {
@@ -3277,12 +3440,12 @@ const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_
 const snap = await getDoc(docRef);
 if(snap.exists()) return window.customAlert('이미 등록되어 있는 이름입니다.');
 
-const r = () => Math.floor(Math.random() * 6) + 55;
 const baseData = {
 name: name, pos: '미정', age: age, gender: gender,
-pac: r(), sho: r(), pas: r(), dri: r(), def: r(), phy: r(), ref: r(), int: r(), pst: r(), dis: r(), cmp: r(), wrk: r(),
+pac: STAT_BASE, sho: STAT_BASE, pas: STAT_BASE, dri: STAT_BASE, def: STAT_BASE, phy: STAT_BASE, ref: STAT_BASE, int: STAT_BASE, pst: STAT_BASE, dis: STAT_BASE, cmp: STAT_BASE, wrk: STAT_BASE,
 level: 1, exp: 0, goals: 0, assists: 0, matches: 0, training: 0, saves: 0, keypass: 0, bong: 0, lastWageWeek: '',
 inventory: [], itemLevels: {}, equipHead: null, equipHandL: null, equipHandR: null, equipFootL: null, equipFootR: null, equipFace: null,
+activityDay: '', activityCounts: emptyActivityCounts(), season: 2,
 updatedAt: new Date().toISOString()
 };
 
@@ -3560,8 +3723,8 @@ const safeId = getSafeDocId(name);
 if(dbPlayers.has(safeId)) { players.push(dbPlayers.get(safeId)); } 
 else {
 players.push({
-id: safeId, name: name, pos: '미정', pac: 60, sho: 60, pas: 60, dri: 60, def: 60, phy: 60, ref: 60, int: 60, pst: 60, dis: 60, cmp: 60, wrk: 60,
-level: 1, exp: 0, goals: 0, assists: 0, matches: 0, training: 0, saves: 0, keypass: 0, bong: 0, age: 13, inventory: [], itemLevels: {}
+id: safeId, name: name, pos: '미정', pac: STAT_BASE, sho: STAT_BASE, pas: STAT_BASE, dri: STAT_BASE, def: STAT_BASE, phy: STAT_BASE, ref: STAT_BASE, int: STAT_BASE, pst: STAT_BASE, dis: STAT_BASE, cmp: STAT_BASE, wrk: STAT_BASE,
+level: 1, exp: 0, goals: 0, assists: 0, matches: 0, training: 0, saves: 0, keypass: 0, bong: 0, age: 13, inventory: [], itemLevels: {}, season: 2
 });
 }
 });
@@ -3625,6 +3788,16 @@ marqueeContainer.classList.remove('hidden');
 } else { marqueeContainer.classList.add('hidden'); }
 }
 }, (error) => console.error("Event Listen Error:", error));
+
+onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'season'), (docSnap) => {
+const data = docSnap.data() || {};
+window.seasonInfo = {
+season: Number(data.season) || 1,
+started: !!data.started,
+startedAt: data.startedAt || null
+};
+applySeasonChrome();
+}, (error) => console.error("Season Listen Error:", error));
 
 document.getElementById('loadingOverlay')?.classList.add('hidden');
 

@@ -23,9 +23,11 @@
 <!-- 로그인 오버레이 (z-index 5000 최상단) -->
 <div id="loginOverlay" class="fixed inset-0 bg-pitch-bg z-[5000] flex flex-col items-center justify-center px-4 transition-opacity duration-500 hidden">
 <div class="text-center mb-8">
+<div class="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full border border-fut-gold/50 bg-black/40 text-[11px] font-black tracking-[0.25em] text-fut-gold shadow-[0_0_20px_rgba(232,194,113,0.35)]">SEASON 2 · CAREER</div>
 <i class="fa-regular fa-futbol text-5xl text-fut-rare mb-4 animate-bounce"></i>
 <h1 class="text-5xl sm:text-7xl font-display text-white tracking-widest drop-shadow-[0_0_15px_rgba(56,255,142,0.5)]">SAMBONG FC</h1>
 <p class="text-emerald-400 mt-3 font-bold text-lg">삼봉초등학교 풋살 클럽</p>
+<p id="loginSeasonSub" class="text-amber-200/90 mt-2 text-sm font-semibold tracking-wide">시즌 2 개막 예정 · 9월 5일(토) · 전원 능력치 55 스타트</p>
 </div>
 
 <div class="glass-panel p-8 rounded-3xl max-w-sm w-full shadow-2xl border-t-4 border-t-fut-rare">
@@ -72,6 +74,7 @@
 <div class="flex items-center gap-2 pr-2 border-r border-slate-700/50 flex-shrink-0">
 <i class="fa-solid fa-shield-halved text-xl sm:text-2xl text-fut-gold hidden sm:block"></i>
 <span class="font-display text-lg sm:text-xl text-white tracking-wider pt-1 hidden md:block">SAMBONG</span>
+<span id="navSeasonBadge" class="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black tracking-widest bg-gradient-to-r from-amber-700 to-yellow-500 text-slate-900 border border-yellow-200/40">S2</span>
 </div>
 
 <div class="flex items-center space-x-1 sm:space-x-3 text-xs sm:text-sm flex-grow overflow-x-auto hide-scrollbar whitespace-nowrap scroll-smooth">
@@ -123,24 +126,30 @@
 </div>
 
 <div id="cardAuraWrapper" class="mx-auto w-fit transition-all duration-500 z-10 relative">
-<div id="detailFutCard" class="fut-card w-[300px] h-[460px] p-5 flex flex-col relative shadow-2xl z-10 mx-auto transition-all duration-300">
+<div id="detailFutCard" class="fut-card fut-career-card w-[320px] h-[530px] p-0 flex flex-col relative shadow-2xl z-10 mx-auto transition-all duration-300 overflow-hidden">
+<div class="fut-card-foil pointer-events-none"></div>
+<div class="fut-card-pitch-bg pointer-events-none"></div>
+<div class="fut-card-content relative z-10 flex flex-col h-full p-4">
 
-<div class="flex justify-between items-start z-10 w-full min-h-[155px]">
-<div class="flex flex-col items-center justify-start relative text-current mt-2 w-1/3">
-<span class="font-oswald text-[4.2rem] font-bold leading-none -ml-1 drop-shadow-md" id="detailOvr">86</span>
+<div class="flex justify-between items-stretch z-10 w-full min-h-[210px] gap-2">
+<div class="flex flex-col items-center justify-start relative text-current mt-1 w-[30%]">
+<span class="font-bebas text-[4.6rem] font-normal leading-[0.8] drop-shadow-[0_3px_0_rgba(0,0,0,0.35)]" id="detailOvr">55</span>
 <div class="flex flex-col items-center gap-1 hover:opacity-70 transition cursor-pointer mt-1 w-full" id="btnChangePos">
-<span class="font-bold text-sm tracking-widest leading-none text-center" id="detailPos">미정</span>
+<span class="font-black text-[11px] tracking-[0.18em] leading-none text-center uppercase" id="detailPos">미정</span>
 <i class="fa-solid fa-pen text-[10px] opacity-70" id="iconEditPos"></i>
 </div>
-<img src="https://flagcdn.com/w40/kr.png" alt="KR" class="w-8 h-auto mt-2 shadow-sm border border-black/20 rounded-sm">
+<div class="mt-2 w-9 h-9 rounded-md bg-black/35 border border-white/20 flex items-center justify-center shadow-inner">
+<img src="https://flagcdn.com/w40/kr.png" alt="KR" class="w-6 h-auto rounded-[2px]">
+</div>
+<p class="mt-2 text-[8px] font-black tracking-widest opacity-80 writing-vertical hidden">SFC</p>
 </div>
 
-<div class="relative w-2/3 h-full flex flex-col items-center justify-center -mt-2 pr-2">
-<div class="flex flex-col items-center justify-center relative z-10 mb-1 w-full">
-<div class="flex items-center justify-center min-h-[5rem] w-full relative z-[12]" id="detailAvatar"></div>
+<div class="relative flex-1 h-full flex flex-col items-center justify-end pr-1">
+<div class="fut-portrait-frame w-full h-[200px] flex items-end justify-center relative z-[12]">
+<div class="flex items-end justify-center w-full h-full" id="detailAvatar"></div>
+</div>
 <div class="mt-1 flex justify-center w-full shrink-0" title="장착 얼굴">
 <div class="item-slot-mini item-slot-face-below" id="slotFace"></div>
-</div>
 </div>
 <div class="item-slot-mini hidden" id="slotHead" style="top: -5px; left: 50%; transform: translateX(-50%);"></div>
 <div class="item-slot-mini hidden" id="slotHandL" style="top: 35px; left: 10px;"></div>
@@ -150,17 +159,19 @@
 </div>
 </div>
 
-<div class="w-full flex flex-col items-center z-10 text-current mt-1 mb-2">
-<div class="font-display text-[1.7rem] tracking-widest uppercase drop-shadow-md leading-none" id="detailName">선수 이름</div>
-<div class="text-[10px] font-bold mt-1 bg-black/40 px-2 py-0.5 rounded border border-current opacity-80"><span id="detailAge">13</span>세</div>
-<div class="w-11/12 border-b-2 border-current opacity-30 mt-1 mb-2"></div>
+<div class="w-full flex flex-col items-center z-10 text-current mt-1 mb-1">
+<div class="fut-nameplate w-full text-center py-1.5 px-2">
+<div class="font-display text-[1.55rem] tracking-[0.14em] uppercase drop-shadow-md leading-none" id="detailName">선수 이름</div>
+<div class="text-[9px] font-black mt-1 tracking-widest opacity-90">SAMBONG FC · S2 · <span id="detailAge">13</span>세</div>
+</div>
 </div>
 
 <div class="relative w-full flex-grow flex items-center justify-center z-10 text-current">
-<div class="absolute inset-0 flex items-center justify-center opacity-15 pointer-events-none">
+<div class="absolute inset-0 flex items-center justify-center opacity-20 pointer-events-none">
 <canvas id="statRadar" width="160" height="160"></canvas>
 </div>
-<div class="w-full grid grid-cols-3 gap-y-1.5 gap-x-0 z-10 px-1" id="detailStatsGrid">
+<div class="w-full grid grid-cols-3 gap-y-1.5 gap-x-1 z-10 px-0.5" id="detailStatsGrid">
+</div>
 </div>
 </div>
 </div>
@@ -224,6 +235,11 @@
 <h4 class="text-[11px] font-bold text-red-400 mb-2 flex items-center gap-1"><i class="fa-solid fa-rotate-left"></i> 전체 레벨 초기화</h4>
 <button onclick="window.resetAllLevels()" class="w-full bg-red-900/40 hover:bg-red-800 text-red-200 text-xs py-2.5 rounded shadow font-bold transition border border-red-700/50">전체 학생 레벨 0으로 초기화</button>
 </div>
+<div class="mt-3 pt-3 border-t border-fut-gold/40">
+<h4 class="text-[11px] font-bold text-fut-gold mb-1 flex items-center gap-1"><i class="fa-solid fa-flag-checkered"></i> 시즌 2 개막</h4>
+<p class="text-[10px] text-slate-400 mb-2 leading-snug break-keep">예정일 9월 5일(토). 누르면 전원 능력치 55·기록·자산·장비 초기화. 이름·포지션·얼굴 사진은 유지됩니다.</p>
+<button type="button" onclick="window.startSeason2()" class="w-full bg-gradient-to-r from-amber-700 via-yellow-500 to-amber-600 hover:from-yellow-500 hover:to-amber-400 text-slate-900 text-xs py-2.5 rounded shadow-lg font-black tracking-wide transition border border-yellow-200/50">시즌 2 시작하기</button>
+</div>
 </div>
 
 <div class="mt-6 bg-pitch-bg p-4 rounded-xl border border-emerald-900/50 relative z-30">
@@ -244,32 +260,33 @@
 </div>
 
 <div class="bg-slate-900/60 p-3 rounded-xl border border-blue-500/30">
-<h4 class="text-[11px] font-bold text-blue-300 mb-2 border-b border-blue-500/30 pb-1 flex items-center justify-between">
-<span><i class="fa-solid fa-pen-to-square mr-1"></i> 내 기록 스스로 입력하기 (양심껏!)</span>
+<h4 class="text-[11px] font-bold text-blue-300 mb-1 border-b border-blue-500/30 pb-1 flex items-center justify-between">
+<span><i class="fa-solid fa-pen-to-square mr-1"></i> 내 기록 스스로 입력하기</span>
 </h4>
+<p id="activityQuotaHint" class="text-[10px] text-amber-200/90 mb-2 leading-snug break-keep">시즌 2: 개인 훈련·출전은 하루 1회, 경기 기록은 일일 한도가 있습니다.</p>
 <div class="grid grid-cols-2 gap-1.5">
 <div class="flex shadow">
-<button onclick="window.addActivity('matches')" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white text-[10px] font-bold py-1.5 rounded-l border border-slate-600 transition">경기 출전</button>
+<button id="btnActMatches" onclick="window.addActivity('matches')" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white text-[10px] font-bold py-1.5 rounded-l border border-slate-600 transition">경기 출전</button>
 <button onclick="window.undoActivity('matches')" class="w-7 bg-red-900/50 hover:bg-red-800 text-red-200 text-[10px] font-bold py-1.5 rounded-r border-y border-r border-red-700/50 transition has-tooltip relative flex justify-center items-center"><i class="fa-solid fa-rotate-left"></i><span class="tooltip text-[10px]">실수 취소 (활동 EXP+1 페널티)</span></button>
 </div>
 <div class="flex shadow">
-<button onclick="window.addActivity('training')" class="flex-1 bg-emerald-900/40 hover:bg-emerald-800 text-emerald-300 text-[10px] font-bold py-1.5 rounded-l border border-emerald-700/50 transition">개인 훈련</button>
+<button id="btnActTraining" onclick="window.addActivity('training')" class="flex-1 bg-emerald-900/40 hover:bg-emerald-800 text-emerald-300 text-[10px] font-bold py-1.5 rounded-l border border-emerald-700/50 transition">개인 훈련</button>
 <button onclick="window.undoActivity('training')" class="w-7 bg-red-900/50 hover:bg-red-800 text-red-200 text-[10px] font-bold py-1.5 rounded-r border-y border-r border-red-700/50 transition has-tooltip relative flex justify-center items-center"><i class="fa-solid fa-rotate-left"></i><span class="tooltip text-[10px]">실수 취소 (활동 EXP+1 페널티)</span></button>
 </div>
 <div class="flex shadow">
-<button onclick="window.addActivity('goals')" class="flex-1 bg-yellow-900/40 hover:bg-yellow-800 text-yellow-300 text-[10px] font-bold py-1.5 rounded-l border border-yellow-700/50 transition">골 ⚽</button>
+<button id="btnActGoals" onclick="window.addActivity('goals')" class="flex-1 bg-yellow-900/40 hover:bg-yellow-800 text-yellow-300 text-[10px] font-bold py-1.5 rounded-l border border-yellow-700/50 transition">골 ⚽</button>
 <button onclick="window.undoActivity('goals')" class="w-7 bg-red-900/50 hover:bg-red-800 text-red-200 text-[10px] font-bold py-1.5 rounded-r border-y border-r border-red-700/50 transition has-tooltip relative flex justify-center items-center"><i class="fa-solid fa-rotate-left"></i><span class="tooltip text-[10px]">실수 취소 (활동 EXP+1 페널티)</span></button>
 </div>
 <div class="flex shadow">
-<button onclick="window.addActivity('assists')" class="flex-1 bg-blue-900/40 hover:bg-blue-800 text-blue-300 text-[10px] font-bold py-1.5 rounded-l border border-blue-700/50 transition">어시스트 👟</button>
+<button id="btnActAssists" onclick="window.addActivity('assists')" class="flex-1 bg-blue-900/40 hover:bg-blue-800 text-blue-300 text-[10px] font-bold py-1.5 rounded-l border border-blue-700/50 transition">어시스트 👟</button>
 <button onclick="window.undoActivity('assists')" class="w-7 bg-red-900/50 hover:bg-red-800 text-red-200 text-[10px] font-bold py-1.5 rounded-r border-y border-r border-red-700/50 transition has-tooltip relative flex justify-center items-center"><i class="fa-solid fa-rotate-left"></i><span class="tooltip text-[10px]">실수 취소 (활동 EXP+1 페널티)</span></button>
 </div>
 <div class="flex shadow">
-<button onclick="window.addActivity('keypass')" class="flex-1 bg-purple-900/40 hover:bg-purple-800 text-purple-300 text-[10px] font-bold py-1.5 rounded-l border border-purple-700/50 transition">킬패스 🎯</button>
+<button id="btnActKeypass" onclick="window.addActivity('keypass')" class="flex-1 bg-purple-900/40 hover:bg-purple-800 text-purple-300 text-[10px] font-bold py-1.5 rounded-l border border-purple-700/50 transition">킬패스 🎯</button>
 <button onclick="window.undoActivity('keypass')" class="w-7 bg-red-900/50 hover:bg-red-800 text-red-200 text-[10px] font-bold py-1.5 rounded-r border-y border-r border-red-700/50 transition has-tooltip relative flex justify-center items-center"><i class="fa-solid fa-rotate-left"></i><span class="tooltip text-[10px]">실수 취소 (활동 EXP+1 페널티)</span></button>
 </div>
 <div class="flex shadow">
-<button onclick="window.addActivity('saves')" class="flex-1 bg-orange-900/40 hover:bg-orange-800 text-orange-300 text-[10px] font-bold py-1.5 rounded-l border border-orange-700/50 transition">세이브 🧤</button>
+<button id="btnActSaves" onclick="window.addActivity('saves')" class="flex-1 bg-orange-900/40 hover:bg-orange-800 text-orange-300 text-[10px] font-bold py-1.5 rounded-l border border-orange-700/50 transition">세이브 🧤</button>
 <button onclick="window.undoActivity('saves')" class="w-7 bg-red-900/50 hover:bg-red-800 text-red-200 text-[10px] font-bold py-1.5 rounded-r border-y border-r border-red-700/50 transition has-tooltip relative flex justify-center items-center"><i class="fa-solid fa-rotate-left"></i><span class="tooltip text-[10px]">실수 취소 (활동 EXP+1 페널티)</span></button>
 </div>
 </div>
@@ -292,8 +309,9 @@
 <div>
 <h3 class="text-2xl font-display text-white flex items-center gap-2">
 <i class="fa-solid fa-door-open text-emerald-400"></i> 삼봉 FC 라커룸
+<span class="text-[10px] font-sans font-black tracking-widest text-fut-gold bg-black/40 border border-fut-gold/40 px-2 py-0.5 rounded">SEASON 2</span>
 </h3>
-<p class="text-sm text-slate-400 mt-1">훈련/경기에 참여한 선수를 체크해주세요. (카드 클릭 시 좌측에 상세 정보 표시)</p>
+<p class="text-sm text-slate-400 mt-1">카드를 눌러 선수를 확인하고, 출석 체크는 좌측 박스를 누르세요. 시즌 2는 하루 한 번 훈련으로 천천히 성장합니다.</p>
 </div>
 <div class="flex flex-wrap items-center gap-2 mb-4 w-full">
 <button type="button" id="btnLockerViewDefault" onclick="window.setLockerViewMode('default')" class="text-xs font-bold px-3 py-2 rounded-lg border transition bg-emerald-700 text-white border-emerald-500 shadow">기본 순서</button>
@@ -577,22 +595,28 @@
 <p class="text-sm text-slate-300 leading-relaxed break-keep">내 포지션에 맞춰 핵심 스탯(70%), 보조 스탯(25%)이 계산되어 전체 OVR이 결정됩니다. 공격수(피보)가 골키퍼(골레이로)로 바꾸면 OVR이 수직 하락할 수 있습니다!</p>
 </div>
 <div class="bg-slate-900/60 p-5 rounded-xl border border-slate-700 hover:border-cyan-500/50 transition">
-<h4 class="text-base sm:text-lg font-bold text-white mb-2 flex items-center gap-2"><i class="fa-solid fa-pen-to-square text-emerald-400"></i> 2. 양심 기록소 (스탯 직접 입력)</h4>
-<p class="text-sm text-slate-300 leading-relaxed break-keep">경기가 끝나면 스스로 골, 어시스트 등을 입력합니다. 실수 취소 시 경험치가 깎이니 신중하세요.</p>
+<h4 class="text-base sm:text-lg font-bold text-white mb-2 flex items-center gap-2"><i class="fa-solid fa-pen-to-square text-emerald-400"></i> 2. 시즌 2 기록소 (일일 한도)</h4>
+<p class="text-sm text-slate-300 leading-relaxed break-keep">경기가 끝나면 스스로 골, 어시스트 등을 입력합니다. 시즌 1처럼 버튼을 연타하면 능력치가 폭등하지 않도록, <b>개인 훈련·출전은 하루 1회</b>, 골·어시 등도 일일 한도가 있습니다. 실수 취소 시 경험치가 깎이니 신중하세요.</p>
 </div>
 <div class="bg-gradient-to-r from-purple-900/40 to-slate-900/60 p-5 rounded-xl border border-purple-500/50 hover:border-purple-400 transition">
 <h4 class="text-base sm:text-lg font-bold text-purple-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-hammer text-fuchsia-400"></i> 3. 장비 강화 및 확률형 성장</h4>
 <p class="text-sm text-purple-100/80 leading-relaxed break-keep">레벨업을 하면 각 스탯마다 기본 10% 확률로 능력치가 상승합니다. 상점에서 장비를 구매해 장착하면 <b>해당 스탯이 오를 확률(최대 +45%)</b>이 엄청나게 증가합니다. 같은 장비를 중복 구매하여 최대 +5강까지 강화해보세요! (실패 시 1단계 하락)</p>
 </div>
 <div class="bg-gradient-to-r from-slate-900/60 to-emerald-900/30 p-5 rounded-xl border border-emerald-700/50 hover:border-emerald-500/80 transition">
-<h4 class="text-base sm:text-lg font-bold text-emerald-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-bullseye text-red-400"></i> 4. 목표: 30주 만에 레벨 100 달성!</h4>
-<p class="text-sm text-emerald-100/80 leading-relaxed break-keep">매주 토요스포츠데이에 꾸준히 참여하고 각종 기록을 쌓으면, 정확히 30주 후 전설의 100레벨(만렙)에 도달할 수 있습니다. 끈기 있게 도전해보세요!</p>
+<h4 class="text-base sm:text-lg font-bold text-emerald-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-bullseye text-red-400"></i> 4. 시즌 2 목표: 매주 조금씩 성장</h4>
+<p class="text-sm text-emerald-100/80 leading-relaxed break-keep">시즌 2는 전원 능력치 55에서 다시 시작합니다. 레벨업 경험치가 높아지고 훈련 연타가 막혀, 토요스포츠데이에 꾸준히 나온 선수가 진짜로 강해집니다. 한 시즌 동안 커리어 카드를 키워보세요.</p>
 </div>
 </div>
 </div>
 </div>
 
 <div id="tabMaster" class="hidden space-y-6">
+
+<div class="glass-panel p-4 sm:p-6 rounded-3xl border-t-4 border-t-fut-gold overflow-hidden mb-2">
+<h4 class="text-fut-gold font-bold mb-2 flex items-center gap-2"><i class="fa-solid fa-flag-checkered"></i> 시즌 2 개막 컨트롤</h4>
+<p id="seasonMasterStatus" class="text-xs text-slate-300 mb-3 leading-relaxed break-keep">예정일: 2026년 9월 5일(토). 버튼을 누르면 전원이 능력치 55로 다시 시작합니다.</p>
+<button type="button" onclick="window.startSeason2()" class="w-full sm:w-auto bg-gradient-to-r from-amber-700 via-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-slate-900 font-black py-3 px-6 rounded-xl transition shadow-lg text-sm tracking-wide">시즌 2 시작하기</button>
+</div>
 
 <!-- 🌟 신규 선수 등록 패널 추가 -->
 <div class="glass-panel p-4 sm:p-6 rounded-3xl border-t-4 border-t-emerald-500 overflow-hidden mb-6">
