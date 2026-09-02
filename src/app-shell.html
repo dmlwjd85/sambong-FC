@@ -467,6 +467,14 @@
 <i class="fa-solid fa-clipboard-list"></i> 매치 센터
 </h3>
 <p class="text-[11px] text-slate-400 mb-3">Football Manager 스타일 · 능력치 맞대결 · 점유율/슈팅 트래커</p>
+<div id="simMateLinkBox" class="mb-4 rounded-xl border border-red-800/40 bg-red-950/25 p-3">
+<label class="flex items-start gap-2 text-[12px] text-red-100 font-bold cursor-pointer">
+<input type="checkbox" id="simLinkMateBet" class="mt-0.5 accent-red-500" checked>
+<span>메이트 승부예측 연동 <span class="font-normal text-slate-400">(레드=한국 진출 · 블루=탈락 · 감독 계정으로 종료 시 학급 봉 지급)</span></span>
+</label>
+<p id="simMateBetStatus" class="text-[10px] text-slate-400 mt-1.5 leading-relaxed">메이트 베팅 현황을 불러오는 중…</p>
+<p class="text-[10px] text-slate-500 mt-1">베팅은 <a href="https://dmlwjd85.github.io/2026sambong6/" target="_blank" rel="noopener" class="text-amber-300 underline">메이트 학급 앱</a>에서 합니다.</p>
+</div>
 <div id="simPrematchBrief" class="mb-4 rounded-2xl border border-amber-700/40 bg-gradient-to-br from-slate-950 to-emerald-950/30 p-3 sm:p-4 text-xs text-slate-300 leading-relaxed break-keep">팀을 고른 뒤 경기 시작을 누르면, 전력 비교와 핵심 매치업이 여기에 표시됩니다.</div>
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
 <label class="flex items-center justify-between gap-2 rounded-xl border border-red-800/40 bg-red-950/20 px-3 py-2 text-[11px] text-red-100">
@@ -491,14 +499,14 @@
 <div class="rounded-2xl border border-red-900/50 bg-red-950/30 p-3 sm:p-4 min-w-0">
 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2 border-b border-red-800/40 pb-2 min-w-0">
 <span class="font-display text-red-400 text-base sm:text-lg shrink-0">팀 A (레드)</span>
-<input type="text" id="simTeamAName" data-sim-team="A" name="simMatchTeamA" maxlength="20" autocomplete="off" class="w-full min-w-0 sm:w-48 bg-slate-900/80 border border-red-700/50 rounded-lg px-2 py-1 text-sm text-white" placeholder="팀 이름" value="삼봉 레드"/>
+<input type="text" id="simTeamAName" data-sim-team="A" name="simMatchTeamA" maxlength="20" autocomplete="off" class="w-full min-w-0 sm:w-48 bg-slate-900/80 border border-red-700/50 rounded-lg px-2 py-1 text-sm text-white" placeholder="팀 이름" value="대한민국"/>
 </div>
 <p class="text-[10px] text-slate-500 mb-2" id="simCountA">대기 중…</p>
 </div>
 <div class="rounded-2xl border border-blue-900/50 bg-blue-950/30 p-3 sm:p-4 min-w-0">
 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2 border-b border-blue-800/40 pb-2 min-w-0">
 <span class="font-display text-blue-400 text-base sm:text-lg shrink-0">팀 B (블루)</span>
-<input type="text" id="simTeamBName" data-sim-team="B" name="simMatchTeamB" maxlength="20" autocomplete="off" class="w-full min-w-0 sm:w-48 bg-slate-900/80 border border-blue-700/50 rounded-lg px-2 py-1 text-sm text-white" placeholder="팀 이름" value="삼봉 블루"/>
+<input type="text" id="simTeamBName" data-sim-team="B" name="simMatchTeamB" maxlength="20" autocomplete="off" class="w-full min-w-0 sm:w-48 bg-slate-900/80 border border-blue-700/50 rounded-lg px-2 py-1 text-sm text-white" placeholder="팀 이름" value="상대"/>
 </div>
 <p class="text-[10px] text-slate-500 mb-2" id="simCountB">대기 중…</p>
 </div>
@@ -578,12 +586,12 @@
 <div class="relative z-10">
 <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-4 border-b border-red-900/40 pb-3">
 <div>
-<h3 class="text-2xl sm:text-3xl font-display text-red-400 flex items-center gap-2"><i class="fa-solid fa-ticket"></i> 월드컵 승부예측</h3>
-<p class="text-xs text-slate-400 mt-1 break-keep leading-relaxed">메이트 학급 월드컵과 같은 경기입니다. <b class="text-fut-gold">삼봉FC 봉(B)</b>으로 베팅하고, 감독이 결과를 확정하면 배당만큼 지급됩니다. 배당에는 북메이커 마진이 있어 장기적으로는 손해입니다 — 재미로만!</p>
+<h3 class="text-2xl sm:text-3xl font-display text-red-400 flex items-center gap-2"><i class="fa-solid fa-ticket"></i> 메이트 승부예측</h3>
+<p class="text-xs text-slate-400 mt-1 break-keep leading-relaxed">베팅은 <a href="https://dmlwjd85.github.io/2026sambong6/" target="_blank" rel="noopener" class="text-amber-300 underline">메이트 학급 앱</a>에서 걸고, 여기서 모의경기를 돌리면 <b class="text-fut-gold">학급 봉(B)</b>이 배당대로 지급됩니다. 레드=한국 진출, 블루=탈락.</p>
 </div>
 <div class="text-right bg-slate-950/70 border border-fut-gold/30 rounded-xl px-3 py-2">
-<div class="text-[10px] text-slate-500 font-bold">내 봉</div>
-<div class="font-display text-2xl text-fut-gold"><span id="betWalletBong">0</span> B</div>
+<div class="text-[10px] text-slate-500 font-bold">학급 대기 베팅</div>
+<div class="font-display text-2xl text-fut-gold"><span id="betWalletBong">0</span>건</div>
 </div>
 </div>
 <div id="wcBetBoard" class="space-y-4">

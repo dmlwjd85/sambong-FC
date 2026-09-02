@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, writeBatch, getDocs, deleteDoc, deleteField } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, writeBatch, getDocs, deleteDoc, deleteField, increment } from 'firebase/firestore';
 import confetti from 'canvas-confetti';
 
 // Vite 빌드 시 .env의 VITE_APP_ID 사용, 없으면 기본값 (기존 단일 HTML과 동일)
@@ -532,9 +532,7 @@ const p = (window.allPlayersData || []).find((x) => x.id === pid);
 const bong = p ? (Number(p.bong) || 0) : (window.playerState && Number(window.playerState.bong) || 0);
 const chip = document.getElementById('navBongChip');
 const val = document.getElementById('navBongValue');
-const betVal = document.getElementById('betWalletBong');
 if (val) val.textContent = String(bong);
-if (betVal) betVal.textContent = String(bong);
 if (chip) {
 if (window.playerState && !window.playerState.isGuest) chip.classList.remove('hidden');
 else chip.classList.add('hidden');
@@ -3481,6 +3479,18 @@ await append(`[연습 모드] 실제 소속 인원이 5명 미만인 팀은 자�
 }
 await append(`전력 요약: ${teamAName} 출전 OVR 합 ${strA} (${mentLabel(mentA)})  |  ${teamBName} 출전 OVR 합 ${strB} (${mentLabel(mentB)})`, kickPitch);
 await append(`[전반 00:00] 킥오프 — 패스 vs 가로채기, 드리블 vs 수비, 슈팅 vs 반사신경으로 판정합니다. 공격적 템포는 슈팅을 늘리고, 수비적은 실점을 줄입니다.`, kickPitch);
+if (isMateSimLinkEnabled() && window.playerState && window.playerState.isGM) {
+try {
+const wcKick = window.mateWcState || {};
+if (!wcKick.settled) {
+await closeMateBettingForKickoff();
+await append('[승부예측] 메이트 학급 베팅을 마감했습니다. 경기 종료 후 점수대로 학급 봉이 지급됩니다.');
+}
+} catch (kickBetErr) {
+console.error('closeMateBettingForKickoff', kickBetErr);
+await append(`[승부예측] 베팅 마감에 실패했습니다: ${kickBetErr && kickBetErr.message ? kickBetErr.message : kickBetErr}`);
+}
+}
 
 for (let halfIdx = 0; halfIdx < 2; halfIdx++) {
 setMatchClock(halfIdx, 0);
@@ -3504,6 +3514,7 @@ await append(`[휴식] 하프타임 — 전술을 가다듬습니다.`);
 await append(`━━ 최종 스코어 ${teamAName} ${sa} : ${sb} ${teamBName} ━━`);
 await append(`(모의 시뮬레이션 종료 · 서버 기록·EXP 미반영)`);
 renderSimPostMatchStats(plA, plB, teamAName, teamBName, simStats, live, ratings);
+await maybeSettleMateBetsAfterSim(sa, sb, teamAName, teamBName);
 } finally {
 if (btn) { btn.disabled = false; btn.classList.remove('opacity-50', 'cursor-not-allowed'); }
 document.getElementById('simTacticalSection')?.classList.remove('hidden');
@@ -3615,6 +3626,174 @@ window.customAlert(`쇼츠 등록 에러:\n${e.message}`);
 }
 };
 
+const MATE_CLASS_ID = import.meta.env.VITE_MATE_APP_ID || 'sambong-class-2026';
+const MATE_WC_MATCH_ID = 'kr_r32_2026';
+const MATE_APP_URL = 'https://dmlwjd85.github.io/2026sambong6/';
+window.mateWcState = window.mateWcState || null;
+window.mateStudents = window.mateStudents || [];
+
+function mateNormalizeBong(v) {
+const n = Number(v);
+if (!Number.isFinite(n)) return 0;
+return Math.floor(n);
+}
+function mateSettingsRef() {
+return doc(db, 'artifacts', MATE_CLASS_ID, 'public', 'data', 'settings', 'global');
+}
+function getMatePendingBets() {
+const rows = [];
+(window.mateStudents || []).forEach((stu) => {
+(Array.isArray(stu.worldCupBets) ? stu.worldCupBets : []).forEach((bet) => {
+if (bet && String(bet.matchId) === MATE_WC_MATCH_ID && bet.status === 'pending') {
+rows.push({ ...bet, studentId: stu.id, studentName: stu.name || bet.studentName || stu.id });
+}
+});
+});
+return rows;
+}
+function updateMateBetStatusUi() {
+const wc = window.mateWcState || {};
+const pending = getMatePendingBets();
+const stEl = document.getElementById('simMateBetStatus');
+if (stEl) {
+if (wc.settled) stEl.textContent = `메이트: 정산 완료 · 최근 ${Number(wc.lastSim?.sa)||0}-${Number(wc.lastSim?.sb)||0}`;
+else if (wc.bettingOpen) stEl.textContent = `메이트: 베팅 접수 중 · 대기 ${pending.length}건`;
+else stEl.textContent = `메이트: 베팅 마감 · 대기 ${pending.length}건 · 경기 종료 시 지급`;
+}
+const betVal = document.getElementById('betWalletBong');
+if (betVal) betVal.textContent = String(pending.length);
+}
+
+/** 매치 센터 체크박스가 켜져 있으면 메이트 학급 베팅과 연동합니다 */
+function isMateSimLinkEnabled() {
+const el = document.getElementById('simLinkMateBet');
+return !el || !!el.checked;
+}
+
+async function closeMateBettingForKickoff() {
+if (!window.playerState || !window.playerState.isGM) return;
+checkAuthReady();
+const snap = await getDoc(mateSettingsRef());
+const wc = snap.exists() ? (snap.data().worldCupBet || {}) : {};
+if (wc.settled) return;
+const nextWc = {
+...wc,
+matchId: MATE_WC_MATCH_ID,
+simLinked: true,
+bettingOpen: false,
+simKickoffAt: Date.now()
+};
+await setDoc(mateSettingsRef(), { worldCupBet: nextWc }, { merge: true });
+window.mateWcState = nextWc;
+updateMateBetStatusUi();
+}
+
+/** 모의 최종 점수로 메이트 승부예측을 정산합니다 (감독 + 연동 체크 시에만) */
+async function maybeSettleMateBetsAfterSim(sa, sb, teamAName, teamBName) {
+if (!isMateSimLinkEnabled()) return;
+if (!window.playerState || !window.playerState.isGM) {
+await window.customAlert('모의경기는 끝났습니다.\n학급 베팅 정산은 감독 계정으로 메이트 연동 경기를 다시 돌려 주세요.');
+return;
+}
+const wc = window.mateWcState || {};
+if (wc.settled) {
+await window.customAlert('메이트 베팅은 이미 정산된 상태입니다.\n다음 라운드는 메이트에서 ‘다음 모의경기 베팅 열기’를 한 뒤 다시 돌려 주세요.');
+return;
+}
+let r32Override = null;
+let r32Label = '';
+if (sa > sb) {
+r32Label = '한국(레드) 승 · 32강 진출';
+} else if (sa < sb) {
+r32Label = '상대(블루) 승 · 탈락';
+} else {
+const asEliminate = await window.customConfirm(
+`모의경기 무승부 ${sa} : ${sb}입니다.\n학급 베팅은 승/패만 있습니다.\n\n진행 = 상대(블루) 승·탈락으로 정산\n취소 = 이번엔 정산하지 않기`
+);
+if (!asEliminate) {
+await window.customAlert('무승부라서 학급 베팅은 정산하지 않았습니다.');
+return;
+}
+r32Override = 'eliminate';
+r32Label = '상대(블루) 승 · 탈락 (무승부 처리)';
+}
+if (sa !== sb) {
+const ok = await window.customConfirm(
+`모의 최종 ${teamAName} ${sa} : ${sb} ${teamBName}\n→ ${r32Label}\n\n메이트 학급 베팅을 정산하고 학급 봉을 지급할까요?`
+);
+if (!ok) return;
+}
+try {
+const res = await window.settleMateWorldCupFromSim({ sa, sb, teamAName, teamBName, r32Override });
+if (!res || res.skipped) return;
+await window.customAlert(
+`메이트 승부예측 정산 완료!\n${r32Label}\n적중 ${res.winnerCount}건 · 총 지급 ${res.totalPayout} 봉`
+);
+} catch (e) {
+console.error('maybeSettleMateBetsAfterSim', e);
+await window.customAlert(`학급 베팅 정산에 실패했습니다.\n${e && e.message ? e.message : e}`);
+}
+}
+
+/** 모의 점수로 메이트 학급 worldCupBets를 정산하고 봉을 지급합니다 */
+window.settleMateWorldCupFromSim = async ({ sa, sb, teamAName, teamBName, r32Override }) => {
+checkAuthReady();
+if (!window.playerState || !window.playerState.isGM) {
+throw new Error('감독 계정으로만 학급 베팅을 정산할 수 있습니다.');
+}
+let r32 = r32Override || null;
+if (!r32) {
+if (sa > sb) r32 = 'advance';
+else if (sa < sb) r32 = 'eliminate';
+}
+if (!r32) return { skipped: 'draw' };
+const settingsSnap = await getDoc(mateSettingsRef());
+const wc = settingsSnap.exists() ? (settingsSnap.data().worldCupBet || {}) : {};
+if (wc.settled) throw new Error('메이트에서 이미 정산된 경기입니다.');
+const stuSnap = await getDocs(collection(db, 'artifacts', MATE_CLASS_ID, 'public', 'data', 'students'));
+const batch = writeBatch(db);
+const settledAt = Date.now();
+let winnerCount = 0;
+let totalPayout = 0;
+stuSnap.forEach((studentDoc) => {
+if (studentDoc.id === 'student_gm' || studentDoc.id === 'student_gm_a') return;
+const data = studentDoc.data() || {};
+const bets = Array.isArray(data.worldCupBets) ? data.worldCupBets : [];
+let payoutSum = 0;
+let changed = false;
+const nextBets = bets.map((bet) => {
+if (!bet || String(bet.matchId) !== MATE_WC_MATCH_ID || bet.status !== 'pending') return bet;
+changed = true;
+const won = String(bet.pick) === String(r32);
+const payout = won ? mateNormalizeBong(Number(bet.stake || 0) * Number(bet.odds || 0)) : 0;
+if (won) {
+payoutSum += payout;
+winnerCount += 1;
+}
+return { ...bet, status: won ? 'won' : 'lost', payout, settledAt };
+});
+if (!changed) return;
+const payload = { worldCupBets: nextBets.slice(-40) };
+if (payoutSum > 0) payload.bong = increment(payoutSum);
+batch.set(studentDoc.ref, payload, { merge: true });
+totalPayout += payoutSum;
+});
+const nextWc = {
+matchId: MATE_WC_MATCH_ID,
+bettingOpen: false,
+settled: true,
+simLinked: true,
+result: { r32 },
+settledAt,
+lastSim: { sa, sb, teamAName, teamBName, r32, at: settledAt }
+};
+batch.set(mateSettingsRef(), { worldCupBet: nextWc }, { merge: true });
+await batch.commit();
+window.mateWcState = nextWc;
+updateMateBetStatusUi();
+return { winnerCount, totalPayout, r32 };
+};
+
 const WC_HOUSE_MARGIN = 0.15;
 const WC_MAX_STAKE = 200;
 function wcOddsFromProb(prob) {
@@ -3672,97 +3851,39 @@ await setDoc(wcBoardRef(), defaultWcBoard(), { merge: true });
 window.renderWorldCupBetBoard = () => {
 const el = document.getElementById('wcBetBoard');
 if (!el) return;
-updateNavBongChip();
-const board = getWcBoard();
-const isGM = !!(window.playerState && window.playerState.isGM);
-const isGuest = !window.playerState || window.playerState.isGuest;
-const pid = window.playerState && window.playerState.id;
-const me = (window.allPlayersData || []).find((p) => p.id === pid);
-const myBets = Array.isArray(me && me.wcBets) ? me.wcBets : [];
-const myBong = me ? (Number(me.bong) || 0) : 0;
-const pending = myBets.filter((b) => b && b.status === 'pending');
-const historyHtml = myBets.length ? `<div class="rounded-xl border border-slate-700 bg-black/30 p-3 mb-3">
-<div class="text-[10px] font-black text-slate-400 mb-1">내 베팅 내역</div>
-${myBets.slice().sort((a,b)=>(b.at||0)-(a.at||0)).map((b) => {
-const st = b.status === 'won' ? `적중 +${b.payout||0}B` : (b.status === 'lost' ? '미적중' : '대기');
-const cls = b.status === 'won' ? 'text-emerald-300' : (b.status === 'lost' ? 'text-slate-500' : 'text-amber-300');
-return `<div class="flex justify-between gap-2 text-[11px] py-0.5"><span class="text-white truncate">${escapeHtml(b.label || '')} · ${b.stake}B</span><span class="${cls} shrink-0">${st}</span></div>`;
-}).join('')}
-</div>` : '';
-el.innerHTML = historyHtml + board.matches.map((m) => {
-const st = m.status === 'settled' ? '정산 완료' : (m.status === 'closed' ? '베팅 마감' : '베팅 접수 중');
-const stCls = m.status === 'settled' ? 'text-emerald-300' : (m.status === 'closed' ? 'text-amber-300' : 'text-red-300');
-const resultOpt = (m.options || []).find((o) => o.id === m.result);
-const optHtml = (m.options || []).map((o) => {
-const mine = myBets.find((b) => b.matchId === m.id && b.optionId === o.id);
-const disabled = isGuest || isGM || m.status !== 'open';
-const mark = mine ? `<div class="text-[9px] text-fut-gold mt-1">내 베팅 ${mine.stake}B · ${mine.status === 'won' ? '적중 +'+(mine.payout||0)+'B' : (mine.status === 'lost' ? '미적중' : '대기')}</div>` : '';
-return `<button type="button" ${disabled ? 'disabled' : ''} onclick="window.placeFcWorldCupBet('${m.id}','${o.id}')"
-class="text-left rounded-xl border border-red-500/30 bg-slate-950/70 px-3 py-2 hover:bg-red-950/40 transition ${disabled ? 'opacity-50 cursor-not-allowed' : ''}">
-<div class="text-sm text-white font-black">${o.label}</div>
-<div class="text-[10px] text-red-200/80">분석 ${Math.round((o.prob||0)*100)}% · 배당 ${Number(o.odds).toFixed(2)}x</div>
-${mark}
-</button>`;
-}).join('');
-const gmHtml = isGM ? `<div class="mt-3 pt-3 border-t border-slate-700 space-y-2">
-<div class="flex flex-wrap gap-2">
-<button type="button" class="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-amber-800 text-white" onclick="window.setWcMatchStatus('${m.id}','closed')">마감</button>
-<button type="button" class="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-700 text-white" onclick="window.setWcMatchStatus('${m.id}','open')">재개</button>
-</div>
-<div class="flex flex-wrap items-center gap-2">
-<select id="wcSettle_${m.id}" class="bg-slate-900 border border-slate-600 rounded-lg px-2 py-1 text-xs text-white">${(m.options||[]).map((o)=>`<option value="${o.id}" ${m.result===o.id?'selected':''}>${o.label}</option>`).join('')}</select>
-<button type="button" class="text-[10px] font-black px-3 py-1.5 rounded-lg bg-emerald-700 text-white" onclick="window.settleWcMatch('${m.id}')">결과 확정·지급</button>
-</div>
-</div>` : '';
-return `<article class="rounded-2xl border border-red-800/40 bg-slate-950/50 p-4">
+updateMateBetStatusUi();
+const wc = window.mateWcState || {};
+const pending = getMatePendingBets();
+const st = wc.settled ? '정산 완료' : (wc.bettingOpen === false ? '베팅 마감' : '베팅 접수 중');
+const stCls = wc.settled ? 'text-emerald-300' : (wc.bettingOpen === false ? 'text-amber-300' : 'text-red-300');
+const r32 = wc.result && wc.result.r32;
+const r32Label = r32 === 'advance' ? '한국(레드) 승 · 32강 진출' : (r32 === 'eliminate' ? '상대(블루) 승 · 탈락' : '');
+const last = wc.lastSim;
+const listHtml = pending.length
+? pending.slice(0, 40).map((b) => `<div class="flex justify-between gap-2 text-[11px] py-0.5 border-b border-slate-800/80"><span class="text-white truncate">${escapeHtml(b.studentName || b.studentId)} · ${escapeHtml(b.label || b.pick)} · ${b.stake}B</span><span class="text-amber-300 shrink-0">대기</span></div>`).join('')
+: '<p class="text-[11px] text-slate-500 text-center py-4">대기 중인 학급 베팅이 없습니다.</p>';
+el.innerHTML = `<article class="rounded-2xl border border-red-800/40 bg-slate-950/50 p-4">
 <div class="flex items-start justify-between gap-2 mb-2">
 <div>
-<h4 class="font-display text-lg text-red-200">${escapeHtml(m.title)}</h4>
-<p class="text-[10px] text-slate-500">${escapeHtml(m.subtitle || '')} · ${escapeHtml(m.kickoffLabel || '')}</p>
+<h4 class="font-display text-lg text-red-200">삼봉FC 모의 월드컵</h4>
+<p class="text-[10px] text-slate-500">메이트와 동일 시장 · 레드=한국 진출 · 블루=탈락</p>
 </div>
 <span class="text-[10px] font-black ${stCls} shrink-0">${st}</span>
 </div>
-${resultOpt ? `<p class="text-[11px] text-emerald-300 mb-2">결과: ${escapeHtml(resultOpt.label)}</p>` : ''}
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${optHtml}</div>
-${gmHtml}
+${r32Label ? `<p class="text-[11px] text-emerald-300 mb-2">결과: ${escapeHtml(r32Label)}</p>` : ''}
+${last ? `<p class="text-[11px] text-slate-300 mb-2">최근 모의 ${escapeHtml(last.teamAName || '레드')} ${Number(last.sa)||0} : ${Number(last.sb)||0} ${escapeHtml(last.teamBName || '블루')}</p>` : ''}
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+<div class="rounded-xl border border-red-500/30 bg-slate-950/70 px-3 py-2"><div class="text-sm text-white font-black">한국(레드) 승 · 32강 진출</div><div class="text-[10px] text-red-200/80">배당 2.29x</div></div>
+<div class="rounded-xl border border-red-500/30 bg-slate-950/70 px-3 py-2"><div class="text-sm text-white font-black">상대(블루) 승 · 탈락</div><div class="text-[10px] text-red-200/80">배당 1.40x</div></div>
+</div>
+<div class="text-[10px] font-black text-slate-400 mb-1">학급 대기 베팅 ${pending.length}건</div>
+<div class="max-h-56 overflow-y-auto">${listHtml}</div>
+<p class="text-[10px] text-slate-500 text-center mt-3">베팅은 <a href="${MATE_APP_URL}" target="_blank" rel="noopener" class="text-amber-300 underline">메이트</a>에서 · 정산은 매치 센터 모의경기(감독)</p>
 </article>`;
-}).join('') + (isGuest ? '<p class="text-center text-[11px] text-slate-500">게스트는 베팅할 수 없습니다. 선수로 로그인하세요.</p>' : `<p class="text-[10px] text-slate-500 text-center">${pending.length ? `대기 ${pending.length}건 · ` : ''}보유 ${myBong} B · 1회 최대 ${WC_MAX_STAKE} B · 같은 경기에 한 옵션만 가능</p>`);
 };
 
-window.placeFcWorldCupBet = async (matchId, optionId) => {
-try {
-checkAuthReady();
-if (!window.playerState || window.playerState.isGuest || window.playerState.isGM) return;
-const board = getWcBoard();
-const match = (board.matches || []).find((m) => m.id === matchId);
-if (!match || match.status !== 'open') return window.customAlert('지금은 이 경기에 베팅할 수 없습니다.');
-const opt = (match.options || []).find((o) => o.id === optionId);
-if (!opt) return;
-const p = (window.allPlayersData || []).find((x) => x.id === window.playerState.id);
-if (!p) return;
-const bets = Array.isArray(p.wcBets) ? p.wcBets : [];
-if (bets.some((b) => b.matchId === matchId && b.status === 'pending')) {
-return window.customAlert('이미 이 경기에 베팅했습니다. 같은 경기 보험 베팅은 할 수 없어요.');
-}
-const wallet = Number(p.bong) || 0;
-if (wallet < 1) return window.customAlert('봉이 부족합니다.');
-const stake = await window.pickBongStake({
-title: '월드컵 승부예측',
-label: `${match.title}\n${opt.label}`,
-odds: opt.odds,
-wallet,
-max: WC_MAX_STAKE
-});
-if (!stake) return;
-if (stake > WC_MAX_STAKE) return window.customAlert(`1회 최대 ${WC_MAX_STAKE} B까지입니다.`);
-if (stake > wallet) return window.customAlert('봉이 부족합니다.');
-if (!await window.customConfirm(`${opt.label}에 ${stake} B를 걸까요?\n적중 시 약 ${Math.floor(stake * opt.odds)} B 지급`)) return;
-const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
-const bet = { id: `bet_${Date.now()}`, matchId, optionId, label: opt.label, stake, odds: opt.odds, status: 'pending', payout: 0, at: Date.now() };
-await setDoc(docRef, { bong: wallet - stake, wcBets: [...bets, bet] }, { merge: true });
-triggerConfetti();
-window.customAlert(`베팅 접수!\n${opt.label} · ${stake} B × ${Number(opt.odds).toFixed(2)}`);
-} catch (e) { console.error(e); window.customAlert(`베팅 실패:\n${e.message}`); }
+window.placeFcWorldCupBet = async () => {
+window.customAlert('베팅은 메이트 학급 앱에서 합니다.\n' + MATE_APP_URL);
 };
 
 window.setWcMatchStatus = async (matchId, status) => {
@@ -4226,6 +4347,28 @@ window.wcBoard = defaultWcBoard();
 }
 if (isVisible('tabBet')) window.renderWorldCupBetBoard();
 }, (error) => console.error("wcBoard Listen Error:", error));
+
+onSnapshot(mateSettingsRef(), (docSnap) => {
+window.mateWcState = docSnap.exists() ? (docSnap.data().worldCupBet || null) : null;
+updateMateBetStatusUi();
+if (isVisible('tabBet')) window.renderWorldCupBetBoard();
+}, (error) => console.error('mate worldCupBet Listen Error:', error));
+
+onSnapshot(collection(db, 'artifacts', MATE_CLASS_ID, 'public', 'data', 'students'), (snapshot) => {
+const students = [];
+snapshot.forEach((d) => {
+if (d.id === 'student_gm' || d.id === 'student_gm_a') return;
+const data = d.data() || {};
+students.push({
+id: String(d.id).replace(/^student_/, ''),
+name: data.name || d.id,
+worldCupBets: Array.isArray(data.worldCupBets) ? data.worldCupBets : []
+});
+});
+window.mateStudents = students;
+updateMateBetStatusUi();
+if (isVisible('tabBet')) window.renderWorldCupBetBoard();
+}, (error) => console.error('mate students Listen Error:', error));
 
 document.getElementById('loadingOverlay')?.classList.add('hidden');
 
