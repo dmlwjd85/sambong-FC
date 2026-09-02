@@ -63,22 +63,41 @@ h1, h2, h3, .font-display { font-family: 'Black Han Sans', sans-serif; letter-sp
 
 .fut-card {
 clip-path: polygon(8% 0, 92% 0, 100% 8%, 100% 92%, 92% 100%, 8% 100%, 0 92%, 0 8%);
-box-shadow: 0 18px 40px rgba(0,0,0,0.55), inset 0 0 18px rgba(255,255,255,0.22);
-transition: transform 0.3s ease, box-shadow 0.3s ease;
+box-shadow: 0 22px 48px rgba(0,0,0,0.62), 0 0 0 1px rgba(255,255,255,0.12), inset 0 0 22px rgba(255,255,255,0.18);
+transition: transform 0.35s cubic-bezier(0.22,1,0.36,1), box-shadow 0.35s ease;
 position: relative;
+}
+.fut-card:hover {
+transform: translateY(-6px) rotateX(4deg);
+box-shadow: 0 28px 56px rgba(0,0,0,0.7), 0 0 28px rgba(232,194,113,0.18), inset 0 0 22px rgba(255,255,255,0.22);
 }
 .fut-card::after {
 content: ''; position: absolute; top: 3px; left: 3px; right: 3px; bottom: 3px;
 clip-path: polygon(8% 0, 92% 0, 100% 8%, 100% 92%, 92% 100%, 8% 100%, 0 92%, 0 8%);
-border: 1.5px solid rgba(255,255,255,0.28); pointer-events: none; z-index: 5;
+border: 1.5px solid rgba(255,255,255,0.34); pointer-events: none; z-index: 5;
 }
 .fut-career-card .fut-card-pitch-bg {
 position: absolute; inset: 0; z-index: 0;
 background:
-  linear-gradient(180deg, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.45) 100%),
-  repeating-linear-gradient(90deg, rgba(255,255,255,0.06) 0 2px, transparent 2px 18px),
-  radial-gradient(ellipse at 70% 18%, rgba(255,255,255,0.18), transparent 46%);
-opacity: 0.55;
+  linear-gradient(180deg, rgba(0,0,0,0.04) 0%, rgba(0,0,0,0.52) 100%),
+  repeating-linear-gradient(90deg, rgba(255,255,255,0.07) 0 3px, transparent 3px 16px),
+  radial-gradient(ellipse at 50% 0%, rgba(255,255,240,0.22), transparent 42%),
+  radial-gradient(ellipse at 18% 88%, rgba(56,255,142,0.12), transparent 40%);
+opacity: 0.62;
+}
+.fut-career-card .fut-card-lights {
+position: absolute; inset: 0; z-index: 2; pointer-events: none;
+background:
+  radial-gradient(ellipse at 20% -8%, rgba(255,255,255,0.28), transparent 36%),
+  radial-gradient(ellipse at 80% -8%, rgba(255,248,220,0.22), transparent 34%);
+mix-blend-mode: screen;
+opacity: 0.85;
+}
+.fut-career-card .fut-card-watermark {
+position: absolute; right: 10px; bottom: 86px; z-index: 2; pointer-events: none;
+font-family: 'Bebas Neue', Oswald, sans-serif;
+font-size: 3.4rem; letter-spacing: 0.12em; color: rgba(255,255,255,0.08);
+transform: rotate(-18deg);
 }
 .fut-career-card .fut-card-foil {
 position: absolute; inset: -40%; z-index: 1; pointer-events: none;
@@ -126,11 +145,11 @@ box-shadow: inset 0 -18px 28px rgba(0,0,0,0.35);
 .stat-mini-bar { width: 100%; height: 3px; background: rgba(0,0,0,0.28); border-radius: 99px; overflow: hidden; margin-top: 3px; }
 .stat-mini-bar > i { display: block; height: 100%; border-radius: 99px; background: currentColor; opacity: 0.85; }
 
-.card-rookie { background: linear-gradient(160deg, #e8c9a0 0%, #b87333 42%, #7c4a1e 100%); color: #fff8e7; } 
-.card-semipro { background: linear-gradient(160deg, #f4f4f5 0%, #c0c0c8 40%, #6b7280 100%); color: #111827; }
-.card-pro { background: linear-gradient(160deg, #fff3c4 0%, #e8c271 38%, #8a6914 100%); color: #2a1a04; }
-.card-worldclass { background: linear-gradient(160deg, #c4b5fd 0%, #6d28d9 40%, #312e81 100%); color: #fff; border: 1px solid #d8bfd8; box-shadow: 0 0 24px rgba(138,43,226,0.55); }
-.card-challenger { background: linear-gradient(160deg, #292524 0%, #0a0a0a 100%); color: #fff; border: 2px solid #ffd700; box-shadow: 0 0 30px rgba(255,215,0,0.8); }
+.card-rookie { background: linear-gradient(165deg, #f3d5ae 0%, #c4843a 38%, #7a4318 78%, #4a260c 100%); color: #fff8e7; }
+.card-semipro { background: linear-gradient(165deg, #f8fafc 0%, #cbd5e1 36%, #64748b 78%, #334155 100%); color: #0f172a; }
+.card-pro { background: linear-gradient(165deg, #fff7d1 0%, #f0c14b 34%, #b8860b 72%, #6b4a08 100%); color: #2a1a04; }
+.card-worldclass { background: linear-gradient(165deg, #ddd6fe 0%, #8b5cf6 32%, #5b21b6 70%, #1e1b4b 100%); color: #fff; border: 1px solid #e9d5ff; box-shadow: 0 0 28px rgba(139,92,246,0.58); }
+.card-challenger { background: linear-gradient(165deg, #44403c 0%, #171717 55%, #0a0a0a 100%); color: #fff; border: 2px solid #ffd700; box-shadow: 0 0 34px rgba(255,215,0,0.78); }
 .card-challenger::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: conic-gradient(transparent, rgba(255,215,0,0.3), transparent 30%); animation: rotate 4s linear infinite; z-index: -1; pointer-events: none; }
 @keyframes rotate { 100% { transform: rotate(1turn); } }
 
@@ -196,14 +215,22 @@ color: inherit; opacity: 0.9; text-shadow: 0 1px 2px rgba(0,0,0,0.8);
 white-space: nowrap; z-index: 2;
 }
 
-.mini-card { position: relative; transition: all 0.2s; overflow: hidden; }
-.mini-card:hover { transform: translateY(-4px) scale(1.04); box-shadow: 0 8px 20px rgba(56,255,142,0.22); border-color: #38ff8e; }
-.mini-card.selected { border-color: #e8c271; box-shadow: 0 0 16px rgba(232,194,113,0.55); }
+.mini-card { position: relative; transition: all 0.22s; overflow: hidden; }
+.mini-card:hover { transform: translateY(-6px) scale(1.05); box-shadow: 0 12px 26px rgba(56,255,142,0.22); border-color: #38ff8e; }
+.mini-card.selected { border-color: #e8c271; box-shadow: 0 0 18px rgba(232,194,113,0.62), 0 8px 18px rgba(0,0,0,0.35); }
 .mini-card.checked-in { opacity: 1; }
 .mini-card.checked-out { opacity: 0.55; filter: grayscale(35%); }
 .fut-mini {
-  background-image: linear-gradient(180deg, rgba(255,255,255,0.12), transparent 38%);
-  min-height: 168px;
+  background-image:
+    linear-gradient(180deg, rgba(255,255,255,0.18), transparent 42%),
+    radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.16), transparent 48%);
+  min-height: 176px;
+}
+.fut-mini::before {
+  content: '';
+  position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(115deg, transparent 40%, rgba(255,255,255,0.16) 50%, transparent 60%);
+  opacity: 0.45;
 }
 .fut-mini .fut-mini-portrait img,
 .fut-mini-portrait-img {
@@ -318,4 +345,127 @@ input[type="number"] { -moz-appearance: textfield; }
 @keyframes simBroadcastKpIn {
   0% { transform: scale(0.94); opacity: 0.6; }
   100% { transform: scale(1); opacity: 1; }
+}
+
+/* 커리어 카드 티어 오라 */
+.card-aura { filter: drop-shadow(0 10px 18px rgba(0,0,0,0.45)); }
+.card-aura-rookie { filter: drop-shadow(0 0 16px rgba(184,115,51,0.45)); }
+.card-aura-semipro { filter: drop-shadow(0 0 16px rgba(203,213,225,0.4)); }
+.card-aura-pro { filter: drop-shadow(0 0 20px rgba(232,194,113,0.55)); }
+.card-aura-worldclass { filter: drop-shadow(0 0 24px rgba(139,92,246,0.62)); }
+.card-aura-challenger { filter: drop-shadow(0 0 28px rgba(255,215,0,0.7)); }
+
+.fut-mini-ovr-plate {
+  background: linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.42));
+  border: 1px solid rgba(255,255,255,0.22);
+  border-radius: 0.4rem;
+  padding: 0 0.35rem;
+  line-height: 1;
+}
+
+.compare-fut-mini {
+  width: 7.5rem;
+  padding: 0.7rem 0.5rem 0.6rem;
+  clip-path: polygon(8% 0, 92% 0, 100% 8%, 100% 92%, 92% 100%, 8% 100%, 0 92%, 0 8%);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.45), inset 0 0 12px rgba(255,255,255,0.16);
+}
+
+/* 모의경기: 고정 레드팀 vs 블루팀 배너 */
+.sim-vs-lock {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 0.6rem;
+  align-items: stretch;
+}
+.sim-team-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-radius: 1rem;
+  padding: 0.7rem 0.9rem;
+  min-height: 3.4rem;
+}
+.sim-team-banner--red {
+  background: linear-gradient(135deg, #7f1d1d 0%, #b91c1c 42%, #450a0a 100%);
+  border: 1px solid rgba(252,165,165,0.45);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), 0 8px 20px rgba(127,29,29,0.35);
+}
+.sim-team-banner--blue {
+  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 42%, #0f172a 100%);
+  border: 1px solid rgba(147,197,253,0.45);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), 0 8px 20px rgba(30,58,138,0.35);
+}
+.sim-vs-badge {
+  align-self: center;
+  font-family: 'Bebas Neue', Oswald, sans-serif;
+  letter-spacing: 0.18em;
+  font-size: 1.35rem;
+  color: #fde68a;
+  text-shadow: 0 0 12px rgba(250,204,21,0.55);
+}
+
+/* TV 중계 스코어보드 */
+.sim-scoreboard {
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid rgba(250,204,21,0.35);
+  background: linear-gradient(180deg, #0b1220 0%, #020617 100%);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+#simScoreBar:not(.hidden) {
+  display: flex;
+}
+.sim-scoreboard-side {
+  flex: 1 1 8rem;
+  min-width: 7rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.75rem;
+  font-family: 'Black Han Sans', sans-serif;
+}
+.sim-scoreboard-side--red {
+  background: linear-gradient(90deg, rgba(185,28,28,0.92), rgba(127,29,29,0.35));
+}
+.sim-scoreboard-side--blue {
+  background: linear-gradient(90deg, rgba(30,58,138,0.35), rgba(37,99,235,0.92));
+}
+.sim-scoreboard-kit {
+  font-family: 'Bebas Neue', Oswald, sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  opacity: 0.85;
+}
+.sim-scoreboard-mid {
+  min-width: 6.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 0%, rgba(250,204,21,0.18), transparent 70%);
+  border-left: 1px solid rgba(250,204,21,0.25);
+  border-right: 1px solid rgba(250,204,21,0.25);
+  padding: 0.35rem 0.8rem;
+}
+
+.sim-clock-led {
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(180deg, #111827, #020617);
+  box-shadow: inset 0 0 18px rgba(250,204,21,0.12), 0 0 16px rgba(250,204,21,0.15);
+}
+
+.sim-hud-tile {
+  background: linear-gradient(180deg, rgba(15,23,42,0.92), rgba(2,6,23,0.92));
+  border: 1px solid rgba(148,163,184,0.22);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+#simPitchPanel {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(250,204,21,0.08), transparent 42%),
+    linear-gradient(180deg, #10261a 0%, #050a08 100%) !important;
 }

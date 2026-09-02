@@ -115,10 +115,12 @@
 </div>
 </div>
 
-<div id="cardAuraWrapper" class="mx-auto w-fit transition-all duration-500 z-10 relative">
+<div id="cardAuraWrapper" class="card-aura mx-auto w-fit transition-all duration-500 z-10 relative">
 <div id="detailFutCard" class="fut-card fut-career-card w-[320px] h-[530px] p-0 flex flex-col relative shadow-2xl z-10 mx-auto transition-all duration-300 overflow-hidden">
 <div class="fut-card-foil pointer-events-none"></div>
 <div class="fut-card-pitch-bg pointer-events-none"></div>
+<div class="fut-card-lights pointer-events-none"></div>
+<div class="fut-card-watermark pointer-events-none">SFC</div>
 <div class="fut-card-content relative z-10 flex flex-col h-full p-4">
 
 <div class="flex justify-between items-stretch z-10 w-full min-h-[210px] gap-2">
@@ -495,18 +497,35 @@
 </label>
 </div>
 
+<div class="sim-vs-lock mb-4 min-w-0">
+<div class="sim-team-banner sim-team-banner--red">
+<div>
+<div class="text-[9px] font-black tracking-[0.28em] text-red-100/80">HOME</div>
+<div class="font-display text-red-50 text-xl sm:text-2xl leading-none">레드팀</div>
+</div>
+<span class="sim-scoreboard-kit text-red-100">RED</span>
+</div>
+<div class="sim-vs-badge">VS</div>
+<div class="sim-team-banner sim-team-banner--blue">
+<span class="sim-scoreboard-kit text-blue-100">BLUE</span>
+<div class="text-right">
+<div class="text-[9px] font-black tracking-[0.28em] text-blue-100/80">AWAY</div>
+<div class="font-display text-blue-50 text-xl sm:text-2xl leading-none">블루팀</div>
+</div>
+</div>
+</div>
+<input type="hidden" id="simTeamAName" data-sim-team="A" name="simMatchTeamA" value="레드팀"/>
+<input type="hidden" id="simTeamBName" data-sim-team="B" name="simMatchTeamB" value="블루팀"/>
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 min-w-0">
 <div class="rounded-2xl border border-red-900/50 bg-red-950/30 p-3 sm:p-4 min-w-0">
-<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2 border-b border-red-800/40 pb-2 min-w-0">
-<span class="font-display text-red-400 text-base sm:text-lg shrink-0">팀 A (레드)</span>
-<input type="text" id="simTeamAName" data-sim-team="A" name="simMatchTeamA" maxlength="20" autocomplete="off" class="w-full min-w-0 sm:w-48 bg-slate-900/80 border border-red-700/50 rounded-lg px-2 py-1 text-sm text-white" placeholder="팀 이름" value="대한민국"/>
+<div class="flex items-center justify-between gap-2 mb-2 border-b border-red-800/40 pb-2 min-w-0">
+<span class="font-display text-red-400 text-base sm:text-lg">레드팀 명단</span>
 </div>
 <p class="text-[10px] text-slate-500 mb-2" id="simCountA">대기 중…</p>
 </div>
 <div class="rounded-2xl border border-blue-900/50 bg-blue-950/30 p-3 sm:p-4 min-w-0">
-<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2 border-b border-blue-800/40 pb-2 min-w-0">
-<span class="font-display text-blue-400 text-base sm:text-lg shrink-0">팀 B (블루)</span>
-<input type="text" id="simTeamBName" data-sim-team="B" name="simMatchTeamB" maxlength="20" autocomplete="off" class="w-full min-w-0 sm:w-48 bg-slate-900/80 border border-blue-700/50 rounded-lg px-2 py-1 text-sm text-white" placeholder="팀 이름" value="상대"/>
+<div class="flex items-center justify-between gap-2 mb-2 border-b border-blue-800/40 pb-2 min-w-0">
+<span class="font-display text-blue-400 text-base sm:text-lg">블루팀 명단</span>
 </div>
 <p class="text-[10px] text-slate-500 mb-2" id="simCountB">대기 중…</p>
 </div>
@@ -535,7 +554,7 @@
 </div>
 
 <div id="simClockWrap" class="hidden mb-3 flex justify-center">
-<div id="simMatchClock" class="font-mono text-xl sm:text-2xl text-amber-300 bg-black/70 px-6 py-2.5 rounded-xl border border-amber-600/50 shadow-lg tracking-widest">전반 00:00</div>
+<div id="simMatchClock" class="sim-clock-led font-mono text-xl sm:text-2xl text-amber-300 px-6 py-2.5 rounded-xl border border-amber-600/50 tracking-widest">전반 00:00</div>
 </div>
 
 <div class="flex flex-wrap gap-2 mb-4">
@@ -543,24 +562,32 @@
 <button type="button" onclick="window.simClearLog()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold px-3 py-2 rounded-lg border border-slate-600">중계 지우기</button>
 </div>
 
-<div id="simScoreBar" class="hidden mb-3 flex flex-wrap items-center justify-center gap-2 sm:gap-4 font-display text-xl sm:text-3xl text-white bg-black/40 rounded-xl py-2 sm:py-3 px-2 sm:px-4 border border-amber-700/40 max-w-full min-w-0">
-<span id="simScoreAName" class="text-red-400"></span>
-<span id="simScoreNums" class="text-fut-gold">0 - 0</span>
-<span id="simScoreBName" class="text-blue-400"></span>
+<div id="simScoreBar" class="hidden sim-scoreboard mb-3 max-w-full min-w-0">
+<div class="sim-scoreboard-side sim-scoreboard-side--red">
+<span class="sim-scoreboard-kit">RED</span>
+<span id="simScoreAName" class="text-red-50 text-lg sm:text-2xl">레드팀</span>
+</div>
+<div class="sim-scoreboard-mid">
+<span id="simScoreNums" class="font-display text-2xl sm:text-4xl text-fut-gold">0 - 0</span>
+</div>
+<div class="sim-scoreboard-side sim-scoreboard-side--blue">
+<span id="simScoreBName" class="text-blue-50 text-lg sm:text-2xl">블루팀</span>
+<span class="sim-scoreboard-kit">BLUE</span>
+</div>
 </div>
 <div id="simLiveHud" class="hidden mb-3 grid grid-cols-3 gap-2 text-center">
-<div class="rounded-xl bg-black/40 border border-slate-700 py-2"><div class="text-[9px] text-slate-500 font-bold">점유율</div><div id="simHudPoss" class="text-sm font-black text-emerald-300">50-50</div></div>
-<div class="rounded-xl bg-black/40 border border-slate-700 py-2"><div class="text-[9px] text-slate-500 font-bold">슈팅 (유효)</div><div id="simHudShots" class="text-sm font-black text-amber-200">0-0 (0-0)</div></div>
-<div class="rounded-xl bg-black/40 border border-slate-700 py-2"><div class="text-[9px] text-slate-500 font-bold">예상득점 xG</div><div id="simHudXg" class="text-sm font-black text-cyan-200">0.00-0.00</div></div>
+<div class="sim-hud-tile rounded-xl py-2"><div class="text-[9px] text-slate-500 font-bold">점유율</div><div id="simHudPoss" class="text-sm font-black text-emerald-300">50-50</div></div>
+<div class="sim-hud-tile rounded-xl py-2"><div class="text-[9px] text-slate-500 font-bold">슈팅 (유효)</div><div id="simHudShots" class="text-sm font-black text-amber-200">0-0 (0-0)</div></div>
+<div class="sim-hud-tile rounded-xl py-2"><div class="text-[9px] text-slate-500 font-bold">예상득점 xG</div><div id="simHudXg" class="text-sm font-black text-cyan-200">0.00-0.00</div></div>
 </div>
 
 <div id="simPostMatchStats" class="hidden mb-3 rounded-xl border border-amber-600/40 bg-gradient-to-br from-slate-900/95 to-black/80 p-3 shadow-lg"></div>
 
 <!-- 시뮬레이션: 상단 경기장(캔버스) / 하단 텍스트 중계 -->
 <div id="simLiveSplit" class="flex flex-col gap-3 w-full min-w-0 max-w-full min-h-[min(78vh,820px)] overflow-x-hidden box-border">
-<div id="simPitchPanel" class="flex flex-col rounded-2xl border border-emerald-500/30 bg-gradient-to-b from-[#0c1810] to-[#050a08] shadow-[0_0_32px_rgba(16,185,129,0.12)] overflow-hidden shrink-0 min-h-[200px] max-h-[min(46vh,420px)] h-[min(42vh,400px)] w-full max-w-full ring-1 ring-emerald-900/40 box-border">
-<div class="flex items-center justify-between px-2 sm:px-3 py-2 bg-gradient-to-r from-black/50 via-emerald-950/40 to-black/50 border-b border-emerald-800/60 gap-2 min-w-0">
-<span class="text-[10px] sm:text-[11px] text-emerald-300 font-bold tracking-wide drop-shadow truncate">경기장 · 포지션 움직임</span>
+<div id="simPitchPanel" class="flex flex-col rounded-2xl border border-emerald-500/30 overflow-hidden shrink-0 min-h-[220px] max-h-[min(50vh,460px)] h-[min(46vh,440px)] w-full max-w-full ring-1 ring-emerald-900/40 box-border">
+<div class="flex items-center justify-between px-2 sm:px-3 py-2 bg-gradient-to-r from-red-950/70 via-black/60 to-blue-950/70 border-b border-emerald-800/60 gap-2 min-w-0">
+<span class="text-[10px] sm:text-[11px] text-emerald-300 font-bold tracking-wide drop-shadow truncate">라이브 코트 · 레드팀 vs 블루팀</span>
 <span id="simPitchBadge" class="text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 shrink-0">대기</span>
 </div>
 <div class="relative flex-1 min-h-[160px] min-w-0 flex items-center justify-center p-1 sm:p-2 overflow-hidden">

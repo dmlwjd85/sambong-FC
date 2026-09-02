@@ -572,19 +572,19 @@ const canSimEdit = !window.playerState.isGuest;
 let simRow = '';
 if (canSimEdit) {
 simRow = `<div class="w-full mt-1 pt-1 border-t border-slate-700/60" onclick="event.stopPropagation()"><div class="flex gap-0.5 justify-center items-center">
-<button type="button" class="text-[9px] px-1.5 py-0.5 rounded font-bold ${st === 'A' ? 'bg-red-600 text-white' : 'bg-slate-800 text-slate-300'} border border-slate-600" onclick="window.setPlayerSimTeam('${p.id}','A')">A</button>
-<button type="button" class="text-[9px] px-1.5 py-0.5 rounded font-bold ${st === 'B' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300'} border border-slate-600" onclick="window.setPlayerSimTeam('${p.id}','B')">B</button>
+<button type="button" class="text-[9px] px-1.5 py-0.5 rounded font-bold ${st === 'A' ? 'bg-red-600 text-white' : 'bg-slate-800 text-slate-300'} border border-slate-600" onclick="window.setPlayerSimTeam('${p.id}','A')">레드</button>
+<button type="button" class="text-[9px] px-1.5 py-0.5 rounded font-bold ${st === 'B' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300'} border border-slate-600" onclick="window.setPlayerSimTeam('${p.id}','B')">블루</button>
 <button type="button" class="text-[8px] px-1 py-0.5 rounded bg-slate-900 text-slate-500 border border-slate-700" onclick="window.setPlayerSimTeam('${p.id}',null)">해제</button>
 </div><p class="text-[7px] text-center text-slate-500 mt-0.5 leading-tight">모의경기 팀</p></div>`;
 } else if (st === 'A' || st === 'B') {
-simRow = `<div class="mt-0.5 text-[9px] font-bold ${st === 'A' ? 'text-red-400' : 'text-blue-400'}" onclick="event.stopPropagation()">모의 ${st}</div>`;
+simRow = `<div class="mt-0.5 text-[9px] font-bold ${st === 'A' ? 'text-red-400' : 'text-blue-400'}" onclick="event.stopPropagation()">모의 ${st === 'A' ? '레드팀' : '블루팀'}</div>`;
 }
 return `
                      <div class="mini-card fut-mini ${tier.cardClass} flex flex-col items-center p-2 rounded-xl border-2 ${borderClass} cursor-pointer ${isSelected ? 'selected' : ''} ${isChecked ? 'checked-in' : 'checked-out'}" onclick="window.selectPlayer('${p.id}')">
                          <input type="checkbox" class="locker-checkbox absolute top-1.5 left-1.5 w-5 h-5 shadow-lg z-10" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); window.toggleCheck('${p.id}')">
                          <div class="absolute top-1 right-1 ${tier.class} text-[8px] font-black px-1.5 py-0.5 rounded shadow whitespace-nowrap tracking-wide">${tier.name.split(' ')[0]}</div>
                          <div class="flex items-end justify-center min-h-[4.6rem] mt-3">${getAvatarHtml(p, 'locker')}</div>
-                         <div class="fut-mini-ovr text-[1.65rem] font-bold leading-none text-current drop-shadow mt-0.5">${ovr}</div>
+                         <div class="fut-mini-ovr-plate fut-mini-ovr text-[1.55rem] font-bold leading-none text-current drop-shadow mt-1">${ovr}</div>
                          <div class="flex flex-col items-center mt-0.5 w-full px-0.5">
                          <span class="text-[9px] font-black ${getPosColor(p.pos)} tracking-wider">${posText}</span>
                          <span class="text-[11px] font-black text-current truncate max-w-[72px] drop-shadow">${p.name}</span>
@@ -649,7 +649,7 @@ return `
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
 <div class="sim-team-drop-zone rounded-xl border border-red-800/40 bg-red-950/25 p-3 min-h-[6rem]" data-sim-drop="A">
 <div class="font-display text-red-400 text-sm mb-1.5 flex justify-between items-center gap-2 flex-wrap">
-<span>레드 (팀 A)</span>
+<span>레드팀</span>
 <div class="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
 ${randomFillA}
 ${clearColA}
@@ -660,7 +660,7 @@ ${listA.length ? listA.map((p) => rowHtml(p, 'A')).join('') : emptyHint}
 </div>
 <div class="sim-team-drop-zone rounded-xl border border-blue-800/40 bg-blue-950/25 p-3 min-h-[6rem]" data-sim-drop="B">
 <div class="font-display text-blue-400 text-sm mb-1.5 flex justify-between items-center gap-2 flex-wrap">
-<span>블루 (팀 B)</span>
+<span>블루팀</span>
 <div class="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
 ${randomFillB}
 ${clearColB}
@@ -675,11 +675,11 @@ ${listB.length ? listB.map((p) => rowHtml(p, 'B')).join('') : emptyHint}
 <div class="flex items-center justify-between gap-6 sm:justify-end">
 <label class="flex items-center gap-2 text-xs text-red-300 cursor-pointer">
 <input type="radio" name="${rname}" value="A" class="accent-red-500" data-sim-board="${boardKey}" ${pref === 'A' ? 'checked' : ''} />
-레드 (A)
+레드팀
 </label>
 <label class="flex items-center gap-2 text-xs text-blue-300 cursor-pointer">
 <input type="radio" name="${rname}" value="B" class="accent-blue-500" data-sim-board="${boardKey}" ${pref === 'B' ? 'checked' : ''} />
-블루 (B)
+블루팀
 </label>
 </div>
 </div>`;
@@ -1024,6 +1024,11 @@ if(badge) { badge.innerText = tier.name; badge.className = `px-2 py-1 rounded bo
 
 const card = document.getElementById('detailFutCard');
 if(card) { card.className = `fut-card fut-career-card w-[320px] h-[530px] p-0 flex flex-col relative shadow-2xl z-10 mx-auto transition-all duration-300 overflow-hidden ${tier.cardClass}`; }
+const aura = document.getElementById('cardAuraWrapper');
+if (aura) {
+const auraTier = (tier.cardClass || 'card-rookie').replace('card-', 'card-aura-');
+aura.className = `card-aura ${auraTier} mx-auto w-fit transition-all duration-500 z-10 relative`;
+}
 
 const detailAv = document.getElementById('detailAvatar');
 if (detailAv) detailAv.innerHTML = getAvatarHtml(p, 'detail');
@@ -1053,11 +1058,11 @@ simTeamPanel.innerHTML = `
 <div class="flex items-center justify-between gap-3 text-xs flex-wrap">
 <label class="flex items-center gap-2 ${canSimPick ? 'cursor-pointer text-red-300' : 'text-slate-500 cursor-default'}">
 <input type="checkbox" class="accent-red-500 rounded border-slate-600 sim-profile-cb" ${cA} ${dis} data-sim-profile-team="A" data-player-id="${pidAttr}" />
-레드 (팀 A)
+레드팀
 </label>
 <label class="flex items-center gap-2 ${canSimPick ? 'cursor-pointer text-blue-300' : 'text-slate-500 cursor-default'}">
 <input type="checkbox" class="accent-blue-500 rounded border-slate-600 sim-profile-cb" ${cB} ${dis} data-sim-profile-team="B" data-player-id="${pidAttr}" />
-블루 (팀 B)
+블루팀
 </label>
 </div>
 <p class="text-[9px] text-slate-500 mt-1.5 leading-snug">한쪽만 선택됩니다. 체크 해제 시 팀에서 빠집니다. 로그인한 학생은 누구나 팀을 구성할 수 있습니다.</p>
@@ -1274,6 +1279,10 @@ const ovr = getOVR(p);
 let color = '56, 255, 142'; if (ovr >= 90) color = '138, 43, 226'; else if (ovr >= 80) color = '232, 194, 113'; 
 
 ctx.fillStyle = `rgba(${color}, 0.5)`; ctx.fill(); ctx.strokeStyle = `rgb(${color})`; ctx.lineWidth = 2; ctx.stroke();
+ctx.shadowColor = `rgba(${color}, 0.55)`;
+ctx.shadowBlur = 12;
+ctx.stroke();
+ctx.shadowBlur = 0;
 }
 
 window.addActivity = async (type) => {
@@ -1908,7 +1917,7 @@ const myW = (myVal / 99) * 100; const tgW = (tgVal / 99) * 100;
 statRows += `<div class="mb-2.5"><div class="flex justify-between items-center text-[10px] sm:text-xs font-bold mb-1 px-1"><span class="${myColor} font-oswald text-sm sm:text-base drop-shadow-sm">${myVal}</span><span class="text-slate-400 font-sans tracking-tight">${s.label.split(' ')[0]}</span><span class="${tgColor} font-oswald text-sm sm:text-base drop-shadow-sm">${tgVal}</span></div><div class="flex gap-1 h-2 sm:h-2.5"><div class="flex-1 bg-slate-800 rounded-l-full overflow-hidden flex justify-end shadow-inner"><div class="${myVal > tgVal ? 'bg-emerald-500' : 'bg-slate-500'} h-full transition-all duration-700 ease-out" style="width: ${myW}%"></div></div><div class="flex-1 bg-slate-800 rounded-r-full overflow-hidden shadow-inner"><div class="${tgVal > myVal ? 'bg-pink-500' : 'bg-slate-500'} h-full transition-all duration-700 ease-out" style="width: ${tgW}%"></div></div></div></div>`;
 });
 
-view.innerHTML = `<div class="flex justify-between items-center mb-6 px-4"><div class="flex flex-col items-center"><span class="inline-flex items-center justify-center mb-2">${getAvatarHtml(myP, 'xl')}</span><span class="font-bold text-white text-sm sm:text-base">${myP.name}</span><span class="font-oswald text-2xl text-emerald-400 mt-1">${myOvr}</span></div><div class="font-display text-2xl text-slate-500 px-4">VS</div><div class="flex flex-col items-center"><span class="inline-flex items-center justify-center mb-2">${getAvatarHtml(tgP, 'xl')}</span><span class="font-bold text-white text-sm sm:text-base">${tgP.name}</span><span class="font-oswald text-2xl text-pink-400 mt-1">${tgOvr}</span></div></div><div class="flex-1 bg-slate-900/50 p-4 sm:p-5 rounded-xl border border-slate-700 shadow-inner overflow-y-auto custom-scrollbar">${statRows}</div>`;
+view.innerHTML = `<div class="flex justify-between items-center mb-6 px-2 sm:px-4"><div class="compare-fut-mini ${getTierInfo(myOvr).cardClass} flex flex-col items-center"><span class="inline-flex items-center justify-center mb-1">${getAvatarHtml(myP, 'xl')}</span><span class="font-bold text-current text-sm truncate max-w-[6.5rem]">${escapeHtml(myP.name)}</span><span class="fut-mini-ovr text-2xl mt-0.5">${myOvr}</span></div><div class="sim-vs-badge px-2">VS</div><div class="compare-fut-mini ${getTierInfo(tgOvr).cardClass} flex flex-col items-center"><span class="inline-flex items-center justify-center mb-1">${getAvatarHtml(tgP, 'xl')}</span><span class="font-bold text-current text-sm truncate max-w-[6.5rem]">${escapeHtml(tgP.name)}</span><span class="fut-mini-ovr text-2xl mt-0.5">${tgOvr}</span></div></div><div class="flex-1 bg-slate-900/50 p-4 sm:p-5 rounded-xl border border-slate-700 shadow-inner overflow-y-auto custom-scrollbar">${statRows}</div>`;
 };
 
 window.renderAchievements = () => {
@@ -1987,6 +1996,9 @@ function countSimTeam(team) {
 return (window.allPlayersData || []).filter((p) => p.simTeam === team).length;
 }
 /** 출전 5인: OVR 상위 5명 */
+const SIM_TEAM_A_NAME = '레드팀';
+const SIM_TEAM_B_NAME = '블루팀';
+
 function getSimMatchRoster(team) {
 return (window.allPlayersData || [])
 .filter((p) => p.simTeam === team)
@@ -2018,12 +2030,12 @@ const oa = Math.round(padTA.roster.reduce((s, p) => s + getOVR(p), 0) / padTA.ro
 const ob = Math.round(padTB.roster.reduce((s, p) => s + getOVR(p), 0) / padTB.roster.length);
 const starA = [...padTA.roster].sort((a, b) => getOVR(b) - getOVR(a))[0];
 const starB = [...padTB.roster].sort((a, b) => getOVR(b) - getOVR(a))[0];
-const fav = oa === ob ? '팽팽한 전력' : (oa > ob ? `레드가 OVR ${oa - ob} 우세` : `블루가 OVR ${ob - oa} 우세`);
-brief.innerHTML = `<div class="flex flex-wrap items-center justify-between gap-2 mb-2"><span class="text-[10px] font-black tracking-widest text-amber-300">PRE-MATCH BRIEFING</span><span class="text-[10px] text-slate-400">${fav}</span></div>
+const fav = oa === ob ? '팽팽한 전력' : (oa > ob ? `레드팀이 OVR ${oa - ob} 우세` : `블루팀이 OVR ${ob - oa} 우세`);
+brief.innerHTML = `<div class="flex flex-wrap items-center justify-between gap-2 mb-2"><span class="text-[10px] font-black tracking-widest text-amber-300">PRE-MATCH · 레드팀 VS 블루팀</span><span class="text-[10px] text-slate-400">${fav}</span></div>
 <div class="grid grid-cols-3 gap-2 text-center mb-2">
-<div><div class="text-red-300 font-black text-lg">${oa}</div><div class="text-[9px] text-slate-500">레드 평균</div></div>
+<div><div class="text-red-300 font-black text-lg">${oa}</div><div class="text-[9px] text-slate-500">레드팀 평균</div></div>
 <div class="text-[10px] text-slate-400 self-center">VS</div>
-<div><div class="text-blue-300 font-black text-lg">${ob}</div><div class="text-[9px] text-slate-500">블루 평균</div></div>
+<div><div class="text-blue-300 font-black text-lg">${ob}</div><div class="text-[9px] text-slate-500">블루팀 평균</div></div>
 </div>
 <p class="text-[11px] text-slate-300">핵심 매치업: <b class="text-red-200">${escapeHtml(starA.name)}</b> (OVR ${getOVR(starA)}) vs <b class="text-blue-200">${escapeHtml(starB.name)}</b> (OVR ${getOVR(starB)}). 슈팅은 슈팅/반사신경, 패스는 패스/가로채기 맞대결로 판정됩니다.</p>`;
 }
@@ -2348,37 +2360,127 @@ img.onerror = () => resolve(img);
 });
 }
 
-/** 골대·페널티 에어리어·센터 서클 등 풋살 코트 마킹 */
+/** 풋살 코트 마킹 · 네트 · 페널티 스팟 */
 function drawFutsalPitchMarkings(ctx, px0, py0, pw, ph, midX) {
-ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-ctx.lineWidth = 1.5;
-ctx.strokeRect(px0, py0, pw, ph);
+ctx.save();
+ctx.strokeStyle = 'rgba(255,255,255,0.72)';
+ctx.lineWidth = 1.8;
+ctx.strokeRect(px0 + 0.5, py0 + 0.5, pw - 1, ph - 1);
 ctx.beginPath();
 ctx.moveTo(midX, py0);
 ctx.lineTo(midX, py0 + ph);
 ctx.stroke();
-ctx.strokeStyle = 'rgba(255,255,255,0.22)';
-ctx.lineWidth = 1;
+ctx.strokeStyle = 'rgba(255,255,255,0.28)';
+ctx.lineWidth = 1.2;
 ctx.beginPath();
-ctx.arc(midX, py0 + ph / 2, Math.min(ph, pw) * 0.14, 0, Math.PI * 2);
+ctx.arc(midX, py0 + ph / 2, Math.min(ph, pw) * 0.15, 0, Math.PI * 2);
 ctx.stroke();
-const gaW = pw * 0.13;
-const gaH = ph * 0.44;
+ctx.fillStyle = 'rgba(255,255,255,0.85)';
+ctx.beginPath();
+ctx.arc(midX, py0 + ph / 2, 2.4, 0, Math.PI * 2);
+ctx.fill();
+const gaW = pw * 0.14;
+const gaH = ph * 0.46;
 const gaY = py0 + (ph - gaH) / 2;
-ctx.strokeStyle = 'rgba(255,255,255,0.4)';
-ctx.lineWidth = 1.1;
+ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+ctx.lineWidth = 1.3;
 ctx.strokeRect(px0, gaY, gaW, gaH);
 ctx.strokeRect(px0 + pw - gaW, gaY, gaW, gaH);
-const gmouthW = 5;
-const gmouthH = gaH * 0.36;
+const paW = pw * 0.22;
+const paH = ph * 0.62;
+const paY = py0 + (ph - paH) / 2;
+ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+ctx.strokeRect(px0, paY, paW, paH);
+ctx.strokeRect(px0 + pw - paW, paY, paW, paH);
+const spotR = 2.1;
+ctx.fillStyle = 'rgba(255,255,255,0.8)';
+ctx.beginPath();
+ctx.arc(px0 + gaW + 8, py0 + ph / 2, spotR, 0, Math.PI * 2);
+ctx.fill();
+ctx.beginPath();
+ctx.arc(px0 + pw - gaW - 8, py0 + ph / 2, spotR, 0, Math.PI * 2);
+ctx.fill();
+const gmouthW = 7;
+const gmouthH = gaH * 0.4;
 const gmouthY = py0 + ph / 2 - gmouthH / 2;
-ctx.fillStyle = 'rgba(15,23,42,0.93)';
-ctx.fillRect(px0 - 1, gmouthY, gmouthW, gmouthH);
-ctx.fillRect(px0 + pw - gmouthW + 1, gmouthY, gmouthW, gmouthH);
-ctx.strokeStyle = 'rgba(250,204,21,0.88)';
+const drawNet = (x, flip) => {
+ctx.fillStyle = 'rgba(15,23,42,0.88)';
+ctx.fillRect(x, gmouthY, gmouthW, gmouthH);
+ctx.strokeStyle = 'rgba(250,204,21,0.92)';
 ctx.lineWidth = 1.6;
-ctx.strokeRect(px0 - 1, gmouthY, gmouthW, gmouthH);
-ctx.strokeRect(px0 + pw - gmouthW + 1, gmouthY, gmouthW, gmouthH);
+ctx.strokeRect(x, gmouthY, gmouthW, gmouthH);
+ctx.strokeStyle = 'rgba(226,232,240,0.35)';
+ctx.lineWidth = 0.7;
+for (let i = 1; i < 4; i++) {
+const nx = x + (gmouthW * i) / 4;
+ctx.beginPath();
+ctx.moveTo(nx, gmouthY);
+ctx.lineTo(nx, gmouthY + gmouthH);
+ctx.stroke();
+}
+for (let i = 1; i < 5; i++) {
+const ny = gmouthY + (gmouthH * i) / 5;
+ctx.beginPath();
+ctx.moveTo(x, ny);
+ctx.lineTo(x + gmouthW, ny);
+ctx.stroke();
+}
+if (flip) { /* 좌우 대칭용 자리 */ }
+};
+drawNet(px0 - 2, false);
+drawNet(px0 + pw - gmouthW + 2, true);
+ctx.restore();
+}
+
+/** 스타디움 바닥 · 줄무늬 잔디 · 사이드보드 · 레드/블루 코너 */
+function paintFutsalPitchSurface(ctx, W, H, px0, py0, pw, ph) {
+ctx.fillStyle = '#071018';
+ctx.fillRect(0, 0, W, H);
+const flood = ctx.createRadialGradient(W / 2, H * 0.28, 12, W / 2, H * 0.42, Math.max(W, H) * 0.7);
+flood.addColorStop(0, 'rgba(255,255,230,0.1)');
+flood.addColorStop(1, 'rgba(0,0,0,0)');
+ctx.fillStyle = flood;
+ctx.fillRect(0, 0, W, H);
+ctx.fillStyle = '#7f1d1d';
+ctx.fillRect(px0 - 7, py0 - 5, 7, ph + 10);
+ctx.fillStyle = '#1e3a8a';
+ctx.fillRect(px0 + pw, py0 - 5, 7, ph + 10);
+ctx.fillStyle = '#0f172a';
+ctx.fillRect(px0 - 7, py0 - 5, pw + 14, 5);
+ctx.fillRect(px0 - 7, py0 + ph, pw + 14, 5);
+const stripeN = 12;
+const stripeW = pw / stripeN;
+for (let i = 0; i < stripeN; i++) {
+ctx.fillStyle = i % 2 === 0 ? '#168a3f' : '#127536';
+ctx.fillRect(px0 + i * stripeW, py0, stripeW + 0.6, ph);
+}
+const gloss = ctx.createLinearGradient(px0, py0, px0, py0 + ph);
+gloss.addColorStop(0, 'rgba(255,255,255,0.1)');
+gloss.addColorStop(0.45, 'rgba(255,255,255,0)');
+gloss.addColorStop(1, 'rgba(0,0,0,0.22)');
+ctx.fillStyle = gloss;
+ctx.fillRect(px0, py0, pw, ph);
+const midX = px0 + pw / 2;
+drawFutsalPitchMarkings(ctx, px0, py0, pw, ph, midX);
+ctx.fillStyle = 'rgba(185,28,28,0.22)';
+ctx.beginPath();
+ctx.moveTo(px0, py0);
+ctx.lineTo(px0 + 28, py0);
+ctx.lineTo(px0, py0 + 22);
+ctx.fill();
+ctx.fillStyle = 'rgba(37,99,235,0.22)';
+ctx.beginPath();
+ctx.moveTo(px0 + pw, py0);
+ctx.lineTo(px0 + pw - 28, py0);
+ctx.lineTo(px0 + pw, py0 + 22);
+ctx.fill();
+ctx.font = '800 10px "Bebas Neue","Oswald","Malgun Gothic",sans-serif';
+ctx.fillStyle = 'rgba(254,226,226,0.92)';
+ctx.fillText('RED', px0 + 6, py0 + ph - 7);
+ctx.fillStyle = 'rgba(219,234,254,0.92)';
+ctx.textAlign = 'right';
+ctx.fillText('BLUE', px0 + pw - 6, py0 + ph - 7);
+ctx.textAlign = 'left';
 }
 
 /** 상단 고정 캔버스: 경기장·위험지역·골대·페널티·볼·공격 방향 화살표(성공=초록/실패=빨강/중립=주황) */
@@ -2404,27 +2506,17 @@ const px0 = 16;
 const py0 = 12;
 const pw = W - 32;
 const ph = H - 44;
-const midX = px0 + pw / 2;
 
-ctx.fillStyle = '#0b1220';
-ctx.fillRect(0, 0, W, H);
+paintFutsalPitchSurface(ctx, W, H, px0, py0, pw, ph);
 
-const grass = ctx.createLinearGradient(px0, py0, px0 + pw, py0 + ph);
-grass.addColorStop(0, '#14532d');
-grass.addColorStop(0.45, '#166534');
-grass.addColorStop(1, '#14532d');
-ctx.fillStyle = grass;
-ctx.fillRect(px0, py0, pw, ph);
-drawFutsalPitchMarkings(ctx, px0, py0, pw, ph, midX);
-
-const dzW = pw * 0.24;
+const dzW = pw * 0.2;
 ctx.fillStyle = 'rgba(220, 38, 38, 0.18)';
 ctx.fillRect(px0, py0, dzW, ph);
 ctx.fillRect(px0 + pw - dzW, py0, dzW, ph);
 ctx.font = '600 9px "Malgun Gothic","Noto Sans KR",sans-serif';
-ctx.fillStyle = 'rgba(254, 242, 242, 0.95)';
-ctx.fillText('위험', px0 + 4, py0 + 11);
-ctx.fillText('위험', px0 + pw - dzW + 4, py0 + 11);
+ctx.fillStyle = 'rgba(254, 242, 242, 0.88)';
+ctx.fillText('BOX', px0 + 8, py0 + 22);
+ctx.fillText('BOX', px0 + pw - dzW + 8, py0 + 22);
 
 ctx.fillStyle = 'rgba(0,0,0,0.5)';
 ctx.fillRect(px0 - 3, py0 + ph * 0.32, 3, ph * 0.36);
@@ -2581,24 +2673,18 @@ canvas.height = Math.floor(cssH * dpr);
 canvas.style.width = `${cssW}px`;
 canvas.style.height = `${cssH}px`;
 ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-ctx.fillStyle = '#0b1220';
-ctx.fillRect(0, 0, cssW, cssH);
 const px0 = 16;
 const py0 = 12;
 const pw = cssW - 32;
 const ph = cssH - 44;
-const midX = px0 + pw / 2;
-const grass = ctx.createLinearGradient(px0, py0, px0 + pw, py0 + ph);
-grass.addColorStop(0, '#14532d');
-grass.addColorStop(0.5, '#166534');
-grass.addColorStop(1, '#14532d');
-ctx.fillStyle = grass;
-ctx.fillRect(px0, py0, pw, ph);
-drawFutsalPitchMarkings(ctx, px0, py0, pw, ph, midX);
-ctx.fillStyle = 'rgba(148, 163, 184, 0.92)';
-ctx.font = '600 12px "Malgun Gothic","Noto Sans KR",sans-serif';
+paintFutsalPitchSurface(ctx, cssW, cssH, px0, py0, pw, ph);
+ctx.fillStyle = 'rgba(254, 240, 138, 0.95)';
+ctx.font = '800 14px "Bebas Neue","Oswald","Malgun Gothic",sans-serif';
 ctx.textAlign = 'center';
-ctx.fillText('경기 시작 시 공의 방향과 성공·실패가 표시됩니다', cssW / 2, py0 + ph / 2);
+ctx.fillText('RED  vs  BLUE', cssW / 2, py0 + ph / 2 - 10);
+ctx.font = '600 11px "Malgun Gothic","Noto Sans KR",sans-serif';
+ctx.fillStyle = 'rgba(226, 232, 240, 0.92)';
+ctx.fillText('레드팀 vs 블루팀 · 경기 시작 시 공의 방향이 표시됩니다', cssW / 2, py0 + ph / 2 + 10);
 ctx.textAlign = 'left';
 if (badge) {
 badge.textContent = '대기';
@@ -2812,7 +2898,7 @@ const plB = opts.plB;
 if (!plA || !plB || !plA.length || !plB.length) return;
 const portraitMap = opts.portraitMap;
 const holderId = opts.ballHolderId || null;
-const maxNameW = Math.max(44, pw * 0.2);
+const maxNameW = Math.max(48, pw * 0.22);
 const drawOne = (p, team) => {
 const teamIsA = team === 'A';
 const base = window.simFieldPositions[team][p.id] || { nx: teamIsA ? 0.25 : 0.75, ny: 0.5 };
@@ -2820,64 +2906,79 @@ const { nx, ny } = simPlayerLiveNorm(p, teamIsA, base, opts);
 const x = px0 + nx * pw;
 const y = py0 + ny * ph;
 const isHolder = holderId && p.id === holderId;
-const col = teamIsA ? 'rgba(248,113,113,0.92)' : 'rgba(96,165,250,0.92)';
-const colRing = isHolder ? 'rgba(250, 204, 21, 0.98)' : teamIsA ? 'rgba(127,29,29,0.95)' : 'rgba(30,64,175,0.95)';
-const pr = Math.max(10, Math.min(14, pw * 0.024)) * (isHolder ? 1.1 : 1);
+const kitTop = teamIsA ? '#ef4444' : '#3b82f6';
+const kitBot = teamIsA ? '#7f1d1d' : '#1e3a8a';
+const colRing = isHolder ? 'rgba(250, 204, 21, 0.98)' : teamIsA ? 'rgba(254,202,202,0.95)' : 'rgba(191,219,254,0.95)';
+const pr = Math.max(11, Math.min(16, pw * 0.028)) * (isHolder ? 1.12 : 1);
 const img = portraitMap && portraitMap.get(p.id);
 ctx.save();
+ctx.fillStyle = 'rgba(0,0,0,0.35)';
+ctx.beginPath();
+ctx.ellipse(x, y + pr + 3, pr * 0.85, pr * 0.28, 0, 0, Math.PI * 2);
+ctx.fill();
 if (isHolder) {
 ctx.beginPath();
-ctx.arc(x, y, pr + 4, 0, Math.PI * 2);
-ctx.fillStyle = 'rgba(250, 204, 21, 0.22)';
+ctx.arc(x, y, pr + 5, 0, Math.PI * 2);
+ctx.fillStyle = 'rgba(250, 204, 21, 0.2)';
 ctx.fill();
 }
-ctx.shadowColor = 'rgba(0,0,0,0.55)';
-ctx.shadowBlur = isHolder ? 6 : 4;
-ctx.shadowOffsetY = 1;
+const jw = pr * 1.72;
+const jh = pr * 2.15;
 ctx.beginPath();
-ctx.arc(x, y, pr, 0, Math.PI * 2);
+if (typeof ctx.roundRect === 'function') ctx.roundRect(x - jw / 2, y - pr * 1.05, jw, jh, 5);
+else ctx.rect(x - jw / 2, y - pr * 1.05, jw, jh);
+const kit = ctx.createLinearGradient(x, y - pr, x, y + pr);
+kit.addColorStop(0, kitTop);
+kit.addColorStop(1, kitBot);
+ctx.fillStyle = kit;
+ctx.fill();
+ctx.save();
+ctx.beginPath();
+ctx.arc(x, y - 1, pr * 0.92, 0, Math.PI * 2);
 ctx.clip();
 if (img && img.naturalWidth) {
-ctx.drawImage(img, x - pr, y - pr, pr * 2, pr * 2);
+ctx.drawImage(img, x - pr, y - pr - 2, pr * 2, pr * 2);
 } else {
-ctx.fillStyle = col;
-ctx.fillRect(x - pr, y - pr, pr * 2, pr * 2);
+ctx.fillStyle = kitTop;
+ctx.fillRect(x - pr, y - pr - 2, pr * 2, pr * 2);
 const emoji = (p.gender || GENDER_MAP[p.name]) === 'F' ? '👧' : '👦';
-ctx.font = `${Math.floor(pr * 1.35)}px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif`;
+ctx.font = `${Math.floor(pr * 1.4)}px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif`;
 ctx.textAlign = 'center';
 ctx.textBaseline = 'middle';
-ctx.fillText(emoji, x, y + 1);
+ctx.fillText(emoji, x, y);
 }
 ctx.restore();
-ctx.save();
-ctx.shadowColor = 'transparent';
 ctx.beginPath();
-ctx.arc(x, y, pr, 0, Math.PI * 2);
+ctx.arc(x, y - 1, pr * 0.92, 0, Math.PI * 2);
 ctx.strokeStyle = colRing;
-ctx.lineWidth = isHolder ? 3 : 2;
+ctx.lineWidth = isHolder ? 2.8 : 2;
 ctx.stroke();
-if (isHolder) {
-ctx.beginPath();
-ctx.arc(x, y, pr + 2.5, 0, Math.PI * 2);
-ctx.strokeStyle = 'rgba(254, 240, 138, 0.85)';
-ctx.lineWidth = 1.5;
-ctx.stroke();
-}
 ctx.restore();
 ctx.textAlign = 'center';
 ctx.textBaseline = 'alphabetic';
-ctx.font = '600 7px "Malgun Gothic","Noto Sans KR",sans-serif';
-ctx.fillStyle = 'rgba(226,232,240,0.95)';
+ctx.font = '800 8px "Bebas Neue","Oswald","Malgun Gothic",sans-serif';
+ctx.fillStyle = 'rgba(15,23,42,0.72)';
+ctx.fillRect(x - 10, y - pr - 13, 20, 10);
+ctx.fillStyle = isHolder ? '#fef08a' : '#f8fafc';
 ctx.fillText(String(getOVR(p)), x, y - pr - 5);
 const fullName = String(p.name || '?').trim();
-ctx.font = isHolder ? '700 7px "Malgun Gothic","Noto Sans KR",sans-serif' : '600 6.5px "Malgun Gothic","Noto Sans KR",sans-serif';
+ctx.font = isHolder ? '800 8px "Malgun Gothic","Noto Sans KR",sans-serif' : '700 7px "Malgun Gothic","Noto Sans KR",sans-serif';
 let shown = fullName;
 for (let s = fullName.length; s >= 1; s--) {
 shown = s < fullName.length ? `${fullName.slice(0, s)}…` : fullName;
 if (ctx.measureText(shown).width <= maxNameW) break;
 }
+const nw = Math.min(maxNameW, ctx.measureText(shown).width + 8);
+ctx.fillStyle = teamIsA ? 'rgba(127,29,29,0.82)' : 'rgba(30,58,138,0.82)';
+if (typeof ctx.roundRect === 'function') {
+ctx.beginPath();
+ctx.roundRect(x - nw / 2, y + pr + 3, nw, 11, 4);
+ctx.fill();
+} else {
+ctx.fillRect(x - nw / 2, y + pr + 3, nw, 11);
+}
 ctx.fillStyle = isHolder ? 'rgba(254, 249, 195, 0.98)' : 'rgba(248,250,252,0.96)';
-ctx.fillText(shown, x, y + pr + 9);
+ctx.fillText(shown, x, y + pr + 12);
 ctx.textAlign = 'left';
 };
 const entries = [
@@ -2919,26 +3020,17 @@ const px0 = 12;
 const py0 = 10;
 const pw = W - 24;
 const ph = H - 36;
-const midX = px0 + pw / 2;
-ctx.fillStyle = '#0b1220';
-ctx.fillRect(0, 0, W, H);
-const grass = ctx.createLinearGradient(px0, py0, px0 + pw, py0 + ph);
-grass.addColorStop(0, '#14532d');
-grass.addColorStop(0.45, '#166534');
-grass.addColorStop(1, '#14532d');
-ctx.fillStyle = grass;
-ctx.fillRect(px0, py0, pw, ph);
-drawFutsalPitchMarkings(ctx, px0, py0, pw, ph, midX);
-ctx.strokeStyle = 'rgba(34,211,238,0.35)';
+paintFutsalPitchSurface(ctx, W, H, px0, py0, pw, ph);
+ctx.strokeStyle = 'rgba(250,204,21,0.28)';
 ctx.setLineDash([6, 4]);
 ctx.beginPath();
-ctx.moveTo(midX, py0);
-ctx.lineTo(midX, py0 + ph);
+ctx.moveTo(px0 + pw / 2, py0);
+ctx.lineTo(px0 + pw / 2, py0 + ph);
 ctx.stroke();
 ctx.setLineDash([]);
-ctx.fillStyle = 'rgba(226,232,240,0.85)';
-ctx.font = '600 9px "Malgun Gothic","Noto Sans KR",sans-serif';
-ctx.fillText('레드 진영 ←  |  → 블루 진영', px0 + 4, py0 + ph + 14);
+ctx.fillStyle = 'rgba(254,240,138,0.9)';
+ctx.font = '700 10px "Malgun Gothic","Noto Sans KR",sans-serif';
+ctx.fillText('레드팀 ←  |  → 블루팀', px0 + 4, py0 + ph + 14);
 drawSimPlayersOnPitch(ctx, px0, py0, pw, ph, {
 plA: padA.roster,
 plB: padB.roster,
@@ -3072,7 +3164,7 @@ if (window.playerState.isGuest) {
 return window.customAlert('게스트는 모의경기를 실행할 수 없습니다. 학생 계정으로 로그인해 주세요.');
 }
 if (countSimTeam('A') < 1 || countSimTeam('B') < 1) {
-return window.customAlert('팀 A(레드)와 팀 B(블루)에 각각 최소 1명 이상 배정되어야 합니다.\n프로필의 체크박스 또는 라커/팀 분류에서 팀을 선택하세요.');
+return window.customAlert('레드팀과 블루팀에 각각 최소 1명 이상 배정되어야 합니다.\n프로필의 체크박스 또는 라커/팀 분류에서 팀을 선택하세요.');
 }
 const rawA = getSimMatchRoster('A');
 const rawB = getSimMatchRoster('B');
@@ -3085,11 +3177,8 @@ if (plA.length !== 5 || plB.length !== 5) return window.customAlert('출전 선�
 ensureSimFieldPositions(plA, plB);
 document.getElementById('simTacticalSection')?.classList.add('hidden');
 
-const tabSimRoot = document.getElementById('tabSim');
-const elTeamA = tabSimRoot?.querySelector('input[data-sim-team="A"]') || document.getElementById('simTeamAName');
-const elTeamB = tabSimRoot?.querySelector('input[data-sim-team="B"]') || document.getElementById('simTeamBName');
-const teamAName = (elTeamA?.value || '').trim() || '팀 A';
-const teamBName = (elTeamB?.value || '').trim() || '팀 B';
+const teamAName = SIM_TEAM_A_NAME;
+const teamBName = SIM_TEAM_B_NAME;
 
 const btn = document.getElementById('btnSimStart');
 if (btn) { btn.disabled = true; btn.classList.add('opacity-50', 'cursor-not-allowed'); }
