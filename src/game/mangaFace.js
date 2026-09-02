@@ -1,4 +1,4 @@
-/** 이름 기반 시드 (선수마다 색감이 조금씩 달라지게) */
+/** 이름 기반 시드 */
 function hashStr(s) {
 let h = 2166136261;
 const str = String(s || 'sfc');
@@ -9,19 +9,40 @@ h = Math.imul(h, 16777619);
 return h >>> 0;
 }
 
-/**
- * 축구만화풍 기본 얼굴.
- * 업로드 사진이 없을 때 쓰는 바스트샷 PNG. 얼굴이 프레임 중앙에 오도록 object-position을 맞춥니다.
- * variant: detail | card | locker | xl | md | sm
- */
-export function getMangaFaceHtml(p, variant = 'md') {
-const isGirl = (p.gender || '') === 'F';
-const h = hashStr(p?.name || p?.id || 'sfc');
+/** 기본 스킨 남녀 3종 (증명사진 비율) */
+export const DEFAULT_SKINS = {
+M: [
+{ id: 'skin_m1', file: 'faces/skin-m1.jpg', name: '기본: 그린 스파이크' },
+{ id: 'skin_m2', file: 'faces/skin-m2.jpg', name: '기본: 네이비 사이드' },
+{ id: 'skin_m3', file: 'faces/skin-m3.jpg', name: '기본: 크림슨 실버' }
+],
+F: [
+{ id: 'skin_f1', file: 'faces/skin-f1.jpg', name: '기본: 퍼플 포니' },
+{ id: 'skin_f2', file: 'faces/skin-f2.jpg', name: '기본: 민트 보브' },
+{ id: 'skin_f3', file: 'faces/skin-f3.jpg', name: '기본: 코랄 헤드밴드' }
+]
+};
+
+export function resolveFaceSrc(relOrUrl) {
+if (!relOrUrl) return '';
+if (/^https?:\/\//i.test(relOrUrl)) return relOrUrl;
 const base = import.meta.env.BASE_URL || '/';
-const src = `${base}faces/${isGirl ? 'sfc-manga-girl.jpg' : 'sfc-manga-boy.jpg'}`;
-const hue = (h % 28) - 10;
-const sat = 1.02 + (h % 8) * 0.02;
-const bright = 0.98 + (h % 6) * 0.015;
+return `${base}${String(relOrUrl).replace(/^\//, '')}`;
+}
+
+export function getDefaultSkinRel(p) {
+const g = (p?.gender || '') === 'F' ? 'F' : 'M';
+const list = DEFAULT_SKINS[g];
+return list[hashStr(p?.name || p?.id || 'sfc') % list.length].file;
+}
+
+/**
+ * 축구만화 증명사진 비율 얼굴.
+ * variant: locker | detail | sm | md | xl
+ */
+export function getMangaFaceHtml(p, variant = 'md', src) {
+const isGirl = (p.gender || '') === 'F';
+const url = src || resolveFaceSrc(getDefaultSkinRel(p));
 const cls = {
 detail: 'manga-face manga-face-card',
 card: 'manga-face manga-face-card',
@@ -31,5 +52,5 @@ md: 'manga-face manga-face-md',
 sm: 'manga-face manga-face-sm'
 }[variant] || 'manga-face manga-face-md';
 const pos = isGirl ? 'manga-face-pos-f' : 'manga-face-pos-m';
-return `<span class="${cls}" aria-hidden="true"><img src="${src}" alt="" class="manga-face-img ${pos}" style="filter:hue-rotate(${hue}deg) saturate(${sat}) brightness(${bright})" draggable="false"/></span>`;
+return `<span class="${cls}" aria-hidden="true"><img src="${url}" alt="" class="manga-face-img ${pos}" loading="lazy" decoding="async" draggable="false"/></span>`;
 }

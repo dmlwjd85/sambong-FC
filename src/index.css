@@ -138,10 +138,22 @@ font-size: 4.4rem; line-height: 1;
 border: 2px solid rgba(255,255,255,0.28);
 box-shadow: inset 0 -18px 28px rgba(0,0,0,0.35);
 }
-.manga-face { display: inline-flex; align-items: center; justify-content: center; overflow: hidden; line-height: 0; }
-.manga-face-img { width: 100%; height: 100%; display: block; object-fit: cover; }
-.manga-face-pos-m { object-position: center 70%; transform: scale(1.28); transform-origin: center 32%; }
-.manga-face-pos-f { object-position: center 50%; transform: scale(1.18); transform-origin: center 38%; }
+.manga-face { display: inline-flex; align-items: center; justify-content: center; overflow: hidden; line-height: 0; background: linear-gradient(180deg, #e8eef5 0%, #c5d0dc 100%); }
+.manga-face-img { width: 100%; height: 100%; display: block; }
+.manga-face-card .manga-face-img,
+.manga-face-mini .manga-face-img,
+.manga-face-xl .manga-face-img {
+object-fit: contain;
+object-position: center 46%;
+transform: none;
+}
+.manga-face-pos-m,
+.manga-face-pos-f { transform: none; }
+.manga-face-md .manga-face-img,
+.manga-face-sm .manga-face-img {
+object-fit: cover;
+object-position: center 28%;
+}
 .manga-face-card {
 width: 100%; height: 100%;
 border-radius: 0.65rem;
@@ -154,7 +166,7 @@ width: 100%;
 height: 100%;
 }
 .manga-face-mini {
-width: 3.6rem; height: 3.9rem;
+width: 3.5rem; height: 4.4rem;
 border-radius: 0.4rem;
 border: 1px solid rgba(255,255,255,0.35);
 box-shadow: 0 4px 10px rgba(0,0,0,0.35);
@@ -196,9 +208,42 @@ background-color: rgba(0,0,0,0.3);
 border: 1px solid rgba(255,255,255,0.2);
 border-radius: 50%;
 display: flex; align-items: center; justify-content: center;
-position: absolute; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+position: relative;
+transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 z-index: 20; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
 }
+
+.item-slot-row {
+display: flex; justify-content: center; align-items: flex-start;
+gap: 6px; position: relative; z-index: 20;
+}
+.item-slot-row .item-slot-mini {
+position: relative !important;
+left: auto; top: auto; right: auto; bottom: auto;
+transform: none;
+width: 34px; height: 34px;
+}
+.item-slot-row .item-label { bottom: -11px; font-size: 8px; }
+
+.shop-cat-chip {
+flex-shrink: 0; font-size: 11px; font-weight: 800;
+padding: 6px 12px; border-radius: 999px;
+border: 1px solid rgba(168,85,247,0.35);
+background: rgba(15,23,42,0.75); color: #e9d5ff;
+}
+.shop-cat-chip.active {
+background: linear-gradient(180deg, #6d28d9, #4c1d95);
+border-color: rgba(216,180,254,0.7); color: #fff;
+}
+
+.card-skin-emerald { box-shadow: 0 0 28px rgba(16,185,129,0.45), 0 22px 48px rgba(0,0,0,0.55) !important; }
+.card-skin-gold { box-shadow: 0 0 30px rgba(234,179,8,0.55), 0 22px 48px rgba(0,0,0,0.55) !important; }
+.card-skin-crimson { box-shadow: 0 0 28px rgba(239,68,68,0.5), 0 22px 48px rgba(0,0,0,0.55) !important; }
+.card-skin-midnight { box-shadow: 0 0 26px rgba(59,130,246,0.42), 0 22px 48px rgba(0,0,0,0.55) !important; }
+.card-skin-sakura { box-shadow: 0 0 28px rgba(244,114,182,0.5), 0 22px 48px rgba(0,0,0,0.55) !important; }
+.card-skin-ice { box-shadow: 0 0 26px rgba(125,211,252,0.5), 0 22px 48px rgba(0,0,0,0.55) !important; }
+.card-skin-sun { box-shadow: 0 0 30px rgba(251,191,36,0.55), 0 22px 48px rgba(0,0,0,0.55) !important; }
+.card-skin-void { box-shadow: 0 0 28px rgba(148,163,184,0.35), 0 0 0 2px rgba(15,23,42,0.9), 0 22px 48px rgba(0,0,0,0.55) !important; }
 
 /* 💎 강화 단계별 시각적 이펙트 (CSS) */
 .eff-0.equipped { background-color: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.8); box-shadow: 0 0 12px rgba(255,255,255,0.4); }

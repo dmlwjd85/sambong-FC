@@ -140,14 +140,14 @@
 <div class="fut-portrait-frame w-full h-[200px] flex items-center justify-center relative z-[12]">
 <div class="flex items-center justify-center w-full h-full" id="detailAvatar"></div>
 </div>
-<div class="mt-1 flex justify-center w-full shrink-0" title="장착 얼굴">
-<div class="item-slot-mini item-slot-face-below" id="slotFace"></div>
+<div class="item-slot-row mt-2 w-full">
+<div class="item-slot-mini" id="slotHead"></div>
+<div class="item-slot-mini" id="slotHandL"></div>
+<div class="item-slot-mini" id="slotFace"></div>
+<div class="item-slot-mini" id="slotHandR"></div>
+<div class="item-slot-mini" id="slotFootL"></div>
+<div class="item-slot-mini" id="slotFootR"></div>
 </div>
-<div class="item-slot-mini hidden" id="slotHead" style="top: -5px; left: 50%; transform: translateX(-50%);"></div>
-<div class="item-slot-mini hidden" id="slotHandL" style="top: 35px; left: 10px;"></div>
-<div class="item-slot-mini hidden" id="slotHandR" style="top: 35px; right: 10px;"></div>
-<div class="item-slot-mini hidden" id="slotFootL" style="bottom: 5px; left: 28px;"></div>
-<div class="item-slot-mini hidden" id="slotFootR" style="bottom: 5px; right: 28px;"></div>
 </div>
 </div>
 
@@ -475,7 +475,7 @@
 <span>메이트 승부예측 연동 <span class="font-normal text-slate-400">(레드=한국 진출 · 블루=탈락 · 감독 계정으로 종료 시 학급 봉 지급)</span></span>
 </label>
 <p id="simMateBetStatus" class="text-[10px] text-slate-400 mt-1.5 leading-relaxed">메이트 베팅 현황을 불러오는 중…</p>
-<p class="text-[10px] text-slate-500 mt-1">베팅은 <a href="https://dmlwjd85.github.io/2026sambong6/" target="_blank" rel="noopener" class="text-amber-300 underline">메이트 학급 앱</a>에서 합니다.</p>
+<p class="text-[10px] text-slate-500 mt-1">승부예측은 <a href="https://dmlwjd85.github.io/2026sambong6/" target="_blank" rel="noopener" class="text-amber-300 underline">메이트 학급 앱</a>에서 합니다.</p>
 </div>
 <div id="simPrematchBrief" class="mb-4 rounded-2xl border border-amber-700/40 bg-gradient-to-br from-slate-950 to-emerald-950/30 p-3 sm:p-4 text-xs text-slate-300 leading-relaxed break-keep">팀을 고른 뒤 경기 시작을 누르면, 전력 비교와 핵심 매치업이 여기에 표시됩니다.</div>
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
@@ -607,27 +607,6 @@
 </div>
 </div>
 
-<div id="tabBet" class="hidden space-y-6">
-<div class="glass-panel p-4 sm:p-8 rounded-3xl border-t-4 border-t-red-500 relative overflow-hidden">
-<div class="absolute -top-16 -left-10 w-56 h-56 bg-red-600/15 rounded-full blur-3xl pointer-events-none"></div>
-<div class="relative z-10">
-<div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-4 border-b border-red-900/40 pb-3">
-<div>
-<h3 class="text-2xl sm:text-3xl font-display text-red-400 flex items-center gap-2"><i class="fa-solid fa-ticket"></i> 메이트 승부예측</h3>
-<p class="text-xs text-slate-400 mt-1 break-keep leading-relaxed">베팅은 <a href="https://dmlwjd85.github.io/2026sambong6/" target="_blank" rel="noopener" class="text-amber-300 underline">메이트 학급 앱</a>에서 걸고, 여기서 모의경기를 돌리면 <b class="text-fut-gold">학급 봉(B)</b>이 배당대로 지급됩니다. 레드=한국 진출, 블루=탈락.</p>
-</div>
-<div class="text-right bg-slate-950/70 border border-fut-gold/30 rounded-xl px-3 py-2">
-<div class="text-[10px] text-slate-500 font-bold">학급 대기 베팅</div>
-<div class="font-display text-2xl text-fut-gold"><span id="betWalletBong">0</span>건</div>
-</div>
-</div>
-<div id="wcBetBoard" class="space-y-4">
-<div class="text-center text-slate-500 py-10 text-sm">승부예측 보드를 불러오는 중...</div>
-</div>
-</div>
-</div>
-</div>
-
 <!-- 🛠️ 탭 3: 꾸미기 상점 & 제련소 -->
 <div id="tabShop" class="hidden space-y-6">
 <div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-purple-500 relative overflow-hidden">
@@ -638,14 +617,21 @@
 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 border-b border-slate-700 pb-4 gap-4 relative z-10">
 <div>
 <h3 class="text-3xl font-display text-purple-400 flex items-center gap-3">
-<i class="fa-solid fa-hammer text-fuchsia-400"></i> 장비 상점 & 강화소
+<i class="fa-solid fa-store text-fuchsia-400"></i> 아이템 상점 & 강화소
 </h3>
-<p class="text-sm text-slate-300 mt-2 break-keep" id="shopSubTitle">자산(B)으로 장비를 구매하고 강화하세요. (최대 +5강)<br><span class="text-emerald-400 font-bold">💡 아이템 장착 시 레벨업할 때 해당 스탯이 오를 확률이 증가합니다!</span></p>
+<p class="text-sm text-slate-300 mt-2 break-keep" id="shopSubTitle">하단 <b class="text-fuchsia-300">상점</b>에서 장비·스킨을 사고, 장비는 강화소에서 +5강까지 올립니다.<br><span class="text-emerald-400 font-bold">💡 머리·손·발 장착 시 레벨업 성장 확률이 올라갑니다. 스킨은 꾸미기용입니다.</span></p>
 </div>
 <div class="text-left sm:text-right w-full sm:w-auto bg-slate-900/60 p-3 rounded-xl border border-purple-500/30">
 <p class="text-xs text-slate-400 font-bold mb-1" id="shopWalletLabel">보유 자산</p>
 <div class="font-display text-3xl text-fut-gold"><span id="shopBong">0</span> B</div>
 </div>
+</div>
+
+<div id="shopCatBar" class="flex gap-1.5 overflow-x-auto hide-scrollbar mb-4 relative z-10">
+<button type="button" data-shop-cat="all" class="shop-cat-chip active" onclick="window.setShopCat('all')">전체</button>
+<button type="button" data-shop-cat="gear" class="shop-cat-chip" onclick="window.setShopCat('gear')">장비</button>
+<button type="button" data-shop-cat="skin" class="shop-cat-chip" onclick="window.setShopCat('skin')">스킨·킷</button>
+<button type="button" data-shop-cat="face" class="shop-cat-chip" onclick="window.setShopCat('face')">얼굴</button>
 </div>
 
 <div id="shopGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10"></div>
@@ -668,15 +654,15 @@
 </div>
 <div class="bg-gradient-to-r from-purple-900/40 to-slate-900/60 p-5 rounded-xl border border-purple-500/50 hover:border-purple-400 transition">
 <h4 class="text-base sm:text-lg font-bold text-purple-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-hammer text-fuchsia-400"></i> 3. 장비 강화 및 확률형 성장</h4>
-<p class="text-sm text-purple-100/80 leading-relaxed break-keep">레벨업을 하면 각 스탯마다 기본 10% 확률로 능력치가 상승합니다. 상점에서 장비를 구매해 장착하면 <b>해당 스탯이 오를 확률(최대 +45%)</b>이 엄청나게 증가합니다. 같은 장비를 중복 구매하여 최대 +5강까지 강화해보세요! (실패 시 1단계 하락)</p>
+<p class="text-sm text-purple-100/80 leading-relaxed break-keep">레벨업을 하면 각 스탯마다 기본 10% 확률로 능력치가 상승합니다. 하단 <b>상점</b>에서 장비를 사서 장착하면 해당 스탯이 오를 확률이 크게 늘어납니다. 강화소에서 B를 써서 최대 +5강까지 올릴 수 있습니다. (실패 시 1단계 하락)</p>
 </div>
 <div class="bg-gradient-to-r from-slate-900/60 to-emerald-900/30 p-5 rounded-xl border border-emerald-700/50 hover:border-emerald-500/80 transition">
 <h4 class="text-base sm:text-lg font-bold text-emerald-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-bullseye text-red-400"></i> 4. 시즌 2 목표: 매주 조금씩 성장</h4>
 <p class="text-sm text-emerald-100/80 leading-relaxed break-keep">시즌 2는 전원 능력치 55에서 다시 시작합니다. 레벨업 경험치가 높아지고 훈련 연타가 막혀, 토요스포츠데이에 꾸준히 나온 선수가 진짜로 강해집니다. 한 시즌 동안 커리어 카드를 키워보세요.</p>
 </div>
-<div class="bg-gradient-to-r from-red-950/40 to-slate-900/60 p-5 rounded-xl border border-red-700/50 hover:border-red-400 transition">
-<h4 class="text-base sm:text-lg font-bold text-red-300 mb-2 flex items-center gap-2"><i class="fa-solid fa-ticket text-fut-gold"></i> 5. 월드컵 승부예측 (메이트 연동)</h4>
-<p class="text-sm text-slate-300 leading-relaxed break-keep">베팅은 <a href="https://dmlwjd85.github.io/2026sambong6/" target="_blank" rel="noopener" class="text-amber-300 underline">메이트</a>에서 학급 봉으로 겁니다. 여기서 <b>매치 센터</b> 모의경기를 돌리면(감독 계정 · 연동 체크) 레드 승=한국 진출, 블루 승=탈락으로 정산되어 메이트 학급 봉이 지급됩니다.</p>
+<div class="bg-gradient-to-r from-fuchsia-950/40 to-slate-900/60 p-5 rounded-xl border border-fuchsia-700/50 hover:border-fuchsia-400 transition">
+<h4 class="text-base sm:text-lg font-bold text-fuchsia-300 mb-2 flex items-center gap-2"><i class="fa-solid fa-shirt text-fut-gold"></i> 5. 스킨과 장비 슬롯</h4>
+<p class="text-sm text-slate-300 leading-relaxed break-keep">하단 <b>상점</b> 탭에서 아이템을 삽니다. 기본 스킨은 남녀 각 3종이 무료입니다. 카드 킷은 테두리 연출, 레전드 얼굴은 초상 교체입니다. 머리·양손·양발 슬롯에 장비를 끼우면 스탯 보너스가 붙고, 강화소에서 +5강까지 올릴 수 있습니다.</p>
 </div>
 </div>
 </div>
@@ -791,13 +777,13 @@
 <i class="fa-solid fa-futbol text-lg"></i>
 <span>매치</span>
 </button>
+<button type="button" data-app-hub="shop" onclick="window.switchAppTab('shop')" class="app-tab py-2.5">
+<i class="fa-solid fa-store text-lg"></i>
+<span>상점</span>
+</button>
 <button type="button" data-app-hub="career" onclick="window.switchAppTab('career')" class="app-tab py-2.5">
 <i class="fa-solid fa-chart-line text-lg"></i>
 <span>성장</span>
-</button>
-<button type="button" data-app-hub="bet" onclick="window.switchAppTab('bet')" class="app-tab py-2.5">
-<i class="fa-solid fa-ticket text-lg"></i>
-<span>베팅</span>
 </button>
 <button type="button" data-app-hub="more" onclick="window.switchAppTab('more')" class="app-tab py-2.5">
 <i class="fa-solid fa-ellipsis text-lg"></i>

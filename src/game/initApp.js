@@ -2,7 +2,7 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, writeBatch, getDocs, deleteDoc, deleteField, increment } from 'firebase/firestore';
 import confetti from 'canvas-confetti';
-import { getMangaFaceHtml } from './mangaFace.js';
+import { getMangaFaceHtml, resolveFaceSrc, getDefaultSkinRel } from './mangaFace.js';
 
 // Vite 빌드 시 .env의 VITE_APP_ID 사용, 없으면 기본값 (기존 단일 HTML과 동일)
 const appId = import.meta.env.VITE_APP_ID || (typeof globalThis.__app_id !== 'undefined' ? globalThis.__app_id : 'sambong-futsal-ultimate'); 
@@ -197,7 +197,9 @@ const DAILY_TIPS = [
 { title: "풋살과 축구의 가장 큰 차이점?", img: "⚽", category: "기본상식", desc: "풋살은 5인제 실내 축구입니다. 공이 밖으로 나가면 손으로 던지는 스로인이 아닌 '발로 차서 넣는 킥인'을 합니다!" },
 { title: "가장 중요한 '4초 룰'을 아시나요?", img: "⏱️", category: "기본규칙", desc: "킥인, 코너킥, 프리킥, 골클리어런스(골키퍼가 공을 던질 때)는 모두 공을 잡은 후 '4초' 안에 처리해야 합니다. 속도감이 생명이죠!" },
 { title: "거리 두기 5미터 원칙", img: "📏", category: "기본규칙", desc: "킥인, 코너킥, 프리킥 상황에서 수비수는 공으로부터 무조건 5미터 이상 떨어져 있어야 합니다. 방해하면 경고를 받을 수 있어요." },
-{ title: "선수 교체는 무제한!", img: "🔄", category: "기본규칙", desc: "축구와 달리 풋살은 선수 교체 횟수에 제한이 없고, 언제든 코치의 지시로 교체 구역을 통해 자유롭게 들어오고 나갈 수 있습니다." }
+{ title: "선수 교체는 무제한!", img: "🔄", category: "기본규칙", desc: "축구와 달리 풋살은 선수 교체 횟수에 제한이 없고, 언제든 코치의 지시로 교체 구역을 통해 자유롭게 들어오고 나갈 수 있습니다." },
+{ title: "장비는 강화소에서 +5강까지", img: "🔨", category: "시즌2 성장", desc: "상점에서 산 장비는 같은 가격의 B로 강화합니다. 실패하면 1단계 내려가니, 주급을 모아 신중하게 도전하세요!" },
+{ title: "스킨은 능력치에 영향 없음", img: "🎨", category: "시즌2 성장", desc: "기본 스킨 3종은 무료입니다. 카드 킷·레전드 얼굴은 꾸미기용이고, 스탯 보너스는 머리·손·발 장비만 줍니다." }
 ];
 
 const ACHIEVEMENTS = [
@@ -223,7 +225,10 @@ const ACHIEVEMENTS = [
 
 { id: 'goleiro_low', category: '골레이로(GK)', title: '든든한 수문장', desc: '누적 10세이브 달성. 팀의 뒷문을 책임집니다.', reqKey: 'saves', reqValue: 10, icon: '🧤', color: 'text-orange-400', bg: 'bg-orange-400', reward: 10 },
 { id: 'goleiro_med', category: '골레이로(GK)', title: '반사신경의 달인', desc: '누적 50세이브 달성. 동물적인 감각으로 실점을 막아냅니다.', reqKey: 'saves', reqValue: 50, icon: '🐆', color: 'text-orange-500', bg: 'bg-orange-500', reward: 50 },
-{ id: 'goleiro_high', category: '골레이로(GK)', title: '삼봉의 야신', desc: '누적 150세이브 달성. 누구도 그의 골문을 뚫을 수 없습니다!', reqKey: 'saves', reqValue: 150, icon: '🐙', color: 'text-orange-600', bg: 'bg-orange-600', reward: 150 }
+{ id: 'goleiro_high', category: '골레이로(GK)', title: '삼봉의 야신', desc: '누적 150세이브 달성. 누구도 그의 골문을 뚫을 수 없습니다!', reqKey: 'saves', reqValue: 150, icon: '🐙', color: 'text-orange-600', bg: 'bg-orange-600', reward: 150 },
+{ id: 'train_8', category: '시즌2 성장', title: '토요의 땀', desc: '개인 훈련 8회. 하루 한 번이지만 매주 나온 선수가 강해집니다.', reqKey: 'training', reqValue: 8, icon: '💪', color: 'text-lime-400', bg: 'bg-lime-400', reward: 20 },
+{ id: 'lv_10', category: '시즌2 성장', title: '커리어의 첫 도약', desc: '레벨 10. 시즌 2 능력치 55에서 천천히 올라온 증표입니다.', reqKey: 'level', reqValue: 10, icon: '🌟', color: 'text-amber-300', bg: 'bg-amber-300', reward: 25 },
+{ id: 'match_8', category: '시즌2 성장', title: '라커룸 단골', desc: '출전 8회. 토요스포츠데이에 꾸준히 나온 선수입니다.', reqKey: 'matches', reqValue: 8, icon: '📅', color: 'text-sky-400', bg: 'bg-sky-400', reward: 20 }
 ];
 
 const ENHANCE_LEVELS = [
@@ -251,6 +256,35 @@ const SHOP_ITEMS = [
 { id: 'footR_tier1', name: '강철 발목 보호대 [우]', type: 'footR', price: 150, icon: '🧦', desc: '[1종 집중형] 정확한 가로채기 타이밍.', baseStats: {int: 1}, baseGrowth: {int: 15} },
 { id: 'footR_tier1_alt', name: '터프 태클 풋살화 [우]', type: 'footR', price: 150, icon: '🥾', desc: '[1종 집중형] 끈질긴 대인 수비 전용.', baseStats: {def: 1}, baseGrowth: {def: 15} },
 { id: 'footR_tier2', name: '팬텀 드리블러 풋살화 [우]', type: 'footR', price: 300, icon: '👟', desc: '[2종 복합형] 보이지 않는 발놀림.', baseStats: {dri: 1, pac: 1}, baseGrowth: {dri: 10, pac: 10} },
+{ id: 'footL_tier3', name: '삼봉 골든 부스트 [좌]', type: 'footL', price: 800, icon: '🥇', desc: '[3종 올라운더] 최상급 왼발. 속력·슈팅·드리블.', baseStats: {pac: 1, sho: 1, dri: 1}, baseGrowth: {pac: 7, sho: 7, dri: 7} },
+{ id: 'footR_tier3', name: '삼봉 아이언 앵클 [우]', type: 'footR', price: 800, icon: '🛡️', desc: '[3종 올라운더] 최상급 오른발. 수비·가로채기·피지컬.', baseStats: {def: 1, int: 1, phy: 1}, baseGrowth: {def: 7, int: 7, phy: 7} },
+{ id: 'head_band_wrk', name: '땀밴드 플라이', type: 'head', price: 180, icon: '🎽', desc: '[1종 집중형] 활동량을 끌어올리는 헤어밴드.', baseStats: {wrk: 1}, baseGrowth: {wrk: 15} },
+{ id: 'handL_gk_pro', name: '슈퍼세이브 글러브 [좌]', type: 'handL', price: 420, icon: '🥅', desc: '[2종 복합형] 골레이로 전용 그립과 반사.', baseStats: {ref: 1, cmp: 1}, baseGrowth: {ref: 12, cmp: 8} },
+{ id: 'handR_gk_pro', name: '슈퍼세이브 글러브 [우]', type: 'handR', price: 420, icon: '🥅', desc: '[2종 복합형] 펀칭과 볼배급.', baseStats: {ref: 1, dis: 1}, baseGrowth: {ref: 12, dis: 8} },
+{ id: 'head_cap_int', name: '리딩 캡', type: 'head', price: 220, icon: '🧢', desc: '[2종 복합형] 패스 길과 가로채기를 읽습니다.', baseStats: {int: 1, pst: 1}, baseGrowth: {int: 10, pst: 10} },
+{ id: 'footL_ctrl', name: '터치 마스터 [좌]', type: 'footL', price: 280, icon: '🩰', desc: '[2종 복합형] 드리블과 슈팅 터치.', baseStats: {dri: 1, sho: 1}, baseGrowth: {dri: 10, sho: 10} },
+{ id: 'footR_engine', name: '엔진 부츠 [우]', type: 'footR', price: 280, icon: '⚙️', desc: '[2종 복합형] 속력과 활동량.', baseStats: {pac: 1, wrk: 1}, baseGrowth: {pac: 10, wrk: 10} },
+
+{ id: 'skin_m1', name: '기본 스킨: 그린 스파이크', type: 'skin', price: 0, icon: '💚', gender: 'M', desc: '[무료] 남학생 기본 3종 ① 증명사진 비율.', faceImageUrl: 'faces/skin-m1.jpg', baseStats: {}, baseGrowth: {} },
+{ id: 'skin_m2', name: '기본 스킨: 네이비 사이드', type: 'skin', price: 0, icon: '💙', gender: 'M', desc: '[무료] 남학생 기본 3종 ② 증명사진 비율.', faceImageUrl: 'faces/skin-m2.jpg', baseStats: {}, baseGrowth: {} },
+{ id: 'skin_m3', name: '기본 스킨: 크림슨 실버', type: 'skin', price: 0, icon: '❤️', gender: 'M', desc: '[무료] 남학생 기본 3종 ③ 증명사진 비율.', faceImageUrl: 'faces/skin-m3.jpg', baseStats: {}, baseGrowth: {} },
+{ id: 'skin_f1', name: '기본 스킨: 퍼플 포니', type: 'skin', price: 0, icon: '💜', gender: 'F', desc: '[무료] 여학생 기본 3종 ① 증명사진 비율.', faceImageUrl: 'faces/skin-f1.jpg', baseStats: {}, baseGrowth: {} },
+{ id: 'skin_f2', name: '기본 스킨: 민트 보브', type: 'skin', price: 0, icon: '💚', gender: 'F', desc: '[무료] 여학생 기본 3종 ② 증명사진 비율.', faceImageUrl: 'faces/skin-f2.jpg', baseStats: {}, baseGrowth: {} },
+{ id: 'skin_f3', name: '기본 스킨: 코랄 헤드밴드', type: 'skin', price: 0, icon: '🧡', gender: 'F', desc: '[무료] 여학생 기본 3종 ③ 증명사진 비율.', faceImageUrl: 'faces/skin-f3.jpg', baseStats: {}, baseGrowth: {} },
+{ id: 'skin_hero_m', name: '히어로 스킨: 클로즈업 남', type: 'skin', price: 280, icon: '⚡', desc: '[유료] 경기 직전 클로즈업 연출 (남).', faceImageUrl: 'faces/sfc-manga-boy.jpg', baseStats: {}, baseGrowth: {} },
+{ id: 'skin_hero_f', name: '히어로 스킨: 클로즈업 여', type: 'skin', price: 280, icon: '✨', desc: '[유료] 경기 직전 클로즈업 연출 (여).', faceImageUrl: 'faces/sfc-manga-girl.jpg', baseStats: {}, baseGrowth: {} },
+{ id: 'skin_m4', name: '킷 스킨: 골드 홈 (남)', type: 'skin', price: 160, icon: '💛', gender: 'M', desc: '[유료] 노란 홈킷 · 증명사진 비율.', faceImageUrl: 'faces/skin-m4.jpg', baseStats: {}, baseGrowth: {} },
+{ id: 'skin_m5', name: '킷 스킨: 화이트 어웨이 (남)', type: 'skin', price: 160, icon: '🤍', gender: 'M', desc: '[유료] 흰 어웨이킷 · 증명사진 비율.', faceImageUrl: 'faces/skin-m5.jpg', baseStats: {}, baseGrowth: {} },
+{ id: 'skin_f4', name: '킷 스킨: 레드 스트라이프 (여)', type: 'skin', price: 160, icon: '❤️', gender: 'F', desc: '[유료] 빨간 홈킷 · 증명사진 비율.', faceImageUrl: 'faces/skin-f4.jpg', baseStats: {}, baseGrowth: {} },
+{ id: 'skin_f5', name: '킷 스킨: 민트 어웨이 (여)', type: 'skin', price: 160, icon: '💚', gender: 'F', desc: '[유료] 민트 어웨이킷 · 증명사진 비율.', faceImageUrl: 'faces/skin-f5.jpg', baseStats: {}, baseGrowth: {} },
+{ id: 'kit_emerald', name: '카드 킷: 에메랄드 피치', type: 'kit', price: 180, icon: '🌿', kitClass: 'card-skin-emerald', desc: '[킷] 카드에 초록 스포트라이트.', baseStats: {}, baseGrowth: {} },
+{ id: 'kit_gold', name: '카드 킷: 골든 포일', type: 'kit', price: 260, icon: '🥇', kitClass: 'card-skin-gold', desc: '[킷] 금박 포일 테두리.', baseStats: {}, baseGrowth: {} },
+{ id: 'kit_crimson', name: '카드 킷: 크림슨 플레어', type: 'kit', price: 220, icon: '🔥', kitClass: 'card-skin-crimson', desc: '[킷] 레드 플레어 아우라.', baseStats: {}, baseGrowth: {} },
+{ id: 'kit_midnight', name: '카드 킷: 미드나잇', type: 'kit', price: 200, icon: '🌙', kitClass: 'card-skin-midnight', desc: '[킷] 야간 경기 조명.', baseStats: {}, baseGrowth: {} },
+{ id: 'kit_sakura', name: '카드 킷: 사쿠라', type: 'kit', price: 240, icon: '🌸', kitClass: 'card-skin-sakura', desc: '[킷] 핑크 하이라이트.', baseStats: {}, baseGrowth: {} },
+{ id: 'kit_ice', name: '카드 킷: 아이스 블루', type: 'kit', price: 200, icon: '❄️', kitClass: 'card-skin-ice', desc: '[킷] 냉정한 블루 글로우.', baseStats: {}, baseGrowth: {} },
+{ id: 'kit_sun', name: '카드 킷: 선샤인', type: 'kit', price: 190, icon: '☀️', kitClass: 'card-skin-sun', desc: '[킷] 밝은 햇살 골드.', baseStats: {}, baseGrowth: {} },
+{ id: 'kit_void', name: '카드 킷: 보이드', type: 'kit', price: 250, icon: '🖤', kitClass: 'card-skin-void', desc: '[킷] 검은 보이드 테두리.', baseStats: {}, baseGrowth: {} },
 
 // 얼굴 프레임: 장착 시 선수 카드/라커 아바타에 레전드·컨셉 이미지 표시 (스탯 보너스 없음) — 위키 URL은 Commons 직접 경로(404 방지)
 { id: 'face_legend_buffon', name: '레전드 얼굴: 부폰 (GK)', type: 'face', price: 300, icon: '🥅', desc: '[골키퍼] 이탈리아 전설 골키퍼 잔루이지 부폰.', faceImageUrl: 'https://upload.wikimedia.org/wikipedia/commons/5/5f/Gianluigi_Buffon_%282014%29.jpg', baseStats: {}, baseGrowth: {} },
@@ -272,7 +306,7 @@ const SHOP_ITEMS = [
 { id: 'face_idol_lilac', name: '스포트라이트 얼굴: 라일락 드림', type: 'face', price: 420, icon: '💜', desc: '[컨셉] 라일락·라벤더 드림 무대.', faceImageUrl: 'https://api.dicebear.com/9.x/lorelei/png?seed=SambongStageLilac&size=256&radius=50&scale=96&backgroundType=gradientLinear&backgroundRotation=0,180,360&backgroundColor=d9c9ff,e9d5ff,f3e8ff', baseStats: {}, baseGrowth: {} },
 ];
 
-window.playerState = { id: '', isGM: false, isGuest: false, name: '', inventory: [], itemLevels: {}, equipHead: null, equipHandL: null, equipHandR: null, equipFootL: null, equipFootR: null, equipFace: null };
+window.playerState = { id: '', isGM: false, isGuest: false, name: '', inventory: [], itemLevels: {}, equipHead: null, equipHandL: null, equipHandR: null, equipFootL: null, equipFootR: null, equipFace: null, equipSkin: null, equipKit: null };
 window.allPlayersData = [];
 window.checkedInPlayers = new Set();
 window.selectedPlayerId = null;
@@ -395,41 +429,34 @@ function escapeHtml(s) {
 return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-/** 프로필 얼굴 URL: 업로드 사진(facePhotoUrl) > 장착 얼굴 아이템(상점 레전드) */
+/** 프로필 얼굴 URL: 업로드 사진 > 장착 얼굴 아이템 > 장착 스킨 > 기본 3종 */
 function getPortraitUrl(p) {
 if (p && p.facePhotoUrl && String(p.facePhotoUrl).trim()) return String(p.facePhotoUrl).trim();
 const fid = p.equipFace;
 if (fid) {
 const it = SHOP_ITEMS.find(x => x.id === fid && x.type === 'face' && x.faceImageUrl);
-if (it && String(it.faceImageUrl).trim()) return String(it.faceImageUrl).trim();
+if (it && String(it.faceImageUrl).trim()) return resolveFaceSrc(it.faceImageUrl);
 }
-return '';
+const sid = p.equipSkin;
+if (sid) {
+const it = SHOP_ITEMS.find(x => x.id === sid && x.type === 'skin' && x.faceImageUrl);
+if (it && String(it.faceImageUrl).trim()) return resolveFaceSrc(it.faceImageUrl);
+}
+return resolveFaceSrc(getDefaultSkinRel({ ...p, gender: (p.gender || GENDER_MAP[p.name]) === 'F' ? 'F' : 'M' }));
 }
 
 /**
- * 선수 얼굴: 업로드 사진·얼굴 아이템 > 축구만화 기본 얼굴
+ * 선수 얼굴: 업로드 사진·얼굴 아이템·스킨 > 축구만화 기본 스킨
  * variant: locker | detail | sm | md | xl
  */
 function getAvatarHtml(p, variant) {
 const url = getPortraitUrl(p);
-const boxes = {
-locker: { img: 'fut-mini-portrait-img' },
-detail: { img: 'fut-portrait-img' },
-card: { img: 'fut-portrait-img' },
-sm: { img: 'w-8 h-8 min-w-[2rem] min-h-[2rem] rounded-full object-cover object-center border border-white/25' },
-md: { img: 'w-10 h-10 min-w-[2.5rem] min-h-[2.5rem] rounded-full object-cover object-center border border-white/25' },
-xl: { img: 'w-16 h-16 min-w-[4rem] min-h-[4rem] rounded-lg object-cover object-center border border-white/25' }
-};
-const b = boxes[variant] || boxes.md;
-if (url) {
-return `<img src="${escapeAttr(url)}" alt="" class="${b.img}" loading="lazy" decoding="async"/>`;
-}
 const gender = (p.gender || GENDER_MAP[p.name]) === 'F' ? 'F' : 'M';
-return getMangaFaceHtml({ ...p, gender }, variant);
+return getMangaFaceHtml({ ...p, gender }, variant, url);
 }
 
 window.switchTab = (tabId) => {
-['tabWorkspace', 'tabTips', 'tabShop', 'tabAchievements', 'tabRank', 'tabCompare', 'tabSim', 'tabGuide', 'tabMaster', 'tabMasterStats', 'tabBet'].forEach(id => {
+['tabWorkspace', 'tabTips', 'tabShop', 'tabAchievements', 'tabRank', 'tabCompare', 'tabSim', 'tabGuide', 'tabMaster', 'tabMasterStats'].forEach(id => {
 document.getElementById(id)?.classList.add('hidden');
 });
 document.getElementById(tabId)?.classList.remove('hidden');
@@ -437,7 +464,7 @@ document.getElementById(tabId)?.classList.remove('hidden');
 const leftPanel = document.getElementById('leftCardPanel');
 const rightPanel = document.getElementById('rightContentPanel');
 
-if (tabId === 'tabWorkspace' || tabId === 'tabAchievements') {
+if (tabId === 'tabWorkspace' || tabId === 'tabAchievements' || tabId === 'tabShop') {
 leftPanel?.classList.remove('hidden', 'lg:hidden'); rightPanel?.classList.remove('lg:col-span-12'); rightPanel?.classList.add('lg:col-span-8');
 } else {
 leftPanel?.classList.add('hidden', 'lg:hidden'); rightPanel?.classList.remove('lg:col-span-8'); rightPanel?.classList.add('lg:col-span-12');
@@ -462,10 +489,6 @@ if(tabId === 'tabCompare') window.renderCompareList();
 if(tabId === 'tabSim') window.renderSimMatchTab();
 if(tabId === 'tabMaster') renderMasterDashboard();
 if(tabId === 'tabMasterStats') window.renderMasterStats();
-if(tabId === 'tabBet') {
-window.renderWorldCupBetBoard();
-window.ensureWcBoardPublished?.();
-}
 updateNavBongChip();
 };
 
@@ -474,7 +497,6 @@ window.appNav = { hub: 'home', sub: null };
 function getAppHubChips(hub) {
 if (hub === 'career') {
 return [
-{ id: 'tabShop', label: '상점' },
 { id: 'tabAchievements', label: '트로피' },
 { id: 'tabCompare', label: '비교' }
 ];
@@ -495,7 +517,7 @@ return [];
 }
 
 window.switchAppTab = (hub, subTabId) => {
-const defaults = { home: 'tabWorkspace', match: 'tabSim', career: 'tabShop', bet: 'tabBet', more: (window.playerState && window.playerState.isGM) ? 'tabMaster' : 'tabTips' };
+const defaults = { home: 'tabWorkspace', match: 'tabSim', shop: 'tabShop', career: 'tabAchievements', more: (window.playerState && window.playerState.isGM) ? 'tabMaster' : 'tabTips' };
 const hubKey = hub || 'home';
 if (window.appNav.hub !== hubKey) window.appNav.sub = null;
 window.appNav.hub = hubKey;
@@ -577,7 +599,7 @@ return `
                      <div class="mini-card fut-mini ${tier.cardClass} flex flex-col items-center p-2 rounded-xl border-2 ${borderClass} cursor-pointer ${isSelected ? 'selected' : ''} ${isChecked ? 'checked-in' : 'checked-out'}" onclick="window.selectPlayer('${p.id}')">
                          <input type="checkbox" class="locker-checkbox absolute top-1.5 left-1.5 w-5 h-5 shadow-lg z-10" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); window.toggleCheck('${p.id}')">
                          <div class="absolute top-1 right-1 ${tier.class} text-[8px] font-black px-1.5 py-0.5 rounded shadow whitespace-nowrap tracking-wide">${tier.name.split(' ')[0]}</div>
-                         <div class="flex items-center justify-center min-h-[3.9rem] mt-3">${getAvatarHtml(p, 'locker')}</div>
+                         <div class="flex items-center justify-center min-h-[4.4rem] mt-3">${getAvatarHtml(p, 'locker')}</div>
                          <div class="fut-mini-ovr-plate fut-mini-ovr text-[1.55rem] font-bold leading-none text-current drop-shadow mt-1">${ovr}</div>
                          <div class="flex flex-col items-center mt-0.5 w-full px-0.5">
                          <span class="text-[9px] font-black ${getPosColor(p.pos)} tracking-wider">${posText}</span>
@@ -918,6 +940,27 @@ if(p) html += `<div class="bg-slate-800 border border-slate-600 rounded px-2 py-
 container.innerHTML = html;
 }
 
+window.shopCat = 'all';
+const SHOP_GEAR_TYPES = ['head', 'handL', 'handR', 'footL', 'footR'];
+const SHOP_SKIN_TYPES = ['skin', 'kit'];
+function isCosmeticItem(item) {
+return item && (item.type === 'face' || item.type === 'skin' || item.type === 'kit');
+}
+function itemMatchesShopCat(item, cat) {
+if (!cat || cat === 'all') return true;
+if (cat === 'gear') return SHOP_GEAR_TYPES.includes(item.type);
+if (cat === 'skin') return SHOP_SKIN_TYPES.includes(item.type);
+if (cat === 'face') return item.type === 'face';
+return true;
+}
+window.setShopCat = (cat) => {
+window.shopCat = cat || 'all';
+document.querySelectorAll('#shopCatBar .shop-cat-chip').forEach((btn) => {
+btn.classList.toggle('active', btn.getAttribute('data-shop-cat') === window.shopCat);
+});
+window.renderShop();
+};
+
 window.renderShop = () => {
 const targetId = window.playerState.isGM ? window.selectedPlayerId : window.playerState.id;
 const p = window.allPlayersData.find(x => x.id === targetId) || null;
@@ -929,9 +972,9 @@ document.getElementById('shopBong') && (document.getElementById('shopBong').inne
 document.getElementById('shopWalletLabel') && (document.getElementById('shopWalletLabel').innerText = window.playerState.isGM ? (p ? `[${p.name}] 선수의 자산` : `학생 미등록`) : (window.playerState.isGuest ? `게스트 자산 없음` : `내 보유 자산`));
 
 let html = '';
-SHOP_ITEMS.forEach(item => {
-const isOwned = inventory.includes(item.id);
-const isEquipped = p ? (p.equipHead === item.id || p.equipHandL === item.id || p.equipHandR === item.id || p.equipFootL === item.id || p.equipFootR === item.id || p.equipFace === item.id) : false;
+SHOP_ITEMS.filter((item) => itemMatchesShopCat(item, window.shopCat)).forEach(item => {
+const isOwned = item.price === 0 || inventory.includes(item.id);
+const isEquipped = p ? (p.equipHead === item.id || p.equipHandL === item.id || p.equipHandR === item.id || p.equipFootL === item.id || p.equipFootR === item.id || p.equipFace === item.id || p.equipSkin === item.id || p.equipKit === item.id) : false;
 const level = Number(itemLevels[item.id]) || 0;
 const enhData = ENHANCE_LEVELS[level] || ENHANCE_LEVELS[0];
 const nextEnhData = ENHANCE_LEVELS[level + 1];
@@ -942,7 +985,7 @@ let growthHtml = '';
 for (const [k, v] of Object.entries(item.baseGrowth || {})) { growthHtml += `<span class="inline-block bg-purple-900/50 text-purple-300 border border-purple-500/50 text-[9px] px-1 rounded mr-1 mb-1">성장 +${Math.floor(v * enhData.growthMult)}%</span>`; }
 
 let btnHtml = ''; let enhanceBtnHtml = '';
-if(isOwned && nextEnhData && !window.playerState.isGuest && item.type !== 'face') {
+if(isOwned && nextEnhData && !window.playerState.isGuest && !isCosmeticItem(item)) {
 const canEnhance = bong >= item.price;
 enhanceBtnHtml = `
                      <div class="mt-2 pt-2 border-t border-slate-700 w-full">
@@ -950,7 +993,7 @@ enhanceBtnHtml = `
                              <span class="relative z-10 flex items-center justify-center gap-2"><i class="fa-solid fa-hammer ${canEnhance ? 'animate-bounce' : ''}"></i> 강화 도전 (${item.price} B) - 성공률 ${nextEnhData.chance}%</span>
                          </button>
                      </div>`;
-} else if (isOwned && !nextEnhData && item.type !== 'face') {
+} else if (isOwned && !nextEnhData && !isCosmeticItem(item)) {
 enhanceBtnHtml = `<div class="mt-2 pt-2 border-t border-slate-700 w-full text-center text-[10px] font-bold text-red-400">MAX LEVEL 도달</div>`;
 }
 
@@ -973,16 +1016,16 @@ btnHtml = `<button onclick="window.purchaseItem('${item.id}')" class="w-full mt-
 }
 }
 
-const slotKo = { 'head':'머리', 'handL':'왼손', 'handR':'오른손', 'footL':'왼발', 'footR':'오른발', 'face':'얼굴' }[item.type] || '기타';
+const slotKo = { 'head':'머리', 'handL':'왼손', 'handR':'오른손', 'footL':'왼발', 'footR':'오른발', 'face':'얼굴', 'skin':'스킨', 'kit':'킷' }[item.type] || '기타';
 
 let previewInner = item.faceImageUrl
-? `<img src="${escapeAttr(item.faceImageUrl)}" alt="" class="w-full h-full object-cover rounded-lg"/>`
+? `<img src="${escapeAttr(resolveFaceSrc(item.faceImageUrl))}" alt="" class="w-full h-full object-contain rounded-lg bg-slate-950"/>`
 : `<span class="z-10 relative drop-shadow-md">${item.icon}</span>`;
 
 html += `
                  <div class="bg-slate-900/80 border ${isOwned ? 'border-purple-500/50 shadow-[0_0_10px_rgba(168,85,247,0.2)]' : 'border-slate-700'} rounded-xl p-4 flex flex-col justify-between hover:border-purple-400 transition duration-300">
                      <div class="flex items-start gap-4">
-                         <div class="text-4xl w-16 h-16 bg-slate-800 flex items-center justify-center rounded-lg shadow-inner flex-shrink-0 relative border overflow-hidden ${isOwned ? 'border-purple-500' : 'border-slate-600'} ${isOwned && item.type !== 'face' ? enhData.css : ''}">
+                         <div class="text-4xl w-16 h-16 bg-slate-800 flex items-center justify-center rounded-lg shadow-inner flex-shrink-0 relative border overflow-hidden ${isOwned ? 'border-purple-500' : 'border-slate-600'} ${isOwned && !isCosmeticItem(item) ? enhData.css : ''}">
                              ${previewInner}
                              <div class="absolute -top-2 -left-2 bg-slate-700 text-white text-[8px] px-1.5 py-0.5 rounded border border-slate-500 z-20">${slotKo}</div>
                              ${isOwned && level > 0 ? `<div class="absolute -bottom-2 -right-2 bg-black text-[9px] font-bold px-1.5 py-0.5 rounded border border-current z-20 ${enhData.color}">${enhData.text}</div>` : ''}
@@ -1009,6 +1052,7 @@ const isMe = window.playerState.id === pId; const isGM = window.playerState.isGM
 const ovr = getOVR(p); const tier = getTierInfo(ovr); const lv = Number(p.level) || 1; const exp = Number(p.exp) || 0;
 const expNeeded = getExpNeeded(lv); const expPercent = Math.min(100, Math.floor((exp / expNeeded) * 100));
 const bonus = getBonusStats(p);
+const kitItem = SHOP_ITEMS.find((x) => x.id === p.equipKit && x.type === 'kit');
 
 document.getElementById('detailPanelTitle') && (document.getElementById('detailPanelTitle').innerText = isMe ? '내 선수 정보' : `${p.name} 선수의 정보`);
 document.getElementById('detailLevel') && (document.getElementById('detailLevel').innerText = lv);
@@ -1017,7 +1061,7 @@ const badge = document.getElementById('detailTierBadge');
 if(badge) { badge.innerText = tier.name; badge.className = `px-2 py-1 rounded border text-[10px] font-bold shadow-md whitespace-nowrap ${tier.class}`; }
 
 const card = document.getElementById('detailFutCard');
-if(card) { card.className = `fut-card fut-career-card w-[320px] h-[530px] p-0 flex flex-col relative shadow-2xl z-10 mx-auto transition-all duration-300 overflow-hidden ${tier.cardClass}`; }
+if(card) { card.className = `fut-card fut-career-card w-[320px] h-[530px] p-0 flex flex-col relative shadow-2xl z-10 mx-auto transition-all duration-300 overflow-hidden ${tier.cardClass} ${kitItem?.kitClass || ''}`.trim(); }
 const aura = document.getElementById('cardAuraWrapper');
 if (aura) {
 const auraTier = (tier.cardClass || 'card-rookie').replace('card-', 'card-aura-');
@@ -1133,7 +1177,12 @@ if(statsGridEl) statsGridEl.innerHTML = gridHtml;
 drawRadarChart(p, bonus.flat);
 
 const equipSlots = [
-{ id: 'slotFace', equip: p.equipFace, empty: '😶', label: '얼굴' }
+{ id: 'slotHead', equip: p.equipHead, empty: '🪖', label: '머리' },
+{ id: 'slotHandL', equip: p.equipHandL, empty: '🧤', label: '왼손' },
+{ id: 'slotFace', equip: p.equipFace || p.equipSkin, empty: '😶', label: '얼굴' },
+{ id: 'slotHandR', equip: p.equipHandR, empty: '🧤', label: '오른손' },
+{ id: 'slotFootL', equip: p.equipFootL, empty: '👟', label: '왼발' },
+{ id: 'slotFootR', equip: p.equipFootR, empty: '👟', label: '오른발' }
 ];
 
 equipSlots.forEach(slot => {
@@ -1145,8 +1194,8 @@ const level = (p.itemLevels && typeof p.itemLevels === 'object' && !Array.isArra
 const enhData = ENHANCE_LEVELS[level] || ENHANCE_LEVELS[0];
 
 if (item) {
-if (item.type === 'face' && item.faceImageUrl) {
-el.innerHTML = `<img src="${escapeAttr(item.faceImageUrl)}" alt="" class="item-face-thumb"/><span class="item-label">${slot.label}</span>`;
+if (item.type === 'face' || item.type === 'skin') {
+el.innerHTML = `<img src="${escapeAttr(resolveFaceSrc(item.faceImageUrl || ''))}" alt="" class="item-face-thumb"/><span class="item-label">${slot.label}</span>`;
 el.className = 'item-slot-mini equipped eff-0';
 } else {
 el.innerHTML = `<span class="item-icon">${item.icon}</span><span class="item-label">${slot.label}</span>${level>0?`<span class="absolute -top-1 -right-1 text-[8px] font-bold ${enhData.color} z-10">${enhData.text}</span>`:''}`;
@@ -1372,8 +1421,10 @@ if(window.playerState.isGM) {
 if(!await window.customConfirm(`감독 권한으로 [${p.name}] 선수에게 [${item.name}]을 선물하시겠습니까?`)) return;
 } else {
 if((Number(p.bong) || 0) < item.price) return window.customAlert("자산(B)이 부족합니다!");
+if (item.price > 0) {
 if(!await window.customConfirm(`[${item.name}] 아이템을 ${item.price} B에 구매하시겠습니까?`)) return;
 updates.bong = (Number(p.bong) || 0) - item.price;
+}
 }
 
 const currentInventory = Array.isArray(p.inventory) ? p.inventory : [];
@@ -1400,7 +1451,7 @@ const pId = window.playerState.isGM ? window.selectedPlayerId : window.playerSta
 const p = window.allPlayersData.find(x => x.id === pId);
 const item = SHOP_ITEMS.find(x => x.id === itemId);
 if(!p || !item) return;
-if (item.type === 'face') return window.customAlert('얼굴 프레임 아이템은 강화할 수 없습니다.');
+if (item.type === 'face' || item.type === 'skin' || item.type === 'kit') return window.customAlert('스킨·얼굴·킷은 강화할 수 없습니다.');
 
 const cost = item.price;
 if(!window.playerState.isGM && (Number(p.bong) || 0) < cost) return window.customAlert(`자산이 부족합니다. (필요 자산: ${cost} B)`);
@@ -1451,7 +1502,7 @@ if(!p) return;
 
 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
 let updates = {};
-const fieldMap = { 'head':'equipHead', 'handL':'equipHandL', 'handR':'equipHandR', 'footL':'equipFootL', 'footR':'equipFootR', 'face':'equipFace' };
+const fieldMap = { 'head':'equipHead', 'handL':'equipHandL', 'handR':'equipHandR', 'footL':'equipFootL', 'footR':'equipFootR', 'face':'equipFace', 'skin':'equipSkin', 'kit':'equipKit' };
 const field = fieldMap[type];
 if(field) { updates[field] = p[field] === itemId ? null : itemId; }
 
@@ -1479,7 +1530,7 @@ const newItemLevels = { ...safeItemLevels }; delete newItemLevels[itemId]; updat
 
 if(p.equipHead === itemId) updates.equipHead = null; if(p.equipHandL === itemId) updates.equipHandL = null;
 if(p.equipHandR === itemId) updates.equipHandR = null; if(p.equipFootL === itemId) updates.equipFootL = null; if(p.equipFootR === itemId) updates.equipFootR = null;
-if(p.equipFace === itemId) updates.equipFace = null;
+if(p.equipFace === itemId) updates.equipFace = null; if(p.equipSkin === itemId) updates.equipSkin = null; if(p.equipKit === itemId) updates.equipKit = null;
 
 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
 await setDoc(docRef, updates, { merge: true });
@@ -4221,18 +4272,22 @@ window.switchAppTab('home');
 if(window.selectedPlayerId && window.allPlayersData.length > 0) window.selectPlayer(window.selectedPlayerId);
 }
 
-// 🔔 초기 공지사항 팝업 (본문이 비어 있거나 공백만 있으면 표시하지 않음)
-if(!isGuest && !window.hasShownAnnouncement) {
+// 🔔 공지 팝업: 같은 공지는 기기당 1회만 (내용이 바뀌면 다시 1회)
+if(!isGuest) {
 const annRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'announcement');
 getDoc(annRef).then(snap => {
 const raw = snap.exists() ? snap.data().text : '';
 const annText = typeof raw === 'string' ? raw.trim() : '';
-if (annText) {
+const stamp = snap.exists() ? String(snap.data().updatedAt || '') : '';
+if (!annText) return;
+const token = `${stamp}|${annText}`;
+try {
+if (localStorage.getItem('sfc_ann_seen_v1') === token) return;
+localStorage.setItem('sfc_ann_seen_v1', token);
+} catch (e) { /* ignore */ }
 setTimeout(() => {
-window.customAlert(`📢 [감독님 공지사항]\n\n${annText}`);
+window.customAlert(`📢 [감독님 공지사항]\n\n${escapeHtml(annText)}`);
 }, 800);
-window.hasShownAnnouncement = true;
-}
 });
 }
 };
@@ -4376,7 +4431,6 @@ if(isVisible('tabMaster')) renderMasterDashboard();
 if(isVisible('tabCompare')) window.renderCompareList();
 if(isVisible('tabSim')) window.renderSimMatchTab();
 if(isVisible('tabMasterStats')) window.renderMasterStats();
-if(isVisible('tabBet')) window.renderWorldCupBetBoard();
 updateNavBongChip();
 }, (error) => console.error("Players Listen Error:", error));
 
@@ -4428,13 +4482,11 @@ window.wcBoard = data;
 } else {
 window.wcBoard = defaultWcBoard();
 }
-if (isVisible('tabBet')) window.renderWorldCupBetBoard();
 }, (error) => console.error("wcBoard Listen Error:", error));
 
 onSnapshot(mateSettingsRef(), (docSnap) => {
 window.mateWcState = docSnap.exists() ? (docSnap.data().worldCupBet || null) : null;
 updateMateBetStatusUi();
-if (isVisible('tabBet')) window.renderWorldCupBetBoard();
 }, (error) => console.error('mate worldCupBet Listen Error:', error));
 
 onSnapshot(collection(db, 'artifacts', MATE_CLASS_ID, 'public', 'data', 'students'), (snapshot) => {
@@ -4450,7 +4502,6 @@ worldCupBets: Array.isArray(data.worldCupBets) ? data.worldCupBets : []
 });
 window.mateStudents = students;
 updateMateBetStatusUi();
-if (isVisible('tabBet')) window.renderWorldCupBetBoard();
 }, (error) => console.error('mate students Listen Error:', error));
 
 document.getElementById('loadingOverlay')?.classList.add('hidden');
