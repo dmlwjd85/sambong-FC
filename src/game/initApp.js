@@ -158,10 +158,9 @@ const p = window.allPlayersData.find(x => x.id === pId);
 let growthText = '';
 if(p) {
 const bonus = getBonusStats(p);
-const baseChance = 10;
+const pct = Math.round(statGrowthChancePct(p, statKey, bonus, null));
 const itemGrowth = bonus.growth[statKey] || 0;
-const totalChance = baseChance + itemGrowth;
-growthText = `\n\n-----------------------------\n🌱 [현재 스탯 성장 확률: ${totalChance}%]\n(기본 10% ${itemGrowth > 0 ? `+ 장비 보너스 ${itemGrowth}%` : ''})`;
+growthText = `\n\n-----------------------------\n🌱 [이번 레벨업 시 이 스탯 +1 확률: 약 ${pct}%]\n(기본 6% · 장비 ${itemGrowth}% · 높은 능력치는 오르기 더 어렵습니다. 레벨당 최대 2개)`;
 }
 window.customAlert(`[${STAT_NAMES[statKey]}]\n\n${STAT_DESC[statKey]}${growthText}`);
 };
@@ -198,7 +197,7 @@ const DAILY_TIPS = [
 { title: "가장 중요한 '4초 룰'을 아시나요?", img: "⏱️", category: "기본규칙", desc: "킥인, 코너킥, 프리킥, 골클리어런스(골키퍼가 공을 던질 때)는 모두 공을 잡은 후 '4초' 안에 처리해야 합니다. 속도감이 생명이죠!" },
 { title: "거리 두기 5미터 원칙", img: "📏", category: "기본규칙", desc: "킥인, 코너킥, 프리킥 상황에서 수비수는 공으로부터 무조건 5미터 이상 떨어져 있어야 합니다. 방해하면 경고를 받을 수 있어요." },
 { title: "선수 교체는 무제한!", img: "🔄", category: "기본규칙", desc: "축구와 달리 풋살은 선수 교체 횟수에 제한이 없고, 언제든 코치의 지시로 교체 구역을 통해 자유롭게 들어오고 나갈 수 있습니다." },
-{ title: "장비는 강화소에서 +5강까지", img: "🔨", category: "시즌2 성장", desc: "상점에서 산 장비는 같은 가격의 B로 강화합니다. 실패하면 1단계 내려가니, 주급을 모아 신중하게 도전하세요!" },
+{ title: "장비는 강화소에서 +5강까지", img: "🔨", category: "시즌2 성장", desc: "상점에서 산 장비는 같은 가격의 B로 강화합니다. 능력치 보너스는 조금씩만 오르니, 주급을 모아 신중하게 도전하세요!" },
 { title: "스킨은 능력치에 영향 없음", img: "🎨", category: "시즌2 성장", desc: "기본 스킨 3종은 무료입니다. 카드 킷·레전드 얼굴은 꾸미기용이고, 스탯 보너스는 머리·손·발 장비만 줍니다." }
 ];
 
@@ -231,13 +230,14 @@ const ACHIEVEMENTS = [
 { id: 'match_8', category: '시즌2 성장', title: '라커룸 단골', desc: '출전 8회. 토요스포츠데이에 꾸준히 나온 선수입니다.', reqKey: 'matches', reqValue: 8, icon: '📅', color: 'text-sky-400', bg: 'bg-sky-400', reward: 20 }
 ];
 
+/** 강화: 평타는 느껴지되 +5에서 능력치가 폭주하지 않게 보너스를 완만히 */
 const ENHANCE_LEVELS = [
 { level: 0, chance: 100, statPlus: 0, growthMult: 1.0, css: 'eff-0', text: '+0', color: 'text-slate-400' },
-{ level: 1, chance: 100, statPlus: 1, growthMult: 1.1, css: 'eff-1', text: '+1', color: 'text-white' },
-{ level: 2, chance: 80,  statPlus: 2, growthMult: 1.2, css: 'eff-2', text: '+2', color: 'text-blue-400' },
-{ level: 3, chance: 50,  statPlus: 4, growthMult: 1.5, css: 'eff-3', text: '+3', color: 'text-purple-400' },
-{ level: 4, chance: 20,  statPlus: 7, growthMult: 2.0, css: 'eff-4', text: '+4', color: 'text-yellow-400' },
-{ level: 5, chance: 10,  statPlus: 12, growthMult: 3.0, css: 'eff-5', text: '+5 MAX', color: 'text-red-400 drop-shadow-[0_0_5px_red]' }
+{ level: 1, chance: 90,  statPlus: 1, growthMult: 1.05, css: 'eff-1', text: '+1', color: 'text-white' },
+{ level: 2, chance: 70,  statPlus: 1, growthMult: 1.1, css: 'eff-2', text: '+2', color: 'text-blue-400' },
+{ level: 3, chance: 45,  statPlus: 2, growthMult: 1.2, css: 'eff-3', text: '+3', color: 'text-purple-400' },
+{ level: 4, chance: 25,  statPlus: 2, growthMult: 1.3, css: 'eff-4', text: '+4', color: 'text-yellow-400' },
+{ level: 5, chance: 12,  statPlus: 3, growthMult: 1.4, css: 'eff-5', text: '+5 MAX', color: 'text-red-400 drop-shadow-[0_0_5px_red]' }
 ];
 
 const SHOP_ITEMS = [
@@ -344,11 +344,68 @@ const enhData = ENHANCE_LEVELS[level] || ENHANCE_LEVELS[0];
 
 if (item) {
 for (const [key, baseVal] of Object.entries(item.baseStats || {})) { flat[key] += baseVal + enhData.statPlus; }
-for (const [key, baseGrow] of Object.entries(item.baseGrowth || {})) { growth[key] += Math.floor(baseGrow * enhData.growthMult); }
+for (const [key, baseGrow] of Object.entries(item.baseGrowth || {})) {
+// 성장%는 반으로 줄이고 스탯당 10%를 넘지 않게 해 인플레이션을 막음
+growth[key] += Math.min(10, Math.floor(Number(baseGrow) * enhData.growthMult * 0.5));
+}
 }
 });
 return { flat, growth };
 };
+
+/** 배열을 제자리에서 섞음 (성장 롤용) */
+function shuffleInPlace(arr) {
+for (let i = arr.length - 1; i > 0; i--) {
+const j = Math.floor(Math.random() * (i + 1));
+const t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+}
+return arr;
+}
+function currentStatValue(p, key, updatesObj) {
+if (updatesObj && Number.isFinite(Number(updatesObj[key]))) return Math.min(99, Number(updatesObj[key]));
+return getStat(p, key);
+}
+/** 레벨업 시 한 스탯이 +1 될 확률(%). 기본 6% + 장비, 높은 스탯은 더 잘 안 오름 */
+function statGrowthChancePct(p, key, bonuses, updatesObj) {
+const cur = currentStatValue(p, key, updatesObj);
+if (cur >= 99) return 0;
+const itemGrow = Math.min(10, Number(bonuses && bonuses.growth ? bonuses.growth[key] : 0) || 0);
+const raw = Math.min(16, 6 + itemGrow);
+const dim = Math.max(0.18, (90 - cur) / 35);
+return raw * dim;
+}
+/** 레벨 1회분: 포지션 핵심→보조→기타 순으로 굴려 최대 2개만 +1 */
+function applyLevelStatGrowth(p, updatesObj) {
+const bonuses = getBonusStats(p);
+const w = POS_WEIGHTS[p.pos] || POS_WEIGHTS['미정'];
+const core = shuffleInPlace((w.core || []).slice());
+const sub = shuffleInPlace((w.sub || []).slice());
+const etc = shuffleInPlace(STAT_KEYS.filter((k) => !core.includes(k) && !sub.includes(k)));
+const increased = [];
+for (const s of [...core, ...sub, ...etc]) {
+if (increased.length >= 2) break;
+const cur = currentStatValue(p, s, updatesObj);
+if (cur >= 99) continue;
+if (Math.random() * 100 < statGrowthChancePct(p, s, bonuses, updatesObj)) {
+updatesObj[s] = cur + 1;
+increased.push(STAT_NAMES[s].split(' ')[0]);
+}
+}
+return increased;
+}
+/** 개인 훈련: 낮은 확률로 포지션 핵심 스탯 1개 +1 (높은 스탯은 거의 안 오름) */
+function tryTrainingStatBump(p, updatesObj) {
+const w = POS_WEIGHTS[p.pos] || POS_WEIGHTS['미정'];
+const pool = (w.core && w.core.length) ? w.core.slice() : STAT_KEYS.slice();
+shuffleInPlace(pool);
+const key = pool[0];
+const cur = currentStatValue(p, key, updatesObj);
+if (cur >= 82) return null;
+const chance = cur >= 72 ? 12 : 26;
+if (Math.random() * 100 >= chance) return null;
+updatesObj[key] = cur + 1;
+return STAT_NAMES[key].split(' ')[0];
+}
 
 const getOVRForPos = (stats, pos) => {
 if (pos === '미정' || !POS_WEIGHTS[pos]) {
@@ -1158,13 +1215,13 @@ labelIcon = '<i class="fa-solid fa-star text-yellow-400 text-[8px] ml-0.5"></i>'
 if(isGM) {
 gridHtml += `
                      <div class="flex flex-col items-center justify-center text-current w-full group relative">
-                         <div class="flex items-center justify-center gap-1 mb-0.5">
-                             <button onclick="window.modStat('${p.id}', '${s.id}', -1)" class="w-3.5 h-3.5 rounded bg-black/40 hover:bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-minus text-[7px]"></i></button>
-                             <div class="relative flex items-center justify-center w-7">
-                                 <input type="number" min="1" max="99" value="${baseVal}" class="font-oswald text-xl font-bold w-full text-center bg-transparent border-b border-transparent hover:border-current focus:outline-none transition cursor-text leading-none p-0 m-0 text-current ${highlightClass}" onchange="window.setStat('${p.id}', '${s.id}', this.value)">
+                         <div class="flex items-center justify-center gap-0.5 mb-0.5">
+                             <button type="button" onclick="window.modStat('${p.id}', '${s.id}', -1)" class="w-6 h-6 rounded-md bg-black/55 hover:bg-red-900/80 text-white flex items-center justify-center border border-white/20"><i class="fa-solid fa-minus text-[9px]"></i></button>
+                             <div class="relative flex items-center justify-center w-8">
+                                 <input type="number" min="1" max="99" inputmode="numeric" value="${baseVal}" class="font-oswald text-xl font-bold w-full text-center bg-black/30 rounded border border-white/25 hover:border-current focus:outline-none focus:border-emerald-400 transition cursor-text leading-none p-0 m-0 text-current ${highlightClass}" onchange="window.setStat('${p.id}', '${s.id}', this.value)">
                                  ${bonusBadge}
                              </div>
-                             <button onclick="window.modStat('${p.id}', '${s.id}', 1)" class="w-3.5 h-3.5 rounded bg-black/40 hover:bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-plus text-[7px]"></i></button>
+                             <button type="button" onclick="window.modStat('${p.id}', '${s.id}', 1)" class="w-6 h-6 rounded-md bg-black/55 hover:bg-emerald-800 text-white flex items-center justify-center border border-white/20"><i class="fa-solid fa-plus text-[9px]"></i></button>
                          </div>
                          <span class="font-bold text-[10px] tracking-tight whitespace-nowrap opacity-95 cursor-pointer hover:text-emerald-400 leading-none" onclick="window.showStatDesc('${s.id}')">${s.label} ${labelIcon}</span>
                          <div class="stat-mini-bar w-10"><i style="width:${barW}%"></i></div>
@@ -1227,7 +1284,7 @@ const btnChangePos = document.getElementById('btnChangePos'); if(btnChangePos) b
 const counts = getTodayActivityCounts(p);
 const hint = document.getElementById('activityQuotaHint');
 if (hint) {
-hint.innerHTML = `오늘 남은 한도 — 훈련 ${counts.training}/${ACTIVITY_DAILY_CAP.training} · 출전 ${counts.matches}/${ACTIVITY_DAILY_CAP.matches} · 골 ${counts.goals}/${ACTIVITY_DAILY_CAP.goals} · 어시 ${counts.assists}/${ACTIVITY_DAILY_CAP.assists}`;
+hint.innerHTML = `오늘 남은 한도 — 훈련 ${counts.training}/${ACTIVITY_DAILY_CAP.training} · 출전 ${counts.matches}/${ACTIVITY_DAILY_CAP.matches} · 골 ${counts.goals}/${ACTIVITY_DAILY_CAP.goals} · 어시 ${counts.assists}/${ACTIVITY_DAILY_CAP.assists}<br><span class="text-slate-400">개인 훈련은 가끔 포지션 핵심 스탯이 +1 됩니다. 이미 높은 능력치는 잘 안 오릅니다.</span>`;
 }
 ['training','matches','goals','assists','keypass','saves'].forEach((k) => {
 const btn = document.getElementById('btnAct' + k.charAt(0).toUpperCase() + k.slice(1));
@@ -1246,6 +1303,7 @@ if(isGM) {
 document.getElementById('gmControls')?.classList.remove('hidden');
 document.getElementById('gmWalletManager')?.classList.remove('hidden');
 document.getElementById('gmAgeManager')?.classList.remove('hidden');
+document.getElementById('gmStatHint')?.classList.remove('hidden');
 document.getElementById('gmInputAge') && (document.getElementById('gmInputAge').value = Number(p.age) || 13);
 const gmViewBong = document.getElementById('gmViewBong');
 if(gmViewBong) gmViewBong.innerHTML = `<input type="number" value="${Number(p.bong) || 0}" class="w-16 bg-transparent text-center border-b border-slate-600 focus:border-emerald-500 focus:outline-none transition-colors m-0 p-0 text-fut-gold font-display text-xl leading-none" onchange="window.setRecord('${p.id}', 'bong', this.value)">`;
@@ -1253,11 +1311,13 @@ if(gmViewBong) gmViewBong.innerHTML = `<input type="number" value="${Number(p.bo
 document.getElementById('gmControls')?.classList.add('hidden');
 document.getElementById('gmWalletManager')?.classList.add('hidden');
 document.getElementById('gmAgeManager')?.classList.add('hidden');
+document.getElementById('gmStatHint')?.classList.add('hidden');
 }
 };
 
 async function processExp(p, expGained, docRef, updatesObj) {
 let currentLv = Number(p.level) || 1;
+const startLv = currentLv;
 let currentExp = (Number(p.exp) || 0) + Number(expGained);
 let leveledUp = false; let increasedStats = [];
 
@@ -1266,20 +1326,14 @@ updatesObj.exp = currentExp;
 
 if(leveledUp) {
 updatesObj.level = currentLv;
-const bonuses = getBonusStats(p); 
-const statKeys = ['pac', 'sho', 'pas', 'dri', 'def', 'phy', 'ref', 'int', 'pst', 'dis', 'cmp', 'wrk'];
-
-statKeys.forEach(s => {
-const totalChance = 10 + (bonuses.growth[s] || 0);
-if (Math.random() * 100 < totalChance) {
-const nextVal = Math.min(99, getStat(p, s) + 1);
-updatesObj[s] = nextVal;
-if (nextVal > getStat(p, s)) increasedStats.push(STAT_NAMES[s].split(' ')[0]);
+const levelsGained = Math.max(1, currentLv - startLv);
+for (let i = 0; i < levelsGained; i++) {
+increasedStats.push(...applyLevelStatGrowth(p, updatesObj));
 }
-});
 
 triggerConfetti(); 
-const statsMsg = increasedStats.length > 0 ? `\n\n💪 스탯 성장 내역:\n${increasedStats.join(', ')} 능력이 +1 증가했습니다!` : `\n\n(이번 레벨업에서는 상승한 스탯이 없습니다. 아이템을 장착해보세요!)`;
+const uniqueStats = [...new Set(increasedStats)];
+const statsMsg = uniqueStats.length > 0 ? `\n\n💪 스탯 성장 내역:\n${uniqueStats.join(', ')} 능력이 올랐습니다!` : `\n\n(이번 레벨업에서는 상승한 스탯이 없습니다. 장비를 장착하면 포지션 핵심 스탯이 조금 더 잘 오릅니다.)`;
 setTimeout(() => window.customAlert(`🎉 축하합니다!\n[${p.name}] 선수가 레벨 ${currentLv} (으)로 올랐습니다!${statsMsg}`), 500);
 }
 await setDoc(docRef, updatesObj, { merge: true });
@@ -1366,7 +1420,15 @@ updates.activityCounts = counts;
 }
 
 if(type === 'matches') { expGained = 50; updates.matches = (Number(p.matches)||0) + 1; }
-if(type === 'training') { expGained = 25; updates.training = (Number(p.training)||0) + 1; }
+if(type === 'training') {
+expGained = 25;
+updates.training = (Number(p.training)||0) + 1;
+const bumped = tryTrainingStatBump(p, updates);
+if (bumped) {
+animateFloatText(`${bumped} +1`, 'text-fut-gold', 'confettiOrigin');
+setTimeout(() => window.customAlert(`💪 훈련 효과!\n[${p.name}]의 ${bumped}이(가) +1 올랐습니다.`), 400);
+}
+}
 if(type === 'goals') { expGained = 20; updates.goals = (Number(p.goals)||0) + 1; updates.bong = (Number(p.bong)||0) + 3; }
 if(type === 'assists') { expGained = 10; updates.assists = (Number(p.assists)||0) + 1; updates.bong = (Number(p.bong)||0) + 1; }
 if(type === 'keypass') { expGained = 15; updates.keypass = (Number(p.keypass)||0) + 1; updates.bong = (Number(p.bong)||0) + 1; }
@@ -1872,8 +1934,8 @@ return getOVR(b) - getOVR(a);
 }
 if(window.currentSortKey === 'ovr') return getOVR(b) - getOVR(a);
 const bBonus = getBonusStats(b).flat; const aBonus = getBonusStats(a).flat;
-const bVal = (Number(b[window.currentSortKey])||60) + (bBonus[window.currentSortKey]||0);
-const aVal = (Number(a[window.currentSortKey])||60) + (aBonus[window.currentSortKey]||0);
+const bVal = getStat(b, window.currentSortKey) + (bBonus[window.currentSortKey]||0);
+const aVal = getStat(a, window.currentSortKey) + (aBonus[window.currentSortKey]||0);
 if (bVal !== aVal) return bVal - aVal;
 return getOVR(b) - getOVR(a);
 });
@@ -1882,9 +1944,12 @@ players.forEach(p => {
 const ovr = getOVR(p); const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정'; const b = getBonusStats(p).flat;
 const ageVal = Number(p.age) || 13;
 const getCell = (key) => {
-const base = Number(p[key])||60; const bonus = b[key]||0; const total = Math.min(99, base + bonus);
+const base = getStat(p, key); const bonus = b[key]||0;
 const isHighlight = window.currentSortKey === key;
-return `<td class="py-3 text-center font-oswald text-sm sm:text-base ${isHighlight ? 'text-white font-bold bg-slate-800/50' : 'text-slate-300'}">${total} ${bonus>0 ? `<span class="text-[9px] text-emerald-400 ml-0.5 absolute mt-0.5">+${bonus}</span>`:''}</td>`;
+return `<td class="py-2 px-0.5 text-center ${isHighlight ? 'bg-slate-800/50' : ''}" onclick="event.stopPropagation()">
+<input type="number" min="1" max="99" inputmode="numeric" value="${base}" class="w-11 bg-slate-950/80 border border-slate-600 rounded text-center font-oswald text-sm text-white py-1 focus:border-emerald-400 focus:outline-none" onchange="window.setStat('${p.id}', '${key}', this.value)">
+${bonus>0 ? `<div class="text-[9px] text-emerald-400 leading-none mt-0.5">+${bonus}</div>`:''}
+</td>`;
 };
 statsHtml += `<tr class="hover:bg-slate-800/80 transition cursor-pointer" onclick="window.switchTab('tabWorkspace'); window.selectPlayer('${p.id}')"><td class="py-3 pl-4 text-left font-bold text-white flex items-center gap-2 whitespace-nowrap"><span class="inline-flex items-center justify-center align-middle">${getAvatarHtml(p, 'sm')}</span><span>${p.name}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[12px] font-bold text-emerald-400 px-1.5 py-0.5 leading-none">${ageVal}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[10px] font-bold ${getPosColor(p.pos)} border border-slate-600 px-1.5 py-0.5 rounded leading-none">${posText}</span></td><td class="py-3 text-center font-oswald text-base sm:text-lg ${window.currentSortKey==='ovr' ? 'text-white bg-slate-800/50' : 'text-fut-gold'} font-bold">${ovr}</td>${getCell('pac')}${getCell('sho')}${getCell('pas')}${getCell('dri')}${getCell('def')}${getCell('phy')}${getCell('ref')}${getCell('int')}${getCell('pst')}${getCell('dis')}${getCell('cmp')}${getCell('wrk')}</tr>`;
 });

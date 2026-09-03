@@ -199,6 +199,10 @@
 </div>
 </div>
 
+<div id="gmStatHint" class="hidden mt-2 bg-emerald-950/70 p-3 rounded-xl border border-emerald-500/50 relative z-30">
+<p class="text-[11px] font-bold text-emerald-200 leading-snug break-keep"><i class="fa-solid fa-sliders mr-1"></i> 능력치 직접 수정: 위 카드의 <b>+ / −</b> 또는 숫자를 바꾸세요. 더보기 → 상세 스탯 현황판에서도 표로 고칠 수 있습니다.</p>
+</div>
+
 <div id="gmControls" class="hidden mt-4 bg-slate-900/80 p-4 rounded-xl border border-emerald-800/50 relative z-30">
 <div class="mb-3 pb-3 border-b border-amber-800/40 flex flex-wrap items-center justify-between gap-2">
 <span class="text-[11px] font-bold text-amber-300 leading-snug"><i class="fa-solid fa-arrow-rotate-left mr-1"></i>선택 선수 레벨 롤백 (마스터)</span>
@@ -207,7 +211,7 @@
 <h3 class="text-sm font-bold text-emerald-400 mb-3 border-b border-emerald-800/50 pb-1"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> 코치 스태프 권한: 활동 기록 추가</h3>
 <div class="grid grid-cols-2 gap-2 mb-2">
 <button onclick="window.addActivity('matches')" class="bg-slate-800 hover:bg-slate-700 text-white text-xs py-2 rounded border border-slate-600 transition shadow">경기 출전 (+50 EXP)</button>
-<button onclick="window.addActivity('training')" class="bg-emerald-900/60 hover:bg-emerald-800 text-emerald-300 text-xs py-2 rounded border border-emerald-700 transition shadow">훈련 완료 (+30 EXP)</button>
+<button onclick="window.addActivity('training')" class="bg-emerald-900/60 hover:bg-emerald-800 text-emerald-300 text-xs py-2 rounded border border-emerald-700 transition shadow">훈련 완료 (+25 EXP)</button>
 <button onclick="window.addActivity('goals')" class="bg-yellow-900/40 hover:bg-yellow-800 text-yellow-300 text-xs py-2 rounded border border-yellow-700/50 transition shadow">골 ⚽ (+20 EXP)</button>
 <button onclick="window.addActivity('assists')" class="bg-blue-900/40 hover:bg-blue-800 text-blue-300 text-xs py-2 rounded border border-blue-700/50 transition shadow">어시스트 👟 (+10 EXP)</button>
 </div>
@@ -629,7 +633,7 @@
 <h3 class="text-3xl font-display text-purple-400 flex items-center gap-3">
 <i class="fa-solid fa-store text-fuchsia-400"></i> 아이템 상점 & 강화소
 </h3>
-<p class="text-sm text-slate-300 mt-2 break-keep" id="shopSubTitle">하단 <b class="text-fuchsia-300">상점</b>에서 장비·스킨을 사고, 장비는 강화소에서 +5강까지 올립니다.<br><span class="text-emerald-400 font-bold">💡 머리·손·발 장착 시 레벨업 성장 확률이 올라갑니다. 스킨은 꾸미기용입니다.</span></p>
+<p class="text-sm text-slate-300 mt-2 break-keep" id="shopSubTitle">하단 <b class="text-fuchsia-300">상점</b>에서 장비·스킨을 사고, 장비는 강화소에서 +5강까지 올립니다.<br><span class="text-emerald-400 font-bold">💡 머리·손·발 장착 시 레벨업 성장 확률이 조금 올라갑니다. 강화 보너스는 소량이며, 스킨은 꾸미기용입니다.</span></p>
 </div>
 <div class="text-left sm:text-right w-full sm:w-auto bg-slate-900/60 p-3 rounded-xl border border-purple-500/30">
 <p class="text-xs text-slate-400 font-bold mb-1" id="shopWalletLabel">보유 자산</p>
@@ -664,7 +668,7 @@
 </div>
 <div class="bg-gradient-to-r from-purple-900/40 to-slate-900/60 p-5 rounded-xl border border-purple-500/50 hover:border-purple-400 transition">
 <h4 class="text-base sm:text-lg font-bold text-purple-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-hammer text-fuchsia-400"></i> 3. 장비 강화 및 확률형 성장</h4>
-<p class="text-sm text-purple-100/80 leading-relaxed break-keep">레벨업을 하면 각 스탯마다 기본 10% 확률로 능력치가 상승합니다. 하단 <b>상점</b>에서 장비를 사서 장착하면 해당 스탯이 오를 확률이 크게 늘어납니다. 강화소에서 B를 써서 최대 +5강까지 올릴 수 있습니다. (실패 시 1단계 하락)</p>
+<p class="text-sm text-purple-100/80 leading-relaxed break-keep">레벨업을 하면 포지션 핵심 스탯부터 최대 2개만 오를 수 있습니다. 기본 확률은 낮고, 이미 높은 능력치는 더 잘 안 오릅니다. 하단 <b>상점</b>에서 장비를 장착하면 해당 스탯이 조금 더 잘 오르고, 개인 훈련은 가끔 핵심 스탯이 +1 됩니다. 강화 보너스는 소량입니다. (실패 시 1단계 하락)</p>
 </div>
 <div class="bg-gradient-to-r from-slate-900/60 to-emerald-900/30 p-5 rounded-xl border border-emerald-700/50 hover:border-emerald-500/80 transition">
 <h4 class="text-base sm:text-lg font-bold text-emerald-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-bullseye text-red-400"></i> 4. 시즌 2 목표: 매주 조금씩 성장</h4>
@@ -745,7 +749,7 @@
 <h3 class="text-2xl sm:text-3xl font-display text-emerald-400 mb-2 flex items-center gap-2 sm:gap-3">
 <i class="fa-solid fa-list-ol"></i> 상세 스탯 현황판 (마스터)
 </h3>
-<p class="text-xs sm:text-sm text-slate-400 mb-4 sm:mb-6">각 스탯 헤더를 클릭하여 정렬할 수 있습니다. (+수치는 장착 아이템 보너스)</p>
+<p class="text-xs sm:text-sm text-slate-400 mb-4 sm:mb-6">숫자를 눌러 기본 능력치를 바로 수정할 수 있습니다. (+수치는 장착 아이템 보너스 · 헤더 클릭 시 정렬)</p>
 
 <div class="overflow-x-auto custom-scrollbar rounded-xl border border-slate-700 shadow-inner bg-slate-900">
 <table class="w-full text-center text-[11px] sm:text-sm text-slate-300 min-w-[700px] sm:min-w-[1200px]">
