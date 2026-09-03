@@ -2070,6 +2070,7 @@ const cb = document.getElementById('simCountB');
 if (ca) ca.textContent = `소속 ${na}명 · 출전 OVR 상위 5명 (팀당 1명 이상이면 연습 경기 가능)`;
 if (cb) cb.textContent = `소속 ${nb}명 · 출전 OVR 상위 5명 (팀당 1명 이상이면 연습 경기 가능)`;
 window.renderSimTeamBoards();
+window.renderOfficialBetPanel();
 const rawTA = getSimMatchRoster('A');
 const rawTB = getSimMatchRoster('B');
 const padTA = padSimRosterWithBots(rawTA, 'A');
@@ -2547,7 +2548,7 @@ const ctx = canvas.getContext('2d');
 const wrap = canvas.parentElement;
 const maxCssW = typeof window !== 'undefined' ? Math.min(window.innerWidth - 20, 720) : 720;
 const cssW = Math.max(260, Math.min(maxCssW, wrap?.clientWidth || maxCssW));
-const cssH = Math.max(160, Math.min(320, Math.floor(cssW * 0.42)));
+const cssH = Math.max(188, Math.min(380, Math.floor(cssW * 0.5)));
 const dpr = Math.min(2, typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1);
 canvas.width = Math.floor(cssW * dpr);
 canvas.height = Math.floor(cssH * dpr);
@@ -2721,7 +2722,7 @@ const ctx = canvas.getContext('2d');
 const wrap = canvas.parentElement;
 const maxCssW = typeof window !== 'undefined' ? Math.min(window.innerWidth - 20, 720) : 720;
 const cssW = Math.max(260, Math.min(maxCssW, wrap?.clientWidth || maxCssW));
-const cssH = Math.max(160, Math.min(320, Math.floor(cssW * 0.42)));
+const cssH = Math.max(188, Math.min(380, Math.floor(cssW * 0.5)));
 const dpr = Math.min(2, window.devicePixelRatio || 1);
 canvas.width = Math.floor(cssW * dpr);
 canvas.height = Math.floor(cssH * dpr);
@@ -2748,7 +2749,7 @@ badge.className = 'text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-slate-800 t
 applySimPitchCaptionMeta(null);
 }
 
-const SIM_FIELD_LS_KEY = 'sfc_sim_field_v1';
+const SIM_FIELD_LS_KEY = 'sfc_sim_field_v2';
 /** @type {{ A: Record<string, { nx: number, ny: number }>, B: Record<string, { nx: number, ny: number }> }} */
 window.simFieldPositions = window.simFieldPositions || { A: {}, B: {} };
 
@@ -2767,13 +2768,13 @@ localStorage.setItem(SIM_FIELD_LS_KEY, JSON.stringify(window.simFieldPositions))
 }
 loadSimFieldPositionsFromStorage();
 
-/** 기본 포메이션: 레드 기준 — 공격 시 픽소는 중앙선 부근, 측면·피보는 넓고 전진 */
+/** 기본 포메이션: 레드 기준 — 골키퍼·픽소·양 측면·피보가 서로 겹치지 않게 간격을 둠 */
 const SIM_DEFAULT_SLOTS_A = [
-{ nx: 0.1, ny: 0.5 },
-{ nx: 0.48, ny: 0.5 },
-{ nx: 0.3, ny: 0.16 },
-{ nx: 0.3, ny: 0.84 },
-{ nx: 0.54, ny: 0.48 }
+{ nx: 0.08, ny: 0.50 },
+{ nx: 0.26, ny: 0.50 },
+{ nx: 0.32, ny: 0.16 },
+{ nx: 0.32, ny: 0.84 },
+{ nx: 0.40, ny: 0.50 }
 ];
 const SIM_DEFAULT_SLOTS_B = SIM_DEFAULT_SLOTS_A.map((s) => ({ nx: 1 - s.nx, ny: s.ny }));
 
@@ -2826,17 +2827,17 @@ const phZ = phase === 'danger' ? 1.35 : phase === 'progress' ? 1.05 : 0.82;
 const cyShift = channel === 'left' ? -0.14 : channel === 'right' ? 0.14 : 0;
 let nx = home.nx;
 let ny = home.ny;
-const wBall = pos === 'Goleiro' ? 0.18 : pos === 'Fixo' ? 0.38 : pos === 'Ala' ? 0.52 : pos === 'Pivo' ? 0.58 : 0.42;
-nx += (ballNx - nx) * wBall * 0.55 * phZ;
-ny += (ballNy - ny) * wBall * 0.5 * phZ;
-ny += cyShift * 0.2 * (weAttack ? 1 : 0.65);
+const wBall = pos === 'Goleiro' ? 0.05 : pos === 'Fixo' ? 0.12 : pos === 'Ala' ? 0.18 : pos === 'Pivo' ? 0.2 : 0.14;
+nx += (ballNx - nx) * wBall * 0.22 * phZ;
+ny += (ballNy - ny) * wBall * 0.14 * phZ;
+ny += cyShift * 0.16 * (weAttack ? 1 : 0.55);
 if (weAttack) {
-const push = (pos === 'Goleiro' ? 0.03 : pos === 'Fixo' ? 0.08 : pos === 'Pivo' ? 0.18 : 0.14) * phZ;
+const push = (pos === 'Goleiro' ? 0.02 : pos === 'Fixo' ? 0.05 : pos === 'Pivo' ? 0.12 : 0.1) * phZ;
 nx += teamIsA ? push : -push;
 if (pos === 'Fixo') {
-const midLine = teamIsA ? 0.5 : 0.5;
-nx += (midLine - nx) * 0.42 * phZ;
-ny += (0.5 - ny) * 0.22 * phZ;
+const hold = teamIsA ? 0.36 : 0.64;
+nx += (hold - nx) * 0.28 * phZ;
+ny += (0.5 - ny) * 0.12 * phZ;
 } else if (pos !== 'Goleiro') {
 const wingSpread = 0.34 * phZ;
 ny += (home.ny - 0.5) * wingSpread;
@@ -2855,14 +2856,14 @@ nx += (teamIsA ? -1 : 1) * 0.03 * phZ;
 }
 }
 if (phase === 'danger' && pos !== 'Goleiro') {
-nx += (ballNx - nx) * 0.22;
-ny += (ballNy - ny) * 0.18;
+nx += (ballNx - nx) * 0.1;
+ny += (ballNy - ny) * 0.08;
 }
-const ovrJ = (getOVR(p) / 99) * 0.045;
+const ovrJ = (getOVR(p) / 99) * 0.022;
 nx += Math.sin(t + (teamIsA ? 0 : 2)) * ovrJ;
-ny += Math.cos(t * 0.85 + (pos === 'Ala' ? 1 : 0)) * ovrJ * 1.1;
-nx += Math.sin(t * 0.4) * 0.028;
-ny += Math.cos(t * 0.55) * 0.026;
+ny += Math.cos(t * 0.85 + (pos === 'Ala' ? 1 : 0)) * ovrJ * 1.05;
+nx += Math.sin(t * 0.4) * 0.012;
+ny += Math.cos(t * 0.55) * 0.01;
 nx = Math.max(0.03, Math.min(0.97, nx));
 ny = Math.max(0.06, Math.min(0.94, ny));
 return { nx, ny };
@@ -2947,17 +2948,71 @@ ctx.stroke();
 ctx.restore();
 }
 
+/** 피치 위 선수끼리 겹치지 않도록 타원 거리로 밀어냄 */
+function separateSimLivePositions(items, minNx, minNy) {
+const n = items.length;
+const clampItem = (it) => {
+it.nx = Math.max(0.05, Math.min(0.95, it.nx));
+it.ny = Math.max(0.12, Math.min(0.88, it.ny));
+};
+for (let iter = 0; iter < 20; iter++) {
+for (let i = 0; i < n; i++) {
+for (let j = i + 1; j < n; j++) {
+let dx = (items[j].nx - items[i].nx) / minNx;
+let dy = (items[j].ny - items[i].ny) / minNy;
+let dist = Math.hypot(dx, dy);
+if (dist < 0.0008) {
+items[j].nx += minNx * 0.55;
+items[j].ny += minNy * (j % 2 === 0 ? 0.45 : -0.45);
+dx = (items[j].nx - items[i].nx) / minNx;
+dy = (items[j].ny - items[i].ny) / minNy;
+dist = Math.hypot(dx, dy);
+}
+if (dist < 1) {
+const push = ((1 - dist) / 2) * 1.12;
+let ux = dx / dist;
+let uy = dy / dist;
+// 가로로 거의 겹치면 이름표가 가려지지 않게 세로로 더 밀어냄
+if (Math.abs(dx) < 0.55) {
+uy += (uy >= 0 ? 1 : -1) * 0.35;
+const nrm = Math.hypot(ux, uy) || 1;
+ux /= nrm;
+uy /= nrm;
+}
+items[i].nx -= ux * push * minNx;
+items[i].ny -= uy * push * minNy;
+items[j].nx += ux * push * minNx;
+items[j].ny += uy * push * minNy;
+}
+}
+}
+items.forEach(clampItem);
+}
+}
+
 function drawSimPlayersOnPitch(ctx, px0, py0, pw, ph, opts) {
 const plA = opts.plA;
 const plB = opts.plB;
 if (!plA || !plB || !plA.length || !plB.length) return;
 const portraitMap = opts.portraitMap;
 const holderId = opts.ballHolderId || null;
-const maxNameW = Math.max(48, pw * 0.22);
-const drawOne = (p, team) => {
+const maxNameW = Math.max(34, Math.min(52, pw * 0.13));
+const prRef = Math.max(11, Math.min(16, pw * 0.028));
+const placed = [];
+[...plA.map((p) => ({ p, team: 'A' })), ...plB.map((p) => ({ p, team: 'B' }))].forEach(({ p, team }) => {
 const teamIsA = team === 'A';
 const base = window.simFieldPositions[team][p.id] || { nx: teamIsA ? 0.25 : 0.75, ny: 0.5 };
-const { nx, ny } = simPlayerLiveNorm(p, teamIsA, base, opts);
+const live = opts.useHomeOnly ? { nx: base.nx, ny: base.ny } : simPlayerLiveNorm(p, teamIsA, base, opts);
+placed.push({ p, team, nx: live.nx, ny: live.ny });
+});
+// 유니폼 폭·이름표 높이까지 포함해 최소 간격을 확보
+separateSimLivePositions(
+placed,
+Math.max(0.11, Math.max(prRef * 2.4, maxNameW * 0.92) / pw),
+Math.max(0.22, (prRef * 4.8) / ph)
+);
+const drawOne = (p, team, nx, ny) => {
+const teamIsA = team === 'A';
 const x = px0 + nx * pw;
 const y = py0 + ny * ph;
 const isHolder = holderId && p.id === holderId;
@@ -3036,16 +3091,13 @@ ctx.fillStyle = isHolder ? 'rgba(254, 249, 195, 0.98)' : 'rgba(248,250,252,0.96)
 ctx.fillText(shown, x, y + pr + 12);
 ctx.textAlign = 'left';
 };
-const entries = [
-...plA.map((p) => ({ p, team: 'A' })),
-...plB.map((p) => ({ p, team: 'B' }))
-];
-entries.sort((a, b) => {
+placed.sort((a, b) => {
+if (Math.abs(a.ny - b.ny) > 0.002) return a.ny - b.ny;
 const ah = a.p.id === holderId ? 1 : 0;
 const bh = b.p.id === holderId ? 1 : 0;
 return ah - bh;
 });
-entries.forEach(({ p, team }) => drawOne(p, team));
+placed.forEach(({ p, team, nx, ny }) => drawOne(p, team, nx, ny));
 }
 
 /** 전술 보드 캔버스: 배치 전용(공 없음) */
@@ -3062,7 +3114,7 @@ const portraitMap = plAll.length ? await buildSimPitchPortraitMap(plAll) : new M
 const ctx = canvas.getContext('2d');
 const wrap = canvas.parentElement;
 const cssW = Math.min(720, Math.max(260, wrap?.clientWidth || 320));
-const cssH = Math.max(180, Math.min(340, Math.floor(cssW * 0.42)));
+const cssH = Math.max(200, Math.min(380, Math.floor(cssW * 0.5)));
 const dpr = Math.min(2, window.devicePixelRatio || 1);
 canvas.width = Math.floor(cssW * dpr);
 canvas.height = Math.floor(cssH * dpr);
@@ -3089,6 +3141,7 @@ ctx.fillText('레드팀 ←  |  → 블루팀', px0 + 4, py0 + ph + 14);
 drawSimPlayersOnPitch(ctx, px0, py0, pw, ph, {
 plA: padA.roster,
 plB: padB.roster,
+useHomeOnly: true,
 attackA: true,
 channel: 'center',
 phase: 'build',
@@ -3237,6 +3290,8 @@ const teamBName = SIM_TEAM_B_NAME;
 
 const btn = document.getElementById('btnSimStart');
 if (btn) { btn.disabled = true; btn.classList.add('opacity-50', 'cursor-not-allowed'); }
+const omKick = window.officialMatch || {};
+const gmOfficialKick = !!(window.playerState && window.playerState.isGM && document.getElementById('simOfficialKickoff')?.checked && (omKick.status === 'open' || omKick.status === 'live'));
 
 const logEl = document.getElementById('simMatchLog');
 const scoreBar = document.getElementById('simScoreBar');
@@ -3623,16 +3678,13 @@ await append(`[연습 모드] 실제 소속 인원이 5명 미만인 팀은 자�
 }
 await append(`전력 요약: ${teamAName} 출전 OVR 합 ${strA} (${mentLabel(mentA)})  |  ${teamBName} 출전 OVR 합 ${strB} (${mentLabel(mentB)})`, kickPitch);
 await append(`[전반 00:00] 킥오프 — 패스 vs 가로채기, 드리블 vs 수비, 슈팅 vs 반사신경으로 판정합니다. 공격적 템포는 슈팅을 늘리고, 수비적은 실점을 줄입니다.`, kickPitch);
-if (isMateSimLinkEnabled() && window.playerState && window.playerState.isGM) {
+if (gmOfficialKick) {
 try {
-const wcKick = window.mateWcState || {};
-if (!wcKick.settled) {
-await closeMateBettingForKickoff();
-await append('[승부예측] 메이트 학급 베팅을 마감했습니다. 경기 종료 후 점수대로 학급 봉이 지급됩니다.');
-}
+await closeOfficialBettingForKickoff();
+await append('[공식 경기] 베팅을 마감했습니다. 종료 후 삼봉FC 봉으로 정산합니다.');
 } catch (kickBetErr) {
-console.error('closeMateBettingForKickoff', kickBetErr);
-await append(`[승부예측] 베팅 마감에 실패했습니다: ${kickBetErr && kickBetErr.message ? kickBetErr.message : kickBetErr}`);
+console.error('closeOfficialBettingForKickoff', kickBetErr);
+await append(`[공식 경기] 베팅 마감에 실패했습니다: ${kickBetErr && kickBetErr.message ? kickBetErr.message : kickBetErr}`);
 }
 }
 
@@ -3658,7 +3710,7 @@ await append(`[휴식] 하프타임 — 전술을 가다듬습니다.`);
 await append(`━━ 최종 스코어 ${teamAName} ${sa} : ${sb} ${teamBName} ━━`);
 await append(`(모의 시뮬레이션 종료 · 서버 기록·EXP 미반영)`);
 renderSimPostMatchStats(plA, plB, teamAName, teamBName, simStats, live, ratings);
-await maybeSettleMateBetsAfterSim(sa, sb, teamAName, teamBName);
+await maybeSettleOfficialBetsAfterSim(sa, sb, teamAName, teamBName, gmOfficialKick);
 } finally {
 if (btn) { btn.disabled = false; btn.classList.remove('opacity-50', 'cursor-not-allowed'); }
 document.getElementById('simTacticalSection')?.classList.remove('hidden');
@@ -3770,173 +3822,6 @@ window.customAlert(`쇼츠 등록 에러:\n${e.message}`);
 }
 };
 
-const MATE_CLASS_ID = import.meta.env.VITE_MATE_APP_ID || 'sambong-class-2026';
-const MATE_WC_MATCH_ID = 'kr_r32_2026';
-const MATE_APP_URL = 'https://dmlwjd85.github.io/2026sambong6/';
-window.mateWcState = window.mateWcState || null;
-window.mateStudents = window.mateStudents || [];
-
-function mateNormalizeBong(v) {
-const n = Number(v);
-if (!Number.isFinite(n)) return 0;
-return Math.floor(n);
-}
-function mateSettingsRef() {
-return doc(db, 'artifacts', MATE_CLASS_ID, 'public', 'data', 'settings', 'global');
-}
-function getMatePendingBets() {
-const rows = [];
-(window.mateStudents || []).forEach((stu) => {
-(Array.isArray(stu.worldCupBets) ? stu.worldCupBets : []).forEach((bet) => {
-if (bet && String(bet.matchId) === MATE_WC_MATCH_ID && bet.status === 'pending') {
-rows.push({ ...bet, studentId: stu.id, studentName: stu.name || bet.studentName || stu.id });
-}
-});
-});
-return rows;
-}
-function updateMateBetStatusUi() {
-const wc = window.mateWcState || {};
-const pending = getMatePendingBets();
-const stEl = document.getElementById('simMateBetStatus');
-if (stEl) {
-if (wc.settled) stEl.textContent = `메이트: 정산 완료 · 최근 ${Number(wc.lastSim?.sa)||0}-${Number(wc.lastSim?.sb)||0}`;
-else if (wc.bettingOpen) stEl.textContent = `메이트: 베팅 접수 중 · 대기 ${pending.length}건`;
-else stEl.textContent = `메이트: 베팅 마감 · 대기 ${pending.length}건 · 경기 종료 시 지급`;
-}
-const betVal = document.getElementById('betWalletBong');
-if (betVal) betVal.textContent = String(pending.length);
-}
-
-/** 매치 센터 체크박스가 켜져 있으면 메이트 학급 베팅과 연동합니다 */
-function isMateSimLinkEnabled() {
-const el = document.getElementById('simLinkMateBet');
-return !el || !!el.checked;
-}
-
-async function closeMateBettingForKickoff() {
-if (!window.playerState || !window.playerState.isGM) return;
-checkAuthReady();
-const snap = await getDoc(mateSettingsRef());
-const wc = snap.exists() ? (snap.data().worldCupBet || {}) : {};
-if (wc.settled) return;
-const nextWc = {
-...wc,
-matchId: MATE_WC_MATCH_ID,
-simLinked: true,
-bettingOpen: false,
-simKickoffAt: Date.now()
-};
-await setDoc(mateSettingsRef(), { worldCupBet: nextWc }, { merge: true });
-window.mateWcState = nextWc;
-updateMateBetStatusUi();
-}
-
-/** 모의 최종 점수로 메이트 승부예측을 정산합니다 (감독 + 연동 체크 시에만) */
-async function maybeSettleMateBetsAfterSim(sa, sb, teamAName, teamBName) {
-if (!isMateSimLinkEnabled()) return;
-if (!window.playerState || !window.playerState.isGM) {
-await window.customAlert('모의경기는 끝났습니다.\n학급 베팅 정산은 감독 계정으로 메이트 연동 경기를 다시 돌려 주세요.');
-return;
-}
-const wc = window.mateWcState || {};
-if (wc.settled) {
-await window.customAlert('메이트 베팅은 이미 정산된 상태입니다.\n다음 라운드는 메이트에서 ‘다음 모의경기 베팅 열기’를 한 뒤 다시 돌려 주세요.');
-return;
-}
-let r32Override = null;
-let r32Label = '';
-if (sa > sb) {
-r32Label = '한국(레드) 승 · 32강 진출';
-} else if (sa < sb) {
-r32Label = '상대(블루) 승 · 탈락';
-} else {
-const asEliminate = await window.customConfirm(
-`모의경기 무승부 ${sa} : ${sb}입니다.\n학급 베팅은 승/패만 있습니다.\n\n진행 = 상대(블루) 승·탈락으로 정산\n취소 = 이번엔 정산하지 않기`
-);
-if (!asEliminate) {
-await window.customAlert('무승부라서 학급 베팅은 정산하지 않았습니다.');
-return;
-}
-r32Override = 'eliminate';
-r32Label = '상대(블루) 승 · 탈락 (무승부 처리)';
-}
-if (sa !== sb) {
-const ok = await window.customConfirm(
-`모의 최종 ${teamAName} ${sa} : ${sb} ${teamBName}\n→ ${r32Label}\n\n메이트 학급 베팅을 정산하고 학급 봉을 지급할까요?`
-);
-if (!ok) return;
-}
-try {
-const res = await window.settleMateWorldCupFromSim({ sa, sb, teamAName, teamBName, r32Override });
-if (!res || res.skipped) return;
-await window.customAlert(
-`메이트 승부예측 정산 완료!\n${r32Label}\n적중 ${res.winnerCount}건 · 총 지급 ${res.totalPayout} 봉`
-);
-} catch (e) {
-console.error('maybeSettleMateBetsAfterSim', e);
-await window.customAlert(`학급 베팅 정산에 실패했습니다.\n${e && e.message ? e.message : e}`);
-}
-}
-
-/** 모의 점수로 메이트 학급 worldCupBets를 정산하고 봉을 지급합니다 */
-window.settleMateWorldCupFromSim = async ({ sa, sb, teamAName, teamBName, r32Override }) => {
-checkAuthReady();
-if (!window.playerState || !window.playerState.isGM) {
-throw new Error('감독 계정으로만 학급 베팅을 정산할 수 있습니다.');
-}
-let r32 = r32Override || null;
-if (!r32) {
-if (sa > sb) r32 = 'advance';
-else if (sa < sb) r32 = 'eliminate';
-}
-if (!r32) return { skipped: 'draw' };
-const settingsSnap = await getDoc(mateSettingsRef());
-const wc = settingsSnap.exists() ? (settingsSnap.data().worldCupBet || {}) : {};
-if (wc.settled) throw new Error('메이트에서 이미 정산된 경기입니다.');
-const stuSnap = await getDocs(collection(db, 'artifacts', MATE_CLASS_ID, 'public', 'data', 'students'));
-const batch = writeBatch(db);
-const settledAt = Date.now();
-let winnerCount = 0;
-let totalPayout = 0;
-stuSnap.forEach((studentDoc) => {
-if (studentDoc.id === 'student_gm' || studentDoc.id === 'student_gm_a') return;
-const data = studentDoc.data() || {};
-const bets = Array.isArray(data.worldCupBets) ? data.worldCupBets : [];
-let payoutSum = 0;
-let changed = false;
-const nextBets = bets.map((bet) => {
-if (!bet || String(bet.matchId) !== MATE_WC_MATCH_ID || bet.status !== 'pending') return bet;
-changed = true;
-const won = String(bet.pick) === String(r32);
-const payout = won ? mateNormalizeBong(Number(bet.stake || 0) * Number(bet.odds || 0)) : 0;
-if (won) {
-payoutSum += payout;
-winnerCount += 1;
-}
-return { ...bet, status: won ? 'won' : 'lost', payout, settledAt };
-});
-if (!changed) return;
-const payload = { worldCupBets: nextBets.slice(-40) };
-if (payoutSum > 0) payload.bong = increment(payoutSum);
-batch.set(studentDoc.ref, payload, { merge: true });
-totalPayout += payoutSum;
-});
-const nextWc = {
-matchId: MATE_WC_MATCH_ID,
-bettingOpen: false,
-settled: true,
-simLinked: true,
-result: { r32 },
-settledAt,
-lastSim: { sa, sb, teamAName, teamBName, r32, at: settledAt }
-};
-batch.set(mateSettingsRef(), { worldCupBet: nextWc }, { merge: true });
-await batch.commit();
-window.mateWcState = nextWc;
-updateMateBetStatusUi();
-return { winnerCount, totalPayout, r32 };
-};
 
 const WC_HOUSE_MARGIN = 0.15;
 const WC_MAX_STAKE = 200;
@@ -3944,6 +3829,243 @@ function wcOddsFromProb(prob) {
 const adjusted = Math.min(0.95, Number(prob) * (1 + WC_HOUSE_MARGIN));
 return Math.max(1.05, Math.round((1 / adjusted) * 100) / 100);
 }
+window.officialMatch = window.officialMatch || { status: 'idle' };
+function officialMatchRef() {
+return doc(db, 'artifacts', appId, 'public', 'data', 'config', 'officialMatch');
+}
+function floorBong(v) {
+const n = Number(v);
+if (!Number.isFinite(n)) return 0;
+return Math.max(0, Math.floor(n));
+}
+function computeOfficialOdds() {
+const a = getSimMatchRoster('A');
+const b = getSimMatchRoster('B');
+const oa = a.length ? a.reduce((s, p) => s + getOVR(p), 0) / a.length : STAT_BASE;
+const ob = b.length ? b.reduce((s, p) => s + getOVR(p), 0) / b.length : STAT_BASE;
+const pA = 1 / (1 + Math.pow(10, (ob - oa) / 40));
+const clamp = Math.max(0.18, Math.min(0.82, pA));
+return { oddsA: wcOddsFromProb(clamp), oddsB: wcOddsFromProb(1 - clamp) };
+}
+function getPendingOfficialBets(matchId) {
+const mid = matchId || (window.officialMatch && window.officialMatch.matchId);
+if (!mid) return [];
+return (window.allPlayersData || []).map((p) => {
+const b = p.officialBet;
+if (b && String(b.matchId) === String(mid) && b.status === 'pending') {
+return { ...b, playerId: p.id, playerName: p.name };
+}
+return null;
+}).filter(Boolean);
+}
+function officialStatusLabel(m) {
+if (!m || m.status === 'idle') return { t: '연습만', cls: 'text-slate-400' };
+if (m.status === 'open') return { t: '베팅 접수 중', cls: 'text-amber-300' };
+if (m.status === 'live') return { t: '공식 경기 진행', cls: 'text-red-300' };
+if (m.status === 'settled') return { t: '정산 완료', cls: 'text-emerald-300' };
+if (m.status === 'closed') return { t: '베팅 마감', cls: 'text-slate-300' };
+return { t: m.status, cls: 'text-slate-400' };
+}
+window.renderOfficialBetPanel = () => {
+const m = window.officialMatch || { status: 'idle' };
+const stEl = document.getElementById('officialBetStatus');
+const lab = officialStatusLabel(m);
+if (stEl) { stEl.textContent = lab.t; stEl.className = `text-[10px] font-black ${lab.cls} shrink-0`; }
+const gmBar = document.getElementById('officialBetGmBar');
+if (gmBar) {
+if (window.playerState && window.playerState.isGM) gmBar.classList.remove('hidden');
+else gmBar.classList.add('hidden');
+}
+const box = document.getElementById('officialBetMarket');
+if (!box) return;
+const pending = getPendingOfficialBets(m.matchId);
+const me = (window.allPlayersData || []).find((x) => x.id === window.playerState.id);
+const myBet = me && me.officialBet && String(me.officialBet.matchId) === String(m.matchId) ? me.officialBet : null;
+const wallet = me ? floorBong(me.bong) : 0;
+const oddsA = Number(m.oddsA) || 1.85;
+const oddsB = Number(m.oddsB) || 1.85;
+const canBet = !!(window.playerState && !window.playerState.isGuest && !window.playerState.isGM && m.status === 'open' && !myBet);
+let market = '';
+if (m.status === 'open' || m.status === 'live' || m.status === 'closed' || m.status === 'settled') {
+const resTxt = m.result === 'A' ? '레드팀 승' : m.result === 'B' ? '블루팀 승' : m.result === 'draw' ? '무승부(환급)' : '';
+market += `<div class="grid grid-cols-2 gap-2 mb-2">
+<button type="button" ${canBet ? `onclick="window.placeOfficialBet('A')"` : 'disabled'} class="rounded-xl border border-red-500/40 bg-red-950/40 px-3 py-2 text-left ${canBet ? 'hover:border-red-300' : 'opacity-80'}">
+<div class="text-xs font-black text-red-100">레드팀 승</div>
+<div class="text-[10px] text-fut-gold font-black">${oddsA.toFixed(2)}x</div>
+</button>
+<button type="button" ${canBet ? `onclick="window.placeOfficialBet('B')"` : 'disabled'} class="rounded-xl border border-blue-500/40 bg-blue-950/40 px-3 py-2 text-left ${canBet ? 'hover:border-blue-300' : 'opacity-80'}">
+<div class="text-xs font-black text-blue-100">블루팀 승</div>
+<div class="text-[10px] text-fut-gold font-black">${oddsB.toFixed(2)}x</div>
+</button>
+</div>`;
+if (resTxt) market += `<p class="text-[11px] text-emerald-300 mb-1">결과: ${escapeHtml(resTxt)}${m.lastScore ? ` · ${m.lastScore.sa}-${m.lastScore.sb}` : ''}</p>`;
+if (myBet) {
+const mine = myBet.status === 'pending' ? '대기' : myBet.status === 'won' ? `적중 +${floorBong(myBet.payout)}B` : myBet.status === 'refund' ? '환급' : '미적중';
+market += `<p class="text-[11px] text-amber-200 mb-1">내 베팅: ${myBet.pick === 'A' ? '레드' : '블루'} ${floorBong(myBet.stake)}B · ${mine}</p>`;
+} else if (window.playerState && !window.playerState.isGuest && !window.playerState.isGM && m.status === 'open') {
+market += `<p class="text-[10px] text-slate-400 mb-1">보유 ${wallet} B · 한 경기에 한 번만 걸 수 있습니다.</p>`;
+}
+if (window.playerState && window.playerState.isGM) {
+const list = pending.length
+? pending.slice(0, 40).map((b) => `<div class="flex justify-between gap-2 text-[11px] py-0.5 border-b border-slate-800/80"><span class="text-white truncate">${escapeHtml(b.playerName)} · ${b.pick === 'A' ? '레드' : '블루'} · ${floorBong(b.stake)}B</span><span class="text-amber-300 shrink-0">대기</span></div>`).join('')
+: '<p class="text-[11px] text-slate-500 text-center py-2">대기 중인 베팅이 없습니다.</p>';
+market += `<div class="text-[10px] font-black text-slate-400 mb-1">대기 ${pending.length}건</div><div class="max-h-40 overflow-y-auto">${list}</div>`;
+}
+} else {
+market = '<p class="text-[11px] text-slate-500">선생님이 공식 경기 베팅을 열면 여기에 배당이 뜹니다.</p>';
+}
+box.innerHTML = market;
+};
+window.openOfficialBetting = async () => {
+try {
+checkAuthReady();
+if (!window.playerState || !window.playerState.isGM) return;
+if (countSimTeam('A') < 1 || countSimTeam('B') < 1) return window.customAlert('레드/블루에 선수를 먼저 배정한 뒤 베팅을 열어 주세요.');
+const cur = window.officialMatch || {};
+if (cur.status === 'open') return window.customAlert('이미 베팅이 열려 있습니다.');
+if (cur.status === 'live') return window.customAlert('공식 경기가 진행 중입니다. 종료 후 다시 열어 주세요.');
+const { oddsA, oddsB } = computeOfficialOdds();
+const next = {
+matchId: 'om_' + Date.now(),
+status: 'open',
+teamAName: SIM_TEAM_A_NAME,
+teamBName: SIM_TEAM_B_NAME,
+oddsA, oddsB,
+openedAt: Date.now(),
+openedBy: window.playerState.id,
+result: null,
+lastScore: null
+};
+await setDoc(officialMatchRef(), next, { merge: true });
+window.officialMatch = next;
+window.renderOfficialBetPanel();
+window.customAlert(`공식 경기 베팅을 열었습니다.\n레드 ${oddsA.toFixed(2)}x · 블루 ${oddsB.toFixed(2)}x`);
+} catch (e) { console.error(e); window.customAlert(`베팅 열기 실패:\n${e.message}`); }
+};
+window.closeOfficialBetting = async () => {
+try {
+checkAuthReady();
+if (!window.playerState || !window.playerState.isGM) return;
+const cur = window.officialMatch || {};
+if (cur.status !== 'open') return window.customAlert('열려 있는 베팅이 없습니다.');
+const next = { ...cur, status: 'closed', closedAt: Date.now() };
+await setDoc(officialMatchRef(), next, { merge: true });
+window.officialMatch = next;
+window.renderOfficialBetPanel();
+} catch (e) { window.customAlert(e.message); }
+};
+async function closeOfficialBettingForKickoff() {
+if (!window.playerState || !window.playerState.isGM) return;
+checkAuthReady();
+const snap = await getDoc(officialMatchRef());
+const cur = snap.exists() ? snap.data() : (window.officialMatch || {});
+if (cur.status === 'settled') return;
+const next = { ...cur, status: 'live', kickoffAt: Date.now() };
+await setDoc(officialMatchRef(), next, { merge: true });
+window.officialMatch = next;
+window.renderOfficialBetPanel();
+}
+window.placeOfficialBet = async (pick) => {
+try {
+checkAuthReady();
+if (!window.playerState || window.playerState.isGuest || window.playerState.isGM) return window.customAlert('학생 계정으로만 베팅할 수 있습니다.');
+const m = window.officialMatch || {};
+if (m.status !== 'open') return window.customAlert('지금은 베팅을 받지 않습니다. 선생님이 공식 경기를 열어 주세요.');
+const p = (window.allPlayersData || []).find((x) => x.id === window.playerState.id);
+if (!p) return;
+if (p.officialBet && String(p.officialBet.matchId) === String(m.matchId) && p.officialBet.status === 'pending') {
+return window.customAlert('이미 이 경기에 베팅했습니다.');
+}
+const odds = pick === 'A' ? Number(m.oddsA) : Number(m.oddsB);
+const wallet = floorBong(p.bong);
+const cap = Math.min(WC_MAX_STAKE, wallet);
+if (cap < 1) return window.customAlert('봉이 부족합니다.');
+const stake = await window.pickBongStake({
+title: '공식 경기 베팅',
+label: pick === 'A' ? '레드팀 승' : '블루팀 승',
+odds, wallet, max: cap
+});
+if (!stake) return;
+if (stake > cap) return window.customAlert('걸 수 있는 금액을 넘었습니다.');
+const bet = { matchId: m.matchId, pick, stake, odds, status: 'pending', placedAt: Date.now() };
+const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
+await setDoc(docRef, { bong: wallet - stake, officialBet: bet }, { merge: true });
+window.customAlert(`${pick === 'A' ? '레드' : '블루'}에 ${stake} B를 걸었습니다.`);
+window.renderOfficialBetPanel();
+} catch (e) { console.error(e); window.customAlert(`베팅 실패:\n${e.message}`); }
+};
+async function maybeSettleOfficialBetsAfterSim(sa, sb, teamAName, teamBName, isOfficial) {
+if (!isOfficial) return;
+if (!window.playerState || !window.playerState.isGM) return;
+const m = window.officialMatch || {};
+if (m.status === 'settled') {
+await window.customAlert('이 공식 경기는 이미 정산되었습니다.');
+return;
+}
+let result = 'draw';
+let label = '무승부 · 걸었던 봉을 환급합니다';
+if (sa > sb) { result = 'A'; label = '레드팀 승'; }
+else if (sa < sb) { result = 'B'; label = '블루팀 승'; }
+const ok = await window.customConfirm(`공식 경기 최종 ${teamAName} ${sa} : ${sb} ${teamBName}\n→ ${label}\n\n삼봉FC 봉으로 베팅을 정산할까요?`);
+if (!ok) return;
+try {
+const res = await settleOfficialMatch({ sa, sb, teamAName, teamBName, result });
+if (!res) return;
+await window.customAlert(`공식 경기 정산 완료!\n${label}\n적중 ${res.winnerCount}건 · 지급 ${res.totalPayout} B · 환급 ${res.refundCount}건`);
+} catch (e) {
+console.error(e);
+await window.customAlert(`정산 실패:\n${e && e.message ? e.message : e}`);
+}
+}
+async function settleOfficialMatch({ sa, sb, teamAName, teamBName, result }) {
+checkAuthReady();
+if (!window.playerState || !window.playerState.isGM) throw new Error('감독 계정으로만 정산할 수 있습니다.');
+const snap = await getDoc(officialMatchRef());
+const cur = snap.exists() ? snap.data() : (window.officialMatch || {});
+if (cur.status === 'settled') throw new Error('이미 정산된 공식 경기입니다.');
+const matchId = cur.matchId;
+const settledAt = Date.now();
+const batch = writeBatch(db);
+let winnerCount = 0;
+let refundCount = 0;
+let totalPayout = 0;
+(window.allPlayersData || []).forEach((p) => {
+const b = p.officialBet;
+if (!b || String(b.matchId) !== String(matchId) || b.status !== 'pending') return;
+const stake = floorBong(b.stake);
+let status = 'lost';
+let payout = 0;
+if (result === 'draw') {
+status = 'refund';
+payout = stake;
+refundCount += 1;
+} else if (String(b.pick) === String(result)) {
+status = 'won';
+payout = floorBong(stake * Number(b.odds || 0));
+winnerCount += 1;
+}
+totalPayout += payout;
+const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
+const payload = { officialBet: { ...b, status, payout, settledAt } };
+if (payout > 0) payload.bong = increment(payout);
+batch.set(docRef, payload, { merge: true });
+});
+const next = {
+...cur,
+status: 'settled',
+result,
+settledAt,
+lastScore: { sa, sb },
+teamAName, teamBName
+};
+batch.set(officialMatchRef(), next, { merge: true });
+await batch.commit();
+window.officialMatch = next;
+window.renderOfficialBetPanel();
+return { winnerCount, refundCount, totalPayout, result };
+}
+
+
 function defaultWcBoard() {
 return {
 updatedAt: new Date().toISOString(),
@@ -3951,7 +4073,7 @@ matches: [
 {
 id: 'kr_r32_2026',
 title: '대한민국 32강 진출 예측',
-subtitle: '메이트 학급 월드컵과 동일 시장',
+subtitle: '삼봉FC 공식 경기와 별도 예측 보드',
 kickoffLabel: '2026 월드컵',
 status: 'open',
 result: null,
@@ -3993,41 +4115,11 @@ await setDoc(wcBoardRef(), defaultWcBoard(), { merge: true });
 } catch (e) { console.error('wcBoard seed', e); }
 };
 window.renderWorldCupBetBoard = () => {
-const el = document.getElementById('wcBetBoard');
-if (!el) return;
-updateMateBetStatusUi();
-const wc = window.mateWcState || {};
-const pending = getMatePendingBets();
-const st = wc.settled ? '정산 완료' : (wc.bettingOpen === false ? '베팅 마감' : '베팅 접수 중');
-const stCls = wc.settled ? 'text-emerald-300' : (wc.bettingOpen === false ? 'text-amber-300' : 'text-red-300');
-const r32 = wc.result && wc.result.r32;
-const r32Label = r32 === 'advance' ? '한국(레드) 승 · 32강 진출' : (r32 === 'eliminate' ? '상대(블루) 승 · 탈락' : '');
-const last = wc.lastSim;
-const listHtml = pending.length
-? pending.slice(0, 40).map((b) => `<div class="flex justify-between gap-2 text-[11px] py-0.5 border-b border-slate-800/80"><span class="text-white truncate">${escapeHtml(b.studentName || b.studentId)} · ${escapeHtml(b.label || b.pick)} · ${b.stake}B</span><span class="text-amber-300 shrink-0">대기</span></div>`).join('')
-: '<p class="text-[11px] text-slate-500 text-center py-4">대기 중인 학급 베팅이 없습니다.</p>';
-el.innerHTML = `<article class="rounded-2xl border border-red-800/40 bg-slate-950/50 p-4">
-<div class="flex items-start justify-between gap-2 mb-2">
-<div>
-<h4 class="font-display text-lg text-red-200">삼봉FC 모의 월드컵</h4>
-<p class="text-[10px] text-slate-500">메이트와 동일 시장 · 레드=한국 진출 · 블루=탈락</p>
-</div>
-<span class="text-[10px] font-black ${stCls} shrink-0">${st}</span>
-</div>
-${r32Label ? `<p class="text-[11px] text-emerald-300 mb-2">결과: ${escapeHtml(r32Label)}</p>` : ''}
-${last ? `<p class="text-[11px] text-slate-300 mb-2">최근 모의 ${escapeHtml(last.teamAName || '레드')} ${Number(last.sa)||0} : ${Number(last.sb)||0} ${escapeHtml(last.teamBName || '블루')}</p>` : ''}
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
-<div class="rounded-xl border border-red-500/30 bg-slate-950/70 px-3 py-2"><div class="text-sm text-white font-black">한국(레드) 승 · 32강 진출</div><div class="text-[10px] text-red-200/80">배당 2.29x</div></div>
-<div class="rounded-xl border border-red-500/30 bg-slate-950/70 px-3 py-2"><div class="text-sm text-white font-black">상대(블루) 승 · 탈락</div><div class="text-[10px] text-red-200/80">배당 1.40x</div></div>
-</div>
-<div class="text-[10px] font-black text-slate-400 mb-1">학급 대기 베팅 ${pending.length}건</div>
-<div class="max-h-56 overflow-y-auto">${listHtml}</div>
-<p class="text-[10px] text-slate-500 text-center mt-3">베팅은 <a href="${MATE_APP_URL}" target="_blank" rel="noopener" class="text-amber-300 underline">메이트</a>에서 · 정산은 매치 센터 모의경기(감독)</p>
-</article>`;
+window.renderOfficialBetPanel();
 };
 
-window.placeFcWorldCupBet = async () => {
-window.customAlert('베팅은 메이트 학급 앱에서 합니다.\n' + MATE_APP_URL);
+window.placeFcWorldCupBet = async (pick) => {
+window.placeOfficialBet(pick === 'advance' ? 'A' : 'B');
 };
 
 window.setWcMatchStatus = async (matchId, status) => {
@@ -4440,6 +4532,7 @@ if(isVisible('tabRank')) renderLeaderboard();
 if(isVisible('tabMaster')) renderMasterDashboard();
 if(isVisible('tabCompare')) window.renderCompareList();
 if(isVisible('tabSim')) window.renderSimMatchTab();
+else window.renderOfficialBetPanel();
 if(isVisible('tabMasterStats')) window.renderMasterStats();
 updateNavBongChip();
 }, (error) => console.error("Players Listen Error:", error));
@@ -4494,25 +4587,10 @@ window.wcBoard = defaultWcBoard();
 }
 }, (error) => console.error("wcBoard Listen Error:", error));
 
-onSnapshot(mateSettingsRef(), (docSnap) => {
-window.mateWcState = docSnap.exists() ? (docSnap.data().worldCupBet || null) : null;
-updateMateBetStatusUi();
-}, (error) => console.error('mate worldCupBet Listen Error:', error));
-
-onSnapshot(collection(db, 'artifacts', MATE_CLASS_ID, 'public', 'data', 'students'), (snapshot) => {
-const students = [];
-snapshot.forEach((d) => {
-if (d.id === 'student_gm' || d.id === 'student_gm_a') return;
-const data = d.data() || {};
-students.push({
-id: String(d.id).replace(/^student_/, ''),
-name: data.name || d.id,
-worldCupBets: Array.isArray(data.worldCupBets) ? data.worldCupBets : []
-});
-});
-window.mateStudents = students;
-updateMateBetStatusUi();
-}, (error) => console.error('mate students Listen Error:', error));
+onSnapshot(officialMatchRef(), (docSnap) => {
+window.officialMatch = docSnap.exists() ? docSnap.data() : { status: 'idle' };
+window.renderOfficialBetPanel();
+}, (error) => console.error('officialMatch Listen Error:', error));
 
 document.getElementById('loadingOverlay')?.classList.add('hidden');
 
