@@ -1,10 +1,11 @@
 {
+  "id": "/sambong-FC/",
   "name": "삼봉 FC",
   "short_name": "삼봉 FC",
   "description": "삼봉초 6학년 축구 커리어 모드",
   "lang": "ko",
-  "start_url": "./",
-  "scope": "./",
+  "start_url": "/sambong-FC/",
+  "scope": "/sambong-FC/",
   "display": "standalone",
   "background_color": "#0B1F14",
   "theme_color": "#0B3B22",
