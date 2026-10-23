@@ -33,14 +33,27 @@ export function parseStartedAt(value) {
   return null;
 }
 
+const SEASON_STAT_KEYS = ['pac', 'sho', 'pas', 'dri', 'def', 'phy', 'ref', 'int', 'pst', 'dis', 'cmp', 'wrk'];
+
+export function seasonStartStatMap(base) {
+  const start = Number(base);
+  const out = {};
+  SEASON_STAT_KEYS.forEach((key) => { out[key] = start; });
+  return out;
+}
+
 export function formatSeasonStartLabel(value) {
   const d = parseStartedAt(value);
   if (!d) return '';
-  return new Intl.DateTimeFormat('ko-KR', {
+  const ymd = new Intl.DateTimeFormat('ko-KR', {
     timeZone: 'Asia/Seoul',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
+  }).format(d);
+  const weekday = new Intl.DateTimeFormat('ko-KR', {
+    timeZone: 'Asia/Seoul',
     weekday: 'short',
   }).format(d);
+  return `${ymd}(${weekday})`;
 }

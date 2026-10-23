@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { diffStatChanges, pushUndo, popUndo, revertStatMap } from './activityUndo.js';
-import { formatSeasonStartLabel, parseStartedAt } from './seasonDate.js';
+import { formatSeasonStartLabel, parseStartedAt, seasonStartStatMap } from './seasonDate.js';
 
 const KEYS = ['sho', 'pac'];
 
@@ -45,6 +45,12 @@ test('startedAt이 없으면 날짜를 만들지 않는다', () => {
   assert.equal(formatSeasonStartLabel('아직 몰라요'), '');
 });
 
+test('신규 카드 능력치는 모두 같은 출발값이다', () => {
+  const stats = seasonStartStatMap(55);
+  assert.equal(Object.keys(stats).length, 12);
+  Object.values(stats).forEach((value) => assert.equal(value, 55));
+});
+
 test('Timestamp, 초, 밀리초, 문자열을 같은 날로 읽는다', () => {
   const iso = '2026-10-23T03:00:00.000Z';
   const ms = Date.parse(iso);
@@ -60,9 +66,7 @@ test('Timestamp, 초, 밀리초, 문자열을 같은 날로 읽는다', () => {
   ];
   samples.forEach((value) => {
     const label = formatSeasonStartLabel(value);
-    assert.match(label, /2026/);
-    assert.match(label, /10월/);
-    assert.match(label, /23/);
+    assert.match(label, /2026년 10월 23일\(금\)/);
     assert.ok(parseStartedAt(value) instanceof Date);
   });
 });

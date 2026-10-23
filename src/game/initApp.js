@@ -5,7 +5,7 @@ import confetti from 'canvas-confetti';
 import { getMangaFaceHtml, resolveFaceSrc, getDefaultSkinRel } from './mangaFace.js';
 import { featureOn } from '../config/features.js';
 import { diffStatChanges, pushUndo, popUndo, revertStatMap } from './activityUndo.js';
-import { formatSeasonStartLabel } from './seasonDate.js';
+import { formatSeasonStartLabel, seasonStartStatMap } from './seasonDate.js';
 
 // Vite 빌드 시 .env의 VITE_APP_ID 사용, 없으면 기본값 (기존 단일 HTML과 동일)
 const appId = import.meta.env.VITE_APP_ID || (typeof globalThis.__app_id !== 'undefined' ? globalThis.__app_id : 'sambong-futsal-ultimate'); 
@@ -70,6 +70,14 @@ const raw = p && typeof p.name === 'string' ? p.name.trim() : '';
 if (raw) return raw;
 const id = p && p.id ? String(p.id) : '';
 return id.replace(/^player_/, '') || '선수';
+}
+
+function canEditThisPlayer(pId) {
+const ps = window.playerState || {};
+if (!ps.id || ps.isGuest) return false;
+if (ps.isGM) return true;
+const mine = String(ps.id);
+return String(pId) === mine || getSafeDocId(pId) === mine;
 }
 
 function stripPrivate(data) {
@@ -152,16 +160,43 @@ const STAT_DESC = {
 'wrk': '🔥 활동량 (Work Rate)\n\n경기장 전 지역을 쉴 새 없이 뛰어다니는 체력과 투지입니다.\n공이 없을 때(오프더볼) 공간을 창출하고 팀을 돕는 헌신적인 능력입니다.'
 };
 
-window.customAlert = (m) => new Promise(r => {
-const d = document.createElement('div'); d.className = "fixed inset-0 z-[6000] flex items-center justify-center bg-black/80 px-4";
-d.innerHTML = `<div class="bg-pitch-panel p-6 sm:p-8 rounded-3xl border-2 border-fut-gold max-w-sm w-full text-center space-y-4 shadow-2xl"><h3 class="text-xl font-display text-white">알림</h3><p class="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed break-keep">${m}</p><button id="bOk" class="bg-fut-gold text-slate-900 font-bold py-2.5 px-8 rounded-xl w-full hover:bg-yellow-400 transition mt-4">확인</button></div>`;
-document.body.appendChild(d); document.getElementById('bOk').onclick = () => { d.remove(); r(true); };
+const dialogQueue = [];
+let dialogBusy = false;
+
+function enqueueDialog(render) {
+return new Promise((resolve) => {
+dialogQueue.push({ render, resolve });
+pumpDialogQueue();
+});
+}
+
+function pumpDialogQueue() {
+if (dialogBusy || !dialogQueue.length) return;
+dialogBusy = true;
+const job = dialogQueue.shift();
+const done = (value) => {
+job.resolve(value);
+dialogBusy = false;
+pumpDialogQueue();
+};
+job.render(done);
+}
+
+window.customAlert = (m) => enqueueDialog((done) => {
+const d = document.createElement('div');
+d.className = 'app-dialog fixed inset-0 z-[6000] flex items-center justify-center bg-black/80 px-4';
+d.innerHTML = `<div class="bg-pitch-panel p-6 sm:p-8 rounded-3xl border-2 border-fut-gold max-w-sm w-full text-center space-y-4 shadow-2xl"><h3 class="text-xl font-display text-white">알림</h3><p class="text-base text-slate-100 whitespace-pre-wrap leading-relaxed break-keep">${m}</p><button type="button" class="app-dialog-ok bg-fut-gold text-slate-900 font-bold min-h-[44px] px-8 rounded-xl w-full">확인</button></div>`;
+document.body.appendChild(d);
+d.querySelector('.app-dialog-ok').addEventListener('click', () => { d.remove(); done(true); });
 });
 
-window.customConfirm = (m) => new Promise(r => {
-const d = document.createElement('div'); d.className = "fixed inset-0 z-[6000] flex items-center justify-center bg-black/80 px-4";
-d.innerHTML = `<div class="bg-pitch-panel p-6 sm:p-8 rounded-3xl border-2 border-fut-gold max-w-sm w-full text-center space-y-4 shadow-2xl"><h3 class="text-xl font-display text-white">확인</h3><p class="text-sm text-slate-300 whitespace-pre-wrap">${m}</p><div class="flex gap-3 mt-6"><button id="bNo" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2.5 rounded-xl w-full transition">취소</button><button id="bYes" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl w-full transition">진행</button></div></div>`;
-document.body.appendChild(d); document.getElementById('bYes').onclick = () => { d.remove(); r(true); }; document.getElementById('bNo').onclick = () => { d.remove(); r(false); };
+window.customConfirm = (m) => enqueueDialog((done) => {
+const d = document.createElement('div');
+d.className = 'app-dialog fixed inset-0 z-[6000] flex items-center justify-center bg-black/80 px-4';
+d.innerHTML = `<div class="bg-pitch-panel p-6 sm:p-8 rounded-3xl border-2 border-fut-gold max-w-sm w-full text-center space-y-4 shadow-2xl"><h3 class="text-xl font-display text-white">확인</h3><p class="text-base text-slate-100 whitespace-pre-wrap leading-relaxed break-keep">${m}</p><div class="flex gap-3"><button type="button" class="app-dialog-no bg-slate-700 text-white font-bold min-h-[44px] rounded-xl w-full">취소</button><button type="button" class="app-dialog-yes bg-emerald-600 text-white font-bold min-h-[44px] rounded-xl w-full">진행</button></div></div>`;
+document.body.appendChild(d);
+d.querySelector('.app-dialog-yes').addEventListener('click', () => { d.remove(); done(true); });
+d.querySelector('.app-dialog-no').addEventListener('click', () => { d.remove(); done(false); });
 });
 
 const checkAuthReady = () => {
@@ -220,19 +255,35 @@ dots.appendChild(dot);
 
 function knownEmptyPin(id) {
 const p = (window.allPlayersData || []).find((x) => x.id === id);
-if (!p || !p.fromDb) return false;
+if (!p || !p.fromDb) return true;
 return !String(p.pin || '').trim();
 }
 
-function openPinFor(id, label, role) {
-loginDesk.pick = { id, label, role };
-loginDesk.mode = (role === 'student' && knownEmptyPin(id)) ? 'set1' : 'enter';
-loginDesk.first = '';
-loginDesk.buffer = '';
+function showPinStage(id, needsSet) {
+if (!loginDesk.pick || loginDesk.pick.id !== id) return;
+loginDesk.mode = needsSet ? 'set1' : 'enter';
 loginDesk.busy = false;
 document.getElementById('loginPickWrap')?.classList.add('hidden');
 document.getElementById('pinStage')?.classList.remove('hidden');
 paintPin();
+}
+
+function openPinFor(id, label, role) {
+loginDesk.pick = { id, label, role };
+loginDesk.first = '';
+loginDesk.buffer = '';
+loginDesk.busy = false;
+if (role === 'gm') {
+loginDesk.busy = true;
+const ref = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + id);
+getDoc(ref).then((snap) => {
+const raw = snap.exists() ? snap.data().pin : '';
+const empty = !snap.exists() || !String(raw == null ? '' : raw).trim();
+showPinStage(id, empty);
+}).catch(() => showPinStage(id, false));
+return;
+}
+showPinStage(id, knownEmptyPin(id));
 }
 
 function buildNameGrid() {
@@ -1031,7 +1082,7 @@ if (elLocker) elLocker.innerHTML = buildSimTeamBoardHtml('locker');
 if (elTab) elTab.innerHTML = buildSimTeamBoardHtml('sim');
 };
 
-/** 서로 다른 팀 소속 두 선수 맞교체 (로그인 학생 전원) */
+/** 서로 다른 팀 소속 두 선수를 맞바꿉니다. 감독만 할 수 있어요. */
 window.swapSimTeamPlayers = async (id1, id2) => {
 try {
 checkAuthReady();
@@ -1519,12 +1570,10 @@ el.className = 'item-slot-mini';
 }
 });
 
-if(isMe && !isGM && !window.playerState.isGuest) {
+if(isMe && !window.playerState.isGuest) {
 document.getElementById('playerTrainingPanel')?.classList.remove('hidden');
 document.getElementById('recBong') && (document.getElementById('recBong').innerText = Number(p.bong) || 0);
 if (featureOn('bong')) document.getElementById('expectedWageDisplay') && (document.getElementById('expectedWageDisplay').innerText = `이번 주 ${getWeeklyWage(ovr)}`);
-document.getElementById('iconEditPos')?.classList.remove('hidden');
-const btnChangePos = document.getElementById('btnChangePos'); if(btnChangePos) btnChangePos.onclick = () => window.changePositionModal(p.id);
 const counts = getTodayActivityCounts(p);
 const hint = document.getElementById('activityQuotaHint');
 if (hint) {
@@ -1539,8 +1588,16 @@ btn.classList.toggle('cursor-not-allowed', left <= 0);
 });
 } else {
 document.getElementById('playerTrainingPanel')?.classList.add('hidden');
+}
+const btnChangePos = document.getElementById('btnChangePos');
+if (canEditThisPlayer(p.id)) {
+document.getElementById('iconEditPos')?.classList.remove('hidden');
+btnChangePos?.classList.add('cursor-pointer');
+if (btnChangePos) btnChangePos.onclick = () => window.changePositionModal(p.id);
+} else {
 document.getElementById('iconEditPos')?.classList.add('hidden');
-const btnChangePos = document.getElementById('btnChangePos'); if(btnChangePos) btnChangePos.onclick = null;
+btnChangePos?.classList.remove('cursor-pointer');
+if (btnChangePos) btnChangePos.onclick = null;
 }
 
 if(isGM) {
@@ -1677,7 +1734,7 @@ updates.training = (Number(p.training)||0) + 1;
 const bumped = tryTrainingStatBump(p, updates);
 if (bumped) {
 animateFloatText(`${bumped} +1`, 'text-fut-gold', 'confettiOrigin');
-setTimeout(() => window.customAlert(`💪 훈련 효과!\n[${p.name}]의 ${bumped}이(가) +1 올랐습니다.`), 400);
+setTimeout(() => window.customAlert(`💪 훈련 효과!\n[${playerDisplayName(p)}]의 ${bumped}이(가) +1 올랐습니다.`), 400);
 }
 }
 if(type === 'goals') { expGained = 20; updates.goals = (Number(p.goals)||0) + 1; if (featureOn('bong')) updates.bong = (Number(p.bong)||0) + 3; }
@@ -1969,14 +2026,14 @@ window.resetAllLevels = async () => {
 try {
 checkAuthReady();
 if(!window.playerState.isGM) return;
-if(!await window.customConfirm(`⚠️ 경고: 모든 학생의 레벨과 경험치를 0으로 초기화하시겠습니까?\n(스탯과 자산, 누적 기록은 그대로 유지됩니다)`)) return;
+if(!await window.customConfirm('모든 학생의 레벨을 1, 경험치를 0으로 되돌릴까요?\n능력치와 기록은 그대로예요.')) return;
 
 const batch = writeBatch(db);
 window.allPlayersData.forEach(p => {
 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
-batch.set(docRef, { exp: 0, level: 0 }, { merge: true });
+batch.set(docRef, { exp: 0, level: 1 }, { merge: true });
 });
-await batch.commit(); triggerConfetti(); window.customAlert("✅ 모든 학생의 레벨과 경험치가 0으로 초기화되었습니다!");
+await batch.commit(); triggerConfetti(); window.customAlert('모든 학생의 레벨을 1, 경험치를 0으로 되돌렸어요.');
 } catch (e) { console.error("resetAll Error:", e); window.customAlert(`초기화 에러:\n${e.message}`); }
 };
 
@@ -2015,6 +2072,7 @@ equipFace: null,
 claimedAchievements: [],
 activityDay: '',
 activityCounts: emptyActivityCounts(),
+activityUndo: [],
 season: 2,
 simTeam: deleteField(),
 updatedAt: new Date().toISOString()
@@ -2117,12 +2175,14 @@ modalHtml += `<tr class="hover:bg-slate-800/60 transition group"><td class="p-2 
 });
 
 modalHtml += `</tbody></table></div><button onclick="this.parentElement.parentElement.remove()" class="mt-6 bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-xl w-full sm:w-64 mx-auto transition shadow-lg text-lg">닫기</button></div>`;
-const modal = document.createElement('div'); modal.className = "fixed inset-0 z-[6000] flex items-center justify-center bg-black/90 px-2 sm:px-4 backdrop-blur-sm"; modal.innerHTML = modalHtml; document.body.appendChild(modal);
+const modal = document.createElement('div'); modal.className = "app-dialog fixed inset-0 z-[6000] flex items-center justify-center bg-black/90 px-2 sm:px-4 backdrop-blur-sm"; modal.innerHTML = modalHtml; document.body.appendChild(modal);
 } catch (e) { console.error("조회 에러:", e); window.customAlert("데이터를 불러오는데 실패했습니다."); }
 };
 
 window.changePositionModal = (pId) => {
+if (!canEditThisPlayer(pId)) return;
 const p = window.allPlayersData.find(x => x.id === pId);
+if (!p) return;
 const b = getBonusStats(p).flat;
 const stats = {
 pac: (Number(p.pac)||60)+b.pac, sho: (Number(p.sho)||60)+b.sho, pas: (Number(p.pas)||60)+b.pas,
@@ -2146,34 +2206,36 @@ const ovrDiff = potentialOvr - currentOvr;
 const diffStr = ovrDiff > 0 ? `<span class="text-emerald-400 animate-pulse drop-shadow-md">▲ +${ovrDiff}</span>` : (ovrDiff < 0 ? `<span class="text-red-400 drop-shadow-md">▼ ${ovrDiff}</span>` : `<span class="text-slate-500">-</span>`);
 const ovrColor = potentialOvr >= 90 ? 'text-purple-400' : (potentialOvr >= 80 ? 'text-fut-gold' : 'text-white');
 
-return `<button onclick="window.confirmChangePos('${pId}', '${pos.id}')" class="bg-slate-800 hover:bg-emerald-900 border border-slate-600 hover:border-emerald-500 p-3 rounded-xl text-left transition group flex flex-col gap-1 relative overflow-hidden">
-      <div class="flex justify-between items-center w-full relative z-10">
+return `<button type="button" onclick="window.confirmChangePos('${pId}', '${pos.id}')" class="bg-slate-800 hover:bg-emerald-900 border border-slate-600 hover:border-emerald-500 p-3 rounded-xl text-left transition group flex flex-col gap-1 relative overflow-hidden min-h-[44px]">
+      <div class="flex justify-between items-center w-full relative z-10 gap-2">
           <div class="font-bold text-lg text-emerald-400 group-hover:text-white">${pos.name}</div>
           <div class="flex flex-col items-end">
-              <div class="text-[10px] text-slate-400 mb-0.5">선택 시 예상 OVR</div>
+              <div class="text-xs text-slate-300 mb-0.5">선택 시 예상 OVR</div>
               <div class="font-oswald text-2xl ${ovrColor} leading-none flex items-center gap-2">${potentialOvr} <span class="text-sm">${diffStr}</span></div>
           </div>
       </div>
-      <div class="text-[11px] text-slate-400 mt-1 relative z-10">${pos.desc}</div>
-      <div class="text-[9px] text-red-300 mt-1 bg-red-900/30 w-fit px-1.5 py-0.5 rounded border border-red-800/50">🔥 핵심 스탯: ${pos.core} (70% 반영)</div>
+      <div class="text-sm text-slate-200 mt-1 relative z-10 leading-relaxed">${pos.desc}</div>
+      <div class="text-xs text-red-200 mt-1 bg-red-900/30 w-fit px-1.5 py-0.5 rounded border border-red-800/50">핵심 스탯: ${pos.core} (70% 반영)</div>
   </button>`;
 }).join('');
 
+modal.className = 'app-dialog fixed inset-0 z-[6000] flex items-center justify-center bg-black/80 px-4';
 modal.innerHTML = `<div class="bg-pitch-bg p-6 rounded-3xl border-2 border-emerald-500 max-w-sm w-full sm:max-w-md shadow-2xl">
   <h3 class="text-xl font-display text-white mb-2 text-center">선호 포지션 변경</h3>
-  <p class="text-[10px] text-emerald-400 mb-4 text-center leading-relaxed">포지션별로 요구하는 <b>핵심 스탯(70%), 보조 스탯(25%)</b>이 다릅니다.<br>나의 강점을 극대화할 수 있는 포지션을 찾아보세요!</p>
+  <p class="text-base text-emerald-200 mb-4 text-center leading-relaxed">포지션마다 핵심 능력치가 달라요. 내가 잘하는 쪽에 맞춰 골라 봐요.</p>
   <div class="bg-slate-900 p-3 rounded-xl mb-4 border border-slate-700 flex justify-between items-center shadow-inner">
       <span class="text-sm text-slate-300 font-bold">현재 내 OVR (${POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정'})</span>
       <span class="font-oswald text-2xl text-fut-gold">${currentOvr}</span>
   </div>
   <div class="grid grid-cols-1 gap-3 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">${btns}</div>
-  <button onclick="this.parentElement.parentElement.remove()" class="mt-4 bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-6 rounded-xl w-full transition shadow-md">닫기</button>
+  <button type="button" onclick="this.parentElement.parentElement.remove()" class="mt-4 bg-slate-700 hover:bg-slate-600 text-white font-bold min-h-[44px] py-3 px-6 rounded-xl w-full transition shadow-md">닫기</button>
 </div>`;
 document.body.appendChild(modal); window.posModalInstance = modal;
 };
 
 window.confirmChangePos = async (pId, newPos) => {
 try {
+if (!canEditThisPlayer(pId)) return;
 checkAuthReady();
 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(pId));
 await setDoc(docRef, { pos: newPos }, { merge: true });
@@ -2261,9 +2323,10 @@ return getOVR(b) - getOVR(a);
 players.forEach(p => {
 const ovr = getOVR(p); const tier = getTierInfo(ovr); const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
 const ageVal = Number(p.age) || 13;
-html += `<tr class="hover:bg-slate-800/80 transition cursor-pointer" onclick="window.switchTab('tabWorkspace'); window.selectPlayer('${p.id}')"><td class="py-3 pl-4 text-left font-bold text-white flex items-center gap-2 whitespace-nowrap"><span class="inline-flex items-center justify-center">${getAvatarHtml(p, 'sm')}</span><span>${p.name}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[12px] font-bold text-emerald-400 px-1.5 py-0.5 leading-none">${ageVal}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[10px] font-bold ${getPosColor(p.pos)} border border-slate-600 px-1.5 py-0.5 rounded leading-none">${posText}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[10px] font-bold ${tier.class} border px-1.5 py-0.5 rounded shadow-sm">${tier.name.split(' ')[0]}</span></td><td class="py-3 text-center font-oswald text-base text-fut-gold font-bold">${ovr}</td><td class="py-3 text-center text-slate-300">${Number(p.matches)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.goals)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.assists)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.saves)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.training)||0}</td><td class="py-3 text-center font-oswald text-orange-400 text-sm">${Number(p.exp)||0}</td><td data-feature="bong" class="py-3 pr-4 text-right font-oswald text-emerald-400 font-bold text-sm">${Number(p.bong)||0} B</td><td class="py-3 px-2 text-center"><button onclick="event.stopPropagation(); window.deletePlayer('${p.id}', '${p.name}')" class="text-red-400 hover:text-white transition bg-red-900/40 hover:bg-red-600 px-2 py-1 rounded text-[10px] border border-red-800/50"><i class="fa-solid fa-trash"></i> 삭제</button></td></tr>`;
+html += `<tr class="hover:bg-slate-800/80 transition cursor-pointer" onclick="window.switchTab('tabWorkspace'); window.selectPlayer('${p.id}')"><td class="py-3 pl-4 text-left font-bold text-white flex items-center gap-2 whitespace-nowrap"><span class="inline-flex items-center justify-center">${getAvatarHtml(p, 'sm')}</span><span>${p.name}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[12px] font-bold text-emerald-400 px-1.5 py-0.5 leading-none">${ageVal}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[10px] font-bold ${getPosColor(p.pos)} border border-slate-600 px-1.5 py-0.5 rounded leading-none">${posText}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[10px] font-bold ${tier.class} border px-1.5 py-0.5 rounded shadow-sm">${tier.name.split(' ')[0]}</span></td><td class="py-3 text-center font-oswald text-base text-fut-gold font-bold">${ovr}</td><td class="py-3 text-center text-slate-300">${Number(p.matches)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.goals)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.assists)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.saves)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.training)||0}</td><td class="py-3 text-center font-oswald text-orange-400 text-sm">${Number(p.exp)||0}</td>${featureOn('bong') ? `<td class="py-3 pr-4 text-right font-oswald text-emerald-400 font-bold text-sm">${Number(p.bong)||0} B</td>` : ''}<td class="py-3 px-2 text-center"><button onclick="event.stopPropagation(); window.deletePlayer('${p.id}', '${p.name}')" class="text-red-400 hover:text-white transition bg-red-900/40 hover:bg-red-600 px-2 py-1 rounded text-[10px] border border-red-800/50"><i class="fa-solid fa-trash"></i> 삭제</button></td></tr>`;
 });
 tbody.innerHTML = html;
+applyFeatureChrome();
 }
 
 window.renderCompareList = () => {
@@ -4251,7 +4314,6 @@ const safeDocId = isGM ? pId : getSafeDocId(pId);
 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + safeDocId);
 try {
 const snap = await getDoc(docRef);
-const roll = () => Math.floor(Math.random() * 6) + 55;
 if (snap.exists()) {
 const data = snap.data();
 const serverPin = data.pin == null ? '' : String(data.pin).trim();
@@ -4267,15 +4329,16 @@ return 'bad';
 window.playerState = { ...stripPrivate(data), id: safeDocId, isGM, isGuest: false, name: playerDisplayName({ ...data, id: safeDocId }) };
 }
 } else {
-if (!await window.customConfirm('처음 만드는 카드예요. 이 PIN으로 등록할까요?')) return 'cancel';
+if (mode !== 'set') return 'need-set';
 const baseData = {
 name: isGM ? (pId === 'gm1' ? '감독 J' : '수석코치 J') : pId,
 pin: pinText,
 pos: isGM ? 'Fixo' : '미정',
-pac: roll(), sho: roll(), pas: roll(), dri: roll(), def: roll(), phy: roll(), ref: roll(), int: roll(), pst: roll(), dis: roll(), cmp: roll(), wrk: roll(),
+...seasonStartStatMap(STAT_BASE),
 level: 1, exp: 0, goals: 0, assists: 0, matches: 0, training: 0, saves: 0, keypass: 0, bong: 0, lastWageWeek: '',
 age: 13,
 inventory: [], itemLevels: {}, equipHead: null, equipHandL: null, equipHandR: null, equipFootL: null, equipFootR: null, equipFace: null,
+activityUndo: [],
 updatedAt: new Date().toISOString()
 };
 await setDoc(docRef, baseData);

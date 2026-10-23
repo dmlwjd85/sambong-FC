@@ -602,9 +602,12 @@ input[type="number"] { -moz-appearance: textfield; }
 #playerTrainingPanel button { font-size: 14px; min-width: 44px; min-height: 44px; }
 
 #mainUI .text-\[7px\], #mainUI .text-\[8px\], #mainUI .text-\[9px\], #mainUI .text-\[10px\], #mainUI .text-\[11px\],
-#loginOverlay .text-\[7px\], #loginOverlay .text-\[8px\], #loginOverlay .text-\[9px\], #loginOverlay .text-\[10px\], #loginOverlay .text-\[11px\] {
+#loginOverlay .text-\[7px\], #loginOverlay .text-\[8px\], #loginOverlay .text-\[9px\], #loginOverlay .text-\[10px\], #loginOverlay .text-\[11px\],
+.app-dialog .text-\[7px\], .app-dialog .text-\[8px\], .app-dialog .text-\[9px\], .app-dialog .text-\[10px\], .app-dialog .text-\[11px\] {
   font-size: 12px !important;
 }
+.app-dialog { font-size: 14px; }
+.app-dialog button { min-height: 44px; font-size: 15px; }
 
 @media (max-width: 480px) {
   #lockerGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
