@@ -240,8 +240,42 @@ let loginDesk = { pick: null, mode: 'enter', first: '', buffer: '', busy: false 
 let didRememberEnter = false;
 let pendingRememberId = '';
 let rosterReady = false;
+let loginSeq = 0;
+let slowHintTimer = 0;
+
+function clearSlowHint() {
+if (slowHintTimer) clearTimeout(slowHintTimer);
+slowHintTimer = 0;
+document.getElementById('pinSlowHint')?.classList.add('hidden');
+const retry = document.getElementById('btnPinRetry');
+if (retry) {
+retry.classList.add('hidden');
+retry.onclick = null;
+}
+}
+
+function armSlowHint(seq, onRetry) {
+clearSlowHint();
+slowHintTimer = setTimeout(() => {
+if (seq !== loginSeq) return;
+const hint = document.getElementById('pinSlowHint');
+if (hint) {
+hint.textContent = '연결이 조금 느려요. 이름을 다시 눌러 보세요.';
+hint.classList.remove('hidden');
+}
+const retry = document.getElementById('btnPinRetry');
+if (!retry || typeof onRetry !== 'function') return;
+retry.classList.remove('hidden');
+retry.onclick = () => {
+if (seq !== loginSeq) return;
+onRetry();
+};
+}, 9000);
+}
 
 function showLoginOverlay() {
+loginSeq += 1;
+clearSlowHint();
 document.getElementById('mainUI')?.classList.add('hidden');
 const login = document.getElementById('loginOverlay');
 if (login) {
@@ -284,6 +318,7 @@ if (dots) dots.replaceChildren();
 
 function showPinStage(id, needsSet) {
 if (!loginDesk.pick || loginDesk.pick.id !== id) return;
+clearSlowHint();
 loginDesk.mode = needsSet ? 'set1' : 'enter';
 loginDesk.busy = false;
 loginDesk.buffer = '';
@@ -297,13 +332,22 @@ paintPin();
 function openPinFor(id, label, role) {
 if (role === 'student' && !rosterReady) return;
 if (loginDesk.busy && loginDesk.mode === 'check' && loginDesk.pick && loginDesk.pick.id === id) return;
+loginSeq += 1;
+const seq = loginSeq;
+clearSlowHint();
 loginDesk.pick = { id, label, role };
 loginDesk.first = '';
 loginDesk.buffer = '';
 loginDesk.mode = 'check';
 loginDesk.busy = true;
 showPinChecking(label);
+armSlowHint(seq, () => {
+if (seq !== loginSeq) return;
+loginDesk.busy = false;
+openPinFor(id, label, role);
+});
 const finish = (needsSet) => {
+if (seq !== loginSeq) return;
 if (!loginDesk.pick || loginDesk.pick.id !== id) return;
 showPinStage(id, needsSet);
 };
@@ -467,13 +511,30 @@ window.customAlert('PIN 두 번이 같지 않아요. 다시 정해 주세요.');
 return;
 }
 const mode = loginDesk.mode === 'enter' ? 'enter' : 'set';
+const pick = { id: loginDesk.pick.id, label: loginDesk.pick.label, role: loginDesk.pick.role };
+await runPinLogin(pick, pin, mode, loginSeq);
+}
+
+async function runPinLogin(pick, pin, mode, seq) {
+loginDesk.pick = pick;
+loginDesk.mode = 'check';
 loginDesk.busy = true;
+loginDesk.buffer = '';
+showPinChecking(pick.label);
+armSlowHint(seq, () => {
+if (seq !== loginSeq) return;
+loginSeq += 1;
+runPinLogin(pick, pin, mode, loginSeq);
+});
 let result = 'bad';
-try { result = await window.handleLogin(loginDesk.pick.id, pin, { mode }); }
+try { result = await window.handleLogin(pick.id, pin, { mode, seq }); }
 catch (e) { result = 'bad'; }
+if (seq !== loginSeq) return;
+clearSlowHint();
 loginDesk.busy = false;
 loginDesk.first = '';
-if (result === 'ok') return;
+if (result === 'ok' || result === 'stale') return;
+document.getElementById('pinPad')?.classList.remove('hidden');
 if (result === 'need-set') {
 loginDesk.mode = 'set1';
 paintPin();
@@ -4342,6 +4403,8 @@ window.customAlert(`삭제 에러:\n${e.message}`);
 // ==============================================
 window.handleLogin = async (pId, pin, opts = {}) => {
 const mode = opts && opts.mode === 'set' ? 'set' : 'enter';
+const seq = opts ? opts.seq : undefined;
+const abandoned = () => seq != null && seq !== loginSeq;
 if (!pId) return 'bad';
 const isGM = pId === 'gm1' || pId === 'gm2';
 const pinText = String(pin || '');
@@ -4354,30 +4417,35 @@ await signInWithCustomToken(auth, globalThis.__initial_auth_token);
 await signInAnonymously(auth);
 }
 } catch (e) {
+if (abandoned()) return 'stale';
 window.customAlert('서버와 연결할 수 없어요. 학교 와이파이가 막혀 있으면 휴대폰 데이터로 다시 들어와 주세요.');
 return 'cancel';
 }
 }
+if (abandoned()) return 'stale';
 const safeDocId = isGM ? pId : getSafeDocId(pId);
 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + safeDocId);
 try {
 const snap = await getDoc(docRef);
+if (abandoned()) return 'stale';
 if (snap.exists()) {
 const data = snap.data();
 const serverPin = data.pin == null ? '' : String(data.pin).trim();
 if (!serverPin) {
-if (mode !== 'set') return 'need-set';
+if (mode !== 'set') return abandoned() ? 'stale' : 'need-set';
 await setDoc(docRef, { pin: pinText, updatedAt: new Date().toISOString() }, { merge: true });
+if (abandoned()) return 'stale';
 const idx = window.allPlayersData.findIndex((x) => x.id === safeDocId);
 if (idx >= 0) window.allPlayersData[idx] = { ...window.allPlayersData[idx], pin: pinText, fromDb: true, name: playerDisplayName({ ...window.allPlayersData[idx], id: safeDocId }) };
 window.playerState = { ...stripPrivate(data), id: safeDocId, isGM, isGuest: false, name: playerDisplayName({ ...data, id: safeDocId }) };
 } else if (serverPin !== pinText) {
-return 'bad';
+return abandoned() ? 'stale' : 'bad';
 } else {
+if (abandoned()) return 'stale';
 window.playerState = { ...stripPrivate(data), id: safeDocId, isGM, isGuest: false, name: playerDisplayName({ ...data, id: safeDocId }) };
 }
 } else {
-if (mode !== 'set') return 'need-set';
+if (mode !== 'set') return abandoned() ? 'stale' : 'need-set';
 const baseData = {
 name: isGM ? (pId === 'gm1' ? '감독 J' : '수석코치 J') : pId,
 pin: pinText,
@@ -4390,8 +4458,10 @@ activityUndo: [],
 updatedAt: new Date().toISOString()
 };
 await setDoc(docRef, baseData);
+if (abandoned()) return 'stale';
 window.playerState = { ...stripPrivate(baseData), id: safeDocId, isGM, isGuest: false, name: playerDisplayName({ ...baseData, id: safeDocId }) };
 }
+if (abandoned()) return 'stale';
 persistRemember(isGM ? pId : safeDocId);
 if (!isGM) window.selectedPlayerId = safeDocId;
 else if (!window.selectedPlayerId) window.selectedPlayerId = getSafeDocId(ALLOWED_PLAYERS[0] || '');
@@ -4399,6 +4469,7 @@ showEnteredUI();
 return 'ok';
 } catch (e) {
 console.error('Login err:', e);
+if (abandoned()) return 'stale';
 window.customAlert('들어가는 중에 문제가 생겼어요. 잠시 뒤 다시 눌러 주세요.');
 return 'cancel';
 }
