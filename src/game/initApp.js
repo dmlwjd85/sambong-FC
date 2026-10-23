@@ -5,7 +5,7 @@ import confetti from 'canvas-confetti';
 import { getMangaFaceHtml, resolveFaceSrc, getDefaultSkinRel } from './mangaFace.js';
 import { featureOn } from '../config/features.js';
 import { diffStatChanges, pushUndo, popUndo, revertStatMap } from './activityUndo.js';
-import { formatSeasonStartLabel, seasonStartStatMap } from './seasonDate.js';
+import { formatSeasonStartLabel, needsPinSetup, seasonStartStatMap } from './seasonDate.js';
 
 // Vite 빌드 시 .env의 VITE_APP_ID 사용, 없으면 기본값 (기존 단일 HTML과 동일)
 const appId = import.meta.env.VITE_APP_ID || (typeof globalThis.__app_id !== 'undefined' ? globalThis.__app_id : 'sambong-futsal-ultimate'); 
@@ -174,12 +174,28 @@ function pumpDialogQueue() {
 if (dialogBusy || !dialogQueue.length) return;
 dialogBusy = true;
 const job = dialogQueue.shift();
+let settled = false;
 const done = (value) => {
+if (settled) return;
+settled = true;
 job.resolve(value);
 dialogBusy = false;
 pumpDialogQueue();
 };
+let opened = false;
+try {
 job.render(done);
+opened = true;
+} catch (e) {
+console.error('dialog render', e);
+} finally {
+if (!opened && !settled) {
+settled = true;
+dialogBusy = false;
+job.resolve(undefined);
+pumpDialogQueue();
+}
+}
 }
 
 window.customAlert = (m) => enqueueDialog((done) => {
@@ -223,6 +239,7 @@ window.customAlert(`[${STAT_NAMES[statKey]}]\n\n${STAT_DESC[statKey]}${growthTex
 let loginDesk = { pick: null, mode: 'enter', first: '', buffer: '', busy: false };
 let didRememberEnter = false;
 let pendingRememberId = '';
+let rosterReady = false;
 
 function showLoginOverlay() {
 document.getElementById('mainUI')?.classList.add('hidden');
@@ -233,6 +250,7 @@ login.style.opacity = '1';
 }
 document.getElementById('loginPickWrap')?.classList.remove('hidden');
 document.getElementById('pinStage')?.classList.add('hidden');
+document.getElementById('pinPad')?.classList.remove('hidden');
 loginDesk = { pick: null, mode: 'enter', first: '', buffer: '', busy: false };
 }
 
@@ -241,7 +259,8 @@ const who = document.getElementById('pinWho');
 const dots = document.getElementById('pinDots');
 const name = loginDesk.pick ? loginDesk.pick.label : '';
 let msg = `${name}, PIN 4자리를 눌러 주세요.`;
-if (loginDesk.mode === 'set1') msg = `${name}, 처음이니까 나만의 PIN 4자리를 정해 주세요.`;
+if (loginDesk.mode === 'check') msg = `${name}, 확인 중이에요.`;
+else if (loginDesk.mode === 'set1') msg = `${name}, 처음이니까 나만의 PIN 4자리를 정해 주세요.`;
 else if (loginDesk.mode === 'set2') msg = '같은 숫자를 한 번 더 눌러 주세요.';
 if (who) who.textContent = msg;
 if (!dots) return;
@@ -253,52 +272,81 @@ dots.appendChild(dot);
 }
 }
 
-function knownEmptyPin(id) {
-const p = (window.allPlayersData || []).find((x) => x.id === id);
-if (!p || !p.fromDb) return true;
-return !String(p.pin || '').trim();
+function showPinChecking(label) {
+document.getElementById('loginPickWrap')?.classList.add('hidden');
+document.getElementById('pinStage')?.classList.remove('hidden');
+document.getElementById('pinPad')?.classList.add('hidden');
+const who = document.getElementById('pinWho');
+if (who) who.textContent = `${label}, 확인 중이에요.`;
+const dots = document.getElementById('pinDots');
+if (dots) dots.replaceChildren();
 }
 
 function showPinStage(id, needsSet) {
 if (!loginDesk.pick || loginDesk.pick.id !== id) return;
 loginDesk.mode = needsSet ? 'set1' : 'enter';
 loginDesk.busy = false;
+loginDesk.buffer = '';
+loginDesk.first = '';
 document.getElementById('loginPickWrap')?.classList.add('hidden');
 document.getElementById('pinStage')?.classList.remove('hidden');
+document.getElementById('pinPad')?.classList.remove('hidden');
 paintPin();
 }
 
 function openPinFor(id, label, role) {
+if (role === 'student' && !rosterReady) return;
+if (loginDesk.busy && loginDesk.mode === 'check' && loginDesk.pick && loginDesk.pick.id === id) return;
 loginDesk.pick = { id, label, role };
 loginDesk.first = '';
 loginDesk.buffer = '';
-loginDesk.busy = false;
-if (role === 'gm') {
+loginDesk.mode = 'check';
 loginDesk.busy = true;
+showPinChecking(label);
+const finish = (needsSet) => {
+if (!loginDesk.pick || loginDesk.pick.id !== id) return;
+showPinStage(id, needsSet);
+};
+try {
 const ref = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + id);
 getDoc(ref).then((snap) => {
 const raw = snap.exists() ? snap.data().pin : '';
-const empty = !snap.exists() || !String(raw == null ? '' : raw).trim();
-showPinStage(id, empty);
-}).catch(() => showPinStage(id, false));
-return;
+finish(needsPinSetup(snap.exists(), raw));
+}).catch(() => finish(false));
+} catch (e) {
+finish(false);
 }
-showPinStage(id, knownEmptyPin(id));
+}
+
+function paintRosterStatus() {
+const status = document.getElementById('loginRosterStatus');
+if (!status) return;
+status.textContent = rosterReady ? '' : '명단을 불러오는 중이에요.';
+status.classList.toggle('hidden', rosterReady);
 }
 
 function buildNameGrid() {
+paintRosterStatus();
 const grid = document.getElementById('loginNameGrid');
 if (!grid) return;
 grid.replaceChildren();
+grid.setAttribute('aria-busy', rosterReady ? 'false' : 'true');
 [...ALLOWED_PLAYERS].sort().forEach((name) => {
 const btn = document.createElement('button');
 btn.type = 'button';
 btn.className = 'login-name-btn';
 btn.dataset.name = name;
 btn.textContent = name;
+btn.disabled = !rosterReady;
+if (!rosterReady) btn.setAttribute('aria-label', `${name} 불러오는 중`);
 btn.addEventListener('click', () => openPinFor(getSafeDocId(name), name, 'student'));
 grid.appendChild(btn);
 });
+}
+
+function markRosterReady() {
+rosterReady = true;
+buildNameGrid();
 }
 
 function onPinKey(key) {
@@ -1762,10 +1810,10 @@ let expDeduct = 1, updates = {};
 
 if(type === 'matches' && (Number(p.matches) || 0) > 0) { expDeduct += 50; updates.matches = Number(p.matches) - 1; }
 else if(type === 'training' && (Number(p.training) || 0) > 0) { expDeduct += 25; updates.training = Number(p.training) - 1; }
-else if(type === 'goals' && (Number(p.goals) || 0) > 0) { expDeduct += 20; updates.goals = Number(p.goals) - 1; updates.bong = Math.max(0, (Number(p.bong)||0) - 3); }
-else if(type === 'assists' && (Number(p.assists) || 0) > 0) { expDeduct += 10; updates.assists = Number(p.assists) - 1; updates.bong = Math.max(0, (Number(p.bong)||0) - 1); }
-else if(type === 'keypass' && (Number(p.keypass) || 0) > 0) { expDeduct += 15; updates.keypass = Number(p.keypass) - 1; updates.bong = Math.max(0, (Number(p.bong)||0) - 1); }
-else if(type === 'saves' && (Number(p.saves) || 0) > 0) { expDeduct += 15; updates.saves = Number(p.saves) - 1; updates.bong = Math.max(0, (Number(p.bong)||0) - 2); }
+else if(type === 'goals' && (Number(p.goals) || 0) > 0) { expDeduct += 20; updates.goals = Number(p.goals) - 1; if (featureOn('bong')) updates.bong = Math.max(0, (Number(p.bong)||0) - 3); }
+else if(type === 'assists' && (Number(p.assists) || 0) > 0) { expDeduct += 10; updates.assists = Number(p.assists) - 1; if (featureOn('bong')) updates.bong = Math.max(0, (Number(p.bong)||0) - 1); }
+else if(type === 'keypass' && (Number(p.keypass) || 0) > 0) { expDeduct += 15; updates.keypass = Number(p.keypass) - 1; if (featureOn('bong')) updates.bong = Math.max(0, (Number(p.bong)||0) - 1); }
+else if(type === 'saves' && (Number(p.saves) || 0) > 0) { expDeduct += 15; updates.saves = Number(p.saves) - 1; if (featureOn('bong')) updates.bong = Math.max(0, (Number(p.bong)||0) - 2); }
 else return window.customAlert("❌ 차감할 해당 기록이 없습니다.");
 
 if(!await window.customConfirm('방금 기록을 취소할까요? 그때 오른 능력치와 경험치를 되돌리고, 경험치 1이 더 빠져요.')) return;
@@ -4442,8 +4490,6 @@ delete GENDER_MAP[name];
 }
 }
 
-buildNameGrid();
-
 const players = [];
 ALLOWED_PLAYERS.forEach(name => {
 const safeId = getSafeDocId(name);
@@ -4465,6 +4511,7 @@ if (ageB !== ageA) return ageB - ageA;
 const lvDiff = (b.level ?? 1) - (a.level ?? 1);
 if(lvDiff !== 0) return lvDiff; return getOVR(b) - getOVR(a);
 });
+markRosterReady();
 
 // 로그인 상태에 따른 자동 선택 로직
 if(window.playerState.id && !window.playerState.isGuest) {

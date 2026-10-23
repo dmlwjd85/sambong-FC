@@ -35,6 +35,12 @@ export function parseStartedAt(value) {
 
 const SEASON_STAT_KEYS = ['pac', 'sho', 'pas', 'dri', 'def', 'phy', 'ref', 'int', 'pst', 'dis', 'cmp', 'wrk'];
 
+/** 문서가 없거나 PIN이 비어 있을 때만 설정 화면. 값은 비교만 하고 로그에 남기지 않는다. */
+export function needsPinSetup(exists, pin) {
+  if (!exists) return true;
+  return !String(pin == null ? '' : pin).trim();
+}
+
 export function seasonStartStatMap(base) {
   const start = Number(base);
   const out = {};

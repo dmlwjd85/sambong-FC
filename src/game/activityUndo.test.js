@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { diffStatChanges, pushUndo, popUndo, revertStatMap } from './activityUndo.js';
-import { formatSeasonStartLabel, parseStartedAt, seasonStartStatMap } from './seasonDate.js';
+import { formatSeasonStartLabel, needsPinSetup, parseStartedAt, seasonStartStatMap } from './seasonDate.js';
 
 const KEYS = ['sho', 'pac'];
 
@@ -43,6 +43,13 @@ test('startedAt이 없으면 날짜를 만들지 않는다', () => {
   assert.equal(formatSeasonStartLabel(''), '');
   assert.equal(formatSeasonStartLabel(undefined), '');
   assert.equal(formatSeasonStartLabel('아직 몰라요'), '');
+});
+
+test('문서가 없거나 PIN이 비어 있을 때만 설정 화면으로 간다', () => {
+  assert.equal(needsPinSetup(false, undefined), true);
+  assert.equal(needsPinSetup(true, ''), true);
+  assert.equal(needsPinSetup(true, '   '), true);
+  assert.equal(needsPinSetup(true, 'saved'), false);
 });
 
 test('신규 카드 능력치는 모두 같은 출발값이다', () => {
