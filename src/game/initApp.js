@@ -1,8 +1,11 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, writeBatch, getDocs, deleteDoc, deleteField, increment } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, writeBatch, getDocs, deleteDoc, deleteField } from 'firebase/firestore';
 import confetti from 'canvas-confetti';
 import { getMangaFaceHtml, resolveFaceSrc, getDefaultSkinRel } from './mangaFace.js';
+import { featureOn } from '../config/features.js';
+import { diffStatChanges, pushUndo, popUndo, revertStatMap } from './activityUndo.js';
+import { formatSeasonStartLabel } from './seasonDate.js';
 
 // Vite 빌드 시 .env의 VITE_APP_ID 사용, 없으면 기본값 (기존 단일 HTML과 동일)
 const appId = import.meta.env.VITE_APP_ID || (typeof globalThis.__app_id !== 'undefined' ? globalThis.__app_id : 'sambong-futsal-ultimate'); 
@@ -39,7 +42,6 @@ const POS_WEIGHTS = {
 /** 시즌 2 기본 능력치 · 일일 기록 한도 */
 const STAT_BASE = 55;
 const STAT_KEYS = ['pac', 'sho', 'pas', 'dri', 'def', 'phy', 'ref', 'int', 'pst', 'dis', 'cmp', 'wrk'];
-const SEASON2_KICKOFF = '2026-09-05';
 const ACTIVITY_DAILY_CAP = { training: 1, matches: 1, goals: 4, assists: 4, keypass: 6, saves: 8 };
 const ACTIVITY_LABEL = { training: '개인 훈련', matches: '경기 출전', goals: '골', assists: '어시스트', keypass: '킬패스', saves: '세이브' };
 window.seasonInfo = window.seasonInfo || { season: 1, started: false, startedAt: null };
@@ -51,6 +53,31 @@ return Number.isFinite(n) && n > 0 ? Math.min(99, n) : STAT_BASE;
 
 function getKstDateStr() {
 return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+}
+
+function fontStack(kind) {
+const cs = getComputedStyle(document.documentElement);
+const key = kind === 'num' ? '--font-num' : kind === 'title' ? '--font-title' : '--font-body';
+const raw = (cs.getPropertyValue(key) || '').trim();
+if (raw) return raw;
+if (kind === 'num') return '"Bebas Neue","Oswald",sans-serif';
+if (kind === 'title') return '"Black Han Sans",sans-serif';
+return '"Noto Sans KR","Malgun Gothic",sans-serif';
+}
+
+function playerDisplayName(p) {
+const raw = p && typeof p.name === 'string' ? p.name.trim() : '';
+if (raw) return raw;
+const id = p && p.id ? String(p.id) : '';
+return id.replace(/^player_/, '') || '선수';
+}
+
+function stripPrivate(data) {
+const copy = { ...(data || {}) };
+delete copy.pin;
+delete copy.officialBet;
+delete copy.wcBets;
+return copy;
 }
 
 function emptyActivityCounts() {
@@ -66,23 +93,48 @@ Object.keys(out).forEach((k) => { out[k] = Number(raw[k]) || 0; });
 return out;
 }
 
+function seasonResetSentence() {
+const bits = [];
+if (featureOn('bong')) bits.push('자산');
+if (featureOn('shop')) bits.push('장비');
+if (bits.length) return `능력치와 기록, ${bits.join('·')}이 출발점으로 돌아가요. 이름과 얼굴은 그대로예요.`;
+return '능력치와 기록이 출발점으로 돌아가요. 이름과 얼굴은 그대로예요.';
+}
+
+function applyFeatureChrome() {
+document.querySelectorAll('[data-feature]').forEach((el) => {
+const name = el.getAttribute('data-feature');
+el.classList.toggle('feature-hidden', !featureOn(name));
+});
+const grid = document.querySelector('#appBottomNav .grid');
+if (grid) {
+grid.classList.toggle('grid-cols-5', featureOn('shop'));
+grid.classList.toggle('grid-cols-4', !featureOn('shop'));
+}
+const sentence = seasonResetSentence();
+document.querySelectorAll('.season-reset-hint').forEach((el) => { el.textContent = sentence; });
+}
+window.applyFeatureChrome = applyFeatureChrome;
+window.applySeasonChrome = applySeasonChrome;
+
 function applySeasonChrome() {
 const info = window.seasonInfo || {};
-const started = !!info.started;
+const when = formatSeasonStartLabel(info.startedAt);
 const sub = document.getElementById('loginSeasonSub');
 if (sub) {
-sub.textContent = started
-? 'SEASON 2 개막 · 전원 능력치 55부터 커리어를 키우세요'
-: `시즌 2 개막 예정 · 9월 5일(토) · 전원 능력치 ${STAT_BASE} 스타트`;
+sub.textContent = when
+? `시즌 2가 ${when}에 시작됐어요. 모두 능력치 ${STAT_BASE}에서 같이 달려 봐요!`
+: `시즌 2가 시작됐어요. 모두 능력치 ${STAT_BASE}에서 같이 달려 봐요!`;
 }
 const badge = document.getElementById('navSeasonBadge');
-if (badge) badge.textContent = started ? 'S2 ON' : 'S2';
+if (badge) badge.textContent = 'S2';
 const master = document.getElementById('seasonMasterStatus');
 if (master) {
-master.textContent = started
-? `시즌 2가 ${info.startedAt ? new Date(info.startedAt).toLocaleString('ko-KR') : ''}에 개막했습니다. 다시 누르면 전원 55로 한 번 더 리셋됩니다.`
-: `예정일: 2026년 9월 5일(토). 버튼을 누르면 전원이 능력치 ${STAT_BASE}로 다시 시작합니다.`;
+master.textContent = when
+? `시즌 2는 ${when}에 시작됐어요. ${seasonResetSentence()}`
+: seasonResetSentence();
 }
+applyFeatureChrome();
 }
 
 const STAT_DESC = {
@@ -112,40 +164,6 @@ d.innerHTML = `<div class="bg-pitch-panel p-6 sm:p-8 rounded-3xl border-2 border
 document.body.appendChild(d); document.getElementById('bYes').onclick = () => { d.remove(); r(true); }; document.getElementById('bNo').onclick = () => { d.remove(); r(false); };
 });
 
-/** 금액 입력 모달 (스마트폰 퀵칩) */
-window.pickBongStake = ({ title, label, odds, wallet, max }) => new Promise((r) => {
-const cap = Math.max(0, Math.min(Number(max) || 0, Number(wallet) || 0));
-const d = document.createElement('div');
-d.className = 'fixed inset-0 z-[6000] flex items-center justify-center bg-black/80 px-4';
-const chips = [10, 20, 50, 100].filter((n) => n <= cap);
-d.innerHTML = `<div class="bg-pitch-panel p-6 rounded-3xl border-2 border-red-500/70 max-w-sm w-full text-center space-y-3 shadow-2xl">
-<h3 class="text-xl font-display text-white">${title || '베팅'}</h3>
-<p class="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed break-keep">${label}<br>배당 <b class="text-fut-gold">${Number(odds).toFixed(2)}x</b> · 보유 <b class="text-fut-gold">${wallet}</b> B</p>
-<div class="flex flex-wrap justify-center gap-2">${chips.map((n) => `<button type="button" data-chip="${n}" class="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-600 text-xs font-black text-white">${n} B</button>`).join('')}${cap > 0 ? `<button type="button" data-chip="${cap}" class="px-3 py-1.5 rounded-lg bg-red-900/70 border border-red-500 text-xs font-black text-white">전액</button>` : ''}</div>
-<input id="stakeAmt" type="number" min="1" max="${cap}" inputmode="numeric" value="${Math.min(10, cap)}" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-3 py-2.5 text-center text-white font-black text-lg"/>
-<p id="stakePayoutHint" class="text-[11px] text-emerald-300"></p>
-<div class="flex gap-3 pt-1"><button id="bNo" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2.5 rounded-xl w-full">취소</button><button id="bYes" class="bg-red-600 hover:bg-red-500 text-white font-bold py-2.5 rounded-xl w-full">걸기</button></div>
-</div>`;
-document.body.appendChild(d);
-const inp = d.querySelector('#stakeAmt');
-const hint = d.querySelector('#stakePayoutHint');
-const paintHint = () => {
-const n = Math.floor(Number(inp.value) || 0);
-hint.textContent = n > 0 ? `적중 시 약 ${Math.floor(n * Number(odds))} B 지급` : '금액을 입력하세요';
-};
-paintHint();
-inp.addEventListener('input', paintHint);
-d.querySelectorAll('[data-chip]').forEach((btn) => {
-btn.onclick = () => { inp.value = btn.getAttribute('data-chip'); paintHint(); };
-});
-d.querySelector('#bYes').onclick = () => {
-const n = Math.floor(Number(inp.value));
-d.remove();
-r(Number.isFinite(n) && n > 0 ? n : 0);
-};
-d.querySelector('#bNo').onclick = () => { d.remove(); r(0); };
-});
-
 const checkAuthReady = () => {
 if (!auth || !auth.currentUser) {
 throw new Error("서버와의 연결이 끊어졌거나 인증되지 않았습니다. 새로고침 해주세요.");
@@ -159,37 +177,270 @@ let growthText = '';
 if(p) {
 const bonus = getBonusStats(p);
 const pct = Math.round(statGrowthChancePct(p, statKey, bonus, null));
-const itemGrowth = bonus.growth[statKey] || 0;
-growthText = `\n\n-----------------------------\n🌱 [이번 레벨업 시 이 스탯 +1 확률: 약 ${pct}%]\n(기본 6% · 장비 ${itemGrowth}% · 높은 능력치는 오르기 더 어렵습니다. 레벨당 최대 2개)`;
+const itemGrowth = featureOn('shop') ? (bonus.growth[statKey] || 0) : 0;
+growthText = featureOn('shop')
+? `\n\n-----------------------------\n🌱 [이번 레벨업 때 이 능력치가 오를 확률: 약 ${pct}%]\n기본은 낮고, 장비는 ${itemGrowth}%만큼 보탬이 돼요. 이미 높은 능력치는 더 천천히 올라요.`
+: `\n\n-----------------------------\n🌱 [이번 레벨업 때 이 능력치가 오를 확률: 약 ${pct}%]\n기본은 낮아요. 이미 높은 능력치는 더 천천히 올라요.`;
 }
 window.customAlert(`[${STAT_NAMES[statKey]}]\n\n${STAT_DESC[statKey]}${growthText}`);
 };
 
-function setupLoginFormDom() {
-const nameSelect = document.getElementById('loginPlayerName');
-if(nameSelect) {
-ALLOWED_PLAYERS.forEach(name => {
-const opt = document.createElement('option'); opt.value = name; opt.innerText = name; nameSelect.appendChild(opt);
+let loginDesk = { pick: null, mode: 'enter', first: '', buffer: '', busy: false };
+let didRememberEnter = false;
+let pendingRememberId = '';
+
+function showLoginOverlay() {
+document.getElementById('mainUI')?.classList.add('hidden');
+const login = document.getElementById('loginOverlay');
+if (login) {
+login.classList.remove('hidden');
+login.style.opacity = '1';
+}
+document.getElementById('loginPickWrap')?.classList.remove('hidden');
+document.getElementById('pinStage')?.classList.add('hidden');
+loginDesk = { pick: null, mode: 'enter', first: '', buffer: '', busy: false };
+}
+
+function paintPin() {
+const who = document.getElementById('pinWho');
+const dots = document.getElementById('pinDots');
+const name = loginDesk.pick ? loginDesk.pick.label : '';
+let msg = `${name}, PIN 4자리를 눌러 주세요.`;
+if (loginDesk.mode === 'set1') msg = `${name}, 처음이니까 나만의 PIN 4자리를 정해 주세요.`;
+else if (loginDesk.mode === 'set2') msg = '같은 숫자를 한 번 더 눌러 주세요.';
+if (who) who.textContent = msg;
+if (!dots) return;
+dots.replaceChildren();
+for (let i = 0; i < 4; i++) {
+const dot = document.createElement('span');
+dot.className = 'pin-dot' + (i < loginDesk.buffer.length ? ' on' : '');
+dots.appendChild(dot);
+}
+}
+
+function knownEmptyPin(id) {
+const p = (window.allPlayersData || []).find((x) => x.id === id);
+if (!p || !p.fromDb) return false;
+return !String(p.pin || '').trim();
+}
+
+function openPinFor(id, label, role) {
+loginDesk.pick = { id, label, role };
+loginDesk.mode = (role === 'student' && knownEmptyPin(id)) ? 'set1' : 'enter';
+loginDesk.first = '';
+loginDesk.buffer = '';
+loginDesk.busy = false;
+document.getElementById('loginPickWrap')?.classList.add('hidden');
+document.getElementById('pinStage')?.classList.remove('hidden');
+paintPin();
+}
+
+function buildNameGrid() {
+const grid = document.getElementById('loginNameGrid');
+if (!grid) return;
+grid.replaceChildren();
+[...ALLOWED_PLAYERS].sort().forEach((name) => {
+const btn = document.createElement('button');
+btn.type = 'button';
+btn.className = 'login-name-btn';
+btn.dataset.name = name;
+btn.textContent = name;
+btn.addEventListener('click', () => openPinFor(getSafeDocId(name), name, 'student'));
+grid.appendChild(btn);
 });
 }
 
-const loginIdSelect = document.getElementById('loginId');
-const nameInputContainer = document.getElementById('playerNameInputContainer');
-if(loginIdSelect && nameInputContainer) {
-loginIdSelect.addEventListener('change', (e) => {
-if(e.target.value === 'player') {
-nameInputContainer.classList.remove('hidden');
-} else {
-nameInputContainer.classList.add('hidden');
+function onPinKey(key) {
+if (loginDesk.busy) return;
+if (key === '지움') {
+loginDesk.buffer = loginDesk.buffer.slice(0, -1);
+paintPin();
+return;
 }
+if (key === '확인') {
+if (loginDesk.buffer.length === 4) submitPin();
+return;
+}
+if (!/^\d$/.test(key) || loginDesk.buffer.length >= 4) return;
+loginDesk.buffer += key;
+paintPin();
+if (loginDesk.buffer.length === 4) submitPin();
+}
+
+function buildPinPad() {
+const pad = document.getElementById('pinPad');
+if (!pad || pad.dataset.ready === '1') return;
+pad.dataset.ready = '1';
+['1','2','3','4','5','6','7','8','9','지움','0','확인'].forEach((key) => {
+const btn = document.createElement('button');
+btn.type = 'button';
+btn.className = 'pin-key';
+btn.textContent = key;
+btn.addEventListener('click', () => onPinKey(key));
+pad.appendChild(btn);
 });
+document.getElementById('btnPinBack')?.addEventListener('click', () => showLoginOverlay());
+document.getElementById('btnGuestEnter')?.addEventListener('click', () => enterGuest());
+document.getElementById('btnStaffGm1')?.addEventListener('click', () => openPinFor('gm1', '선생님', 'gm'));
+document.getElementById('btnStaffGm2')?.addEventListener('click', () => openPinFor('gm2', '코치님', 'gm'));
+}
+
+function persistRemember(id) {
+try {
+localStorage.removeItem('sfc_pin');
+if (id) localStorage.setItem('sfc_pid', id);
+else localStorage.removeItem('sfc_pid');
+} catch (e) { /* 저장이 막혀도 입장은 계속 */ }
+}
+
+function showEnteredUI() {
+const ps = window.playerState || {};
+const login = document.getElementById('loginOverlay');
+if (login) login.classList.add('hidden');
+document.getElementById('mainUI')?.classList.remove('hidden');
+document.getElementById('saveStatus')?.classList.remove('hidden');
+const label = ps.isGuest ? '둘러보기' : playerDisplayName(ps);
+const roleEl = document.getElementById('playerRoleDisplay');
+const nameEl = document.getElementById('playerNameDisplay');
+if (roleEl) {
+roleEl.textContent = label;
+roleEl.className = (ps.isGM ? 'text-fut-gold' : 'text-emerald-300') + ' font-bold text-sm truncate max-w-[9rem]';
+}
+if (nameEl) nameEl.textContent = label;
+if (ps.isGM) {
+document.getElementById('btnTabMaster')?.classList.remove('hidden');
+document.getElementById('btnTabMasterStats')?.classList.remove('hidden');
+document.getElementById('gmAttendanceTools')?.classList.remove('hidden');
+document.getElementById('gmAttendanceTools')?.classList.add('flex');
+}
+applyFeatureChrome();
+if (ps.isGM) window.switchAppTab('more', 'tabMaster');
+else {
+window.switchAppTab('home');
+if (window.selectedPlayerId && window.allPlayersData.length > 0) window.selectPlayer(window.selectedPlayerId);
+}
+if (ps.isGuest || !db) return;
+const annRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'announcement');
+getDoc(annRef).then((snap) => {
+const raw = snap.exists() ? snap.data().text : '';
+const annText = typeof raw === 'string' ? raw.trim() : '';
+const stamp = snap.exists() ? String(snap.data().updatedAt || '') : '';
+if (!annText) return;
+const token = `${stamp}|${annText}`;
+try {
+if (localStorage.getItem('sfc_ann_seen_v1') === token) return;
+localStorage.setItem('sfc_ann_seen_v1', token);
+} catch (e) { /* ignore */ }
+setTimeout(() => {
+window.customAlert(`📢 [감독님 공지]\n\n${escapeHtml(annText)}`);
+}, 800);
+}).catch(() => {});
+}
+
+function enterGuest() {
+window.playerState = { id: 'guest', isGM: false, isGuest: true, name: '둘러보기' };
+window.selectedPlayerId = getSafeDocId(ALLOWED_PLAYERS[0] || '');
+persistRemember('guest');
+showEnteredUI();
+}
+
+function enterFromMemory(p, isGM) {
+window.playerState = { ...stripPrivate(p), id: p.id, isGM: !!isGM, isGuest: false, name: playerDisplayName(p) };
+window.selectedPlayerId = isGM ? (window.selectedPlayerId || getSafeDocId(ALLOWED_PLAYERS[0] || '')) : p.id;
+showEnteredUI();
+}
+
+async function submitPin() {
+if (loginDesk.busy || !loginDesk.pick || loginDesk.buffer.length !== 4) return;
+const pin = loginDesk.buffer;
+loginDesk.buffer = '';
+if (loginDesk.mode === 'set1') {
+loginDesk.first = pin;
+loginDesk.mode = 'set2';
+paintPin();
+return;
+}
+if (loginDesk.mode === 'set2' && pin !== loginDesk.first) {
+loginDesk.first = '';
+loginDesk.mode = 'set1';
+paintPin();
+window.customAlert('PIN 두 번이 같지 않아요. 다시 정해 주세요.');
+return;
+}
+const mode = loginDesk.mode === 'enter' ? 'enter' : 'set';
+loginDesk.busy = true;
+let result = 'bad';
+try { result = await window.handleLogin(loginDesk.pick.id, pin, { mode }); }
+catch (e) { result = 'bad'; }
+loginDesk.busy = false;
+loginDesk.first = '';
+if (result === 'ok') return;
+if (result === 'need-set') {
+loginDesk.mode = 'set1';
+paintPin();
+return;
+}
+if (result === 'cancel') {
+loginDesk.mode = mode === 'set' ? 'set1' : 'enter';
+paintPin();
+return;
+}
+loginDesk.mode = 'enter';
+paintPin();
+window.customAlert('PIN이 맞지 않아요. 다시 눌러 주세요.');
+}
+
+async function tryRememberedEntry() {
+if (didRememberEnter) return;
+const id = pendingRememberId;
+if (!id) {
+didRememberEnter = true;
+if (!loginDesk.pick) showLoginOverlay();
+return;
+}
+didRememberEnter = true;
+if (id === 'guest') { enterGuest(); return; }
+if (id === 'gm1' || id === 'gm2') {
+let name = id === 'gm1' ? '선생님' : '코치님';
+try {
+const snap = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + id));
+if (snap.exists()) {
+const raw = snap.data().name;
+if (typeof raw === 'string' && raw.trim()) name = raw.trim();
+}
+} catch (e) { /* 이름만 비어도 입장 */ }
+window.playerState = { id, isGM: true, isGuest: false, name };
+if (!window.selectedPlayerId) window.selectedPlayerId = getSafeDocId(ALLOWED_PLAYERS[0] || '');
+showEnteredUI();
+return;
+}
+const p = (window.allPlayersData || []).find((x) => x.id === id);
+if (!p) {
+persistRemember('');
+pendingRememberId = '';
+showLoginOverlay();
+return;
+}
+enterFromMemory(p, false);
+}
+
+function setupLoginFormDom() {
+try {
+localStorage.removeItem('sfc_pin');
+pendingRememberId = localStorage.getItem('sfc_pid') || '';
+} catch (e) { pendingRememberId = ''; }
+buildPinPad();
+buildNameGrid();
+applySeasonChrome();
+if (!pendingRememberId) {
+didRememberEnter = true;
+showLoginOverlay();
 }
 }
 if (document.readyState === 'loading') {
-window.addEventListener('DOMContentLoaded', () => { setupLoginFormDom(); applySeasonChrome(); });
+window.addEventListener('DOMContentLoaded', () => { setupLoginFormDom(); });
 } else {
 setupLoginFormDom();
-applySeasonChrome();
 }
 
 const DAILY_TIPS = [
@@ -335,6 +586,7 @@ return el && !el.classList.contains('hidden');
 const getBonusStats = (p) => {
 let flat = { pac: 0, sho: 0, pas: 0, dri: 0, def: 0, phy: 0, ref: 0, int: 0, pst: 0, dis: 0, cmp: 0, wrk: 0 };
 let growth = { pac: 0, sho: 0, pas: 0, dri: 0, def: 0, phy: 0, ref: 0, int: 0, pst: 0, dis: 0, cmp: 0, wrk: 0 };
+if (!featureOn('shop') || !p) return { flat, growth };
 
 const equippedIds = [p.equipHead, p.equipHandL, p.equipHandR, p.equipFootL, p.equipFootR].filter(Boolean);
 equippedIds.forEach(itemId => {
@@ -585,7 +837,8 @@ return [];
 
 window.switchAppTab = (hub, subTabId) => {
 const defaults = { home: 'tabWorkspace', match: 'tabSim', shop: 'tabShop', career: 'tabAchievements', more: (window.playerState && window.playerState.isGM) ? 'tabMaster' : 'tabTips' };
-const hubKey = hub || 'home';
+let hubKey = hub || 'home';
+if (hubKey === 'shop' && !featureOn('shop')) hubKey = 'home';
 if (window.appNav.hub !== hubKey) window.appNav.sub = null;
 window.appNav.hub = hubKey;
 const chips = getAppHubChips(hubKey);
@@ -622,10 +875,19 @@ else chip.classList.add('hidden');
 }
 }
 
+function visibleTips() {
+return DAILY_TIPS.filter((tip) => {
+const t = `${tip.title} ${tip.desc} ${tip.category}`;
+if (/베팅|전액/.test(t)) return false;
+if (!featureOn('shop') && /상점|스킨|장비|강화/.test(t)) return false;
+if (!featureOn('enhance') && /강화/.test(t)) return false;
+if (!featureOn('bong') && /주급/.test(t)) return false;
+return true;
+});
+}
 function renderDailyTip() {
-const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
-const tipIndex = Math.floor(dayOfYear / 3) % DAILY_TIPS.length;
-const tip = DAILY_TIPS[tipIndex];
+const tips = visibleTips();
+const tip = tips.length ? tips[Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24 / 3) % tips.length] : { title: '킥인은 발로', img: '⚽', category: '기본규칙', desc: '공이 밖으로 나가면 손으로 던지지 않고 발로 차서 넣어요.' };
 
 const container = document.getElementById('dailyTipContainer');
 if(container) {
@@ -651,16 +913,9 @@ let borderClass = 'border-slate-700';
 if(ovr >= 85) borderClass = 'border-purple-500'; else if (ovr >= 75) borderClass = 'border-fut-gold'; else if (ovr >= 65) borderClass = 'border-gray-300';
 const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
 const st = p.simTeam;
-const canSimEdit = !window.playerState.isGuest;
 let simRow = '';
-if (canSimEdit) {
-simRow = `<div class="w-full mt-1 pt-1 border-t border-slate-700/60" onclick="event.stopPropagation()"><div class="flex gap-0.5 justify-center items-center">
-<button type="button" class="text-[9px] px-1.5 py-0.5 rounded font-bold ${st === 'A' ? 'bg-red-600 text-white' : 'bg-slate-800 text-slate-300'} border border-slate-600" onclick="window.setPlayerSimTeam('${p.id}','A')">레드</button>
-<button type="button" class="text-[9px] px-1.5 py-0.5 rounded font-bold ${st === 'B' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300'} border border-slate-600" onclick="window.setPlayerSimTeam('${p.id}','B')">블루</button>
-<button type="button" class="text-[8px] px-1 py-0.5 rounded bg-slate-900 text-slate-500 border border-slate-700" onclick="window.setPlayerSimTeam('${p.id}',null)">해제</button>
-</div><p class="text-[7px] text-center text-slate-500 mt-0.5 leading-tight">모의경기 팀</p></div>`;
-} else if (st === 'A' || st === 'B') {
-simRow = `<div class="mt-0.5 text-[9px] font-bold ${st === 'A' ? 'text-red-400' : 'text-blue-400'}" onclick="event.stopPropagation()">모의 ${st === 'A' ? '레드팀' : '블루팀'}</div>`;
+if (st === 'A' || st === 'B') {
+simRow = `<div class="mt-1 text-sm font-bold ${st === 'A' ? 'text-red-300' : 'text-blue-300'}" onclick="event.stopPropagation()">${st === 'A' ? '레드팀' : '블루팀'}</div>`;
 }
 return `
                      <div class="mini-card fut-mini ${tier.cardClass} flex flex-col items-center p-2 rounded-xl border-2 ${borderClass} cursor-pointer ${isSelected ? 'selected' : ''} ${isChecked ? 'checked-in' : 'checked-out'}" onclick="window.selectPlayer('${p.id}')">
@@ -670,7 +925,7 @@ return `
                          <div class="fut-mini-ovr-plate fut-mini-ovr text-[1.55rem] font-bold leading-none text-current drop-shadow mt-1">${ovr}</div>
                          <div class="flex flex-col items-center mt-0.5 w-full px-0.5">
                          <span class="text-[9px] font-black ${getPosColor(p.pos)} tracking-wider">${posText}</span>
-                         <span class="text-[11px] font-black text-current truncate max-w-[72px] drop-shadow">${p.name}</span>
+                         <span class="text-sm font-black text-current truncate max-w-full drop-shadow">${playerDisplayName(p)}</span>
                          </div>
                          ${simRow}
                      </div>`;
@@ -697,30 +952,30 @@ const listA = (window.allPlayersData || []).filter((p) => p.simTeam === 'A').sor
 const listB = (window.allPlayersData || []).filter((p) => p.simTeam === 'B').sort((a, b) => getOVR(b) - getOVR(a));
 const pref = window.simBoardPreferredTarget[boardKey] === 'B' ? 'B' : 'A';
 const rname = getSimTeamBoardRadioName(boardKey);
-const simTools = !window.playerState.isGuest;
+const simTools = !!(window.playerState && window.playerState.isGM);
 const clearColA = simTools
-? `<button type="button" class="sim-team-clear-btn text-[10px] px-2 py-0.5 rounded bg-slate-900/80 text-amber-200 border border-amber-800/50 hover:bg-slate-800 shrink-0" data-sim-clear-team="A" title="레드 팀 전원 해제">전체 삭제</button>`
+? `<button type="button" class="sim-team-clear-btn min-h-[44px] px-3 rounded-lg bg-slate-900/80 text-amber-100 border border-amber-800/50 text-sm font-bold shrink-0" data-sim-clear-team="A">전체 빼기</button>`
 : '';
 const clearColB = simTools
-? `<button type="button" class="sim-team-clear-btn text-[10px] px-2 py-0.5 rounded bg-slate-900/80 text-amber-200 border border-amber-800/50 hover:bg-slate-800 shrink-0" data-sim-clear-team="B" title="블루 팀 전원 해제">전체 삭제</button>`
+? `<button type="button" class="sim-team-clear-btn min-h-[44px] px-3 rounded-lg bg-slate-900/80 text-amber-100 border border-amber-800/50 text-sm font-bold shrink-0" data-sim-clear-team="B">전체 빼기</button>`
 : '';
 const randomFillA = simTools
-? `<button type="button" class="sim-team-random-fill-btn text-[10px] px-2 py-0.5 rounded bg-emerald-900/55 text-emerald-200 border border-emerald-700/45 hover:bg-emerald-900/90 shrink-0" data-sim-random-team="A" title="골레이로→픽소 우선, 이후 아라·피보·미정 골고루">랜덤 보강</button>`
+? `<button type="button" class="sim-team-random-fill-btn min-h-[44px] px-3 rounded-lg bg-emerald-900/55 text-emerald-100 border border-emerald-700/45 text-sm font-bold shrink-0" data-sim-random-team="A">알아서 채우기</button>`
 : '';
 const randomFillB = simTools
-? `<button type="button" class="sim-team-random-fill-btn text-[10px] px-2 py-0.5 rounded bg-emerald-900/55 text-emerald-200 border border-emerald-700/45 hover:bg-emerald-900/90 shrink-0" data-sim-random-team="B" title="골레이로→픽소 우선, 이후 아라·피보·미정 골고루">랜덤 보강</button>`
+? `<button type="button" class="sim-team-random-fill-btn min-h-[44px] px-3 rounded-lg bg-emerald-900/55 text-emerald-100 border border-emerald-700/45 text-sm font-bold shrink-0" data-sim-random-team="B">알아서 채우기</button>`
 : '';
 const rowHtml = (p, team) => {
 const canEdit = simTools;
 const canDrag = canEdit;
 const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
 const delBtn = canEdit
-? `<button type="button" class="sim-team-remove-btn shrink-0 text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-red-300 border border-red-800/60 hover:bg-red-950" data-player-id="${escapeAttr(p.id)}" title="팀에서 제외">삭제</button>`
+? `<button type="button" class="sim-team-remove-btn shrink-0 min-h-[44px] px-3 rounded-lg bg-slate-800 text-red-200 border border-red-800/60 text-sm font-bold" data-player-id="${escapeAttr(p.id)}">빼기</button>`
 : '';
 const dragAttr = canDrag ? 'true' : 'false';
-return `<div class="sim-team-row flex items-center gap-1.5 text-xs py-1 px-1 border-b border-white/5 rounded hover:bg-white/5" draggable="${dragAttr}" data-player-id="${escapeAttr(p.id)}" data-sim-team="${team}" data-sim-board="${boardKey}">
-<span class="text-slate-500 select-none shrink-0" title="드래그">${canDrag ? '<i class="fa-solid fa-grip-vertical text-[10px]"></i>' : ''}</span>
-<span class="text-white truncate flex-1 min-w-0">${escapeHtml(p.name)}</span>
+return `<div class="sim-team-row flex items-center gap-2 text-sm min-h-[44px] py-1 px-1 border-b border-white/5 rounded" draggable="${dragAttr}" data-player-id="${escapeAttr(p.id)}" data-sim-team="${team}" data-sim-board="${boardKey}">
+<span class="text-slate-500 select-none shrink-0">${canDrag ? '<i class="fa-solid fa-grip-vertical"></i>' : ''}</span>
+<span class="text-white truncate flex-1 min-w-0">${escapeHtml(playerDisplayName(p))}</span>
 <span class="text-[9px] ${getPosColor(p.pos)} shrink-0">${posText}</span>
 <span class="text-fut-gold font-oswald shrink-0">${getOVR(p)}</span>
 ${delBtn}
@@ -728,7 +983,7 @@ ${delBtn}
 };
 const emptyHint = '<p class="text-[10px] text-slate-500 py-2 pointer-events-none">빈 곳에 놓으면 이동</p>';
 return `
-<p class="text-xs font-bold text-slate-400 mb-2 flex flex-wrap items-center gap-2"><i class="fa-solid fa-futbol text-amber-400"></i> 모의경기 팀 분류 <span class="text-[10px] font-normal text-slate-500">누구나 편집 · 삭제 · 드래그 · 맞교체 · 랜덤 보강(골레이로·픽소 우선)</span></p>
+<p class="text-sm font-bold text-slate-300 mb-2 flex flex-wrap items-center gap-2"><i class="fa-solid fa-futbol text-amber-400"></i> 팀 나누기 <span class="text-sm font-normal text-slate-400">${window.playerState && window.playerState.isGM ? '감독만 팀을 바꿔요. 줄을 누르면 고른 팀으로 옮겨요.' : '지금은 보기만 할 수 있어요.'}</span></p>
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
 <div class="sim-team-drop-zone rounded-xl border border-red-800/40 bg-red-950/25 p-3 min-h-[6rem]" data-sim-drop="A">
 <div class="font-display text-red-400 text-sm mb-1.5 flex justify-between items-center gap-2 flex-wrap">
@@ -754,7 +1009,7 @@ ${listB.length ? listB.map((p) => rowHtml(p, 'B')).join('') : emptyHint}
 </div>
 </div>
 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-2 border-t border-slate-700/50">
-<span class="text-[10px] text-slate-500">목표 팀 선택 후 행을 더블클릭하면 해당 팀으로 이동합니다.</span>
+<span class="text-sm text-slate-400">고른 팀으로 줄을 누르면 옮겨요.</span>
 <div class="flex items-center justify-between gap-6 sm:justify-end">
 <label class="flex items-center gap-2 text-xs text-red-300 cursor-pointer">
 <input type="radio" name="${rname}" value="A" class="accent-red-500" data-sim-board="${boardKey}" ${pref === 'A' ? 'checked' : ''} />
@@ -780,7 +1035,7 @@ if (elTab) elTab.innerHTML = buildSimTeamBoardHtml('sim');
 window.swapSimTeamPlayers = async (id1, id2) => {
 try {
 checkAuthReady();
-if (window.playerState.isGuest) return window.customAlert('게스트는 사용할 수 없습니다.');
+if (!window.playerState || !window.playerState.isGM) return;
 const p1 = window.allPlayersData.find((x) => x.id === id1);
 const p2 = window.allPlayersData.find((x) => x.id === id2);
 if (!p1 || !p2) return;
@@ -804,7 +1059,7 @@ window.customAlert('팀 교체에 실패했습니다.');
 window.clearSimTeamColumn = async (team) => {
 try {
 checkAuthReady();
-if (window.playerState.isGuest) return window.customAlert('게스트는 사용할 수 없습니다.');
+if (!window.playerState || !window.playerState.isGM) return;
 if (team !== 'A' && team !== 'B') return;
 const ids = (window.allPlayersData || []).filter((p) => p.simTeam === team).map((p) => p.id);
 for (let i = 0; i < ids.length; i++) {
@@ -820,7 +1075,7 @@ window.customAlert('팀 비우기에 실패했습니다.');
 window.fillSimTeamRandomPos = async (team) => {
 try {
 checkAuthReady();
-if (window.playerState.isGuest) return window.customAlert('게스트는 사용할 수 없습니다.');
+if (!window.playerState || !window.playerState.isGM) return;
 if (team !== 'A' && team !== 'B') return;
 const other = team === 'A' ? 'B' : 'A';
 const onTeam = (window.allPlayersData || []).filter((p) => p.simTeam === team);
@@ -953,7 +1208,7 @@ window.renderLockerRoom(); renderActivePool();
 window.setPlayerSimTeam = async (pId, team, skipRefresh) => {
 try {
 checkAuthReady();
-if (window.playerState.isGuest) return window.customAlert('게스트는 모의경기 팀을 설정할 수 없습니다.');
+if (!window.playerState || !window.playerState.isGM) return;
 const target = window.allPlayersData.find((x) => x.id === pId);
 if (!target) return;
 if (team === 'A' || team === 'B') {
@@ -1029,6 +1284,11 @@ window.renderShop();
 };
 
 window.renderShop = () => {
+if (!featureOn('shop')) {
+const shopGrid = document.getElementById('shopGrid');
+if (shopGrid) shopGrid.innerHTML = '';
+return;
+}
 const targetId = window.playerState.isGM ? window.selectedPlayerId : window.playerState.id;
 const p = window.allPlayersData.find(x => x.id === targetId) || null;
 const bong = p ? (Number(p.bong) || 0) : 0;
@@ -1121,23 +1381,25 @@ const expNeeded = getExpNeeded(lv); const expPercent = Math.min(100, Math.floor(
 const bonus = getBonusStats(p);
 const kitItem = SHOP_ITEMS.find((x) => x.id === p.equipKit && x.type === 'kit');
 
-document.getElementById('detailPanelTitle') && (document.getElementById('detailPanelTitle').innerText = isMe ? '내 선수 정보' : `${p.name} 선수의 정보`);
+const shownName = playerDisplayName(p);
+document.getElementById('detailPanelTitle') && (document.getElementById('detailPanelTitle').innerText = isMe ? '내 선수 정보' : `${shownName} 선수의 정보`);
 document.getElementById('detailLevel') && (document.getElementById('detailLevel').innerText = lv);
 
 const badge = document.getElementById('detailTierBadge');
 if(badge) { badge.innerText = tier.name; badge.className = `px-2 py-1 rounded border text-[10px] font-bold shadow-md whitespace-nowrap ${tier.class}`; }
 
 const card = document.getElementById('detailFutCard');
-if(card) { card.className = `fut-card fut-career-card w-[320px] h-[530px] p-0 flex flex-col relative shadow-2xl z-10 mx-auto transition-all duration-300 overflow-hidden ${tier.cardClass} ${kitItem?.kitClass || ''}`.trim(); }
+const kitClass = featureOn('shop') && kitItem && kitItem.kitClass ? kitItem.kitClass : '';
+if(card) { card.className = `fut-card fut-career-card w-full max-w-[320px] min-h-[530px] h-auto p-0 flex flex-col relative shadow-2xl z-10 mx-auto transition-all duration-300 overflow-hidden ${tier.cardClass} ${kitClass}`.trim(); }
 const aura = document.getElementById('cardAuraWrapper');
 if (aura) {
 const auraTier = (tier.cardClass || 'card-rookie').replace('card-', 'card-aura-');
-aura.className = `card-aura ${auraTier} mx-auto w-fit transition-all duration-500 z-10 relative`;
+aura.className = `card-aura ${auraTier} mx-auto w-full max-w-[320px] transition-all duration-500 z-10 relative`;
 }
 
 const detailAv = document.getElementById('detailAvatar');
 if (detailAv) detailAv.innerHTML = getAvatarHtml(p, 'detail');
-document.getElementById('detailName') && (document.getElementById('detailName').innerText = p.name);
+document.getElementById('detailName') && (document.getElementById('detailName').innerText = shownName);
 document.getElementById('detailAge') && (document.getElementById('detailAge').innerText = Number(p.age) || 13);
 document.getElementById('detailOvr') && (document.getElementById('detailOvr').innerText = ovr);
 document.getElementById('detailPos') && (document.getElementById('detailPos').innerText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정');
@@ -1146,32 +1408,14 @@ document.getElementById('detailExpBar') && (document.getElementById('detailExpBa
 
 const simTeamPanel = document.getElementById('detailSimTeamPanel');
 if (simTeamPanel) {
-if (window.playerState.isGuest) {
+const st = p.simTeam;
+const teamLabel = st === 'A' ? '레드팀' : st === 'B' ? '블루팀' : '';
+if (!teamLabel) {
 simTeamPanel.innerHTML = '';
 simTeamPanel.classList.add('hidden');
 } else {
 simTeamPanel.classList.remove('hidden');
-const st = p.simTeam;
-const canSimPick = !window.playerState.isGuest;
-const dis = canSimPick ? '' : 'disabled';
-const cA = st === 'A' ? 'checked' : '';
-const cB = st === 'B' ? 'checked' : '';
-const pidAttr = escapeAttr(p.id);
-simTeamPanel.innerHTML = `
-<div class="mt-4 pt-3 border-t border-slate-700/80">
-<p class="text-[10px] font-bold text-amber-400/90 mb-2 flex items-center gap-1"><i class="fa-solid fa-futbol"></i> 모의경기 팀 (프로필에서 선택)</p>
-<div class="flex items-center justify-between gap-3 text-xs flex-wrap">
-<label class="flex items-center gap-2 ${canSimPick ? 'cursor-pointer text-red-300' : 'text-slate-500 cursor-default'}">
-<input type="checkbox" class="accent-red-500 rounded border-slate-600 sim-profile-cb" ${cA} ${dis} data-sim-profile-team="A" data-player-id="${pidAttr}" />
-레드팀
-</label>
-<label class="flex items-center gap-2 ${canSimPick ? 'cursor-pointer text-blue-300' : 'text-slate-500 cursor-default'}">
-<input type="checkbox" class="accent-blue-500 rounded border-slate-600 sim-profile-cb" ${cB} ${dis} data-sim-profile-team="B" data-player-id="${pidAttr}" />
-블루팀
-</label>
-</div>
-<p class="text-[9px] text-slate-500 mt-1.5 leading-snug">한쪽만 선택됩니다. 체크 해제 시 팀에서 빠집니다. 로그인한 학생은 누구나 팀을 구성할 수 있습니다.</p>
-</div>`;
+simTeamPanel.innerHTML = `<p class="mt-3 text-sm font-bold ${st === 'A' ? 'text-red-300' : 'text-blue-300'}">${teamLabel}</p>`;
 }
 }
 
@@ -1185,6 +1429,12 @@ else { el.innerText = safeVal; }
 renderRecord('recMatches', 'matches', p.matches); renderRecord('recTraining', 'training', p.training);
 renderRecord('recGoals', 'goals', p.goals); renderRecord('recAssists', 'assists', p.assists);
 renderRecord('recKeypass', 'keypass', p.keypass); renderRecord('recSaves', 'saves', p.saves);
+const seasonStartNote = document.getElementById('seasonStartNote');
+if (seasonStartNote) {
+const atStart = ['matches','training','goals','assists','keypass','saves'].every((k) => !(Number(p[k]) || 0));
+seasonStartNote.textContent = atStart ? '시즌 2 출발선이에요. 경기와 훈련 기록은 아직 0에서 시작해요.' : '';
+seasonStartNote.classList.toggle('hidden', !atStart);
+}
 
 const stats = [
 { id: 'pac', label: '속력' }, { id: 'sho', label: '슈팅' }, { id: 'pas', label: '패스' },
@@ -1196,7 +1446,7 @@ const stats = [
 let gridHtml = '';
 stats.forEach(s => {
 const baseVal = getStat(p, s.id); const bVal = bonus.flat[s.id] || 0; const totalVal = Math.min(99, baseVal + bVal);
-let bonusBadge = bVal > 0 ? `<span class="text-[9px] text-emerald-400 font-bold leading-none absolute -top-0.5 -right-3.5">+${bVal}</span>` : '';
+let bonusBadge = (featureOn('shop') && bVal > 0) ? `<span class="text-xs text-emerald-300 font-bold leading-none">+${bVal}</span>` : '';
 const barW = Math.max(8, Math.min(100, totalVal));
 
 const posConfig = POS_WEIGHTS[p.pos];
@@ -1214,28 +1464,22 @@ labelIcon = '<i class="fa-solid fa-star text-yellow-400 text-[8px] ml-0.5"></i>'
 
 if(isGM) {
 gridHtml += `
-                     <div class="flex flex-col items-center justify-center text-current w-full group relative">
-                         <div class="flex items-center justify-center gap-0.5 mb-0.5">
-                             <button type="button" onclick="window.modStat('${p.id}', '${s.id}', -1)" class="w-6 h-6 rounded-md bg-black/55 hover:bg-red-900/80 text-white flex items-center justify-center border border-white/20"><i class="fa-solid fa-minus text-[9px]"></i></button>
-                             <div class="relative flex items-center justify-center w-8">
-                                 <input type="number" min="1" max="99" inputmode="numeric" value="${baseVal}" class="font-oswald text-xl font-bold w-full text-center bg-black/30 rounded border border-white/25 hover:border-current focus:outline-none focus:border-emerald-400 transition cursor-text leading-none p-0 m-0 text-current ${highlightClass}" onchange="window.setStat('${p.id}', '${s.id}', this.value)">
-                                 ${bonusBadge}
-                             </div>
-                             <button type="button" onclick="window.modStat('${p.id}', '${s.id}', 1)" class="w-6 h-6 rounded-md bg-black/55 hover:bg-emerald-800 text-white flex items-center justify-center border border-white/20"><i class="fa-solid fa-plus text-[9px]"></i></button>
+                     <div class="flex flex-col items-center justify-center text-current w-full">
+                         <span class="font-oswald text-xl leading-none ${highlightClass}">${baseVal}</span>
+                         ${bonusBadge}
+                         <button type="button" class="tap-44 w-full text-sm font-bold" onclick="window.showStatDesc('${s.id}')">${s.label}</button>
+                         <div class="flex w-full">
+                           <button type="button" onclick="window.modStat('${p.id}', '${s.id}', -1)" class="tap-44 flex-1 rounded-lg bg-black/55 text-white border border-white/20" aria-label="내리기"><i class="fa-solid fa-minus"></i></button>
+                           <button type="button" onclick="window.modStat('${p.id}', '${s.id}', 1)" class="tap-44 flex-1 rounded-lg bg-black/55 text-white border border-white/20" aria-label="올리기"><i class="fa-solid fa-plus"></i></button>
                          </div>
-                         <span class="font-bold text-[10px] tracking-tight whitespace-nowrap opacity-95 cursor-pointer hover:text-emerald-400 leading-none" onclick="window.showStatDesc('${s.id}')">${s.label} ${labelIcon}</span>
-                         <div class="stat-mini-bar w-10"><i style="width:${barW}%"></i></div>
                      </div>`;
 } else {
 gridHtml += `
-                     <div class="flex flex-col items-center justify-center text-current w-full">
-                         <div class="relative flex items-center justify-center mb-0.5 ${highlightClass}">
-                             <span class="font-bebas text-[1.45rem] font-normal leading-none tracking-tight">${totalVal}</span>
-                             ${bonusBadge}
-                         </div>
-                         <span class="font-bold text-[10px] sm:text-[11px] opacity-95 tracking-tight whitespace-nowrap cursor-pointer hover:text-emerald-400 transition leading-none" onclick="window.showStatDesc('${s.id}')">${s.label} ${labelIcon}</span>
-                         <div class="stat-mini-bar w-10"><i style="width:${barW}%"></i></div>
-                     </div>`;
+                     <button type="button" class="tap-44 flex flex-col items-center justify-center text-current w-full" onclick="window.showStatDesc('${s.id}')">
+                         <span class="font-bebas text-2xl leading-none ${highlightClass}">${totalVal}</span>
+                         ${bonusBadge}
+                         <span class="text-sm font-bold">${s.label}</span>
+                     </button>`;
 }
 });
 const statsGridEl = document.getElementById('detailStatsGrid');
@@ -1278,7 +1522,7 @@ el.className = 'item-slot-mini';
 if(isMe && !isGM && !window.playerState.isGuest) {
 document.getElementById('playerTrainingPanel')?.classList.remove('hidden');
 document.getElementById('recBong') && (document.getElementById('recBong').innerText = Number(p.bong) || 0);
-document.getElementById('expectedWageDisplay') && (document.getElementById('expectedWageDisplay').innerText = `OVR 주급: ${getWeeklyWage(ovr)} B`);
+if (featureOn('bong')) document.getElementById('expectedWageDisplay') && (document.getElementById('expectedWageDisplay').innerText = `이번 주 ${getWeeklyWage(ovr)}`);
 document.getElementById('iconEditPos')?.classList.remove('hidden');
 const btnChangePos = document.getElementById('btnChangePos'); if(btnChangePos) btnChangePos.onclick = () => window.changePositionModal(p.id);
 const counts = getTodayActivityCounts(p);
@@ -1315,7 +1559,9 @@ document.getElementById('gmStatHint')?.classList.add('hidden');
 }
 };
 
-async function processExp(p, expGained, docRef, updatesObj) {
+async function processExp(p, expGained, docRef, updatesObj, activityType) {
+const beforeStats = {};
+STAT_KEYS.forEach((k) => { beforeStats[k] = getStat(p, k); });
 let currentLv = Number(p.level) || 1;
 const startLv = currentLv;
 let currentExp = (Number(p.exp) || 0) + Number(expGained);
@@ -1333,8 +1579,13 @@ increasedStats.push(...applyLevelStatGrowth(p, updatesObj));
 
 triggerConfetti(); 
 const uniqueStats = [...new Set(increasedStats)];
-const statsMsg = uniqueStats.length > 0 ? `\n\n💪 스탯 성장 내역:\n${uniqueStats.join(', ')} 능력이 올랐습니다!` : `\n\n(이번 레벨업에서는 상승한 스탯이 없습니다. 장비를 장착하면 포지션 핵심 스탯이 조금 더 잘 오릅니다.)`;
-setTimeout(() => window.customAlert(`🎉 축하합니다!\n[${p.name}] 선수가 레벨 ${currentLv} (으)로 올랐습니다!${statsMsg}`), 500);
+const statsMsg = uniqueStats.length > 0
+? `\n\n오른 능력치: ${uniqueStats.join(', ')}`
+: (featureOn('shop') ? '\n\n이번엔 능력치가 그대로예요. 장비를 끼우면 다음엔 조금 더 잘 올라요.' : '\n\n이번엔 능력치가 그대로예요. 다음 레벨에서 다시 기회가 있어요.');
+setTimeout(() => window.customAlert(`축하해요!\n${playerDisplayName(p)} 선수가 레벨 ${currentLv}이 됐어요.${statsMsg}`), 500);
+}
+if (activityType) {
+updatesObj.activityUndo = pushUndo(p.activityUndo, { type: activityType, stats: diffStatChanges(STAT_KEYS, beforeStats, updatesObj) });
 }
 await setDoc(docRef, updatesObj, { merge: true });
 }
@@ -1429,13 +1680,13 @@ animateFloatText(`${bumped} +1`, 'text-fut-gold', 'confettiOrigin');
 setTimeout(() => window.customAlert(`💪 훈련 효과!\n[${p.name}]의 ${bumped}이(가) +1 올랐습니다.`), 400);
 }
 }
-if(type === 'goals') { expGained = 20; updates.goals = (Number(p.goals)||0) + 1; updates.bong = (Number(p.bong)||0) + 3; }
-if(type === 'assists') { expGained = 10; updates.assists = (Number(p.assists)||0) + 1; updates.bong = (Number(p.bong)||0) + 1; }
-if(type === 'keypass') { expGained = 15; updates.keypass = (Number(p.keypass)||0) + 1; updates.bong = (Number(p.bong)||0) + 1; }
-if(type === 'saves') { expGained = 15; updates.saves = (Number(p.saves)||0) + 1; updates.bong = (Number(p.bong)||0) + 2; }
+if(type === 'goals') { expGained = 20; updates.goals = (Number(p.goals)||0) + 1; if (featureOn('bong')) updates.bong = (Number(p.bong)||0) + 3; }
+if(type === 'assists') { expGained = 10; updates.assists = (Number(p.assists)||0) + 1; if (featureOn('bong')) updates.bong = (Number(p.bong)||0) + 1; }
+if(type === 'keypass') { expGained = 15; updates.keypass = (Number(p.keypass)||0) + 1; if (featureOn('bong')) updates.bong = (Number(p.bong)||0) + 1; }
+if(type === 'saves') { expGained = 15; updates.saves = (Number(p.saves)||0) + 1; if (featureOn('bong')) updates.bong = (Number(p.bong)||0) + 2; }
 
 animateFloatText(`+${expGained} EXP`, 'text-emerald-400', 'confettiOrigin');
-await processExp(p, expGained, docRef, updates);
+await processExp(p, expGained, docRef, updates, type);
 } catch (e) { console.error("addActivity Error:", e); window.customAlert(`서버 에러:\n${e.message}`); }
 };
 
@@ -1460,7 +1711,7 @@ else if(type === 'keypass' && (Number(p.keypass) || 0) > 0) { expDeduct += 15; u
 else if(type === 'saves' && (Number(p.saves) || 0) > 0) { expDeduct += 15; updates.saves = Number(p.saves) - 1; updates.bong = Math.max(0, (Number(p.bong)||0) - 2); }
 else return window.customAlert("❌ 차감할 해당 기록이 없습니다.");
 
-if(!await window.customConfirm("방금 입력한 기록을 취소하시겠습니까?\n(해당 활동으로 받은 경험치와 같은 양이 차감되고, 1 EXP 페널티가 추가됩니다.\n부족 시 레벨이 함께 내려갑니다.)")) return;
+if(!await window.customConfirm('방금 기록을 취소할까요? 그때 오른 능력치와 경험치를 되돌리고, 경험치 1이 더 빠져요.')) return;
 
 const today = getKstDateStr();
 if (p.activityDay === today) {
@@ -1472,6 +1723,12 @@ updates.activityCounts = counts;
 }
 }
 
+const popped = popUndo(p.activityUndo, type);
+if (popped.entry) {
+Object.assign(updates, revertStatMap(p, popped.entry.stats));
+updates.activityUndo = popped.stack;
+}
+if (!featureOn('bong')) delete updates.bong;
 animateFloatText(`-${expDeduct} EXP`, 'text-red-400', 'confettiOrigin');
 applyExpLoss(p, expDeduct, updates);
 await setDoc(docRef, updates, { merge: true });
@@ -1481,6 +1738,7 @@ await setDoc(docRef, updates, { merge: true });
 window.purchaseItem = async (itemId) => {
 try {
 checkAuthReady();
+if (!featureOn('shop')) return;
 if(window.playerState.isGuest) return window.customAlert("게스트는 이용할 수 없는 기능입니다.");
 
 const targetId = window.playerState.isGM ? window.selectedPlayerId : window.playerState.id;
@@ -1517,6 +1775,7 @@ window.renderShop();
 window.enhanceItem = async (itemId) => {
 try {
 checkAuthReady();
+if (!featureOn('enhance') || !featureOn('shop')) return;
 if(window.playerState.isGuest) return window.customAlert("게스트는 이용할 수 없는 기능입니다.");
 
 const pId = window.playerState.isGM ? window.selectedPlayerId : window.playerState.id;
@@ -1567,6 +1826,7 @@ window.renderShop(); window.renderSelectedCard(pId);
 window.equipItem = async (itemId, type) => {
 try {
 checkAuthReady();
+if (!featureOn('shop')) return;
 if(window.playerState.isGuest) return window.customAlert("게스트는 이용할 수 없는 기능입니다.");
 const targetId = window.playerState.isGM ? window.selectedPlayerId : window.playerState.id;
 const p = window.allPlayersData.find(x => x.id === targetId);
@@ -1586,6 +1846,7 @@ window.renderShop(); window.renderLockerRoom(); window.renderSelectedCard(target
 window.revokeItem = async (itemId) => {
 try {
 checkAuthReady();
+if (!featureOn('shop')) return;
 if(!window.playerState.isGM) return;
 const targetId = window.selectedPlayerId;
 const p = window.allPlayersData.find(x => x.id === targetId);
@@ -1636,6 +1897,7 @@ window.setRecord = async (pId, statKey, value) => {
 try {
 checkAuthReady();
 if(!window.playerState.isGM) return;
+if (statKey === 'bong' && !featureOn('bong')) return;
 const newVal = Math.max(0, parseInt(value) || 0);
 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(pId));
 await setDoc(docRef, { [statKey]: newVal }, { merge: true });
@@ -1645,6 +1907,7 @@ await setDoc(docRef, { [statKey]: newVal }, { merge: true });
 window.claimWage = async () => {
 try {
 checkAuthReady();
+if (!featureOn('bong')) return;
 if(!window.playerState.id || window.playerState.isGM) return;
 if(window.playerState.isGuest) return window.customAlert("게스트는 이용할 수 없는 기능입니다.");
 
@@ -1662,6 +1925,7 @@ window.giveAll = async (type, amount) => {
 try {
 checkAuthReady();
 if(!window.playerState.isGM) return;
+if (type === 'bong' && !featureOn('bong')) return;
 const msg = type === 'exp' ? `모든 학생에게 [${amount} EXP]를 일괄 지급하시겠습니까?` : `모든 학생에게 [${amount} B]를 일괄 지급하시겠습니까?`;
 if(!await window.customConfirm(msg)) return;
 
@@ -1720,8 +1984,8 @@ window.startSeason2 = async () => {
 try {
 checkAuthReady();
 if(!window.playerState.isGM) return;
-if(!await window.customConfirm(`시즌 2를 개막할까요?\n\n• 모든 학생 능력치 → ${STAT_BASE}\n• 레벨·EXP·골/어시/훈련/출전 기록 → 0\n• 자산(B)·장비·강화 → 초기화\n• 이름·포지션·나이·얼굴 사진은 유지\n\n예정 개막일: ${SEASON2_KICKOFF} (토)\n이 작업은 되돌릴 수 없습니다.`)) return;
-if(!await window.customConfirm('정말로 시즌 2를 시작합니까?\n전원 데이터가 리셋됩니다.')) return;
+if(!await window.customConfirm(`시즌 2를 다시 시작할까요?\n\n${seasonResetSentence()}\n이 작업은 되돌릴 수 없어요.`)) return;
+if(!await window.customConfirm('정말로 전원 능력치와 기록을 출발점으로 돌릴까요?')) return;
 
 const batch = writeBatch(db);
 const resetStats = {};
@@ -1762,7 +2026,6 @@ season: 2,
 title: 'SEASON 2',
 started: true,
 startedAt: new Date().toISOString(),
-kickoffLabel: SEASON2_KICKOFF,
 resetNote: `stats ${STAT_BASE}, records cleared`
 }, { merge: true });
 const eventRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'latest_event');
@@ -1787,6 +2050,7 @@ window.customAlert(`시즌 2 개막 에러:\n${e.message}`);
 window.manualAddBong = async (amount) => {
 try {
 checkAuthReady();
+if (!featureOn('bong')) return;
 if(!window.playerState.isGM || !window.selectedPlayerId) return;
 const p = window.allPlayersData.find(x => x.id === window.selectedPlayerId);
 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
@@ -1968,7 +2232,7 @@ let html = '';
 categories.forEach(cat => {
 const sorted = [...players].sort((a, b) => { const diff = (Number(b[cat.id]) || 0) - (Number(a[cat.id]) || 0); if (diff !== 0) return diff; return getOVR(b) - getOVR(a); }).filter(p => (Number(p[cat.id]) || 0) > 0).slice(0, 3);
 let listHtml = '';
-if (sorted.length === 0) { listHtml = `<p class="text-xs text-slate-500 text-center py-4">아직 기록이 없습니다.</p>`; } 
+if (sorted.length === 0) { listHtml = `<p class="text-sm text-slate-400 text-center py-4 leading-relaxed break-keep">아직 이 부문 기록이 없어요. 경기가 쌓이면 여기에 이름이 올라와요.</p>`; } 
 else {
 const medals = ['🥇', '🥈', '🥉'];
 sorted.forEach((p, idx) => {
@@ -1997,7 +2261,7 @@ return getOVR(b) - getOVR(a);
 players.forEach(p => {
 const ovr = getOVR(p); const tier = getTierInfo(ovr); const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
 const ageVal = Number(p.age) || 13;
-html += `<tr class="hover:bg-slate-800/80 transition cursor-pointer" onclick="window.switchTab('tabWorkspace'); window.selectPlayer('${p.id}')"><td class="py-3 pl-4 text-left font-bold text-white flex items-center gap-2 whitespace-nowrap"><span class="inline-flex items-center justify-center">${getAvatarHtml(p, 'sm')}</span><span>${p.name}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[12px] font-bold text-emerald-400 px-1.5 py-0.5 leading-none">${ageVal}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[10px] font-bold ${getPosColor(p.pos)} border border-slate-600 px-1.5 py-0.5 rounded leading-none">${posText}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[10px] font-bold ${tier.class} border px-1.5 py-0.5 rounded shadow-sm">${tier.name.split(' ')[0]}</span></td><td class="py-3 text-center font-oswald text-base text-fut-gold font-bold">${ovr}</td><td class="py-3 text-center text-slate-300">${Number(p.matches)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.goals)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.assists)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.saves)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.training)||0}</td><td class="py-3 text-center font-oswald text-orange-400 text-sm">${Number(p.exp)||0}</td><td class="py-3 pr-4 text-right font-oswald text-emerald-400 font-bold text-sm">${Number(p.bong)||0} B</td><td class="py-3 px-2 text-center"><button onclick="event.stopPropagation(); window.deletePlayer('${p.id}', '${p.name}')" class="text-red-400 hover:text-white transition bg-red-900/40 hover:bg-red-600 px-2 py-1 rounded text-[10px] border border-red-800/50"><i class="fa-solid fa-trash"></i> 삭제</button></td></tr>`;
+html += `<tr class="hover:bg-slate-800/80 transition cursor-pointer" onclick="window.switchTab('tabWorkspace'); window.selectPlayer('${p.id}')"><td class="py-3 pl-4 text-left font-bold text-white flex items-center gap-2 whitespace-nowrap"><span class="inline-flex items-center justify-center">${getAvatarHtml(p, 'sm')}</span><span>${p.name}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[12px] font-bold text-emerald-400 px-1.5 py-0.5 leading-none">${ageVal}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[10px] font-bold ${getPosColor(p.pos)} border border-slate-600 px-1.5 py-0.5 rounded leading-none">${posText}</span></td><td class="py-3 text-center whitespace-nowrap"><span class="text-[10px] font-bold ${tier.class} border px-1.5 py-0.5 rounded shadow-sm">${tier.name.split(' ')[0]}</span></td><td class="py-3 text-center font-oswald text-base text-fut-gold font-bold">${ovr}</td><td class="py-3 text-center text-slate-300">${Number(p.matches)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.goals)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.assists)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.saves)||0}</td><td class="py-3 text-center text-slate-300">${Number(p.training)||0}</td><td class="py-3 text-center font-oswald text-orange-400 text-sm">${Number(p.exp)||0}</td><td data-feature="bong" class="py-3 pr-4 text-right font-oswald text-emerald-400 font-bold text-sm">${Number(p.bong)||0} B</td><td class="py-3 px-2 text-center"><button onclick="event.stopPropagation(); window.deletePlayer('${p.id}', '${p.name}')" class="text-red-400 hover:text-white transition bg-red-900/40 hover:bg-red-600 px-2 py-1 rounded text-[10px] border border-red-800/50"><i class="fa-solid fa-trash"></i> 삭제</button></td></tr>`;
 });
 tbody.innerHTML = html;
 }
@@ -2056,12 +2320,12 @@ const isClaimed = claimedAchievements.includes(ach.id);
 if(isAchieved) achievedCount++; const percent = Math.min(100, Math.floor((currentVal / ach.reqValue) * 100));
 
 let claimBtnHtml = '';
+if (featureOn('bong')) {
 if (isAchieved && !isClaimed) {
-claimBtnHtml = `<button onclick="window.claimAchievement('${ach.id}')" class="mt-3 w-full bg-gradient-to-r from-fut-gold-dark to-fut-gold hover:from-fut-gold hover:to-yellow-200 text-slate-900 font-bold py-1.5 rounded-lg shadow-md transition text-xs flex items-center justify-center gap-1.5 active:scale-95"><i class="fa-solid fa-gift text-sm"></i> 보상 받기 (${ach.reward} B)</button>`;
+claimBtnHtml = `<button onclick="window.claimAchievement('${ach.id}')" class="mt-3 w-full min-h-[44px] bg-gradient-to-r from-fut-gold-dark to-fut-gold text-slate-900 font-bold py-2 rounded-lg text-sm">보상 받기</button>`;
 } else if (isClaimed) {
-claimBtnHtml = `<div class="mt-3 w-full bg-slate-800 text-slate-500 font-bold py-1.5 rounded-lg border border-slate-700 text-xs flex items-center justify-center gap-1.5"><i class="fa-solid fa-check text-sm"></i> 보상 수령 완료</div>`;
-} else {
-claimBtnHtml = `<div class="mt-3 w-full bg-slate-800/40 text-slate-600 py-1.5 rounded-lg border border-slate-700/50 text-xs flex items-center justify-center gap-1.5"><i class="fa-solid fa-lock text-[10px]"></i> 달성 시 ${ach.reward} B 지급</div>`;
+claimBtnHtml = `<div class="mt-3 w-full min-h-[44px] bg-slate-800 text-slate-400 font-bold py-2 rounded-lg text-sm flex items-center justify-center">받았어요</div>`;
+}
 }
 
 html += `<div class="bg-slate-900/80 rounded-xl p-4 border transition duration-300 ${isAchieved ? 'achieved-card' : 'unachieved-card'} flex gap-4 items-center relative overflow-hidden">${isAchieved ? '<div class="absolute -right-4 -top-4 bg-fut-gold text-black text-[10px] font-bold py-1 px-8 rotate-45 shadow-md z-10">CLEARED</div>' : ''}<div class="text-4xl w-14 flex-shrink-0 text-center drop-shadow-md ${isAchieved ? '' : 'opacity-50 grayscale'}">${ach.icon}</div><div class="flex-grow flex flex-col justify-between"><div class="flex justify-between items-start mb-1"><div><span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600 ${ach.color}">${ach.category}</span><h5 class="font-bold text-white text-sm sm:text-base mt-1 ${isAchieved ? 'text-fut-gold' : ''}">${ach.title}</h5></div></div><p class="text-[10px] sm:text-xs text-slate-400 mb-2 leading-tight break-keep">${ach.desc}</p><div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1"><span>진행도</span><span class="${isAchieved ? 'text-fut-gold' : 'text-slate-400'}">${currentVal} / ${ach.reqValue}</span></div><div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden"><div class="h-1.5 rounded-full transition-all duration-1000 ${isAchieved ? ach.bg : 'bg-slate-500'}" style="width: ${percent}%"></div></div>${claimBtnHtml}</div></div>`;
@@ -2075,6 +2339,7 @@ document.getElementById('achievementProgressBar') && (document.getElementById('a
 window.claimAchievement = async (achId) => {
 try {
 checkAuthReady();
+if (!featureOn('bong')) return;
 if(window.playerState.isGuest) return window.customAlert("게스트는 이용할 수 없는 기능입니다.");
 
 const pId = window.selectedPlayerId;
@@ -2135,7 +2400,6 @@ const cb = document.getElementById('simCountB');
 if (ca) ca.textContent = `소속 ${na}명 · 출전 OVR 상위 5명 (팀당 1명 이상이면 연습 경기 가능)`;
 if (cb) cb.textContent = `소속 ${nb}명 · 출전 OVR 상위 5명 (팀당 1명 이상이면 연습 경기 가능)`;
 window.renderSimTeamBoards();
-window.renderOfficialBetPanel();
 const rawTA = getSimMatchRoster('A');
 const rawTB = getSimMatchRoster('B');
 const padTA = padSimRosterWithBots(rawTA, 'A');
@@ -2361,7 +2625,7 @@ resolve(fallback);
 return;
 }
 
-ctx.font = `600 ${fontSize}px "Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif`;
+ctx.font = `600 ${fontSize}px ${fontStack('body')}`;
 const innerW = maxCssW - pad * 2 - 6;
 const lines = wrapSimBroadcastLines(ctx, text, innerW);
 const isGoal = fxGoal;
@@ -2433,13 +2697,13 @@ ctx.fillRect(0, 0, 6, cssH);
 
 if (hasFxBanner) {
 const badge = isGoal ? '⚽ GOAL!' : isSuperSave ? '🧤 SUPER SAVE' : '🎯 KEY PASS';
-ctx.font = `800 11px "Malgun Gothic","Noto Sans KR",sans-serif`;
+ctx.font = `800 11px ${fontStack('body')}`;
 ctx.fillStyle = isGoal ? '#fef08a' : isSuperSave ? '#cffafe' : '#ede9fe';
 ctx.fillText(badge, pad + 8, pad - 2);
 }
 
 ctx.fillStyle = isGoal ? '#fef9c3' : isSuperSave ? '#ecfeff' : isKeyPass ? '#f3e8ff' : '#f1f5f9';
-ctx.font = `600 ${fontSize}px "Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif`;
+ctx.font = `600 ${fontSize}px ${fontStack('body')}`;
 ctx.textBaseline = 'top';
 const textY = pad + (hasFxBanner ? 12 : 0);
 lines.forEach((ln, i) => {
@@ -2460,7 +2724,7 @@ const metaColor = meta.outcome === 'success' ? '#86efac'
 : meta.outcome === 'fail' ? '#fca5a5'
 : '#fdba74';
 ctx.fillStyle = metaColor;
-ctx.font = `700 10px "Malgun Gothic","Noto Sans KR",sans-serif`;
+ctx.font = `700 10px ${fontStack('body')}`;
 ctx.fillText(meta.captionLine, pad + 10, metaY + 4);
 }
 
@@ -2595,7 +2859,7 @@ ctx.moveTo(px0 + pw, py0);
 ctx.lineTo(px0 + pw - 28, py0);
 ctx.lineTo(px0 + pw, py0 + 22);
 ctx.fill();
-ctx.font = '800 10px "Bebas Neue","Oswald","Malgun Gothic",sans-serif';
+ctx.font = '800 10px ' + fontStack('num');
 ctx.fillStyle = 'rgba(254,226,226,0.92)';
 ctx.fillText('RED', px0 + 6, py0 + ph - 7);
 ctx.fillStyle = 'rgba(219,234,254,0.92)';
@@ -2634,7 +2898,7 @@ const dzW = pw * 0.2;
 ctx.fillStyle = 'rgba(220, 38, 38, 0.18)';
 ctx.fillRect(px0, py0, dzW, ph);
 ctx.fillRect(px0 + pw - dzW, py0, dzW, ph);
-ctx.font = '600 9px "Malgun Gothic","Noto Sans KR",sans-serif';
+ctx.font = '600 9px ' + fontStack('body');
 ctx.fillStyle = 'rgba(254, 242, 242, 0.88)';
 ctx.fillText('BOX', px0 + 8, py0 + 22);
 ctx.fillText('BOX', px0 + pw - dzW + 8, py0 + 22);
@@ -2747,7 +3011,7 @@ const metaColor = opts.outcome === 'success' ? 'rgba(134, 239, 172, 0.95)'
 : opts.outcome === 'fail' ? 'rgba(252, 165, 165, 0.95)'
 : 'rgba(253, 186, 116, 0.95)';
 ctx.fillStyle = metaColor;
-ctx.font = '700 9px "Malgun Gothic","Noto Sans KR",sans-serif';
+ctx.font = '700 9px ' + fontStack('body');
 let shown = meta.captionLine;
 for (let s = meta.captionLine.length; s >= 8; s--) {
 shown = s < meta.captionLine.length ? `${meta.captionLine.slice(0, s)}…` : meta.captionLine;
@@ -2800,10 +3064,10 @@ const pw = cssW - 32;
 const ph = cssH - 44;
 paintFutsalPitchSurface(ctx, cssW, cssH, px0, py0, pw, ph);
 ctx.fillStyle = 'rgba(254, 240, 138, 0.95)';
-ctx.font = '800 14px "Bebas Neue","Oswald","Malgun Gothic",sans-serif';
+ctx.font = '800 14px ' + fontStack('num');
 ctx.textAlign = 'center';
 ctx.fillText('RED  vs  BLUE', cssW / 2, py0 + ph / 2 - 10);
-ctx.font = '600 11px "Malgun Gothic","Noto Sans KR",sans-serif';
+ctx.font = '600 11px ' + fontStack('body');
 ctx.fillStyle = 'rgba(226, 232, 240, 0.92)';
 ctx.fillText('레드팀 vs 블루팀 · 경기 시작 시 공의 방향이 표시됩니다', cssW / 2, py0 + ph / 2 + 10);
 ctx.textAlign = 'left';
@@ -3131,13 +3395,13 @@ ctx.stroke();
 ctx.restore();
 ctx.textAlign = 'center';
 ctx.textBaseline = 'alphabetic';
-ctx.font = '800 8px "Bebas Neue","Oswald","Malgun Gothic",sans-serif';
+ctx.font = '800 8px ' + fontStack('num');
 ctx.fillStyle = 'rgba(15,23,42,0.72)';
 ctx.fillRect(x - 10, y - pr - 13, 20, 10);
 ctx.fillStyle = isHolder ? '#fef08a' : '#f8fafc';
 ctx.fillText(String(getOVR(p)), x, y - pr - 5);
 const fullName = String(p.name || '?').trim();
-ctx.font = isHolder ? '800 8px "Malgun Gothic","Noto Sans KR",sans-serif' : '700 7px "Malgun Gothic","Noto Sans KR",sans-serif';
+ctx.font = (isHolder ? '800 8px ' : '700 7px ') + fontStack('body');
 let shown = fullName;
 for (let s = fullName.length; s >= 1; s--) {
 shown = s < fullName.length ? `${fullName.slice(0, s)}…` : fullName;
@@ -3201,7 +3465,7 @@ ctx.lineTo(px0 + pw / 2, py0 + ph);
 ctx.stroke();
 ctx.setLineDash([]);
 ctx.fillStyle = 'rgba(254,240,138,0.9)';
-ctx.font = '700 10px "Malgun Gothic","Noto Sans KR",sans-serif';
+ctx.font = '700 10px ' + fontStack('body');
 ctx.fillText('레드팀 ←  |  → 블루팀', px0 + 4, py0 + ph + 14);
 drawSimPlayersOnPitch(ctx, px0, py0, pw, ph, {
 plA: padA.roster,
@@ -3334,10 +3598,10 @@ resetSimPitchCanvas();
 /** 풋살 5vs5 · 시뮬 전·후반 각 20분을 실제 시청 전·후반 각 2분에 비례 압축 중계 */
 window.runSimMatch = async () => {
 if (window.playerState.isGuest) {
-return window.customAlert('게스트는 모의경기를 실행할 수 없습니다. 학생 계정으로 로그인해 주세요.');
+return window.customAlert('둘러보기는 경기를 돌릴 수 없어요. 내 이름으로 들어와 주세요.');
 }
 if (countSimTeam('A') < 1 || countSimTeam('B') < 1) {
-return window.customAlert('레드팀과 블루팀에 각각 최소 1명 이상 배정되어야 합니다.\n프로필의 체크박스 또는 라커/팀 분류에서 팀을 선택하세요.');
+return window.customAlert(window.playerState.isGM ? '레드팀과 블루팀에 각각 한 명 이상 넣어 주세요.' : '아직 팀이 정해지지 않았어요. 감독님이 나눠 주면 경기를 볼 수 있어요.');
 }
 const rawA = getSimMatchRoster('A');
 const rawB = getSimMatchRoster('B');
@@ -3355,9 +3619,6 @@ const teamBName = SIM_TEAM_B_NAME;
 
 const btn = document.getElementById('btnSimStart');
 if (btn) { btn.disabled = true; btn.classList.add('opacity-50', 'cursor-not-allowed'); }
-const omKick = window.officialMatch || {};
-const gmOfficialKick = !!(window.playerState && window.playerState.isGM && document.getElementById('simOfficialKickoff')?.checked && (omKick.status === 'open' || omKick.status === 'live'));
-
 const logEl = document.getElementById('simMatchLog');
 const scoreBar = document.getElementById('simScoreBar');
 const scoreNums = document.getElementById('simScoreNums');
@@ -3743,16 +4004,6 @@ await append(`[연습 모드] 실제 소속 인원이 5명 미만인 팀은 자�
 }
 await append(`전력 요약: ${teamAName} 출전 OVR 합 ${strA} (${mentLabel(mentA)})  |  ${teamBName} 출전 OVR 합 ${strB} (${mentLabel(mentB)})`, kickPitch);
 await append(`[전반 00:00] 킥오프 — 패스 vs 가로채기, 드리블 vs 수비, 슈팅 vs 반사신경으로 판정합니다. 공격적 템포는 슈팅을 늘리고, 수비적은 실점을 줄입니다.`, kickPitch);
-if (gmOfficialKick) {
-try {
-await closeOfficialBettingForKickoff();
-await append('[공식 경기] 베팅을 마감했습니다. 종료 후 삼봉FC 봉으로 정산합니다.');
-} catch (kickBetErr) {
-console.error('closeOfficialBettingForKickoff', kickBetErr);
-await append(`[공식 경기] 베팅 마감에 실패했습니다: ${kickBetErr && kickBetErr.message ? kickBetErr.message : kickBetErr}`);
-}
-}
-
 for (let halfIdx = 0; halfIdx < 2; halfIdx++) {
 setMatchClock(halfIdx, 0);
 for (let si = 0; si < SITUATIONS_PER_HALF; si++) {
@@ -3775,7 +4026,6 @@ await append(`[휴식] 하프타임 — 전술을 가다듬습니다.`);
 await append(`━━ 최종 스코어 ${teamAName} ${sa} : ${sb} ${teamBName} ━━`);
 await append(`(모의 시뮬레이션 종료 · 서버 기록·EXP 미반영)`);
 renderSimPostMatchStats(plA, plB, teamAName, teamBName, simStats, live, ratings);
-await maybeSettleOfficialBetsAfterSim(sa, sb, teamAName, teamBName, gmOfficialKick);
 } finally {
 if (btn) { btn.disabled = false; btn.classList.remove('opacity-50', 'cursor-not-allowed'); }
 document.getElementById('simTacticalSection')?.classList.remove('hidden');
@@ -3888,354 +4138,6 @@ window.customAlert(`쇼츠 등록 에러:\n${e.message}`);
 };
 
 
-const WC_HOUSE_MARGIN = 0.15;
-const WC_MAX_STAKE = 200;
-function wcOddsFromProb(prob) {
-const adjusted = Math.min(0.95, Number(prob) * (1 + WC_HOUSE_MARGIN));
-return Math.max(1.05, Math.round((1 / adjusted) * 100) / 100);
-}
-window.officialMatch = window.officialMatch || { status: 'idle' };
-function officialMatchRef() {
-return doc(db, 'artifacts', appId, 'public', 'data', 'config', 'officialMatch');
-}
-function floorBong(v) {
-const n = Number(v);
-if (!Number.isFinite(n)) return 0;
-return Math.max(0, Math.floor(n));
-}
-function computeOfficialOdds() {
-const a = getSimMatchRoster('A');
-const b = getSimMatchRoster('B');
-const oa = a.length ? a.reduce((s, p) => s + getOVR(p), 0) / a.length : STAT_BASE;
-const ob = b.length ? b.reduce((s, p) => s + getOVR(p), 0) / b.length : STAT_BASE;
-const pA = 1 / (1 + Math.pow(10, (ob - oa) / 40));
-const clamp = Math.max(0.18, Math.min(0.82, pA));
-return { oddsA: wcOddsFromProb(clamp), oddsB: wcOddsFromProb(1 - clamp) };
-}
-function getPendingOfficialBets(matchId) {
-const mid = matchId || (window.officialMatch && window.officialMatch.matchId);
-if (!mid) return [];
-return (window.allPlayersData || []).map((p) => {
-const b = p.officialBet;
-if (b && String(b.matchId) === String(mid) && b.status === 'pending') {
-return { ...b, playerId: p.id, playerName: p.name };
-}
-return null;
-}).filter(Boolean);
-}
-function officialStatusLabel(m) {
-if (!m || m.status === 'idle') return { t: '연습만', cls: 'text-slate-400' };
-if (m.status === 'open') return { t: '베팅 접수 중', cls: 'text-amber-300' };
-if (m.status === 'live') return { t: '공식 경기 진행', cls: 'text-red-300' };
-if (m.status === 'settled') return { t: '정산 완료', cls: 'text-emerald-300' };
-if (m.status === 'closed') return { t: '베팅 마감', cls: 'text-slate-300' };
-return { t: m.status, cls: 'text-slate-400' };
-}
-window.renderOfficialBetPanel = () => {
-const m = window.officialMatch || { status: 'idle' };
-const stEl = document.getElementById('officialBetStatus');
-const lab = officialStatusLabel(m);
-if (stEl) { stEl.textContent = lab.t; stEl.className = `text-[10px] font-black ${lab.cls} shrink-0`; }
-const gmBar = document.getElementById('officialBetGmBar');
-if (gmBar) {
-if (window.playerState && window.playerState.isGM) gmBar.classList.remove('hidden');
-else gmBar.classList.add('hidden');
-}
-const box = document.getElementById('officialBetMarket');
-if (!box) return;
-const pending = getPendingOfficialBets(m.matchId);
-const me = (window.allPlayersData || []).find((x) => x.id === window.playerState.id);
-const myBet = me && me.officialBet && String(me.officialBet.matchId) === String(m.matchId) ? me.officialBet : null;
-const wallet = me ? floorBong(me.bong) : 0;
-const oddsA = Number(m.oddsA) || 1.85;
-const oddsB = Number(m.oddsB) || 1.85;
-const canBet = !!(window.playerState && !window.playerState.isGuest && !window.playerState.isGM && m.status === 'open' && !myBet);
-let market = '';
-if (m.status === 'open' || m.status === 'live' || m.status === 'closed' || m.status === 'settled') {
-const resTxt = m.result === 'A' ? '레드팀 승' : m.result === 'B' ? '블루팀 승' : m.result === 'draw' ? '무승부(환급)' : '';
-market += `<div class="grid grid-cols-2 gap-2 mb-2">
-<button type="button" ${canBet ? `onclick="window.placeOfficialBet('A')"` : 'disabled'} class="rounded-xl border border-red-500/40 bg-red-950/40 px-3 py-2 text-left ${canBet ? 'hover:border-red-300' : 'opacity-80'}">
-<div class="text-xs font-black text-red-100">레드팀 승</div>
-<div class="text-[10px] text-fut-gold font-black">${oddsA.toFixed(2)}x</div>
-</button>
-<button type="button" ${canBet ? `onclick="window.placeOfficialBet('B')"` : 'disabled'} class="rounded-xl border border-blue-500/40 bg-blue-950/40 px-3 py-2 text-left ${canBet ? 'hover:border-blue-300' : 'opacity-80'}">
-<div class="text-xs font-black text-blue-100">블루팀 승</div>
-<div class="text-[10px] text-fut-gold font-black">${oddsB.toFixed(2)}x</div>
-</button>
-</div>`;
-if (resTxt) market += `<p class="text-[11px] text-emerald-300 mb-1">결과: ${escapeHtml(resTxt)}${m.lastScore ? ` · ${m.lastScore.sa}-${m.lastScore.sb}` : ''}</p>`;
-if (myBet) {
-const mine = myBet.status === 'pending' ? '대기' : myBet.status === 'won' ? `적중 +${floorBong(myBet.payout)}B` : myBet.status === 'refund' ? '환급' : '미적중';
-market += `<p class="text-[11px] text-amber-200 mb-1">내 베팅: ${myBet.pick === 'A' ? '레드' : '블루'} ${floorBong(myBet.stake)}B · ${mine}</p>`;
-} else if (window.playerState && !window.playerState.isGuest && !window.playerState.isGM && m.status === 'open') {
-market += `<p class="text-[10px] text-slate-400 mb-1">보유 ${wallet} B · 한 경기에 한 번만 걸 수 있습니다.</p>`;
-}
-if (window.playerState && window.playerState.isGM) {
-const list = pending.length
-? pending.slice(0, 40).map((b) => `<div class="flex justify-between gap-2 text-[11px] py-0.5 border-b border-slate-800/80"><span class="text-white truncate">${escapeHtml(b.playerName)} · ${b.pick === 'A' ? '레드' : '블루'} · ${floorBong(b.stake)}B</span><span class="text-amber-300 shrink-0">대기</span></div>`).join('')
-: '<p class="text-[11px] text-slate-500 text-center py-2">대기 중인 베팅이 없습니다.</p>';
-market += `<div class="text-[10px] font-black text-slate-400 mb-1">대기 ${pending.length}건</div><div class="max-h-40 overflow-y-auto">${list}</div>`;
-}
-} else {
-market = '<p class="text-[11px] text-slate-500">선생님이 공식 경기 베팅을 열면 여기에 배당이 뜹니다.</p>';
-}
-box.innerHTML = market;
-};
-window.openOfficialBetting = async () => {
-try {
-checkAuthReady();
-if (!window.playerState || !window.playerState.isGM) return;
-if (countSimTeam('A') < 1 || countSimTeam('B') < 1) return window.customAlert('레드/블루에 선수를 먼저 배정한 뒤 베팅을 열어 주세요.');
-const cur = window.officialMatch || {};
-if (cur.status === 'open') return window.customAlert('이미 베팅이 열려 있습니다.');
-if (cur.status === 'live') return window.customAlert('공식 경기가 진행 중입니다. 종료 후 다시 열어 주세요.');
-const { oddsA, oddsB } = computeOfficialOdds();
-const next = {
-matchId: 'om_' + Date.now(),
-status: 'open',
-teamAName: SIM_TEAM_A_NAME,
-teamBName: SIM_TEAM_B_NAME,
-oddsA, oddsB,
-openedAt: Date.now(),
-openedBy: window.playerState.id,
-result: null,
-lastScore: null
-};
-await setDoc(officialMatchRef(), next, { merge: true });
-window.officialMatch = next;
-window.renderOfficialBetPanel();
-window.customAlert(`공식 경기 베팅을 열었습니다.\n레드 ${oddsA.toFixed(2)}x · 블루 ${oddsB.toFixed(2)}x`);
-} catch (e) { console.error(e); window.customAlert(`베팅 열기 실패:\n${e.message}`); }
-};
-window.closeOfficialBetting = async () => {
-try {
-checkAuthReady();
-if (!window.playerState || !window.playerState.isGM) return;
-const cur = window.officialMatch || {};
-if (cur.status !== 'open') return window.customAlert('열려 있는 베팅이 없습니다.');
-const next = { ...cur, status: 'closed', closedAt: Date.now() };
-await setDoc(officialMatchRef(), next, { merge: true });
-window.officialMatch = next;
-window.renderOfficialBetPanel();
-} catch (e) { window.customAlert(e.message); }
-};
-async function closeOfficialBettingForKickoff() {
-if (!window.playerState || !window.playerState.isGM) return;
-checkAuthReady();
-const snap = await getDoc(officialMatchRef());
-const cur = snap.exists() ? snap.data() : (window.officialMatch || {});
-if (cur.status === 'settled') return;
-const next = { ...cur, status: 'live', kickoffAt: Date.now() };
-await setDoc(officialMatchRef(), next, { merge: true });
-window.officialMatch = next;
-window.renderOfficialBetPanel();
-}
-window.placeOfficialBet = async (pick) => {
-try {
-checkAuthReady();
-if (!window.playerState || window.playerState.isGuest || window.playerState.isGM) return window.customAlert('학생 계정으로만 베팅할 수 있습니다.');
-const m = window.officialMatch || {};
-if (m.status !== 'open') return window.customAlert('지금은 베팅을 받지 않습니다. 선생님이 공식 경기를 열어 주세요.');
-const p = (window.allPlayersData || []).find((x) => x.id === window.playerState.id);
-if (!p) return;
-if (p.officialBet && String(p.officialBet.matchId) === String(m.matchId) && p.officialBet.status === 'pending') {
-return window.customAlert('이미 이 경기에 베팅했습니다.');
-}
-const odds = pick === 'A' ? Number(m.oddsA) : Number(m.oddsB);
-const wallet = floorBong(p.bong);
-const cap = Math.min(WC_MAX_STAKE, wallet);
-if (cap < 1) return window.customAlert('봉이 부족합니다.');
-const stake = await window.pickBongStake({
-title: '공식 경기 베팅',
-label: pick === 'A' ? '레드팀 승' : '블루팀 승',
-odds, wallet, max: cap
-});
-if (!stake) return;
-if (stake > cap) return window.customAlert('걸 수 있는 금액을 넘었습니다.');
-const bet = { matchId: m.matchId, pick, stake, odds, status: 'pending', placedAt: Date.now() };
-const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
-await setDoc(docRef, { bong: wallet - stake, officialBet: bet }, { merge: true });
-window.customAlert(`${pick === 'A' ? '레드' : '블루'}에 ${stake} B를 걸었습니다.`);
-window.renderOfficialBetPanel();
-} catch (e) { console.error(e); window.customAlert(`베팅 실패:\n${e.message}`); }
-};
-async function maybeSettleOfficialBetsAfterSim(sa, sb, teamAName, teamBName, isOfficial) {
-if (!isOfficial) return;
-if (!window.playerState || !window.playerState.isGM) return;
-const m = window.officialMatch || {};
-if (m.status === 'settled') {
-await window.customAlert('이 공식 경기는 이미 정산되었습니다.');
-return;
-}
-let result = 'draw';
-let label = '무승부 · 걸었던 봉을 환급합니다';
-if (sa > sb) { result = 'A'; label = '레드팀 승'; }
-else if (sa < sb) { result = 'B'; label = '블루팀 승'; }
-const ok = await window.customConfirm(`공식 경기 최종 ${teamAName} ${sa} : ${sb} ${teamBName}\n→ ${label}\n\n삼봉FC 봉으로 베팅을 정산할까요?`);
-if (!ok) return;
-try {
-const res = await settleOfficialMatch({ sa, sb, teamAName, teamBName, result });
-if (!res) return;
-await window.customAlert(`공식 경기 정산 완료!\n${label}\n적중 ${res.winnerCount}건 · 지급 ${res.totalPayout} B · 환급 ${res.refundCount}건`);
-} catch (e) {
-console.error(e);
-await window.customAlert(`정산 실패:\n${e && e.message ? e.message : e}`);
-}
-}
-async function settleOfficialMatch({ sa, sb, teamAName, teamBName, result }) {
-checkAuthReady();
-if (!window.playerState || !window.playerState.isGM) throw new Error('감독 계정으로만 정산할 수 있습니다.');
-const snap = await getDoc(officialMatchRef());
-const cur = snap.exists() ? snap.data() : (window.officialMatch || {});
-if (cur.status === 'settled') throw new Error('이미 정산된 공식 경기입니다.');
-const matchId = cur.matchId;
-const settledAt = Date.now();
-const batch = writeBatch(db);
-let winnerCount = 0;
-let refundCount = 0;
-let totalPayout = 0;
-(window.allPlayersData || []).forEach((p) => {
-const b = p.officialBet;
-if (!b || String(b.matchId) !== String(matchId) || b.status !== 'pending') return;
-const stake = floorBong(b.stake);
-let status = 'lost';
-let payout = 0;
-if (result === 'draw') {
-status = 'refund';
-payout = stake;
-refundCount += 1;
-} else if (String(b.pick) === String(result)) {
-status = 'won';
-payout = floorBong(stake * Number(b.odds || 0));
-winnerCount += 1;
-}
-totalPayout += payout;
-const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id));
-const payload = { officialBet: { ...b, status, payout, settledAt } };
-if (payout > 0) payload.bong = increment(payout);
-batch.set(docRef, payload, { merge: true });
-});
-const next = {
-...cur,
-status: 'settled',
-result,
-settledAt,
-lastScore: { sa, sb },
-teamAName, teamBName
-};
-batch.set(officialMatchRef(), next, { merge: true });
-await batch.commit();
-window.officialMatch = next;
-window.renderOfficialBetPanel();
-return { winnerCount, refundCount, totalPayout, result };
-}
-
-
-function defaultWcBoard() {
-return {
-updatedAt: new Date().toISOString(),
-matches: [
-{
-id: 'kr_r32_2026',
-title: '대한민국 32강 진출 예측',
-subtitle: '삼봉FC 공식 경기와 별도 예측 보드',
-kickoffLabel: '2026 월드컵',
-status: 'open',
-result: null,
-options: [
-{ id: 'advance', label: '32강 진출', prob: 0.38, odds: wcOddsFromProb(0.38) },
-{ id: 'eliminate', label: '조별리그 탈락', prob: 0.62, odds: wcOddsFromProb(0.62) }
-]
-},
-{
-id: 'wc2026_final_winner',
-title: '월드컵 우승국',
-subtitle: '재미 예측 · 감독이 결과 확정',
-kickoffLabel: '결승 이후 정산',
-status: 'open',
-result: null,
-options: [
-{ id: 'sa', label: '남미 우승', prob: 0.34, odds: wcOddsFromProb(0.34) },
-{ id: 'eu', label: '유럽 우승', prob: 0.48, odds: wcOddsFromProb(0.48) },
-{ id: 'other', label: '그 외 대륙', prob: 0.18, odds: wcOddsFromProb(0.18) }
-]
-}
-]
-};
-}
-function wcBoardRef() {
-return doc(db, 'artifacts', appId, 'public', 'data', 'config', 'wcBoard');
-}
-function getWcBoard() {
-return window.wcBoard && Array.isArray(window.wcBoard.matches) ? window.wcBoard : defaultWcBoard();
-}
-window.ensureWcBoardPublished = async () => {
-try {
-if (!window.playerState || !window.playerState.isGM) return;
-checkAuthReady();
-const snap = await getDoc(wcBoardRef());
-const data = snap.exists() ? snap.data() : null;
-if (data && Array.isArray(data.matches) && data.matches.length) return;
-await setDoc(wcBoardRef(), defaultWcBoard(), { merge: true });
-} catch (e) { console.error('wcBoard seed', e); }
-};
-window.renderWorldCupBetBoard = () => {
-window.renderOfficialBetPanel();
-};
-
-window.placeFcWorldCupBet = async (pick) => {
-window.placeOfficialBet(pick === 'advance' ? 'A' : 'B');
-};
-
-window.setWcMatchStatus = async (matchId, status) => {
-try {
-checkAuthReady();
-if (!window.playerState.isGM) return;
-const board = getWcBoard();
-board.matches = (board.matches || []).map((m) => m.id === matchId ? { ...m, status } : m);
-board.updatedAt = new Date().toISOString();
-await setDoc(wcBoardRef(), board, { merge: true });
-} catch (e) { window.customAlert(e.message); }
-};
-
-window.settleWcMatch = async (matchId) => {
-try {
-checkAuthReady();
-if (!window.playerState.isGM) return;
-const pick = document.getElementById('wcSettle_' + matchId)?.value;
-if (!pick) return window.customAlert('결과를 선택하세요.');
-if (!await window.customConfirm('결과를 확정하고 적중자에게 봉을 지급할까요?')) return;
-const board = getWcBoard();
-const match = (board.matches || []).find((m) => m.id === matchId);
-if (!match) return;
-const batch = writeBatch(db);
-(window.allPlayersData || []).forEach((p) => {
-const bets = Array.isArray(p.wcBets) ? p.wcBets : [];
-let bong = Number(p.bong) || 0;
-let changed = false;
-const next = bets.map((b) => {
-if (!b || b.matchId !== matchId || b.status !== 'pending') return b;
-changed = true;
-if (b.optionId === pick) {
-const payout = Math.floor(Number(b.stake) * Number(b.odds));
-bong += payout;
-return { ...b, status: 'won', payout };
-}
-return { ...b, status: 'lost', payout: 0 };
-});
-if (changed) {
-batch.set(doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id)), { bong, wcBets: next }, { merge: true });
-}
-});
-board.matches = board.matches.map((m) => m.id === matchId ? { ...m, status: 'settled', result: pick } : m);
-board.updatedAt = new Date().toISOString();
-batch.set(wcBoardRef(), board, { merge: true });
-await batch.commit();
-triggerConfetti();
-window.customAlert('정산 완료. 적중자에게 봉이 지급되었습니다.');
-} catch (e) { console.error(e); window.customAlert(`정산 실패:\n${e.message}`); }
-};
-
 const triggerConfetti = () => {
 const el = document.getElementById('confettiOrigin');
 if(el) {
@@ -4327,135 +4229,67 @@ window.customAlert(`삭제 에러:\n${e.message}`);
 // ==============================================
 // 🚀 앱 코어 인증 및 초기화
 // ==============================================
-window.handleLogin = async (pId, pin, isAuto = false) => {
-if(!pId) return window.customAlert("입장 권한을 선택하세요.");
-
-const isGuest = pId === 'guest';
+window.handleLogin = async (pId, pin, opts = {}) => {
+const mode = opts && opts.mode === 'set' ? 'set' : 'enter';
+if (!pId) return 'bad';
 const isGM = pId === 'gm1' || pId === 'gm2';
-
-if(!isGuest && (!pin || pin.length !== 4)) {
-if(isAuto) { localStorage.clear(); location.reload(); return; }
-return window.customAlert("4자리 숫자로 된 PIN 번호를 입력하세요.");
-}
-
-if (!auth.currentUser) {
+const pinText = String(pin || '');
+if (!/^\d{4}$/.test(pinText)) return 'bad';
+if (!auth || !auth.currentUser) {
 try {
-console.log("인증 정보가 없어 재접속을 시도합니다...");
-if (typeof globalThis.__initial_auth_token !== 'undefined' && globalThis.__initial_auth_token) { 
-await signInWithCustomToken(auth, globalThis.__initial_auth_token); 
-} else { 
-await signInAnonymously(auth); 
-}
-} catch(e) {
-return window.customAlert(`서버와 연결할 수 없습니다.\n\n💡 팁: 학교 와이파이(교육망) 환경에서는 방화벽으로 차단될 수 있습니다. 스마트폰 핫스팟이나 데이터를 이용해주세요!\n(상세: ${e.message})`);
-}
-}
-
-if(isGuest) {
-window.playerState = { id: 'guest', isGM: false, isGuest: true, name: '게스트' };
-window.selectedPlayerId = ALLOWED_PLAYERS[0];
+if (typeof globalThis.__initial_auth_token !== 'undefined' && globalThis.__initial_auth_token) {
+await signInWithCustomToken(auth, globalThis.__initial_auth_token);
 } else {
-const safeDocId = getSafeDocId(pId);
+await signInAnonymously(auth);
+}
+} catch (e) {
+window.customAlert('서버와 연결할 수 없어요. 학교 와이파이가 막혀 있으면 휴대폰 데이터로 다시 들어와 주세요.');
+return 'cancel';
+}
+}
+const safeDocId = isGM ? pId : getSafeDocId(pId);
 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + safeDocId);
-
 try {
 const snap = await getDoc(docRef);
-const r = () => Math.floor(Math.random() * 6) + 55;
-
-if(snap.exists()) {
+const roll = () => Math.floor(Math.random() * 6) + 55;
+if (snap.exists()) {
 const data = snap.data();
-if(!data.pin) {
-if(isAuto) { localStorage.clear(); location.reload(); return; }
-if(!await window.customConfirm(`PIN [${pin}]으로 초기 등록하시겠습니까?`)) return;
-
-const updateData = {
-pin, pos: data.pos || '미정', pac: data.pac || r(), sho: data.sho || r(), pas: data.pas || r(),
-dri: data.dri || r(), def: data.def || r(), phy: data.phy || r(), ref: data.ref || r(), int: data.int || r(), pst: data.pst || r(),
-dis: data.dis || r(), cmp: data.cmp || r(), wrk: data.wrk || r(), level: data.level || 1, exp: data.exp || 0, goals: data.goals || 0,
-assists: data.assists || 0, matches: data.matches || 0, training: data.training || 0, saves: data.saves || 0, keypass: data.keypass || 0, bong: data.bong || 0,
-age: data.age || 13,
-inventory: data.inventory || [], itemLevels: data.itemLevels || {}
-};
-await setDoc(docRef, { ...updateData, updatedAt: new Date().toISOString() }, { merge: true });
-window.playerState = { id: safeDocId, isGM, isGuest: false, ...data, ...updateData };
-} else if(data.pin !== pin) {
-if(isAuto) { localStorage.clear(); location.reload(); return; }
-return window.customAlert("❌ 비밀번호가 틀렸습니다.");
-} else { window.playerState = { id: safeDocId, isGM, isGuest: false, ...data }; }
+const serverPin = data.pin == null ? '' : String(data.pin).trim();
+if (!serverPin) {
+if (mode !== 'set') return 'need-set';
+await setDoc(docRef, { pin: pinText, updatedAt: new Date().toISOString() }, { merge: true });
+const idx = window.allPlayersData.findIndex((x) => x.id === safeDocId);
+if (idx >= 0) window.allPlayersData[idx] = { ...window.allPlayersData[idx], pin: pinText, fromDb: true, name: playerDisplayName({ ...window.allPlayersData[idx], id: safeDocId }) };
+window.playerState = { ...stripPrivate(data), id: safeDocId, isGM, isGuest: false, name: playerDisplayName({ ...data, id: safeDocId }) };
+} else if (serverPin !== pinText) {
+return 'bad';
 } else {
-if(isAuto) { localStorage.clear(); location.reload(); return; }
-if(!await window.customConfirm(`신규 카드 발급! PIN [${pin}]으로 등록하시겠습니까?`)) return;
-const baseData = { 
-name: isGM ? (pId==='gm1'?'감독 J':'수석코치 J') : pId, pin, pos: isGM ? 'Fixo' : '미정', 
-pac: r(), sho: r(), pas: r(), dri: r(), def: r(), phy: r(), ref: r(), int: r(), pst: r(), dis: r(), cmp: r(), wrk: r(),
+window.playerState = { ...stripPrivate(data), id: safeDocId, isGM, isGuest: false, name: playerDisplayName({ ...data, id: safeDocId }) };
+}
+} else {
+if (!await window.customConfirm('처음 만드는 카드예요. 이 PIN으로 등록할까요?')) return 'cancel';
+const baseData = {
+name: isGM ? (pId === 'gm1' ? '감독 J' : '수석코치 J') : pId,
+pin: pinText,
+pos: isGM ? 'Fixo' : '미정',
+pac: roll(), sho: roll(), pas: roll(), dri: roll(), def: roll(), phy: roll(), ref: roll(), int: roll(), pst: roll(), dis: roll(), cmp: roll(), wrk: roll(),
 level: 1, exp: 0, goals: 0, assists: 0, matches: 0, training: 0, saves: 0, keypass: 0, bong: 0, lastWageWeek: '',
-age: (pId === '신무호' || pId === '신무호') ? 12 : 13,
-inventory: [], itemLevels: {}, equipHead: null, equipHandL: null, equipHandR: null, equipFootL: null, equipFootR: null, equipFace: null, equipAvatar: null,
+age: 13,
+inventory: [], itemLevels: {}, equipHead: null, equipHandL: null, equipHandR: null, equipFootL: null, equipFootR: null, equipFace: null,
 updatedAt: new Date().toISOString()
 };
-await setDoc(docRef, baseData, { merge: true });
-window.playerState = { id: safeDocId, isGM, isGuest: false, ...baseData };
+await setDoc(docRef, baseData);
+window.playerState = { ...stripPrivate(baseData), id: safeDocId, isGM, isGuest: false, name: playerDisplayName({ ...baseData, id: safeDocId }) };
 }
-localStorage.setItem('sfc_pid', pId); localStorage.setItem('sfc_pin', pin);
-} catch(e) { 
-console.error("Login err:", e); 
-let errMsg = e.message || "원인 불명";
-if(errMsg.includes("offline") || errMsg.includes("permissions") || errMsg.includes("Failed to get")) {
-return window.customAlert(`서버 접속이 차단되었습니다.\n\n💡 팁: 학교 와이파이(교육망) 환경에서는 보안 방화벽으로 인해 접속이 막힐 수 있습니다. 스마트폰 핫스팟으로 잠시 연결해 보세요!\n(상세: ${errMsg})`);
-}
-return window.customAlert(`로그인 처리 중 에러가 발생했습니다.\n(상세: ${errMsg})`); 
-}
-}
-
-if(!isGuest && !isGM) { window.selectedPlayerId = getSafeDocId(pId); }
-else if (isGM && !window.selectedPlayerId) { window.selectedPlayerId = getSafeDocId(ALLOWED_PLAYERS[0]); }
-
-document.getElementById('loginOverlay')?.style.setProperty('opacity', '0');
-setTimeout(() => { document.getElementById('loginOverlay')?.classList.add('hidden'); }, 500);
-document.getElementById('mainUI')?.classList.remove('hidden');
-
-document.getElementById('saveStatus')?.classList.remove('hidden');
-const roleEl = document.getElementById('playerRoleDisplay');
-const nameEl = document.getElementById('playerNameDisplay');
-
-if(isGuest) {
-if(roleEl) { roleEl.innerText = "👀 게스트 모드 (관전 전용)"; roleEl.className = "text-slate-400 font-bold"; }
-if(nameEl) nameEl.innerText = "손님";
-} else if(isGM) {
-if(roleEl) { roleEl.innerText = "👑 코칭 스태프 권한 활성화"; roleEl.className = "text-fut-gold font-bold"; }
-if(nameEl) nameEl.innerText = window.playerState.name;
-document.getElementById('btnTabMaster')?.classList.remove('hidden');
-document.getElementById('btnTabMasterStats')?.classList.remove('hidden');
-document.getElementById('gmAttendanceTools')?.classList.remove('hidden');
-document.getElementById('gmAttendanceTools')?.classList.add('flex');
-} else {
-if(roleEl) { roleEl.innerText = "✅ 선수 등록 완료"; roleEl.className = "text-emerald-400 font-bold"; }
-if(nameEl) nameEl.innerText = window.playerState.name;
-}
-
-if(isGM) window.switchAppTab('more', 'tabMaster');
-else {
-window.switchAppTab('home');
-if(window.selectedPlayerId && window.allPlayersData.length > 0) window.selectPlayer(window.selectedPlayerId);
-}
-
-// 🔔 공지 팝업: 같은 공지는 기기당 1회만 (내용이 바뀌면 다시 1회)
-if(!isGuest) {
-const annRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'announcement');
-getDoc(annRef).then(snap => {
-const raw = snap.exists() ? snap.data().text : '';
-const annText = typeof raw === 'string' ? raw.trim() : '';
-const stamp = snap.exists() ? String(snap.data().updatedAt || '') : '';
-if (!annText) return;
-const token = `${stamp}|${annText}`;
-try {
-if (localStorage.getItem('sfc_ann_seen_v1') === token) return;
-localStorage.setItem('sfc_ann_seen_v1', token);
-} catch (e) { /* ignore */ }
-setTimeout(() => {
-window.customAlert(`📢 [감독님 공지사항]\n\n${escapeHtml(annText)}`);
-}, 800);
-});
+persistRemember(isGM ? pId : safeDocId);
+if (!isGM) window.selectedPlayerId = safeDocId;
+else if (!window.selectedPlayerId) window.selectedPlayerId = getSafeDocId(ALLOWED_PLAYERS[0] || '');
+showEnteredUI();
+return 'ok';
+} catch (e) {
+console.error('Login err:', e);
+window.customAlert('들어가는 중에 문제가 생겼어요. 잠시 뒤 다시 눌러 주세요.');
+return 'cancel';
 }
 };
 
@@ -4523,16 +4357,14 @@ snapshot.forEach(d => {
 try {
 if(!d.id.includes('gm')) {
 const data = d.data();
-const cleanId = d.id.replace('player_', '');
-dbPlayers.set(cleanId, { id: cleanId, name: data.name || cleanId, ...data }); 
-
-// 🔥 수동으로 등록된 플레이어 배열에 동기화
-if (data.name && !ALLOWED_PLAYERS.includes(data.name)) {
-ALLOWED_PLAYERS.push(data.name);
-}
-if (data.name && data.gender) {
-GENDER_MAP[data.name] = data.gender;
-}
+const cleanId = d.id.replace(/^player_/, '');
+const copy = { ...data };
+delete copy.officialBet;
+delete copy.wcBets;
+const shown = (typeof data.name === 'string' && data.name.trim()) ? data.name.trim() : cleanId;
+dbPlayers.set(cleanId, { ...copy, id: cleanId, name: shown, fromDb: true });
+if (shown && !ALLOWED_PLAYERS.includes(shown)) ALLOWED_PLAYERS.push(shown);
+if (shown && data.gender) GENDER_MAP[shown] = data.gender;
 }
 } catch(e) { console.error("Parse err", e); }
 });
@@ -4547,17 +4379,7 @@ delete GENDER_MAP[name];
 }
 }
 
-// 🔥 로그인 창 플레이어 이름 선택 드롭다운 갱신
-const nameSelect = document.getElementById('loginPlayerName');
-if(nameSelect) {
-const currentVal = nameSelect.value;
-nameSelect.innerHTML = '<option value="" disabled selected>내 이름 선택하기</option>';
-[...ALLOWED_PLAYERS].sort().forEach(name => {
-const opt = document.createElement('option'); opt.value = name; opt.innerText = name;
-if(name === currentVal) opt.selected = true;
-nameSelect.appendChild(opt);
-});
-}
+buildNameGrid();
 
 const players = [];
 ALLOWED_PLAYERS.forEach(name => {
@@ -4597,9 +4419,9 @@ if(isVisible('tabRank')) renderLeaderboard();
 if(isVisible('tabMaster')) renderMasterDashboard();
 if(isVisible('tabCompare')) window.renderCompareList();
 if(isVisible('tabSim')) window.renderSimMatchTab();
-else window.renderOfficialBetPanel();
 if(isVisible('tabMasterStats')) window.renderMasterStats();
 updateNavBongChip();
+tryRememberedEntry();
 }, (error) => console.error("Players Listen Error:", error));
 
 onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'announcement'), (docSnap) => {
@@ -4624,13 +4446,15 @@ onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'latest_event
 const data = docSnap.data();
 const marqueeContainer = document.getElementById('globalMarqueeContainer');
 const marqueeText = document.getElementById('globalMarqueeText');
-if(data && data.text && marqueeContainer && marqueeText) {
-const isRecent = (Date.now() - (data.timestamp || 0)) < 1000 * 60 * 60 * 24; 
+const eventText = String((data && data.text) || '');
+const hideEvent = /베팅|전액/.test(eventText) || (!featureOn('shop') && /상점|스킨|장비|강화/.test(eventText)) || (!featureOn('bong') && /주급/.test(eventText));
+if(eventText && marqueeContainer && marqueeText && !hideEvent) {
+const isRecent = (Date.now() - (data.timestamp || 0)) < 1000 * 60 * 60 * 24;
 if(isRecent) {
-marqueeText.innerText = `[긴급 속보] ${data.text}`;
+marqueeText.innerText = eventText;
 marqueeContainer.classList.remove('hidden');
 } else { marqueeContainer.classList.add('hidden'); }
-}
+} else if (marqueeContainer) { marqueeContainer.classList.add('hidden'); }
 }, (error) => console.error("Event Listen Error:", error));
 
 onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'season'), (docSnap) => {
@@ -4643,40 +4467,7 @@ startedAt: data.startedAt || null
 applySeasonChrome();
 }, (error) => console.error("Season Listen Error:", error));
 
-onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'wcBoard'), (docSnap) => {
-const data = docSnap.data();
-if (data && Array.isArray(data.matches) && data.matches.length) {
-window.wcBoard = data;
-} else {
-window.wcBoard = defaultWcBoard();
-}
-}, (error) => console.error("wcBoard Listen Error:", error));
-
-onSnapshot(officialMatchRef(), (docSnap) => {
-window.officialMatch = docSnap.exists() ? docSnap.data() : { status: 'idle' };
-window.renderOfficialBetPanel();
-}, (error) => console.error('officialMatch Listen Error:', error));
-
 document.getElementById('loadingOverlay')?.classList.add('hidden');
-
-try {
-const savedPid = localStorage.getItem('sfc_pid');
-const savedPin = localStorage.getItem('sfc_pin');
-if(savedPid && savedPin) {
-setTimeout(() => { 
-const loginIdEl = document.getElementById('loginId');
-const loginPinEl = document.getElementById('loginPin');
-if(loginIdEl) loginIdEl.value = savedPid.includes('gm') ? savedPid : 'player'; 
-if(loginPinEl) loginPinEl.value = savedPin; 
-window.handleLogin(savedPid, savedPin, true); 
-}, 100);
-} else {
-document.getElementById('loginOverlay')?.classList.remove('hidden');
-}
-} catch(lsErr) { 
-console.warn("자동로그인 확인 불가:", lsErr); 
-document.getElementById('loginOverlay')?.classList.remove('hidden');
-}
 } else {
 document.getElementById('loadingOverlay')?.classList.add('hidden');
 document.getElementById('loginOverlay')?.classList.remove('hidden');
@@ -4690,14 +4481,6 @@ document.getElementById('loadingOverlay')?.classList.add('hidden');
 document.getElementById('loginOverlay')?.classList.remove('hidden');
 }
 };
-
-document.getElementById('btnLogin')?.addEventListener('click', () => {
-const role = document.getElementById('loginId').value;
-let pId = role;
-if(role === 'player') pId = document.getElementById('loginPlayerName').value;
-const pin = document.getElementById('loginPin').value;
-window.handleLogin(pId, pin);
-});
 
 // 모의경기 팀 분류창: 삭제 버튼·레드/블루 라디오·더블클릭 이동·드래그 앤 드롭 (한 번만 등록)
 if (typeof window !== 'undefined' && !window.__simTeamBoardUiBound) {
@@ -4739,12 +4522,24 @@ if (tm === 'A' || tm === 'B') window.fillSimTeamRandomPos(tm);
 return;
 }
 const btn = ev.target.closest('.sim-team-remove-btn');
-if (!btn) return;
+if (btn) {
 ev.preventDefault();
 const pid = btn.getAttribute('data-player-id');
 if (pid) window.setPlayerSimTeam(pid, null);
+return;
+}
+const rowTap = ev.target.closest('.sim-team-row');
+if (!rowTap || ev.target.closest('button')) return;
+if (!window.playerState || !window.playerState.isGM) return;
+const boardKey = rowTap.getAttribute('data-sim-board');
+const pid = rowTap.getAttribute('data-player-id');
+if (!boardKey || !pid) return;
+const picked = document.querySelector(`input[name="${getSimTeamBoardRadioName(boardKey)}"]:checked`);
+const team = picked && (picked.value === 'A' || picked.value === 'B') ? picked.value : 'A';
+window.setPlayerSimTeam(pid, team);
 });
 document.addEventListener('dblclick', (ev) => {
+if (!window.playerState || !window.playerState.isGM) return;
 const row = ev.target.closest('.sim-team-row');
 if (!row) return;
 const boardKey = row.getAttribute('data-sim-board');
@@ -4781,6 +4576,7 @@ ev.dataTransfer.dropEffect = 'move';
 document.addEventListener('drop', async (ev) => {
 const zone = ev.target.closest('.sim-team-drop-zone');
 if (!zone) return;
+if (!window.playerState || !window.playerState.isGM) return;
 ev.preventDefault();
 const pid = (ev.dataTransfer.getData('text/plain') || dragSimPid || '').trim();
 if (!pid) return;

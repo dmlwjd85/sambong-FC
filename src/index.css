@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --font-title: "Black Han Sans", sans-serif;
+  --font-body: "Noto Sans KR", sans-serif;
+  --font-num: "Bebas Neue", "Oswald", sans-serif;
+}
+
 html, body, #root {
   min-height: 100%;
 }
@@ -16,7 +22,7 @@ body, #root {
     repeating-linear-gradient(90deg, rgba(255,255,255,0.015) 0 2px, transparent 2px 28px),
     linear-gradient(180deg, #0d2418 0%, #07140e 38%, #050c09 100%);
 }
-h1, h2, h3, .font-display { font-family: 'Black Han Sans', sans-serif; letter-spacing: 1px; }
+h1, h2, h3, .font-display { font-family: var(--font-title); letter-spacing: 1px; }
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: #0a1912; }
@@ -95,7 +101,7 @@ opacity: 0.85;
 }
 .fut-career-card .fut-card-watermark {
 position: absolute; right: 10px; bottom: 86px; z-index: 2; pointer-events: none;
-font-family: 'Bebas Neue', Oswald, sans-serif;
+font-family: var(--font-num);
 font-size: 3.4rem; letter-spacing: 0.12em; color: rgba(255,255,255,0.08);
 transform: rotate(-18deg);
 }
@@ -320,11 +326,11 @@ white-space: nowrap; z-index: 2;
   border-radius: 0.4rem; border: 1px solid rgba(255,255,255,0.35);
   box-shadow: 0 4px 10px rgba(0,0,0,0.35);
 }
-.fut-mini-ovr { font-family: 'Bebas Neue', Oswald, sans-serif; letter-spacing: 0.04em; }
+.fut-mini-ovr { font-family: var(--font-num); letter-spacing: 0.04em; }
 
-.locker-checkbox { appearance: none; background-color: rgba(0,0,0,0.5); border: 2px solid #555; border-radius: 4px; display: inline-block; position: relative; cursor: pointer; transition: all 0.2s; }
+.locker-checkbox { appearance: none; background-color: rgba(0,0,0,0.5); border: 2px solid #555; border-radius: 6px; display: inline-block; position: relative; cursor: pointer; transition: all 0.2s; width: 44px !important; height: 44px !important; }
 .locker-checkbox:checked { background-color: #38ff8e; border-color: #38ff8e; }
-.locker-checkbox:checked::after { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: #0a1912; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 10px; }
+.locker-checkbox:checked::after { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: #0a1912; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 16px; }
 
 .floating-text { position: absolute; pointer-events: none; animation: floatUpFade 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards; font-weight: 900; z-index: 9999; text-shadow: 0 0 10px rgba(0,0,0,0.8); }
 @keyframes floatUpFade { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-50px) scale(1.5); opacity: 0; } }
@@ -341,15 +347,15 @@ input[type="number"] { -moz-appearance: textfield; }
 .nav-tab.active { color: #38ff8e; border-bottom-color: #38ff8e; font-weight: bold; text-shadow: 0 0 10px rgba(56,255,142,0.4); }
 
 .app-tab {
-  display: flex; flex-direction: column; align-items: center; gap: 2px;
-  color: #64748b; font-size: 10px; font-weight: 800; letter-spacing: 0.04em;
-  background: transparent; border: 0; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  color: #64748b; font-size: 14px; font-weight: 800; letter-spacing: 0.04em;
+  background: transparent; border: 0; cursor: pointer; min-height: 56px;
 }
 .app-tab i { color: inherit; }
 .app-tab.active { color: #38ff8e; text-shadow: 0 0 10px rgba(56,255,142,0.35); }
 .subhub-chip {
-  flex-shrink: 0; font-size: 11px; font-weight: 800;
-  padding: 6px 12px; border-radius: 999px;
+  flex-shrink: 0; font-size: 14px; font-weight: 800;
+  padding: 8px 14px; border-radius: 999px; min-height: 44px;
   border: 1px solid rgba(148,163,184,0.35);
   background: rgba(15,23,42,0.7); color: #cbd5e1;
 }
@@ -480,7 +486,7 @@ input[type="number"] { -moz-appearance: textfield; }
 }
 .sim-vs-badge {
   align-self: center;
-  font-family: 'Bebas Neue', Oswald, sans-serif;
+  font-family: var(--font-num);
   letter-spacing: 0.18em;
   font-size: 1.35rem;
   color: #fde68a;
@@ -509,7 +515,7 @@ input[type="number"] { -moz-appearance: textfield; }
   justify-content: center;
   gap: 0.45rem;
   padding: 0.55rem 0.75rem;
-  font-family: 'Black Han Sans', sans-serif;
+  font-family: var(--font-title);
 }
 .sim-scoreboard-side--red {
   background: linear-gradient(90deg, rgba(185,28,28,0.92), rgba(127,29,29,0.35));
@@ -518,8 +524,8 @@ input[type="number"] { -moz-appearance: textfield; }
   background: linear-gradient(90deg, rgba(30,58,138,0.35), rgba(37,99,235,0.92));
 }
 .sim-scoreboard-kit {
-  font-family: 'Bebas Neue', Oswald, sans-serif;
-  font-size: 0.7rem;
+  font-family: var(--font-num);
+  font-size: 14px;
   letter-spacing: 0.18em;
   opacity: 0.85;
 }
@@ -550,4 +556,56 @@ input[type="number"] { -moz-appearance: textfield; }
   background:
     radial-gradient(ellipse at 50% 0%, rgba(250,204,21,0.08), transparent 42%),
     linear-gradient(180deg, #10261a 0%, #050a08 100%) !important;
+}
+
+.feature-hidden { display: none !important; }
+
+.login-name-btn, .login-wide-btn, .pin-key, .tap-44 {
+  min-height: 48px;
+  min-width: 44px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #f8fafc !important;
+}
+.login-name-btn, .login-wide-btn {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(187, 247, 208, 0.45);
+  background: #166534 !important;
+  color: #f8fafc !important;
+  padding: 10px 12px;
+}
+.pin-key {
+  border-radius: 16px;
+  background: #14532d !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(232, 194, 113, 0.45);
+}
+.pin-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 2px solid rgba(232, 194, 113, 0.8);
+  background: transparent;
+}
+.pin-dot.on { background: #e8c271; }
+.tap-44 {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#mainUI button, #loginOverlay button, #tabSim select, #mainUI input[type="radio"] {
+  min-height: 44px;
+}
+#mainUI input[type="radio"] { min-width: 44px; }
+#playerTrainingPanel button { font-size: 14px; min-width: 44px; min-height: 44px; }
+
+#mainUI .text-\[7px\], #mainUI .text-\[8px\], #mainUI .text-\[9px\], #mainUI .text-\[10px\], #mainUI .text-\[11px\],
+#loginOverlay .text-\[7px\], #loginOverlay .text-\[8px\], #loginOverlay .text-\[9px\], #loginOverlay .text-\[10px\], #loginOverlay .text-\[11px\] {
+  font-size: 12px !important;
+}
+
+@media (max-width: 480px) {
+  #lockerGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

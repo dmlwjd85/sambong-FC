@@ -4,10 +4,10 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Noto Sans KR', 'sans-serif'],
-        display: ['Black Han Sans', 'sans-serif'],
-        oswald: ['Oswald', 'sans-serif'],
-        bebas: ['Bebas Neue', 'Oswald', 'sans-serif'],
+        sans: ['var(--font-body)'],
+        display: ['var(--font-title)'],
+        oswald: ['var(--font-num)'],
+        bebas: ['var(--font-num)'],
       },
       colors: {
         'pitch-bg': '#0a1912',
