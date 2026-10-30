@@ -7,5 +7,9 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     base,
+    build: {
+      // 글꼴 조각은 작아도 CSS에 base64로 넣지 않아요(넣으면 모든 조각을 첫 화면에 받게 돼요)
+      assetsInlineLimit: (file) => (file.endsWith('.woff2') ? false : undefined),
+    },
   };
 });
