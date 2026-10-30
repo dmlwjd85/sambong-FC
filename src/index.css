@@ -28,13 +28,19 @@ body, #root {
     repeating-linear-gradient(90deg, rgba(255,255,255,0.015) 0 2px, transparent 2px 28px),
     linear-gradient(180deg, #0d2418 0%, #07140e 38%, #050c09 100%);
 }
-/* 제목 글꼴: 모든 제목은 쨈 본문 Bold. 28px 이상 큰 제목은 낱말 중간에서 줄이 나뉘지 않게 해요 */
+/* 제목 글꼴: 모든 제목은 쨈 본문 Bold. 28px 이상 큰 제목은 낱말 중간에서 줄이 나뉘지 않게 하고,
+   쨈 본문은 700이 가장 굵어서 얇은 테두리와 그림자로 조금 더 굵고 떠 보이게 해요(QA B안) */
 h1, h2, h3, .font-display { font-family: var(--font-body); font-weight: 700; letter-spacing: 0; }
-:is(h1, h2, h3, h4, .font-display):is(.text-3xl, .text-4xl, .text-5xl, .text-6xl, .text-7xl, .text-8xl, .text-9xl) { font-family: var(--font-title); font-weight: 700; letter-spacing: 0; word-break: keep-all; font-synthesis: none; }
+:is(h1, h2, h3, h4, .font-display):is(.text-3xl, .text-4xl, .text-5xl, .text-6xl, .text-7xl, .text-8xl, .text-9xl) { font-family: var(--font-title); font-weight: 700; letter-spacing: 0; word-break: keep-all; font-synthesis: none; -webkit-text-stroke: .035em currentColor; paint-order: stroke fill; text-shadow: 0 2px 0 rgba(0,0,0,.55), 0 0 12px rgba(250,204,21,.18); }
+/* text-stroke 두께는 제목 크기로 계산돼 물려받아요. 제목 안의 작은 글자(span)는 원래대로 둬요 */
+:is(h1, h2, h3, h4, .font-display):is(.text-3xl, .text-4xl, .text-5xl, .text-6xl, .text-7xl, .text-8xl, .text-9xl) span { -webkit-text-stroke: 0; text-shadow: none; }
+@media (min-width: 640px) {
+  :is(h1, h2, h3, h4, .font-display):is(.sm\:text-3xl, .sm\:text-4xl) span { -webkit-text-stroke: 0; text-shadow: none; }
+}
 /* 맨 위 로고 그림: 예전 48px 글자와 같은 크기(높이 60px, 폭 288px)·한 줄 */
 .sambong-logo { display: block; width: 287.92px; max-width: 100%; height: auto; aspect-ratio: 5998 / 1250; margin: -6px auto; overflow: visible; }
 @media (min-width: 640px) {
-  :is(h1, h2, h3, h4, .font-display):is(.sm\:text-3xl, .sm\:text-4xl) { font-family: var(--font-title); font-weight: 700; letter-spacing: 0; word-break: keep-all; font-synthesis: none; }
+  :is(h1, h2, h3, h4, .font-display):is(.sm\:text-3xl, .sm\:text-4xl) { font-family: var(--font-title); font-weight: 700; letter-spacing: 0; word-break: keep-all; font-synthesis: none; -webkit-text-stroke: .035em currentColor; paint-order: stroke fill; text-shadow: 0 2px 0 rgba(0,0,0,.55), 0 0 12px rgba(250,204,21,.18); }
 }
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
