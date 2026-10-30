@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import appShellHtml from './app-shell.html?raw';
+import logoSvg from './assets/logo/sambong-fc-logo.svg?raw';
 
 /**
  * 기존 단일 HTML의 <body> 내부 마크업을 주입한 뒤, 동일한 게임 로직(initApp) 모듈을 로드합니다.
@@ -14,7 +15,8 @@ export default function App() {
     const el = hostRef.current;
     if (!el) return;
     bootOnce.current = true;
-    el.innerHTML = appShellHtml;
+    // 로고는 글꼴 대신 SVG 그림을 바로 넣어요(아이폰에서도 같은 컬러 로고, 글꼴 깜빡임 없음)
+    el.innerHTML = appShellHtml.replace('<!--sambong-fc-logo-->', logoSvg);
     import('./game/initApp.js');
   }, []);
 
