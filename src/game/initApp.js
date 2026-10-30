@@ -2254,7 +2254,7 @@ dates.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${St
 }
 
 let modalHtml = `<div class="bg-pitch-panel p-4 sm:p-6 rounded-3xl border-2 border-emerald-500 w-full sm:w-[95vw] max-w-7xl shadow-2xl max-h-[90vh] flex flex-col font-sans text-white relative">
-                 <h2 class="text-2xl sm:text-3xl font-display text-center text-emerald-400 mb-2 tracking-widest drop-shadow-lg flex items-center justify-center gap-3"><i class="fa-solid fa-calendar-check"></i> 삼봉 풋살클럽 출석부 (2026)</h2>
+                 <h2 class="text-2xl sm:text-3xl font-display text-center text-emerald-400 mb-2 tracking-widest drop-shadow-lg !break-normal flex items-center justify-center gap-3"><i class="fa-solid fa-calendar-check"></i> 삼봉 풋살클럽 출석부 (2026)</h2>
                  <p class="text-xs text-emerald-200 mb-4 mt-2 text-center">토요스포츠데이 (3~6학년) / 9:20~12:30 / 좌우로 스크롤하여 30주차 전체 일정을 확인하세요!</p>
                  <div class="overflow-x-auto overflow-y-auto custom-scrollbar flex-1 border border-emerald-800/50 rounded-xl bg-slate-900/80">
                      <table class="w-full text-center whitespace-nowrap text-xs border-collapse">
