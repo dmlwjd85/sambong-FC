@@ -60,9 +60,8 @@ const cs = getComputedStyle(document.documentElement);
 const key = kind === 'num' ? '--font-num' : kind === 'title' ? '--font-title' : '--font-body';
 const raw = (cs.getPropertyValue(key) || '').trim();
 if (raw) return raw;
-if (kind === 'num') return '"Bebas Neue","Oswald",sans-serif';
-if (kind === 'title') return '"Black Han Sans",sans-serif';
-return '"Noto Sans KR","Malgun Gothic",sans-serif';
+if (kind === 'num') return '"Bebas Neue","Oswald","JJAEM Body",sans-serif';
+return '"JJAEM Body","Apple SD Gothic Neo","Malgun Gothic",sans-serif';
 }
 
 function playerDisplayName(p) {

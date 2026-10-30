@@ -3,9 +3,15 @@
 @tailwind utilities;
 
 :root {
-  --font-title: "Black Han Sans", sans-serif;
-  --font-body: "Noto Sans KR", sans-serif;
-  --font-num: "Bebas Neue", "Oswald", sans-serif;
+  /* 쨈 폰트 v1.0.5 (src/assets/fonts/jjaem). 글꼴 이름은 여기서만 바꿔요.
+     로고(SAMBONG FC)는 글꼴 대신 SVG 그림이에요(src/assets/logo, 쨈 제목 컬러로 만듦).
+     --font-title : 28px 이상 제목. 쨈 본문 Bold(700). 제목 후보 3개(입체 단색·평면+그림자·본문 700)를
+                    같은 화면에서 비교해 가장 또렷하고 힘 있는 본문 700으로 정했어요
+     --font-body  : 본문·버튼·28px 미만 제목(굵게 700)
+     --font-num   : 능력치·점수 숫자. 폭이 좁은 Bebas Neue 유지, 한글은 쨈 본문으로 */
+  --font-title: "JJAEM Body", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --font-body: "JJAEM Body", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --font-num: "Bebas Neue", "Oswald", "JJAEM Body", sans-serif;
 }
 
 html, body, #root {
@@ -22,7 +28,14 @@ body, #root {
     repeating-linear-gradient(90deg, rgba(255,255,255,0.015) 0 2px, transparent 2px 28px),
     linear-gradient(180deg, #0d2418 0%, #07140e 38%, #050c09 100%);
 }
-h1, h2, h3, .font-display { font-family: var(--font-title); letter-spacing: 1px; }
+/* 제목 글꼴: 모든 제목은 쨈 본문 Bold. 28px 이상 큰 제목은 낱말 중간에서 줄이 나뉘지 않게 해요 */
+h1, h2, h3, .font-display { font-family: var(--font-body); font-weight: 700; letter-spacing: 0; }
+:is(h1, h2, h3, h4, .font-display):is(.text-3xl, .text-4xl, .text-5xl, .text-6xl, .text-7xl, .text-8xl, .text-9xl) { font-family: var(--font-title); font-weight: 700; letter-spacing: 0; word-break: keep-all; font-synthesis: none; }
+/* 맨 위 로고 그림: 예전 48px 글자와 같은 크기(높이 60px, 폭 288px)·한 줄 */
+.sambong-logo { display: block; width: 287.92px; max-width: 100%; height: auto; aspect-ratio: 5998 / 1250; margin: -6px auto; overflow: visible; }
+@media (min-width: 640px) {
+  :is(h1, h2, h3, h4, .font-display):is(.sm\:text-3xl, .sm\:text-4xl) { font-family: var(--font-title); font-weight: 700; letter-spacing: 0; word-break: keep-all; font-synthesis: none; }
+}
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: #0a1912; }
@@ -515,7 +528,8 @@ input[type="number"] { -moz-appearance: textfield; }
   justify-content: center;
   gap: 0.45rem;
   padding: 0.55rem 0.75rem;
-  font-family: var(--font-title);
+  font-family: var(--font-body);
+  font-weight: 700;
 }
 .sim-scoreboard-side--red {
   background: linear-gradient(90deg, rgba(185,28,28,0.92), rgba(127,29,29,0.35));
