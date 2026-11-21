@@ -11,6 +11,7 @@ import { renderLeaderboard, renderMasterDashboard } from './records.js';
 import { getOVR } from './stats.js';
 import { applySeasonChrome } from './ui.js';
 import { isVisible } from './utils.js';
+import { renderWhenIdle } from './renderGate.js';
 
 export const checkAuthReady = () => {
 if (!auth || !auth.currentUser) {
@@ -19,6 +20,7 @@ throw new Error("서버와의 연결이 끊어졌거나 인증되지 않았습�
 };
 
 export let db, auth;
+let subscribed = false;
 
 export const initApp = async () => {
 try {
@@ -78,6 +80,9 @@ onAuthStateChanged(auth, (user) => {
 document.getElementById('loadingOverlay')?.classList.add('hidden');
 
 if (user) {
+// 로그인 상태 알림이 다시 와도 실시간 구독은 한 번만 (중복 구독 → 화면이 여러 번 그려지는 것 방지)
+if (subscribed) return;
+subscribed = true;
 onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'players'), (snapshot) => {
 const dbPlayers = new Map();
 snapshot.forEach(d => { 
@@ -136,6 +141,7 @@ window.selectedPlayerId = window.playerState.isGM ? getSafeDocId(ALLOWED_PLAYERS
 }
 }
 
+renderWhenIdle(() => {
 window.renderLockerRoom();
 if(window.selectedPlayerId) window.renderSelectedCard(window.selectedPlayerId);
 renderActivePool();
@@ -147,6 +153,7 @@ if(isVisible('tabCompare')) window.renderCompareList();
 if(isVisible('tabSim')) window.renderSimMatchTab();
 if(isVisible('tabMasterStats')) window.renderMasterStats();
 updateNavBongChip();
+});
 tryRememberedEntry();
 }, (error) => console.error("Players Listen Error:", error));
 
