@@ -332,9 +332,17 @@
 
 <div class="mb-4">
 <p class="text-xs font-bold text-slate-300 mb-2">나누는 방식</p>
-<div id="teamModePicker" class="grid grid-cols-3 gap-1.5 sm:gap-2" role="radiogroup" aria-label="팀 나누는 방식"></div>
+<div id="teamModePicker" class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2" role="radiogroup" aria-label="팀 나누는 방식"></div>
 <p id="teamModeDesc" class="text-xs text-slate-400 mt-2 leading-relaxed min-h-[2.5em]"></p>
 </div>
+
+<label id="teamKeepWrap" class="flex items-start gap-3 bg-slate-900/50 p-3 rounded-xl border border-slate-700 mb-4 cursor-pointer min-h-[48px]">
+<input type="checkbox" id="teamKeepFixed" class="mt-0.5 w-5 h-5 accent-emerald-500 shrink-0" onchange="window.renderTeamKeepInfo()">
+<span class="text-sm leading-relaxed">
+<b class="text-white">분류표에 넣어 둔 선수는 그대로 두기</b>
+<span id="teamKeepInfo" class="block text-xs text-slate-400">먼저 분류표에서 몇 명을 팀에 넣고 이걸 켜면, 나머지 출석 선수만 나눠 채워요.</span>
+</span>
+</label>
 
 <div class="flex items-center justify-between bg-slate-800 p-2.5 sm:p-3 rounded-xl border border-slate-600 mb-4 shadow-inner gap-2">
 <span class="text-sm font-bold text-slate-300"><i class="fa-solid fa-users mr-1.5 text-blue-400"></i>팀 수 <span class="text-xs text-slate-500 font-normal">(2~6)</span></span>
@@ -770,28 +778,7 @@
 </div>
 
 <nav id="appBottomNav" class="fixed bottom-0 inset-x-0 z-[120] bg-[#07140e]/95 backdrop-blur-xl border-t border-emerald-800/60 pb-[env(safe-area-inset-bottom)]">
-<div class="max-w-lg mx-auto grid grid-cols-4 text-center">
-<button type="button" data-app-hub="home" onclick="window.switchAppTab('home')" class="app-tab py-2.5">
-<i class="fa-solid fa-house text-lg"></i>
-<span>홈</span>
-</button>
-<button type="button" data-app-hub="match" onclick="window.switchAppTab('match')" class="app-tab py-2.5">
-<i class="fa-solid fa-futbol text-lg"></i>
-<span>매치</span>
-</button>
-<button type="button" data-feature="shop" data-app-hub="shop" onclick="window.switchAppTab('shop')" class="app-tab py-2.5">
-<i class="fa-solid fa-store text-lg"></i>
-<span>상점</span>
-</button>
-<button type="button" data-app-hub="career" onclick="window.switchAppTab('career')" class="app-tab py-2.5">
-<i class="fa-solid fa-chart-line text-lg"></i>
-<span>성장</span>
-</button>
-<button type="button" data-app-hub="more" onclick="window.switchAppTab('more')" class="app-tab py-2.5">
-<i class="fa-solid fa-ellipsis text-lg"></i>
-<span>더보기</span>
-</button>
-</div>
+<div id="appBottomNavGrid" class="max-w-2xl mx-auto grid text-center" style="grid-template-columns: repeat(5, minmax(0, 1fr));"></div>
 </nav>
 </div>
 

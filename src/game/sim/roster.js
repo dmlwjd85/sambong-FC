@@ -219,7 +219,32 @@ const cur = window.teamBuildMode;
 box.innerHTML = Object.entries(TEAM_MODES).map(([k, m]) => `<button type="button" role="radio" aria-checked="${k === cur}" onclick="window.setTeamBuildMode('${k}')" class="min-h-[48px] px-1 rounded-xl border text-[13px] sm:text-sm font-bold leading-tight transition ${k === cur ? 'bg-blue-600 border-blue-300 text-white shadow-lg' : 'bg-slate-800 border-slate-600 text-slate-300 hover:bg-slate-700'}">${m.label}</button>`).join('');
 const d = document.getElementById('teamModeDesc');
 if (d) d.textContent = TEAM_MODES[cur].desc;
+window.renderTeamKeepInfo();
 }
+
+/** 고정할 선수: 출석했고 분류표 팀에 들어 있는 선수 → 팀 번호 */
+function fixedFromBoard(activePlayers) {
+const m = new Map();
+activePlayers.forEach((p) => { if (isSimTeamKey(p.simTeam)) m.set(p.id, SIM_TEAM_KEYS.indexOf(p.simTeam)); });
+return m;
+}
+
+/** '그대로 두기' 칸: 감독에게만 보이고, 지금 고정될 인원을 알려 줌 */
+window.renderTeamKeepInfo = () => {
+const wrap = document.getElementById('teamKeepWrap');
+if (!wrap) return;
+const isGM = !!(window.playerState && window.playerState.isGM);
+wrap.classList.toggle('hidden', !isGM);
+const info = document.getElementById('teamKeepInfo');
+const cb = document.getElementById('teamKeepFixed');
+if (!info || !cb) return;
+const active = Array.from(window.checkedInPlayers || []).map((id) => (window.allPlayersData || []).find((p) => p.id === id)).filter(Boolean);
+const fixed = fixedFromBoard(active);
+if (!cb.checked) { info.textContent = '먼저 분류표에서 몇 명을 팀에 넣고 이걸 켜면, 나머지 출석 선수만 나눠 채워요.'; return; }
+if (!fixed.size) { info.innerHTML = '<span class="text-amber-300">아직 분류표에 넣어 둔 출석 선수가 없어요. 처음부터 전부 나눠요.</span>'; return; }
+const per = SIM_TEAM_KEYS.map((k) => [k, active.filter((p) => p.simTeam === k).length]).filter(([, n]) => n).map(([k, n]) => `${simTeamInfo(k).short} ${n}`).join(' · ');
+info.innerHTML = `<span class="text-emerald-300">고정 ${fixed.size}명 (${per})</span> · 나머지 ${active.length - fixed.size}명을 나눠 채워요.`;
+};
 
 window.setTeamBuildMode = (mode) => {
 if (!TEAM_MODES[mode]) return;
@@ -240,7 +265,9 @@ const want = Math.max(2, Math.min(6, Number(window.targetTeamCount) || 2));
 if (activePlayers.length < want) { window.customAlert(`출석 체크한 선수가 ${want}명보다 적어요. 라커룸 카드의 체크를 눌러 출석을 먼저 표시해 주세요.`); return; }
 
 const mode = TEAM_MODES[window.teamBuildMode] ? window.teamBuildMode : 'balanced';
-const { teams, metrics } = buildTeams(activePlayers, want, mode, { ovrOf: getOVR });
+const keep = !!document.getElementById('teamKeepFixed')?.checked && !!(window.playerState && window.playerState.isGM);
+const fixed = keep ? fixedFromBoard(activePlayers) : new Map();
+const { teams, metrics, fixedIds } = buildTeams(activePlayers, want, mode, { ovrOf: getOVR, fixed });
 lastPlan = { ids: teams.map((t) => t.map((p) => p.id)), mode };
 
 const isGM = !!(window.playerState && window.playerState.isGM);
@@ -249,7 +276,7 @@ const cards = teams.map((team, idx) => {
 const ti = simTeamInfo(SIM_TEAM_KEYS[idx]);
 const sum = metrics.summaries[idx];
 const c = sum.counts;
-const rows = team.map((p) => `<div class="flex items-center gap-2 text-sm min-h-[36px] border-b border-slate-700/40 last:border-0">${posBadge(p)}<span class="text-white font-bold truncate flex-1 min-w-0">${escapeHtml(p.name)}</span><span class="font-oswald text-fut-gold shrink-0">${getOVR(p)}</span></div>`).join('');
+const rows = team.map((p) => `<div class="flex items-center gap-2 text-sm min-h-[36px] border-b border-slate-700/40 last:border-0">${posBadge(p)}<span class="text-white font-bold truncate flex-1 min-w-0">${escapeHtml(p.name)}</span>${fixedIds.has(p.id) ? '<span class="text-[10px] text-emerald-300 shrink-0" title="고정"><i class="fa-solid fa-thumbtack"></i> 고정</span>' : ''}<span class="font-oswald text-fut-gold shrink-0">${getOVR(p)}</span></div>`).join('');
 return `<div class="bg-slate-900/80 p-3 rounded-xl border border-slate-700 border-t-4 ${ti.bar} min-w-0">
 <div class="flex items-center justify-between gap-2 mb-1">
 <h4 class="font-display ${ti.head} text-lg flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full ${ti.dot}"></span>${ti.name}</h4>
@@ -262,6 +289,7 @@ return `<div class="bg-slate-900/80 p-3 rounded-xl border border-slate-700 borde
 const gkNote = metrics.summaries.some((x) => x.counts.Goleiro === 0) ? '<span class="text-amber-300">골레이로가 없는 팀은 경기 때 필드 선수 중 가장 잘 맞는 선수가 골문을 맡아요.</span>' : '';
 const head = `<div class="flex flex-wrap items-center gap-x-3 gap-y-1 mb-3 text-xs text-slate-300">
 <span class="font-bold text-white">${TEAM_MODES[mode].label}</span>
+${fixedIds.size ? `<span class="text-emerald-300"><i class="fa-solid fa-thumbtack"></i> 고정 ${fixedIds.size}명</span>` : ''}
 <span>평균 OVR 차이 <b class="text-fut-gold">${metrics.ovrSpread.toFixed(1)}</b></span>
 <span>포지션 ${metrics.posExcess === 0 ? '<b class="text-emerald-300">가장 고르게</b>' : `쏠림 <b class="text-amber-300">${metrics.posExcess}</b>`}</span>
 ${gkNote}

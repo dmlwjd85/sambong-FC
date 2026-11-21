@@ -11,11 +11,7 @@ document.querySelectorAll('[data-feature]').forEach((el) => {
 const name = el.getAttribute('data-feature');
 el.classList.toggle('feature-hidden', !featureOn(name));
 });
-const grid = document.querySelector('#appBottomNav .grid');
-if (grid) {
-grid.classList.toggle('grid-cols-5', featureOn('shop'));
-grid.classList.toggle('grid-cols-4', !featureOn('shop'));
-}
+if (window.renderBottomNav) window.renderBottomNav(true);
 const sentence = seasonResetSentence();
 document.querySelectorAll('.season-reset-hint').forEach((el) => { el.textContent = sentence; });
 }
