@@ -5,7 +5,7 @@ import { checkAuthReady, db } from './boot.js';
 import { appId, ALLOWED_PLAYERS, getSafeDocId, GENDER_MAP, POS_KR, STAT_BASE, STAT_KEYS } from './constants.js';
 import { getStat, getBonusStats, getOVR, getOVRForPos, getWeeklyWage, getExpNeeded, applyLevelStatGrowth } from './stats.js';
 import { triggerConfetti, animateFloatText } from './ui.js';
-import { canEditThisPlayer, emptyActivityCounts, seasonResetSentence, getWeekNumber, getKstDateStr } from './utils.js';
+import { canEditThisPlayer, emptyActivityCounts, seasonResetSentence, getWeekNumber, getKstDateStr, escapeHtml, playerDisplayName } from './utils.js';
 import { buildAttendanceDates, weekdayKr } from './attendanceDates.js';
 
 window.modStat = async (pId, statKey, change) => {
@@ -299,10 +299,10 @@ return `<button type="button" onclick="window.confirmChangePos('${pId}', '${pos.
 
 modal.className = 'app-dialog fixed inset-0 z-[6000] flex items-center justify-center bg-black/80 px-4';
 modal.innerHTML = `<div class="bg-pitch-bg p-6 rounded-3xl border-2 border-emerald-500 max-w-sm w-full sm:max-w-md shadow-2xl">
-  <h3 class="text-xl font-display text-white mb-2 text-center">선호 포지션 변경</h3>
+  <h3 class="text-xl font-display text-white mb-2 text-center">${window.playerState.isGM ? `${escapeHtml(playerDisplayName(p))} 포지션 변경` : '선호 포지션 변경'}</h3>
   <p class="text-base text-emerald-200 mb-4 text-center leading-relaxed">포지션마다 핵심 능력치가 달라요. 내가 잘하는 쪽에 맞춰 골라 봐요.</p>
   <div class="bg-slate-900 p-3 rounded-xl mb-4 border border-slate-700 flex justify-between items-center shadow-inner">
-      <span class="text-sm text-slate-300 font-bold">현재 내 OVR (${POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정'})</span>
+      <span class="text-sm text-slate-300 font-bold">${window.playerState.isGM ? `${escapeHtml(playerDisplayName(p))} 현재 OVR` : '현재 내 OVR'} (${POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정'})</span>
       <span class="font-oswald text-2xl text-fut-gold">${currentOvr}</span>
   </div>
   <div class="grid grid-cols-1 gap-3 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">${btns}</div>

@@ -26,8 +26,11 @@ import { bootLoginForm } from './login.js';
 import { bindSimTeamBoardUi } from './locker.js';
 import { bindSimTacticalUi } from './sim/tactical.js';
 import { initApp } from './boot.js';
+import { renderTeamModePicker, openSimFoldsOnWide } from './sim/roster.js';
 
 bootLoginForm();
 bindSimTeamBoardUi();
 bindSimTacticalUi();
+renderTeamModePicker();
+openSimFoldsOnWide();
 initApp();
