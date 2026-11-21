@@ -26,6 +26,8 @@
 | `sim/formation.js` | 포메이션 위치 저장(localStorage)·계산 |
 | `sim/tactical.js` | 전술판 선수 그리기, 드래그·기본 포메이션 |
 | `sim/match.js` | 경기 진행(`runSimMatch`)과 경기 후 기록 |
+| `renderGate.js` | 감독이 숫자 칸에 입력하는 동안 실시간 갱신으로 화면이 다시 그려지지 않게 미룸 |
+| `attendanceDates.js` | 출석부 날짜 목록 계산 (테스트: `attendanceDates.test.js`) |
 | `activityUndo.js`, `seasonDate.js`, `mangaFace.js` | 원래부터 따로 있던 도우미 (테스트: `activityUndo.test.js`) |
 
 ## 고칠 때 알아 둘 것

@@ -3,9 +3,10 @@ import { doc, setDoc, getDoc, collection, writeBatch, getDocs, deleteDoc, delete
 import { featureOn } from '../config/features.js';
 import { checkAuthReady, db } from './boot.js';
 import { appId, ALLOWED_PLAYERS, getSafeDocId, GENDER_MAP, POS_KR, STAT_BASE, STAT_KEYS } from './constants.js';
-import { getStat, getBonusStats, getOVR, getOVRForPos, getWeeklyWage, getExpNeeded } from './stats.js';
+import { getStat, getBonusStats, getOVR, getOVRForPos, getWeeklyWage, getExpNeeded, applyLevelStatGrowth } from './stats.js';
 import { triggerConfetti, animateFloatText } from './ui.js';
-import { canEditThisPlayer, emptyActivityCounts, seasonResetSentence, getWeekNumber } from './utils.js';
+import { canEditThisPlayer, emptyActivityCounts, seasonResetSentence, getWeekNumber, getKstDateStr } from './utils.js';
+import { buildAttendanceDates, weekdayKr } from './attendanceDates.js';
 
 window.modStat = async (pId, statKey, change) => {
 try {
@@ -73,7 +74,9 @@ while(currentExp >= getExpNeeded(currentLv)) { currentExp -= getExpNeeded(curren
 let updatesObj = { exp: currentExp };
 if(leveledUp) {
 updatesObj.level = currentLv;
-if(currentLv % 3 === 0) { STAT_KEYS.forEach(s => updatesObj[s] = Math.min(99, getStat(p, s) + 1)); }
+// 개별 기록으로 레벨이 오를 때(processExp)와 같은 규칙으로 능력치 성장
+const levelsGained = currentLv - (Number(p.level) || 1);
+for (let i = 0; i < levelsGained; i++) applyLevelStatGrowth(p, updatesObj);
 }
 batch.set(docRef, updatesObj, { merge: true });
 } else if (type === 'bong') { batch.set(docRef, { bong: (Number(p.bong) || 0) + Number(amount) }, { merge: true }); }
@@ -201,7 +204,7 @@ checkAuthReady();
 if (!window.playerState.isGM) return;
 if (window.checkedInPlayers.size === 0) return window.customAlert("체크된 선수가 없습니다.");
 
-const today = new Date(); const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+const dateStr = getKstDateStr();
 const attendees = Array.from(window.checkedInPlayers);
 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'attendance', dateStr);
 await setDoc(docRef, { date: dateStr, count: attendees.length, players: attendees, timestamp: new Date().toISOString() }, { merge: true });
@@ -218,14 +221,11 @@ const attRef = collection(db, 'artifacts', appId, 'public', 'data', 'attendance'
 const snap = await getDocs(attRef);
 let logs = []; snap.forEach(doc => logs.push(doc.data()));
 
-const dates = []; let d = new Date(2026, 2, 7); 
-for(let i=0; i<30; i++) {
-dates.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`); d.setDate(d.getDate() + 7);
-}
+const dates = buildAttendanceDates(logs, getKstDateStr());
 
 let modalHtml = `<div class="bg-pitch-panel p-4 sm:p-6 rounded-3xl border-2 border-emerald-500 w-full sm:w-[95vw] max-w-7xl shadow-2xl max-h-[90vh] flex flex-col font-sans text-white relative">
                  <h2 class="text-2xl sm:text-3xl font-display text-center text-emerald-400 mb-2 tracking-widest drop-shadow-lg !break-normal flex items-center justify-center gap-3"><i class="fa-solid fa-calendar-check"></i> 삼봉 풋살클럽 출석부 (2026)</h2>
-                 <p class="text-xs text-emerald-200 mb-4 mt-2 text-center">토요스포츠데이 (3~6학년) / 9:20~12:30 / 좌우로 스크롤하여 30주차 전체 일정을 확인하세요!</p>
+                 <p class="text-xs text-emerald-200 mb-4 mt-2 text-center">토요스포츠데이 (3~6학년) / 9:20~12:30 / 좌우로 스크롤하여 전체 ${dates.length}주차 일정을 확인하세요!</p>
                  <div class="overflow-x-auto overflow-y-auto custom-scrollbar flex-1 border border-emerald-800/50 rounded-xl bg-slate-900/80">
                      <table class="w-full text-center whitespace-nowrap text-xs border-collapse">
                          <thead>
@@ -233,11 +233,11 @@ let modalHtml = `<div class="bg-pitch-panel p-4 sm:p-6 rounded-3xl border-2 bord
                                  <th rowspan="2" class="p-2 border-r border-slate-700 w-10 sticky left-0 bg-slate-800 z-30">연번</th>
                                  <th rowspan="2" class="p-2 border-r border-slate-700 w-24 sticky left-10 bg-slate-800 z-30 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">성명</th>
                                  <th class="p-2 border-r border-slate-700 bg-emerald-900/80 text-emerald-300 w-12 sticky left-[136px] z-30 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">누계</th>
-                                 ${dates.map((_, i) => `<th class="p-1 border-r border-slate-700 font-normal text-[10px] text-slate-400 w-12">${i+1}주차</th>`).join('')}
+                                 ${(() => { let wk = 0; return dates.map((d) => `<th class="p-1 border-r border-slate-700 font-normal text-[10px] text-slate-400 w-12">${weekdayKr(d) === '토' ? `${++wk}주차` : '추가'}</th>`).join(''); })()}
                              </tr>
                              <tr class="bg-slate-800 border-b border-emerald-800 sticky top-8 z-10 shadow-md">
                                  <th class="p-1 border-r border-slate-700 text-[10px] bg-emerald-900/80 sticky left-[136px] z-30 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">출석</th>
-                                 ${dates.map(d => `<th class="p-1 border-r border-slate-700 text-[10px]"><div class="text-emerald-400 font-bold">${d.substring(5).replace('-','/')}</div><div class="text-emerald-500/70 mt-0.5 font-bold">(토)</div></th>`).join('')}
+                                 ${dates.map(d => `<th class="p-1 border-r border-slate-700 text-[10px]"><div class="text-emerald-400 font-bold">${d.substring(5).replace('-','/')}</div><div class="text-emerald-500/70 mt-0.5 font-bold">(${weekdayKr(d)})</div></th>`).join('')}
                              </tr>
                          </thead><tbody>`;
 
@@ -245,7 +245,7 @@ ALLOWED_PLAYERS.forEach((name, idx) => {
 const safeDocId = getSafeDocId(name); const p = window.allPlayersData.find(x => x.id === safeDocId); const pId = p ? p.id : null; let attCount = 0;
 let rowCells = dates.map(targetDate => {
 const log = logs.find(l => l.date === targetDate);
-if(log && pId && log.players.includes(pId)) { attCount++; return `<td class="p-1 border-r border-b border-slate-700/50"><div class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500 flex items-center justify-center mx-auto text-[10px] font-bold shadow-[0_0_5px_rgba(56,255,142,0.5)]">O</div></td>`; }
+if(log && pId && Array.isArray(log.players) && log.players.includes(pId)) { attCount++; return `<td class="p-1 border-r border-b border-slate-700/50"><div class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500 flex items-center justify-center mx-auto text-[10px] font-bold shadow-[0_0_5px_rgba(56,255,142,0.5)]">O</div></td>`; }
 return `<td class="p-1 border-r border-b border-slate-700/50 text-slate-700">-</td>`;
 }).join('');
 
