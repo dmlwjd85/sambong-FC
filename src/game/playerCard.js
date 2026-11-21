@@ -3,7 +3,7 @@ import { setDoc } from 'firebase/firestore';
 import { resolveFaceSrc } from './mangaFace.js';
 import { featureOn } from '../config/features.js';
 import { diffStatChanges, pushUndo } from './activityUndo.js';
-import { POS_KR, STAT_NAMES, POS_WEIGHTS, STAT_KEYS, ACTIVITY_DAILY_CAP, STAT_DESC, ENHANCE_LEVELS, SHOP_ITEMS } from './constants.js';
+import { POS_KR, STAT_NAMES, POS_WEIGHTS, STAT_KEYS, ACTIVITY_DAILY_CAP, STAT_DESC, ENHANCE_LEVELS, SHOP_ITEMS, isSimTeamKey, simTeamInfo } from './constants.js';
 import { getStat, getBonusStats, statGrowthChancePct, applyLevelStatGrowth, getOVR, getTierInfo, getWeeklyWage, getExpNeeded } from './stats.js';
 import { getAvatarHtml, triggerConfetti } from './ui.js';
 import { playerDisplayName, canEditThisPlayer, getTodayActivityCounts, escapeAttr } from './utils.js';
@@ -61,13 +61,13 @@ document.getElementById('detailExpBar') && (document.getElementById('detailExpBa
 const simTeamPanel = document.getElementById('detailSimTeamPanel');
 if (simTeamPanel) {
 const st = p.simTeam;
-const teamLabel = st === 'A' ? '레드팀' : st === 'B' ? '블루팀' : '';
+const teamLabel = isSimTeamKey(st) ? simTeamInfo(st).name : '';
 if (!teamLabel) {
 simTeamPanel.innerHTML = '';
 simTeamPanel.classList.add('hidden');
 } else {
 simTeamPanel.classList.remove('hidden');
-simTeamPanel.innerHTML = `<p class="mt-3 text-sm font-bold ${st === 'A' ? 'text-red-300' : 'text-blue-300'}">${teamLabel}</p>`;
+simTeamPanel.innerHTML = `<p class="mt-3 text-sm font-bold ${simTeamInfo(st).text}">${teamLabel}</p>`;
 }
 }
 

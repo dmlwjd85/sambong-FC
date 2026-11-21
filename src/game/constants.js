@@ -182,6 +182,20 @@ export const LOCKER_POS_ORDER = ['Goleiro', 'Fixo', 'Ala', 'Pivo', '미정'];
 export const LOCKER_POS_HEAD = { Goleiro: '골레이로 (GK)', Fixo: '픽소 (DF)', Ala: '아라 (MF)', Pivo: '피보 (FW)', '미정': '포지션 미정' };
 export const SHOP_GEAR_TYPES = ['head', 'handL', 'handR', 'footL', 'footR'];
 export const SHOP_SKIN_TYPES = ['skin', 'kit'];
-/** 출전 5인: OVR 상위 5명 */
+/** 모의경기·팀 분류표의 팀 (최대 6팀). Firestore simTeam 값은 key('A'~'F') */
+export const SIM_TEAMS = [
+  { key: 'A', pick: 'peer-checked:bg-red-600 peer-checked:border-red-400', name: '레드팀', short: '레드', text: 'text-red-300', head: 'text-red-400', zone: 'border-red-800/50 bg-red-950/30', chip: 'bg-red-600 border-red-400', dot: 'bg-red-500', bar: 'border-t-red-500', hex: '#ef4444' },
+  { key: 'B', pick: 'peer-checked:bg-blue-600 peer-checked:border-blue-400', name: '블루팀', short: '블루', text: 'text-blue-300', head: 'text-blue-400', zone: 'border-blue-800/50 bg-blue-950/30', chip: 'bg-blue-600 border-blue-400', dot: 'bg-blue-500', bar: 'border-t-blue-500', hex: '#3b82f6' },
+  { key: 'C', pick: 'peer-checked:bg-emerald-600 peer-checked:border-emerald-400', name: '그린팀', short: '그린', text: 'text-emerald-300', head: 'text-emerald-400', zone: 'border-emerald-800/50 bg-emerald-950/30', chip: 'bg-emerald-600 border-emerald-400', dot: 'bg-emerald-500', bar: 'border-t-emerald-500', hex: '#10b981' },
+  { key: 'D', pick: 'peer-checked:bg-yellow-500 peer-checked:border-yellow-300 peer-checked:!text-slate-900', name: '옐로팀', short: '옐로', text: 'text-yellow-200', head: 'text-yellow-300', zone: 'border-yellow-700/50 bg-yellow-950/25', chip: 'bg-yellow-500 border-yellow-300 text-slate-900', dot: 'bg-yellow-400', bar: 'border-t-yellow-400', hex: '#facc15' },
+  { key: 'E', pick: 'peer-checked:bg-purple-600 peer-checked:border-purple-400', name: '퍼플팀', short: '퍼플', text: 'text-purple-300', head: 'text-purple-400', zone: 'border-purple-800/50 bg-purple-950/30', chip: 'bg-purple-600 border-purple-400', dot: 'bg-purple-500', bar: 'border-t-purple-500', hex: '#a855f7' },
+  { key: 'F', pick: 'peer-checked:bg-orange-600 peer-checked:border-orange-400', name: '오렌지팀', short: '오렌지', text: 'text-orange-300', head: 'text-orange-400', zone: 'border-orange-800/50 bg-orange-950/30', chip: 'bg-orange-600 border-orange-400', dot: 'bg-orange-500', bar: 'border-t-orange-500', hex: '#f97316' },
+];
+export const SIM_TEAM_KEYS = SIM_TEAMS.map((t) => t.key);
+export const isSimTeamKey = (k) => SIM_TEAM_KEYS.includes(k);
+export const simTeamInfo = (k) => SIM_TEAMS.find((t) => t.key === k) || SIM_TEAMS[0];
+/** 한 팀 최대 인원 (풋살 5명 + 교체) */
+export const MAX_SIM_TEAM_SIZE = 12;
+/** 예전 이름 (중계 기본값) */
 export const SIM_TEAM_A_NAME = '레드팀';
 export const SIM_TEAM_B_NAME = '블루팀';

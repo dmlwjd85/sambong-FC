@@ -14,18 +14,19 @@
 | `stats.js` | 능력치·OVR·티어·레벨·성장 계산 |
 | `login.js` | 이름 고르기·PIN 화면, `handleLogin`, `logout` |
 | `nav.js` | 탭 이동, 하단 내비, 오늘의 팁 |
-| `locker.js` | 라커룸, 출석 체크, 모의경기 팀 분류판(드래그 포함) |
+| `locker.js` | 라커룸, 출석 체크, 팀 분류표(최대 6팀·팀당 12명), 편성 적용(`applyTeamPlan`), 감독 포지션 변경 |
 | `playerCard.js` | 선수 카드, 레이더 차트, 경험치 처리 |
 | `activity.js` | 훈련·경기 기록 추가와 되돌리기 |
 | `shop.js` | 상점·강화·장착 (지금은 `config/features.js`에서 꺼져 있음) |
 | `gm.js` | 감독 도구: 능력치 수정, 시즌 시작·초기화, 출석 저장, 공지·쇼츠, 선수 추가·삭제 |
 | `records.js` | 기록실: 전체 능력치표, 리더보드, 비교, 업적 |
-| `sim/roster.js` | 모의경기 명단, 팀 수, 균형 팀 자동 편성 |
+| `sim/roster.js` | 팀 짜기 화면, 경기 대진(홈·원정), 출전 5명·교체 명단 |
 | `sim/broadcast.js` | 중계 자막·효과 |
 | `sim/pitch.js` | 경기장 그리기 |
 | `sim/formation.js` | 포메이션 위치 저장(localStorage)·계산 |
 | `sim/tactical.js` | 전술판 선수 그리기, 드래그·기본 포메이션 |
-| `sim/match.js` | 경기 진행(`runSimMatch`)과 경기 후 기록 |
+| `sim/match.js` | 경기 진행(`runSimMatch`): 체력·교체, 파울·경고·10m 프리킥, 코너킥, 역습, 어시스트, 경기 속도, 경기 후 기록 |
+| `teamBuilder.js` | 팀 자동 편성(포지션 우선·능력치 우선·밸런스형)과 출전 5명 고르기 (테스트: `teamBuilder.test.js`) |
 | `renderGate.js` | 감독이 숫자 칸에 입력하는 동안 실시간 갱신으로 화면이 다시 그려지지 않게 미룸 |
 | `attendanceDates.js` | 출석부 날짜 목록 계산 (테스트: `attendanceDates.test.js`) |
 | `activityUndo.js`, `seasonDate.js`, `mangaFace.js` | 원래부터 따로 있던 도우미 (테스트: `activityUndo.test.js`) |
