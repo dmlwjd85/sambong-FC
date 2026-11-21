@@ -3,13 +3,14 @@
 **라이브:** [https://dmlwjd85.github.io/sambong-FC/](https://dmlwjd85.github.io/sambong-FC/)  
 **저장소:** [github.com/dmlwjd85/sambong-FC](https://github.com/dmlwjd85/sambong-FC)
 
-기존 `sambong-FC.html` 단일 파일 앱을 **Vite + React** 프로젝트로 옮긴 버전입니다. UI 마크업은 `src/app-shell.html`에 두고, 게임·Firebase 로직은 `src/game/initApp.js`에서 그대로 동작합니다.
+기존 `sambong-FC.html` 단일 파일 앱을 **Vite + React** 프로젝트로 옮긴 버전입니다. UI 마크업은 `src/app-shell.html`에 두고, 게임·Firebase 로직은 `src/game/` 아래 기능별 모듈에 있습니다. 진입점은 `src/game/initApp.js`이고, 파일별 역할은 [`src/game/README.md`](src/game/README.md)에 정리돼 있습니다.
 
 ## 개발
 
 ```bash
 npm install
 npm run dev
+npm test   # 도우미 함수 테스트
 ```
 
 ## 프로덕션 빌드
