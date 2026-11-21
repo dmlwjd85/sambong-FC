@@ -15,7 +15,7 @@ function roster(n, seed = 7) {
 }
 const ovrOf = (p) => p.ovr;
 
-for (const mode of ['position', 'ability', 'balanced']) {
+for (const mode of ['position', 'ability', 'balanced', 'random']) {
   test(`${mode}: 모든 출석자가 정확히 한 팀에 들어가고 인원은 ±1`, () => {
     for (const [n, k] of [[10, 2], [17, 3], [31, 6], [12, 4], [7, 2]]) {
       const players = roster(n, n * 3 + k);
@@ -94,4 +94,38 @@ test('포지션 우선은 쓸데없는 쏠림이 없다', () => {
   const players = roster(16, 21);
   const { metrics } = buildTeams(players, 3, 'position', { ovrOf, rng: seeded(3) });
   assert.equal(metrics.posExcess, 0);
+});
+
+test('완전 랜덤: 누를 때마다 조합이 달라진다', () => {
+  const players = roster(16, 2);
+  const a = buildTeams(players, 2, 'random', { ovrOf, rng: seeded(1) }).teams.map((t) => t.map((p) => p.id).sort().join());
+  const b = buildTeams(players, 2, 'random', { ovrOf, rng: seeded(99) }).teams.map((t) => t.map((p) => p.id).sort().join());
+  assert.notDeepEqual(a, b);
+});
+
+for (const mode of ['position', 'ability', 'balanced', 'random']) {
+  test(`${mode}: 고정한 선수는 정한 팀에 그대로, 나머지로 인원 ±1`, () => {
+    const players = roster(15, 8);
+    const fixed = new Map([['p0', 0], ['p1', 0], ['p2', 0], ['p3', 1], ['p4', 2]]);
+    const { teams, fixedIds } = buildTeams(players, 3, mode, { ovrOf, rng: seeded(5), fixed });
+    assert.equal(fixedIds.size, 5);
+    fixed.forEach((ti, id) => assert.ok(teams[ti].some((p) => p.id === id), `${id} → ${ti}`));
+    const sizes = teams.map((t) => t.length);
+    assert.ok(Math.max(...sizes) - Math.min(...sizes) <= 1, `${sizes}`);
+    assert.equal(teams.flat().length, 15);
+  });
+}
+
+test('고정 선수가 팀 수보다 뒤 팀에 있으면 그 팀까지 만든다', () => {
+  const players = roster(9, 4);
+  const { teams } = buildTeams(players, 2, 'balanced', { ovrOf, rng: seeded(2), fixed: new Map([['p0', 2]]) });
+  assert.equal(teams.length, 3);
+  assert.ok(teams[2].some((p) => p.id === 'p0'));
+});
+
+test('고정 인원이 한쪽에 몰려 있어도 나머지를 적은 팀에 먼저 채운다', () => {
+  const players = roster(10, 6);
+  const fixed = new Map([['p0', 0], ['p1', 0], ['p2', 0], ['p3', 0]]);
+  const { teams } = buildTeams(players, 2, 'ability', { ovrOf, rng: seeded(3), fixed });
+  assert.deepEqual(teams.map((t) => t.length), [5, 5]);
 });

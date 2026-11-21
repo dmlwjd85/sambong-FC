@@ -13,7 +13,7 @@
 | `ui.js` | 알림·확인창 큐, 기능 스위치·시즌 표시, 아바타, 축하 효과 |
 | `stats.js` | 능력치·OVR·티어·레벨·성장 계산 |
 | `login.js` | 이름 고르기·PIN 화면, `handleLogin`, `logout` |
-| `nav.js` | 탭 이동, 하단 내비, 오늘의 팁 |
+| `nav.js` | 탭 이동, 하단 탭(자주 쓰는 메뉴 최대 6개, 기기·사람별 저장)·전체 메뉴 시트, 오늘의 팁 |
 | `locker.js` | 라커룸, 출석 체크, 팀 분류표(최대 6팀·팀당 12명), 편성 적용(`applyTeamPlan`), 감독 포지션 변경 |
 | `playerCard.js` | 선수 카드, 레이더 차트, 경험치 처리 |
 | `activity.js` | 훈련·경기 기록 추가와 되돌리기 |
@@ -26,7 +26,7 @@
 | `sim/formation.js` | 포메이션 위치 저장(localStorage)·계산 |
 | `sim/tactical.js` | 전술판 선수 그리기, 드래그·기본 포메이션 |
 | `sim/match.js` | 경기 진행(`runSimMatch`): 체력·교체, 파울·경고·10m 프리킥, 코너킥, 역습, 어시스트, 경기 속도, 경기 후 기록 |
-| `teamBuilder.js` | 팀 자동 편성(포지션 우선·능력치 우선·밸런스형)과 출전 5명 고르기 (테스트: `teamBuilder.test.js`) |
+| `teamBuilder.js` | 팀 자동 편성(포지션 우선·능력치 우선·밸런스형·완전 랜덤, 고정 선수 유지)과 출전 5명 고르기 (테스트: `teamBuilder.test.js`) |
 | `renderGate.js` | 감독이 숫자 칸에 입력하는 동안 실시간 갱신으로 화면이 다시 그려지지 않게 미룸 |
 | `attendanceDates.js` | 출석부 날짜 목록 계산 (테스트: `attendanceDates.test.js`) |
 | `activityUndo.js`, `seasonDate.js`, `mangaFace.js` | 원래부터 따로 있던 도우미 (테스트: `activityUndo.test.js`) |

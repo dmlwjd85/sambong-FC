@@ -365,10 +365,12 @@ input[type="number"] { -moz-appearance: textfield; }
 .nav-tab.active { color: #38ff8e; border-bottom-color: #38ff8e; font-weight: bold; text-shadow: 0 0 10px rgba(56,255,142,0.4); }
 
 .app-tab {
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-  color: #64748b; font-size: 14px; font-weight: 800; letter-spacing: 0.04em;
-  background: transparent; border: 0; cursor: pointer; min-height: 56px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  color: #64748b; font-size: 12px; font-weight: 800; letter-spacing: 0.02em; line-height: 1.1;
+  background: transparent; border: 0; cursor: pointer; min-height: 58px; min-width: 0; padding: 6px 2px;
 }
+.app-tab span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (min-width: 640px) { .app-tab { font-size: 13px; } }
 .app-tab i { color: inherit; }
 .app-tab.active { color: #38ff8e; text-shadow: 0 0 10px rgba(56,255,142,0.35); }
 .subhub-chip {
@@ -635,3 +637,12 @@ input[type="number"] { -moz-appearance: textfield; }
 @media (max-width: 480px) {
   #lockerGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* 전체 메뉴 시트 */
+.menu-sheet-item {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  min-height: 72px; border-radius: 14px; border: 1px solid rgba(148,163,184,0.25);
+  background: rgba(15,23,42,0.75); color: #e2e8f0; font-size: 13px; font-weight: 800;
+}
+.menu-sheet-item i { font-size: 18px; color: #38ff8e; }
+.menu-sheet-item.is-fav { border-color: rgba(56,255,142,0.55); }

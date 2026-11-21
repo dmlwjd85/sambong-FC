@@ -136,6 +136,7 @@ const elLocker = document.getElementById('lockerSimTeamsPreview');
 const elTab = document.getElementById('simTeamBoardTab');
 if (elLocker) elLocker.innerHTML = buildSimTeamBoardHtml('locker');
 if (elTab) elTab.innerHTML = buildSimTeamBoardHtml('sim');
+if (window.renderTeamKeepInfo) window.renderTeamKeepInfo();
 };
 
 /** 서로 다른 팀 소속 두 선수를 맞바꿉니다. 감독만 할 수 있어요. */

@@ -5,6 +5,9 @@
  *  - position : 포지션 우선. 팀마다 골레이로·픽소·아라·피보 수가 최대한 같게, 그 안에서 OVR을 맞춤
  *  - ability  : 능력치 우선. 팀 평균 OVR 차이를 가장 작게, 포지션은 동점일 때만 고려
  *  - balanced : 밸런스형. OVR 차이와 포지션 쏠림을 함께 줄임 (골레이로 없는 팀이 생기지 않게 특히 신경 씀)
+ *  - random   : 완전 랜덤. 인원 수만 맞추고 무작위로 나눔
+ *
+ * fixed(고정)를 주면 그 선수들은 정한 팀에 그대로 두고 나머지만 나눠요.
  *
  * 팀 인원은 항상 최대 1명 차이로 맞춰요.
  */
@@ -13,6 +16,7 @@ export const TEAM_MODES = {
   position: { label: '포지션 우선', short: '포지션', desc: '팀마다 골키퍼·수비·미드·공격 수를 먼저 똑같이 맞추고, 그다음 OVR을 맞춰요.' },
   ability: { label: '능력치 우선', short: '능력치', desc: '팀 평균 OVR 차이가 가장 작게 나눠요. 포지션은 덜 따져요.' },
   balanced: { label: '밸런스형', short: '밸런스', desc: 'OVR과 포지션을 함께 봐요. 골키퍼가 없는 팀이 생기지 않게 나눠요.' },
+  random: { label: '완전 랜덤', short: '랜덤', desc: '능력치·포지션을 보지 않고 무작위로 나눠요. 인원 수만 맞춰요.' },
 };
 
 export const POSITIONS = ['Goleiro', 'Fixo', 'Ala', 'Pivo', '미정'];
@@ -67,31 +71,29 @@ function shuffled(arr, rng) {
   return a;
 }
 
-/** 시작 배치: 포지션별로 묶어 OVR 순 스네이크 드래프트 (인원은 ±1로 맞춤) */
-function initialDraft(players, teamCount, ovrOf, rng, byPos) {
-  const teams = Array.from({ length: teamCount }, () => []);
-  const order = byPos
-    ? POSITIONS.flatMap((k) => shuffled(players.filter((p) => normPos(p) === k), rng).sort((a, b) => ovrOf(b) - ovrOf(a)))
-    : shuffled(players, rng).sort((a, b) => ovrOf(b) - ovrOf(a));
-  let i = Math.floor(rng() * teamCount);
-  let dir = 1;
+/** 시작 배치: 고정 선수를 먼저 넣고, 나머지는 (포지션별로 묶어) OVR 순으로 가장 인원이 적은 팀부터 채움 */
+function initialDraft(free, fixedTeams, ovrOf, rng, byPos, random) {
+  const teams = fixedTeams.map((t) => [...t]);
+  const order = random
+    ? shuffled(free, rng)
+    : byPos
+      ? POSITIONS.flatMap((k) => shuffled(free.filter((p) => normPos(p) === k), rng).sort((a, b) => ovrOf(b) - ovrOf(a)))
+      : shuffled(free, rng).sort((a, b) => ovrOf(b) - ovrOf(a));
+  // 스네이크처럼 번갈아 가며 넣되, 항상 인원이 가장 적은 팀 중에서 고름 (고정 인원이 달라도 ±1로 맞춰짐)
+  let dir = rng() < 0.5 ? 1 : -1;
   order.forEach((p) => {
-    teams[i].push(p);
-    let next = i + dir;
-    if (next < 0 || next >= teamCount) { dir = -dir; next = i; }
-    i = next;
+    const min = Math.min(...teams.map((t) => t.length));
+    let cand = teams.map((t, i) => i).filter((i) => teams[i].length === min);
+    if (random) cand = shuffled(cand, rng);
+    else if (dir < 0) cand.reverse();
+    teams[cand[0]].push(p);
+    if (cand.length === 1) dir = -dir;
   });
-  // 스네이크가 끝에서 쏠렸을 수 있으니 인원 맞추기
-  for (;;) {
-    teams.sort((a, b) => a.length - b.length);
-    if (teams[teamCount - 1].length - teams[0].length <= 1) break;
-    teams[0].push(teams[teamCount - 1].pop());
-  }
-  return shuffled(teams, rng);
+  return teams;
 }
 
 /** 두 선수 맞바꾸기로 비용이 줄어드는 동안 계속 개선 (인원 수는 그대로 유지) */
-function improve(teams, ovrOf, mode) {
+function improve(teams, ovrOf, mode, locked) {
   let cur = costOf(measureTeams(teams, ovrOf), mode);
   let improved = true;
   let guard = 0;
@@ -103,6 +105,7 @@ function improve(teams, ovrOf, mode) {
           for (let j = 0; j < teams[b].length; j++) {
             const pa = teams[a][i];
             const pb = teams[b][j];
+            if (locked.has(pa) || locked.has(pb)) continue;
             if (normPos(pa) === normPos(pb) && ovrOf(pa) === ovrOf(pb)) continue;
             teams[a][i] = pb; teams[b][j] = pa;
             const c = costOf(measureTeams(teams, ovrOf), mode);
@@ -117,23 +120,32 @@ function improve(teams, ovrOf, mode) {
 }
 
 /**
- * @param {object[]} players 출석한 선수
+ * @param {object[]} players 출석한 선수 (고정 선수 포함)
  * @param {number} teamCount 팀 수 (2~6)
- * @param {'position'|'ability'|'balanced'} mode
- * @param {{ ovrOf: (p) => number, rng?: () => number, tries?: number }} opts
- * @returns {{ teams: object[][], metrics: ReturnType<typeof measureTeams> }}
+ * @param {'position'|'ability'|'balanced'|'random'} mode
+ * @param {{ ovrOf: (p) => number, rng?: () => number, tries?: number, fixed?: Map<string, number> }} opts
+ *        fixed: 선수 id → 팀 번호(0부터). 그 팀에 그대로 둠
+ * @returns {{ teams: object[][], metrics: ReturnType<typeof measureTeams>, fixedIds: Set<string> }}
  */
 export function buildTeams(players, teamCount, mode, opts) {
   const ovrOf = opts.ovrOf;
   const rng = opts.rng || Math.random;
-  const tries = opts.tries || 24;
-  const n = Math.max(1, Math.min(teamCount, players.length));
+  const fixedMap = opts.fixed || new Map();
+  const fixedPlayers = players.filter((p) => fixedMap.has(p.id));
+  const maxFixedTeam = fixedPlayers.reduce((m, p) => Math.max(m, fixedMap.get(p.id)), -1);
+  const n = Math.max(1, Math.max(maxFixedTeam + 1, Math.min(teamCount, players.length)));
+  const fixedTeams = Array.from({ length: n }, () => []);
+  fixedPlayers.forEach((p) => fixedTeams[fixedMap.get(p.id)].push(p));
+  const free = players.filter((p) => !fixedMap.has(p.id));
+  const locked = new Set(fixedPlayers);
+  const random = mode === 'random';
+  const tries = random ? 1 : (opts.tries || 24);
   let best = null;
   let bestCost = Infinity;
   const near = [];
   for (let t = 0; t < tries; t++) {
-    const teams = initialDraft(players, n, ovrOf, rng, mode !== 'ability' || t % 2 === 1);
-    const c = improve(teams, ovrOf, mode);
+    const teams = initialDraft(free, fixedTeams, ovrOf, rng, mode !== 'ability' || t % 2 === 1, random);
+    const c = random ? 0 : improve(teams, ovrOf, mode, locked);
     if (c < bestCost - 1e-9) { bestCost = c; best = teams.map((x) => [...x]); near.length = 0; near.push(best); }
     else if (Math.abs(c - bestCost) < 1e-9) near.push(teams.map((x) => [...x]));
   }
@@ -141,7 +153,7 @@ export function buildTeams(players, teamCount, mode, opts) {
   const chosen = near.length ? near[Math.floor(rng() * near.length)] : best;
   const posRank = (p) => POSITIONS.indexOf(normPos(p));
   chosen.forEach((t) => t.sort((a, b) => posRank(a) - posRank(b) || ovrOf(b) - ovrOf(a)));
-  return { teams: chosen, metrics: measureTeams(chosen, ovrOf) };
+  return { teams: chosen, metrics: measureTeams(chosen, ovrOf), fixedIds: new Set(fixedPlayers.map((p) => p.id)) };
 }
 
 /** 출전 5명 고르기: 골레이로 1 · 픽소 1 · 아라 2 · 피보 1 자리를 가장 잘 맞는 선수로 채움 */
