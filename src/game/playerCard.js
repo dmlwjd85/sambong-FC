@@ -4,9 +4,9 @@ import { resolveFaceSrc } from './mangaFace.js';
 import { featureOn } from '../config/features.js';
 import { diffStatChanges, pushUndo } from './activityUndo.js';
 import { POS_KR, STAT_NAMES, POS_WEIGHTS, STAT_KEYS, ACTIVITY_DAILY_CAP, STAT_DESC, ENHANCE_LEVELS, SHOP_ITEMS, isSimTeamKey, simTeamInfo } from './constants.js';
-import { getStat, getBonusStats, statGrowthChancePct, applyLevelStatGrowth, getOVR, getTierInfo, getWeeklyWage, getExpNeeded } from './stats.js';
+import { getStat, getBonusStats, statGrowthChancePct, applyLevelStatGrowth, getOVR, getTierInfo, getWeeklyWage, getExpNeeded, positionOVRs, recommendedPosition } from './stats.js';
 import { getAvatarHtml, triggerConfetti } from './ui.js';
-import { playerDisplayName, canEditThisPlayer, getTodayActivityCounts, escapeAttr } from './utils.js';
+import { playerDisplayName, canEditThisPlayer, getTodayActivityCounts, escapeAttr, fontStack } from './utils.js';
 
 window.showStatDesc = (statKey) => {
 const pId = window.selectedPlayerId;
@@ -23,6 +23,10 @@ growthText = featureOn('shop')
 window.customAlert(`[${STAT_NAMES[statKey]}]\n\n${STAT_DESC[statKey]}${growthText}`);
 };
 
+/** 감독: 능력치 +/− 수정 모드 (기본은 보기만) */
+window.statEditMode = false;
+window.toggleStatEdit = () => { window.statEditMode = !window.statEditMode; if (window.selectedPlayerId) window.renderSelectedCard(window.selectedPlayerId); };
+
 window.renderSelectedCard = (pId) => {
 const p = window.allPlayersData.find(x => x.id === pId);
 if(!p) return;
@@ -36,6 +40,10 @@ const kitItem = SHOP_ITEMS.find((x) => x.id === p.equipKit && x.type === 'kit');
 const shownName = playerDisplayName(p);
 document.getElementById('detailPanelTitle') && (document.getElementById('detailPanelTitle').innerText = isMe ? '내 선수' : `${shownName} 선수`);
 document.getElementById('detailLevel') && (document.getElementById('detailLevel').innerText = lv);
+const navOrder = window.lockerOrderIds ? window.lockerOrderIds() : [];
+const navIdx = navOrder.indexOf(pId);
+const navPos = document.getElementById('detailNavPos');
+if (navPos) navPos.textContent = navIdx >= 0 ? `${navIdx + 1} / ${navOrder.length}` : '';
 
 const badge = document.getElementById('detailTierBadge');
 if(badge) { badge.innerText = tier.name.split(' ')[0]; badge.title = tier.name; badge.className = `px-2 py-0.5 rounded border text-[10px] font-bold whitespace-nowrap ${tier.class}`; }
@@ -46,7 +54,7 @@ if(card) { card.className = `fut-card fut-compact ${tier.cardClass} ${kitClass}`
 const aura = document.getElementById('cardAuraWrapper');
 if (aura) {
 const auraTier = (tier.cardClass || 'card-rookie').replace('card-', 'card-aura-');
-aura.className = `card-aura ${auraTier} relative shrink-0 w-[44%] max-w-[180px]`;
+aura.className = `card-aura ${auraTier} relative shrink-0 w-[41%] max-w-[180px]`;
 }
 
 const detailAv = document.getElementById('detailAvatar');
@@ -57,6 +65,22 @@ document.getElementById('detailOvr') && (document.getElementById('detailOvr').in
 document.getElementById('detailPos') && (document.getElementById('detailPos').innerText = ({ Goleiro: 'GK', Fixo: 'DF', Ala: 'MF', Pivo: 'FW' })[p.pos] || '미정');
 const posFull = document.getElementById('detailPosFull');
 if (posFull) posFull.textContent = POS_KR[p.pos] || '포지션 미정';
+// 포지션별 OVR과 추천
+const recGrid = document.getElementById('posRecommendGrid');
+if (recGrid) {
+const list = positionOVRs(p);
+const best = recommendedPosition(p);
+const short = { Goleiro: 'GK 골레이로', Fixo: 'DF 픽소', Ala: 'MF 아라', Pivo: 'FW 피보' };
+recGrid.innerHTML = list.map((x) => `<div class="pos-rec ${x.pos === best.pos ? 'is-best' : ''} ${x.pos === p.pos ? 'is-current' : ''}"><b>${x.ovr}</b><span>${short[x.pos]}</span></div>`).join('');
+const txt = document.getElementById('posRecommendText');
+if (txt) txt.textContent = p.pos === best.pos ? `지금 포지션이 가장 잘 맞아요` : `추천 ${POS_KR[best.pos]} (OVR ${best.ovr})`;
+const btn = document.getElementById('btnApplyRecommend');
+if (btn) {
+const can = canEditThisPlayer(p.id) && p.pos !== best.pos;
+btn.classList.toggle('hidden', !can);
+btn.onclick = can ? () => (isGM ? window.gmSetPosition(p.id, best.pos) : window.confirmChangePos(p.id, best.pos)) : null;
+}
+}
 const rankEl = document.getElementById('detailRank');
 if (rankEl) {
 const all = (window.allPlayersData || []).map((x) => getOVR(x)).sort((a, b) => b - a);
@@ -75,7 +99,7 @@ simTeamPanel.innerHTML = '';
 simTeamPanel.classList.add('hidden');
 } else {
 simTeamPanel.classList.remove('hidden');
-simTeamPanel.innerHTML = `<div class="fm-info-row"><span>팀</span><b class="${simTeamInfo(st).text}">${teamLabel}</b></div>`;
+simTeamPanel.innerHTML = `<span class="text-slate-600">·</span> <b class="${simTeamInfo(st).text}">${teamLabel}</b>`;
 }
 }
 
@@ -111,7 +135,7 @@ stats.forEach(s => {
 const baseVal = getStat(p, s.id); const bVal = bonus.flat[s.id] || 0; const totalVal = Math.min(99, baseVal + bVal);
 const bonusBadge = (featureOn('shop') && bVal > 0) ? `<sup class="text-[9px] text-emerald-300 font-bold">+${bVal}</sup>` : '';
 const role = posConfig && posConfig.core.includes(s.id) ? 'fm-attr-core' : posConfig && posConfig.sub.includes(s.id) ? 'fm-attr-sub' : '';
-if (isGM) {
+if (isGM && window.statEditMode) {
 gridHtml += `<div class="fm-attr ${role}">
 <button type="button" class="fm-attr-label" onclick="window.showStatDesc('${s.id}')">${s.label}</button>
 <button type="button" onclick="window.modStat('${p.id}', '${s.id}', -1)" class="fm-step" aria-label="${s.label} 내리기"><i class="fa-solid fa-minus"></i></button>
@@ -126,7 +150,13 @@ gridHtml += `<button type="button" class="fm-attr ${role}" onclick="window.showS
 }
 });
 const statsGridElGM = document.getElementById('detailStatsGrid');
-if (statsGridElGM) statsGridElGM.classList.toggle('fm-attr-grid-gm', !!isGM);
+if (statsGridElGM) statsGridElGM.classList.toggle('fm-attr-grid-gm', !!(isGM && window.statEditMode));
+const editBtn = document.getElementById('btnStatEdit');
+if (editBtn) {
+editBtn.classList.toggle('hidden', !isGM);
+editBtn.innerHTML = window.statEditMode ? '<i class="fa-solid fa-check mr-1"></i>완료' : '<i class="fa-solid fa-pen mr-1"></i>수정';
+editBtn.className = editBtn.className.replace(/bg-\S+ border-\S+/, window.statEditMode ? 'bg-emerald-600 border-emerald-400' : 'bg-slate-700 border-slate-500');
+}
 
 /** 카드 아래 FUT식 대표 능력치 6개 */
 const faceKeys = p.pos === 'Goleiro'
@@ -252,55 +282,55 @@ updatesObj.activityUndo = pushUndo(p.activityUndo, { type: activityType, stats: 
 await setDoc(docRef, updatesObj, { merge: true });
 }
 
+/** 12각형 능력치 그래프: 바깥으로 갈수록 높음. 포지션 핵심 능력치 이름은 빨강, 보조는 노랑 */
 function drawRadarChart(p, bonusFlat) {
-const canvas = document.getElementById('statRadar'); if(!canvas) return;
+const canvas = document.getElementById('statRadar'); if (!canvas) return;
+const cssW = Math.max(140, Math.min(230, canvas.parentElement ? canvas.parentElement.clientWidth : 200));
+const dpr = Math.min(2, window.devicePixelRatio || 1);
+canvas.width = Math.floor(cssW * dpr); canvas.height = Math.floor(cssW * dpr);
+canvas.style.width = `${cssW}px`; canvas.style.height = `${cssW}px`;
 const ctx = canvas.getContext('2d');
-const cw = canvas.width; const ch = canvas.height; const cx = cw / 2; const cy = ch / 2; const r = cw * 0.45;
-
-ctx.clearRect(0,0,cw,ch);
-
+ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+ctx.clearRect(0, 0, cssW, cssW);
+const keys = ['pac', 'sho', 'pas', 'dri', 'def', 'phy', 'ref', 'int', 'pst', 'dis', 'cmp', 'wrk'];
+const labels = { pac: '속력', sho: '슈팅', pas: '패스', dri: '드리블', def: '수비', phy: '피지컬', ref: '반사', int: '가로채기', pst: '위치', dis: '볼배급', cmp: '평정심', wrk: '활동량' };
+const cx = cssW / 2; const cy = cssW / 2; const R = cssW * 0.33;
+const ang = (i) => (Math.PI * 2 / 12) * i - Math.PI / 2;
+const MIN = 30; const MAX = 99;
+const rOf = (v) => R * Math.max(0.04, (Math.min(MAX, v) - MIN) / (MAX - MIN));
+// 눈금 (50 · 70 · 90)
+[50, 70, 90].forEach((lv, li) => {
 ctx.beginPath();
-for(let i=0; i<12; i++) {
-const angle = (Math.PI * 2 / 12) * i - (Math.PI / 2);
-ctx.lineTo(cx + r * Math.cos(angle), cy + r * Math.sin(angle));
-}
-ctx.closePath(); 
-ctx.fillStyle = 'rgba(10, 25, 15, 0.8)'; ctx.fill(); 
-
-ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)'; ctx.lineWidth = 1;
-for(let j=1; j<=3; j++) {
-ctx.beginPath();
-let ringR = r * (j/3);
-for(let i=0; i<12; i++) {
-const angle = (Math.PI * 2 / 12) * i - (Math.PI / 2);
-ctx.lineTo(cx + ringR * Math.cos(angle), cy + ringR * Math.sin(angle));
-}
-ctx.closePath(); ctx.stroke();
-}
-ctx.beginPath();
-for(let i=0; i<12; i++) {
-const angle = (Math.PI * 2 / 12) * i - (Math.PI / 2);
-ctx.moveTo(cx, cy);
-ctx.lineTo(cx + r * Math.cos(angle), cy + r * Math.sin(angle));
-}
-ctx.stroke();
-
-const statVals = STAT_KEYS.map((k) => getStat(p, k) + (bonusFlat[k] || 0));
-
-ctx.beginPath();
-for(let i=0; i<12; i++) {
-const val = Math.max(1, Math.min(99, statVals[i])) / 99;
-const angle = (Math.PI * 2 / 12) * i - (Math.PI / 2);
-ctx.lineTo(cx + (r * val) * Math.cos(angle), cy + (r * val) * Math.sin(angle));
-}
+for (let i = 0; i < 12; i++) { const rr = rOf(lv); const x = cx + rr * Math.cos(ang(i)); const y = cy + rr * Math.sin(ang(i)); if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); }
 ctx.closePath();
-
-const ovr = getOVR(p);
-let color = '56, 255, 142'; if (ovr >= 90) color = '138, 43, 226'; else if (ovr >= 80) color = '232, 194, 113'; 
-
-ctx.fillStyle = `rgba(${color}, 0.5)`; ctx.fill(); ctx.strokeStyle = `rgb(${color})`; ctx.lineWidth = 2; ctx.stroke();
-ctx.shadowColor = `rgba(${color}, 0.55)`;
-ctx.shadowBlur = 12;
-ctx.stroke();
-ctx.shadowBlur = 0;
+ctx.fillStyle = li === 2 ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.025)'; ctx.fill();
+ctx.strokeStyle = 'rgba(148,163,184,0.28)'; ctx.lineWidth = 1; ctx.stroke();
+});
+for (let i = 0; i < 12; i++) { ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + R * Math.cos(ang(i)), cy + R * Math.sin(ang(i))); ctx.strokeStyle = 'rgba(148,163,184,0.18)'; ctx.stroke(); }
+const vals = keys.map((k) => Math.min(99, getStat(p, k) + ((bonusFlat && bonusFlat[k]) || 0)));
+const w = POS_WEIGHTS[p.pos];
+// 값 다각형
+ctx.beginPath();
+vals.forEach((v, i) => { const rr = rOf(v); const x = cx + rr * Math.cos(ang(i)); const y = cy + rr * Math.sin(ang(i)); if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); });
+ctx.closePath();
+const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, R);
+g.addColorStop(0, 'rgba(46,230,166,0.15)'); g.addColorStop(1, 'rgba(46,230,166,0.55)');
+ctx.fillStyle = g; ctx.fill();
+ctx.strokeStyle = '#2ee6a6'; ctx.lineWidth = 2; ctx.stroke();
+vals.forEach((v, i) => { const rr = rOf(v); ctx.beginPath(); ctx.arc(cx + rr * Math.cos(ang(i)), cy + rr * Math.sin(ang(i)), 2.4, 0, Math.PI * 2); ctx.fillStyle = v >= 75 ? '#38bdf8' : v >= 65 ? '#86efac' : v >= 55 ? '#fbbf24' : '#f87171'; ctx.fill(); });
+// 이름·숫자
+const fs = Math.max(9, Math.round(cssW * 0.05));
+ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+keys.forEach((k, i) => {
+const lx = cx + (R + fs * 1.55) * Math.cos(ang(i));
+const ly = cy + (R + fs * 1.35) * Math.sin(ang(i));
+const core = w && w.core.includes(k); const sub = w && w.sub.includes(k);
+ctx.font = `800 ${fs}px ${fontStack('body')}`;
+ctx.fillStyle = core ? '#fca5a5' : sub ? '#fde68a' : '#94a3b8';
+ctx.fillText(labels[k], lx, ly - fs * 0.5);
+ctx.font = `${fs + 3}px ${fontStack('num')}`;
+ctx.fillStyle = '#fff';
+ctx.fillText(String(vals[i]), lx, ly + fs * 0.6);
+});
 }
+

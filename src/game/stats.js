@@ -148,3 +148,21 @@ if(pos === 'Pivo') return 'bg-red-500'; if(pos === 'Ala') return 'bg-emerald-500
 if(pos === 'Fixo') return 'bg-blue-500'; if(pos === 'Goleiro') return 'bg-orange-500'; 
 return 'bg-yellow-500';
 };
+
+/** 포지션 4개 각각에서의 OVR (장비 보너스 포함). 포지션 가중치(POS_WEIGHTS)로 계산 */
+export const REC_POSITIONS = ['Goleiro', 'Fixo', 'Ala', 'Pivo'];
+export function positionOVRs(p) {
+const b = getBonusStats(p).flat;
+const stats = {};
+STAT_KEYS.forEach((k) => { stats[k] = getStat(p, k) + (b[k] || 0); });
+return REC_POSITIONS.map((pos) => ({ pos, ovr: getOVRForPos(stats, pos) }));
+}
+/** 가장 OVR이 높은 포지션 (같으면 아라 → 피보 → 픽소 → 골레이로 순으로 고름: 골키퍼는 확실히 높을 때만) */
+export function recommendedPosition(p) {
+const list = positionOVRs(p);
+const pref = ['Ala', 'Pivo', 'Fixo', 'Goleiro'];
+list.sort((a, b) => b.ovr - a.ovr || pref.indexOf(a.pos) - pref.indexOf(b.pos));
+// 골키퍼는 팀에 한 명이면 되니까 다른 포지션보다 3 이상 높을 때만 추천
+if (list[0].pos === 'Goleiro' && list[1] && list[0].ovr - list[1].ovr < 3) return list[1];
+return list[0];
+}

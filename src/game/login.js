@@ -234,6 +234,7 @@ if (!ps.isGM && !ps.isGuest && ps.id) window.selectedPlayerId = ps.id;
 if (window.selectedPlayerId && window.allPlayersData.length > 0) window.renderSelectedCard(window.selectedPlayerId);
 if (window.renderLockerRoom) window.renderLockerRoom();
 window.scrollTo(0, 0);
+if (ps.isGM && window.autoAssignUndecidedPositions) window.autoAssignUndecidedPositions();
 if (ps.isGuest || !db) return;
 const annRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'announcement');
 getDoc(annRef).then((snap) => {

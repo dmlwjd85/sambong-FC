@@ -1,14 +1,14 @@
 /** Firebase 연결과 앱 시작(initApp), 실시간 구독 */
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, doc, collection, onSnapshot } from 'firebase/firestore';
+import { getFirestore, doc, collection, onSnapshot, writeBatch } from 'firebase/firestore';
 import { featureOn } from '../config/features.js';
 import { appId, INITIAL_PLAYERS, ALLOWED_PLAYERS, getSafeDocId, GENDER_MAP, STAT_BASE } from './constants.js';
 import { renderActivePool } from './locker.js';
 import { markRosterReady, tryRememberedEntry } from './login.js';
 import { updateNavBongChip } from './nav.js';
 import { renderLeaderboard, renderMasterDashboard } from './records.js';
-import { getOVR } from './stats.js';
+import { getOVR, recommendedPosition } from './stats.js';
 import { applySeasonChrome } from './ui.js';
 import { isVisible } from './utils.js';
 import { renderWhenIdle } from './renderGate.js';
@@ -21,6 +21,22 @@ throw new Error("서버와의 연결이 끊어졌거나 인증되지 않았습�
 
 export let db, auth;
 let subscribed = false;
+
+/** 포지션이 '미정'인 선수는 능력치 가중치로 고른 추천 포지션으로 일단 정해 둠 (감독 기기에서 한 번에 저장) */
+const autoPosDone = new Set();
+export function autoAssignUndecidedPositions() {
+if (!window.playerState || !window.playerState.isGM || !db) return;
+const todo = (window.allPlayersData || []).filter((p) => (!p.pos || p.pos === '미정') && !autoPosDone.has(p.id));
+if (!todo.length) return;
+const batch = writeBatch(db);
+const now = new Date().toISOString();
+todo.forEach((p) => {
+autoPosDone.add(p.id);
+batch.set(doc(db, 'artifacts', appId, 'public', 'data', 'players', 'player_' + getSafeDocId(p.id)), { pos: recommendedPosition(p).pos, posAuto: true, updatedAt: now }, { merge: true });
+});
+batch.commit().catch((e) => { console.error('auto pos', e); todo.forEach((p) => autoPosDone.delete(p.id)); });
+}
+window.autoAssignUndecidedPositions = autoAssignUndecidedPositions;
 
 export const initApp = async () => {
 try {
@@ -133,6 +149,7 @@ const lvDiff = (b.level ?? 1) - (a.level ?? 1);
 if(lvDiff !== 0) return lvDiff; return getOVR(b) - getOVR(a);
 });
 markRosterReady();
+autoAssignUndecidedPositions();
 
 // 로그인 상태에 따른 자동 선택 로직
 if(window.playerState.id && !window.playerState.isGuest) {

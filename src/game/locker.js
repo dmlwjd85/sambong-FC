@@ -533,3 +533,51 @@ await window.setPlayerSimTeam(pid, toTeam);
 });
 }
 }
+
+/** 라커룸에 보이는 순서대로 선수 id (기본 순서 / 포지션별 모아보기) */
+export function lockerOrderIds() {
+const ids = ALLOWED_PLAYERS.map((n) => getSafeDocId(n)).filter((id) => (window.allPlayersData || []).some((p) => p.id === id));
+if (window.lockerViewMode !== 'byPos') return ids;
+const posOf = (id) => {
+const p = window.allPlayersData.find((x) => x.id === id);
+return ['Goleiro', 'Fixo', 'Ala', 'Pivo'].includes(p && p.pos) ? p.pos : '미정';
+};
+return LOCKER_POS_ORDER.flatMap((pos) => ids.filter((id) => posOf(id) === pos));
+}
+window.lockerOrderIds = lockerOrderIds;
+
+/** 선수 카드에서 이전/다음 선수로 (끝에서는 처음으로 돌아감) */
+window.stepSelectedPlayer = (delta) => {
+const ids = lockerOrderIds();
+if (!ids.length) return;
+const cur = ids.indexOf(window.selectedPlayerId);
+const next = ids[((cur < 0 ? 0 : cur + delta) % ids.length + ids.length) % ids.length];
+window.selectedPlayerId = next;
+window.renderSelectedCard(next);
+window.renderLockerRoom();
+const hub = document.getElementById('playerHub');
+if (hub) {
+hub.classList.remove('card-slide-l', 'card-slide-r');
+void hub.offsetWidth;
+hub.classList.add(delta > 0 ? 'card-slide-l' : 'card-slide-r');
+}
+};
+
+/** 휴대폰: 선수 카드를 좌우로 밀면 이전/다음 선수 (한 번만 연결) */
+export function bindCardSwipe() {
+const hub = document.getElementById('playerHub');
+if (!hub || hub.dataset.swipe === '1') return;
+hub.dataset.swipe = '1';
+let sx = 0; let sy = 0; let t0 = 0; let tracking = false;
+hub.addEventListener('touchstart', (e) => {
+if (e.touches.length !== 1 || e.target.closest('input, select, textarea, .fm-step')) { tracking = false; return; }
+sx = e.touches[0].clientX; sy = e.touches[0].clientY; t0 = Date.now(); tracking = true;
+}, { passive: true });
+hub.addEventListener('touchend', (e) => {
+if (!tracking) return;
+tracking = false;
+const t = e.changedTouches[0];
+const dx = t.clientX - sx; const dy = t.clientY - sy;
+if (Math.abs(dx) > 55 && Math.abs(dy) < 45 && Date.now() - t0 < 600) window.stepSelectedPlayer(dx < 0 ? 1 : -1);
+}, { passive: true });
+}
