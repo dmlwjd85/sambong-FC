@@ -5,6 +5,7 @@ import { ensureSimFieldPositions, simHolderBallNorm } from './formation.js';
 import { resetSimPitchCanvas } from './pitch.js';
 import { liveScene } from './liveScene.js';
 import { getTactic, channelWeights } from './tactics.js';
+import { PLAYS, DEFENSE_NOTES, resolveRoles, choosePlay, fillSay, josa } from './playbook.js';
 import { simSlotTeam } from './roster.js';
 import { countSimTeam, getSimLineup, padSimRosterWithBots, simPosShort, simPickTwoDistinct, simSlotName, fitOVR, asRole } from './roster.js';
 import { getStat, getOVR } from '../stats.js';
@@ -44,7 +45,13 @@ const motmHtml = motm ? `<p class="text-[11px] text-fut-gold mb-2">MOTM <b>${esc
 const head = `<div class="flex flex-wrap items-center gap-2 mb-2 border-b border-amber-700/30 pb-2"><i class="fa-solid fa-chart-simple text-amber-400"></i><span class="text-sm font-bold text-amber-200">풀타임 분석</span><span class="text-[10px] text-slate-500">(모의 시뮬 · 서버 미반영)</span></div>`;
 const table = `<div class="overflow-x-auto"><table class="w-full text-[11px] sm:text-xs text-left border-collapse"><thead><tr class="text-slate-400 border-b border-slate-700"><th class="py-1.5 pr-2">팀</th><th class="py-1.5 pr-2">선수</th><th class="py-1.5 text-center">평점</th><th class="py-1.5 text-center" title="뛴 시간(분)">분</th><th class="py-1.5 text-center" title="골">⚽</th><th class="py-1.5 text-center" title="어시스트">🅰️</th><th class="py-1.5 text-center" title="킬패스">KP</th><th class="py-1.5 text-center" title="세이브">🧤</th></tr></thead><tbody>${rows.map((r) => `<tr class="border-b border-slate-800/80 hover:bg-slate-800/40"><td class="py-1.5 pr-2 font-bold ${r.teamCls} truncate max-w-[5.5rem]">${escapeAttr(r.teamTag)}</td><td class="py-1.5 pr-2 text-white font-bold truncate max-w-[8rem]">${escapeAttr(r.p.name)}</td><td class="py-1.5 text-center font-black ${r.rating >= 8 ? 'text-fut-gold' : (r.rating >= 7 ? 'text-emerald-300' : 'text-slate-300')}">${r.rating.toFixed(1)}</td><td class="py-1.5 text-center text-slate-400">${r.min == null ? '' : r.min}</td><td class="py-1.5 text-center text-fut-gold font-oswald">${r.g || ''}</td><td class="py-1.5 text-center text-emerald-300">${r.a || ''}</td><td class="py-1.5 text-center text-cyan-300">${r.k || ''}</td><td class="py-1.5 text-center text-orange-300">${r.s || ''}</td></tr>`).join('')}</tbody></table></div>`;
 const extraLine = extra ? `<p class="text-[11px] text-slate-400 mb-2">파울 ${extra.foulsA}-${extra.foulsB} · 경고 ${extra.cardsA}-${extra.cardsB} · 코너킥 ${extra.cornersA}-${extra.cornersB} · 교체 ${extra.subsA}-${extra.subsB}</p>` : '';
-el.innerHTML = head + motmHtml + hudLine + extraLine + table;
+const playRows = extra && extra.plays ? Object.entries(extra.plays) : [];
+const playHtml = playRows.length ? `<div class="mb-2 rounded-lg bg-black/30 p-2"><div class="text-[11px] font-bold text-sky-300 mb-1">📘 오늘 쓴 전술 (시도 · 슈팅까지 · 골)</div><div class="grid gap-1">${playRows.map(([k, v]) => {
+const nm = (PLAYS[k] && PLAYS[k].name) || k;
+const cell = (x) => (x.t ? `${x.t}회 · ${x.s} · ${x.g}${x.g ? '⚽' : ''}` : '—');
+return `<div class="flex flex-wrap items-center justify-between gap-x-2 text-[11px]"><span class="text-white font-bold truncate">${escapeAttr(nm)}</span><span class="text-slate-300 shrink-0"><span class="text-cyan-300">${escapeAttr(teamAName)}</span> ${cell(v.A)} | <span class="text-rose-300">${escapeAttr(teamBName)}</span> ${cell(v.B)}</span></div>`;
+}).join('')}</div><p class="text-[10px] text-slate-500 mt-1">슈팅까지 간 비율이 높은 전술이 우리 팀에 잘 맞는 전술이에요. 다음 경기 작전 회의 때 써 보세요!</p></div>` : '';
+el.innerHTML = head + motmHtml + hudLine + extraLine + playHtml + table;
 el.classList.remove('hidden');
 }
 
@@ -141,7 +148,9 @@ const notePlayed = () => { plA.forEach((p) => played.A.set(p.id, p)); plB.forEac
 notePlayed();
 const effStat = (p, key) => getStat(p, key) * (0.82 + 0.18 * ((stamina[p.id] ?? 100) / 100));
 const teamMean = (arr, key) => arr.length ? arr.reduce((s, p) => s + effStat(p, key), 0) / arr.length : STAT_BASE;
-const extra = { foulsA: 0, foulsB: 0, cardsA: 0, cardsB: 0, cornersA: 0, cornersB: 0, subsA: 0, subsB: 0 };
+const extra = { foulsA: 0, foulsB: 0, cardsA: 0, cardsB: 0, cornersA: 0, cornersB: 0, subsA: 0, subsB: 0, plays: {} };
+/** 이번 경기에서 처음 나온 전술은 설명을 길게, 다음부터는 짧게 */
+const seenPlays = new Set();
 /** 하프별 팀 누적 파울 (풋살: 6번째부터 10m 프리킥) */
 let halfFouls = { A: 0, B: 0 };
 const yellow = {};
@@ -235,6 +244,15 @@ else if (n === 2) await append(`${prefix} ${scorer.name} 멀티골! 오늘 감�
 if (mine === theirs) await append(`${prefix} 동점! ${name}가 다시 균형을 맞춥니다. ${sa}-${sb}`);
 else if (mine === theirs + 1 && mine > 1 && lastLeader !== null && lastLeader !== attackA) await append(`${prefix} 역전! ${name}가 경기를 뒤집습니다!`);
 if (mine > theirs) lastLeader = attackA; else if (mine < theirs) lastLeader = !attackA; else lastLeader = null;
+// 풋살 규칙: 골이 나면 실점한 팀이 센터 마크에서 킥오프로 다시 시작
+const concName = attackA ? teamBName : teamAName;
+const conc = attackA ? plB : plA;
+const ko = conc.find((p) => p.pos === 'Pivo') || conc.find((p) => p.pos !== 'Goleiro') || conc[0];
+await liveScene.playEvent({ kind: 'kickoff', holderId: ko && ko.id, say: josa(`센터 킥오프 — 실점한 ${concName}이(가) 가운데서 다시 시작합니다`) });
+await append(josa(`${prefix} ⏺ 센터 킥오프 — 골을 먹은 ${concName}이(가) 하프라인 가운데에서 다시 시작합니다. (풋살 규칙: 실점한 팀이 킥오프, 상대는 3m 떨어져요)`));
+simChainSuccess = 0;
+simBallFlowTrail = [];
+possessionNextAttackA = !attackA;
 };
 let lastLeader = null;
 
@@ -475,7 +493,7 @@ if (r <= 0) return pool[i];
 }
 return pool[pool.length - 1];
 };
-const actor = pickAtk();
+let actor = pickAtk();
 const gk = gkOf(def);
 if (piece && piece.kind === 'corner') {
 simChainSuccess = Math.max(simChainSuccess, 2);
@@ -490,7 +508,93 @@ const sideHint = ch === 'left' ? '왼쪽 측면' : ch === 'right' ? '오른쪽 �
 const atkCtrl = teamMean(atk, 'pas') * 0.55 + teamMean(atk, 'dri') * 0.45 + (mentDelta(attackA ? mentA : mentB) * 40);
 const defTac = attackA ? tacB : tacA;
 const defCtrl = teamMean(def, 'int') * 0.5 + teamMean(def, 'def') * 0.5 - (mentDelta(attackA ? mentB : mentA) * 20) + (defTac.press === 'high' ? 3 : defTac.press === 'low' ? -2 : 0);
-const success = Math.random() < clash(atkCtrl, defCtrl);
+const myTac = attackA ? tacA : tacB;
+const emptyNet = !!(piece && piece.emptyNet);
+
+/** 전술 패턴 진행: 단계마다 패스·드리블 맞대결. 끝까지 가면 슈터를 돌려주고, 끊기면 null */
+const runPlay = async (key) => {
+const play = PLAYS[key];
+const roles = resolveRoles(atk, ch);
+const side = attackA ? 'A' : 'B';
+if (!extra.plays[key]) extra.plays[key] = { A: { t: 0, s: 0, g: 0 }, B: { t: 0, s: 0, g: 0 } };
+const st = extra.plays[key][side];
+st.t++;
+const first = !seenPlays.has(key + side);
+seenPlays.add(key + side);
+if (play.side && ch === 'center') ch = Math.random() < 0.5 ? 'left' : 'right';
+const starter = roles[play.steps[0].from] || actor;
+await append(`${prefix} 📘 전술 노트 — ${atkName}의 [${play.name}]` + (first ? ` · ${play.lesson}` : ''),
+pitch('build', 'neutral', ch, starter, { motion: { kind: 'none' } }));
+for (let i = 0; i < play.steps.length; i++) {
+const step = play.steps[i];
+const from = roles[step.from] || actor;
+if (step.type === 'shot') { st.s++; return from; }
+const to = step.to ? roles[step.to] : null;
+if (step.type === 'pass' && (!to || to.id === from.id)) continue;
+const defField = def.filter((p) => p.pos !== 'Goleiro');
+const mark = pick(defField.length ? defField : def);
+const dribble = step.type === 'dribble';
+const atkV = dribble ? effStat(from, 'dri') + effStat(from, 'pac') * 0.2 : effStat(from, 'pas') * 0.75 + effStat(to, 'pst') * 0.25;
+const defV = dribble ? effStat(mark, 'def') + effStat(mark, 'phy') * 0.2 : effStat(mark, 'int') * 0.7 + effStat(mark, 'def') * 0.3;
+let pOk = 0.66 + ((atkV - defV) / 99) * 0.5;
+if (defTac.press === 'high') pOk -= i === 0 ? 0.08 : -0.02; // 전방 압박: 처음 패스가 어렵고, 넘기면 뒤가 비어요
+if (defTac.press === 'low') pOk += i === 0 ? 0.08 : -0.06; // 내려서기: 앞은 편하지만 골문 앞이 촘촘
+if (key === 'powerplay') pOk += 0.06;
+if (key === 'counter') pOk += 0.04;
+const ok = Math.random() < Math.max(0.35, Math.min(0.9, pOk));
+if (!ok) {
+lastPasser = null;
+if (Math.random() < 0.15) {
+await handleFoul(attackA, from, mark, prefix, ch, pitch, atk, def, gk, atkName, defName, step.run === 'box' || i >= play.steps.length - 2);
+return null;
+}
+bumpRating(mark.id, 0.22);
+bumpRating(from.id, -0.05);
+let counter = Math.random() < Math.max(0.08, Math.min(0.4, 0.2 + (teamMean(def, 'pac') - teamMean(atk, 'pac')) / 60));
+let tail = '';
+if (key === 'powerplay') {
+counter = true;
+setPiece = { kind: 'counter', attackA: !attackA, emptyNet: true };
+tail = josa(` ⚠️ 골대가 비었어요! ${defName}이(가) 빈 골문을 노립니다 — 파워플레이의 위험!`);
+} else if (counter) {
+setPiece = { kind: 'counter', attackA: !attackA };
+tail = ` ⚡ ${defName} 바로 역습!`;
+}
+const notes = DEFENSE_NOTES[defTac.press] || DEFENSE_NOTES.mid;
+const what = josa(dribble ? `${mark.name}이(가) 길을 막고 공을 빼앗습니다` : `${mark.name}이(가) 패스 길을 읽고 가로챕니다`);
+await append(`${prefix} ✋ ${defName} ${what}! [${play.name}] 실패. 🛡 ${pick(notes)}${tail}`,
+pitch('progress', 'fail', ch, mark, { motion: { kind: 'intercept', actor: from, defender: mark, counter } }));
+return null;
+}
+bumpRating(from.id, 0.08);
+const said = fillSay(step.say, roles, step);
+const learn = step.learn && (first || Math.random() < 0.3) ? ` 📘 ${step.learn}` : '';
+if (dribble) {
+await append(`${prefix} ${said}${learn}`, pitch('progress', 'success', ch, from, { motion: { kind: 'dribble', actor: from, defender: mark } }));
+} else {
+const later = play.steps.slice(i + 1).some((x) => x.to === step.from || (x.from === step.from && x.type === 'shot'));
+lastPasser = { attackA, id: from.id };
+if (i === play.steps.length - 2) bumpStat('keypass', from.id);
+await append(`${prefix} ${said}${learn}`, pitch('progress', 'success', ch, to, { motion: { kind: 'playpass', actor: from, target: to, defender: mark, run: step.run, passerRun: later ? 'forward' : null, say1: josa(`${play.name}: ${from.name}이(가) 동료의 움직임을 봅니다`), say2: said, badge: '전술' } }));
+}
+}
+return null;
+};
+
+let playShot = false;
+let playKey = null;
+const behindNow = attackA ? sa < sb : sb < sa;
+const powerplay = halfIdx === 1 && simSec >= SIM_HALF_SEC - 300 && behindNow && Math.abs(sa - sb) <= 2 && !piece && Math.random() < 0.7;
+const isCounterPiece = !!(piece && piece.kind === 'counter');
+if (!(piece && piece.kind === 'corner') && (powerplay || isCounterPiece || (simChainSuccess === 0 && Math.random() < 0.6))) {
+playKey = choosePlay({ tactic: myTac, counter: isCounterPiece, powerplay });
+if (playKey === 'powerplay' && !gkOf(atk)) playKey = 'diagonal';
+const shooter = await runPlay(playKey);
+if (!shooter) return;
+actor = shooter;
+playShot = true;
+}
+const success = playShot || Math.random() < clash(atkCtrl, defCtrl);
 
 if (!success) {
 const intr = pick(def);
@@ -534,8 +638,8 @@ const nextChain = simChainSuccess + 1;
 const atkTac = attackA ? tacA : tacB;
 // 첫 연결에서 바로 차는 건 중거리슛 → 잘 안 차고 잘 안 들어감. 박스 근처까지 들어가서 차는 게 대부분
 const shotChance = (nextChain >= 4 ? 0.85 : nextChain === 3 ? 0.74 : nextChain === 2 ? 0.6 : 0.12) + (defTac.press === 'high' && nextChain >= 2 ? 0.05 : 0);
-const longShot = nextChain <= 1;
-const isShot = shotChance > 0 && Math.random() < shotChance;
+const longShot = !playShot && nextChain <= 1;
+const isShot = playShot || (shotChance > 0 && Math.random() < shotChance);
 
 if (isShot) {
 const actorSho = effStat(actor, 'sho') + effStat(actor, 'cmp') * 0.25 + effStat(actor, 'pst') * 0.15;
@@ -546,7 +650,9 @@ if (defTac.press === 'low' && !longShot) xg *= 0.9;
 void atkTac;
 if ((attackA ? mentA : mentB) === 'attack') xg *= 1.12;
 if ((attackA ? mentB : mentA) === 'defend') xg *= 0.88;
-xg = Math.max(0.05, Math.min(0.6, xg));
+if (playShot && !emptyNet) xg *= 0.78; // 수비도 패턴을 알고 따라와요
+if (emptyNet) xg = Math.max(xg, 0.55);
+xg = Math.max(0.05, Math.min(emptyNet ? 0.75 : 0.6, xg));
 if (attackA) { live.shotA++; live.xgA += xg; } else { live.shotB++; live.xgB += xg; }
 paintHud();
 const rollGoal = Math.random() < xg;
@@ -556,6 +662,8 @@ if (rollGoal) {
 if (attackA) { sa++; live.onA++; } else { sb++; live.onB++; }
 updScore();
 paintHud();
+if (playKey && extra.plays[playKey]) extra.plays[playKey][attackA ? 'A' : 'B'].g++;
+if (emptyNet) await append(`${prefix} 🥅 빈 골문! 골키퍼가 올라가 있던 틈을 놓치지 않습니다.`);
 bumpStat('goals', actor.id);
 bumpRating(actor.id, 1.05);
 bumpRating(gk.id, -0.28);
