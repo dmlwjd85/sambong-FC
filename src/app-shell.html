@@ -538,8 +538,9 @@
 </details>
 
 <details id="simTacticalDetails" class="sim-fold group mb-4 rounded-2xl border border-cyan-800/40 bg-slate-950/70 shadow-inner min-w-0 max-w-full overflow-x-hidden">
-<summary class="flex items-center justify-between gap-2 min-h-[48px] px-3 sm:px-4 cursor-pointer select-none text-sm font-bold text-cyan-300"><span><i class="fa-solid fa-chess-board mr-2"></i>전술 보드 (자리 바꾸기)</span><i class="fa-solid fa-chevron-down transition group-open:rotate-180 text-slate-400"></i></summary>
+<summary class="flex items-center justify-between gap-2 min-h-[48px] px-3 sm:px-4 cursor-pointer select-none text-sm font-bold text-cyan-300"><span><i class="fa-solid fa-chess-board mr-2"></i>경기 시작 위치 (포메이션)</span><i class="fa-solid fa-chevron-down transition group-open:rotate-180 text-slate-400"></i></summary>
 <div id="simTacticalSection" class="px-3 pb-3 sm:px-4 sm:pb-4 min-w-0 max-w-full overflow-x-hidden">
+<button type="button" onclick="window.switchAppTab('match','tabTactics')" class="w-full min-h-[44px] mb-2 rounded-xl bg-amber-600/90 hover:bg-amber-500 text-slate-900 font-bold text-sm"><i class="fa-solid fa-chalkboard mr-1"></i>전술판에서 작전 설명하기 (선수·공 움직이기)</button>
 <p class="text-xs font-bold text-cyan-300 mb-2 flex flex-wrap items-center gap-2"><i class="fa-solid fa-chess-board"></i> 전술 보드 <span class="text-[10px] font-normal text-slate-500">출전 명단을 필드로 드래그해 배치 · 로컬 저장</span></p>
 <div class="flex flex-col gap-2 mb-2 min-w-0">
 <div class="min-w-0">
@@ -597,7 +598,7 @@
 <span class="text-[11px] sm:text-xs text-slate-100 font-bold truncate min-w-0"><span class="text-red-300" data-sim-slot-short="A">레드</span> <b id="simPitchScore" class="font-bebas text-lg text-fut-gold mx-1 align-middle">0 - 0</b> <span class="text-sky-300" data-sim-slot-short="B">블루</span></span>
 <div class="flex items-center gap-1.5 shrink-0">
 <span id="simPitchBadge" class="text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-slate-800 text-slate-300 shrink-0">대기</span>
-<button type="button" id="btnSimOrient" onclick="window.toggleSimOrientation()" class="min-h-[36px] px-2.5 rounded-lg bg-slate-800 border border-slate-600 text-slate-100 text-xs font-bold" aria-label="경기장 방향 바꾸기"><i class="fa-solid fa-mobile-screen-button mr-1"></i><span id="simOrientLabel">세로로 보기</span></button>
+<div class="seg" role="radiogroup" aria-label="경기장 방향"><button type="button" data-orient="portrait" onclick="window.simSetOrient('portrait')"><i class="fa-solid fa-mobile-screen-button"></i> 세로</button><button type="button" data-orient="landscape" onclick="window.simSetOrient('landscape')"><i class="fa-solid fa-mobile-screen-button fa-rotate-90"></i> 가로</button></div>
 </div>
 </div>
 <div class="px-3 py-2 bg-black/60 border-b border-emerald-900/50 min-h-[48px] flex items-center gap-2">
@@ -620,6 +621,55 @@
 </div>
 
 <!-- 🛠️ 탭 3: 꾸미기 상점 & 제련소 -->
+<div id="tabTactics" class="hidden space-y-4 w-full min-w-0">
+<div class="glass-panel p-3 sm:p-6 rounded-3xl border-t-4 border-t-amber-500 min-w-0">
+<h3 class="font-display text-white flex items-center gap-2"><i class="fa-solid fa-chalkboard text-amber-400"></i> 전술판</h3>
+<p class="text-xs text-slate-400 mt-1 mb-3">선수·공을 끌어 옮기고 화살표를 그린 뒤 <b class="text-slate-200">장면 저장</b>. 장면을 여러 개 만들고 <b class="text-slate-200">재생</b>하면 순서대로 움직이며 작전을 보여 줘요.</p>
+
+<div id="tacBoardWrap" class="tac-wrap min-w-0">
+<div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+<div class="seg" role="radiogroup" aria-label="그리기 도구">
+<button type="button" data-tac-mode="move" onclick="window.tacSetMode('move')"><i class="fa-solid fa-hand-pointer"></i> 이동</button>
+<button type="button" data-tac-mode="run" onclick="window.tacSetMode('run')"><i class="fa-solid fa-person-running"></i> 달리기</button>
+<button type="button" data-tac-mode="pass" onclick="window.tacSetMode('pass')"><i class="fa-solid fa-futbol"></i> 패스</button>
+</div>
+<div class="seg" role="radiogroup" aria-label="전술판 방향">
+<button type="button" data-orient="portrait" onclick="window.tacSetOrient('portrait')">세로</button>
+<button type="button" data-orient="landscape" onclick="window.tacSetOrient('landscape')">가로</button>
+</div>
+</div>
+<p id="tacHint" class="text-[11px] text-amber-200 mb-1.5"></p>
+<div id="tacBoardPanel" class="rounded-2xl border border-emerald-600/30 overflow-hidden bg-[#06101c] flex items-center justify-center">
+<canvas id="tacBoardCanvas" width="360" height="600" class="block max-w-full"></canvas>
+</div>
+<div class="flex items-center gap-1.5 mt-2 overflow-x-auto pb-1" id="tacSteps"></div>
+<div class="grid grid-cols-4 gap-1.5 mt-2">
+<button type="button" id="tacPlay" onclick="window.tacPlay()" class="tac-btn tac-btn-main col-span-2"><i class="fa-solid fa-play mr-1"></i>재생</button>
+<button type="button" onclick="window.tacUndoArrow()" class="tac-btn"><i class="fa-solid fa-rotate-left mr-1"></i>화살표</button>
+<button type="button" id="tacFullBtn" onclick="window.tacFullscreen()" class="tac-btn"><i class="fa-solid fa-expand mr-1"></i>전체 화면</button>
+<button type="button" id="tacDelStep" onclick="window.tacDelStep()" class="tac-btn"><i class="fa-solid fa-trash mr-1"></i>장면</button>
+<button type="button" onclick="window.tacClearArrows()" class="tac-btn">화살표 전부</button>
+<button type="button" id="tacNames" onclick="window.tacToggleNames()" class="tac-btn">번호로</button>
+<button type="button" onclick="window.tacResetAll()" class="tac-btn">새로</button>
+</div>
+</div>
+
+<div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+<label class="flex items-center justify-between gap-2 rounded-xl border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-200 min-h-[48px]">
+<span class="font-bold">처음 배치</span>
+<select id="tacFormation" onchange="window.tacFormation(this.value)" class="min-h-[36px] bg-slate-900 border border-slate-600 rounded-lg px-2 text-white text-sm">
+<option value="2-2">2-2 (박스)</option><option value="3-1">3-1</option><option value="1-2-1">1-2-1 (다이아)</option><option value="4-0">4-0 (회전)</option>
+</select>
+</label>
+<button type="button" onclick="window.tacUseAsFormation()" class="min-h-[48px] rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-sm"><i class="fa-solid fa-flag-checkered mr-1"></i>이 배치로 모의경기 시작</button>
+</div>
+
+<h4 class="fm-section-title mt-5 mb-2">팀 전술 (모의경기에 반영)</h4>
+<div id="tacTeamTactics" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+<p class="text-[11px] text-slate-500 mt-2">전방 압박은 공을 더 잘 뺏지만 뒤 공간을 내줘요. 내려서기는 실점 기회를 줄여요. 폭·공격 방향은 측면 전개 비율과 선수 위치에 반영돼요.</p>
+</div>
+</div>
+
 <div id="tabShop" class="hidden space-y-6">
 <div class="glass-panel p-6 sm:p-8 rounded-3xl border-t-4 border-t-purple-500 relative overflow-hidden">
 

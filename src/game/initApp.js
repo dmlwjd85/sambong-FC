@@ -27,10 +27,12 @@ import { bindSimTeamBoardUi, bindCardSwipe } from './locker.js';
 import { bindSimTacticalUi } from './sim/tactical.js';
 import { initApp } from './boot.js';
 import { renderTeamModePicker, openSimFoldsOnWide } from './sim/roster.js';
+import { bindTacticsBoard } from './sim/tacticsBoard.js';
 
 bootLoginForm();
 bindSimTeamBoardUi();
 bindCardSwipe();
+bindTacticsBoard();
 bindSimTacticalUi();
 renderTeamModePicker();
 openSimFoldsOnWide();
