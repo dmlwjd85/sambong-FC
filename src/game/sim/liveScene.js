@@ -579,7 +579,13 @@ export class LiveScene {
       });
       if (this.timeScale <= 0) this.snap();
       this.say(ev.say || '킥오프!', '킥오프', 'info');
-      await this.wait(700);
+      await this.wait(ev.holderId ? 1300 : 700); // 골 뒤에는 선수들이 제자리로 돌아가는 시간
+      if (ev.holderId && this.players.has(ev.holderId)) {
+        const K = this.players.get(ev.holderId);
+        K.tx = 0.5 + (K.side === 'A' ? -0.015 : 0.015); K.ty = 0.5;
+        await this.wait(350);
+        this.ball.holder = ev.holderId;
+      }
       return;
     }
     if (ev.kind === 'sub' || ev.kind === 'none') { this.shape(this.ball.holder ? this.players.get(this.ball.holder)?.side : atkSide); return; }
@@ -605,6 +611,33 @@ export class LiveScene {
         this.say(`${name(ev.target)} 잡았습니다. 공격 이어갑니다`, '전개', 'good');
         this.shape(atkSide);
         await this.wait(350);
+        break;
+      }
+      case 'playpass': {
+        // 전술 패턴 패스: 받는 선수가 약속된 길(run)로 먼저 움직이고, 그 '달려갈 곳'으로 패스
+        const depth = (d) => (atkSide === 'A' ? d : 1 - d);
+        const sideY = A.y < 0.5 ? 0.08 : 0.92;
+        const farY = A.y < 0.5 ? 0.78 : 0.22;
+        if (T) {
+          const run = ev.run;
+          let tx = fwd(T, 3); let ty = T.ty;
+          if (run === 'line') { tx = depth(rnd(0.78, 0.86)); ty = sideY; }
+          else if (run === 'diag') { tx = depth(rnd(0.74, 0.8)); ty = lerp(farY, 0.5, 0.55); }
+          else if (run === 'drop') { tx = depth(rnd(0.66, 0.72)); ty = 0.5 + rnd(-0.08, 0.08); }
+          else if (run === 'box') { tx = depth(rnd(0.8, 0.85)); ty = 0.5 + rnd(-0.1, 0.1); }
+          else if (run === 'back') { tx = depth(rnd(0.84, 0.9)); ty = lerp(T.y, 0.5, 0.3); }
+          this.move(T.p.id, tx, ty);
+          if (D) this.move(D.p.id, lerp(D.x, tx, 0.6), lerp(D.y, ty, 0.6));
+        }
+        this.say(ev.say1 || `${name(ev.actor)}, 동료의 움직임을 봅니다`, ev.badge || '전술', 'info');
+        await this.wait(ev.run ? 800 : 500);
+        this.say(ev.say2 || `${name(ev.actor)} → ${name(ev.target)}!`, ev.badge || '전술', 'good');
+        if (T) await this.kick({ toId: T.p.id, x: T.tx, y: T.ty, speed: ev.run === 'back' ? 16 : 14 });
+        this.shape(atkSide);
+        // 패스한 선수는 서 있지 않고 다음 자리로
+        if (ev.passerRun === 'forward') this.move(A.p.id, fwd(A, 6), lerp(A.y, 0.5, 0.35));
+        else if (ev.passerRun === 'fill') this.move(A.p.id, depth(0.3), 0.5);
+        await this.wait(380);
         break;
       }
       case 'dribble': {
