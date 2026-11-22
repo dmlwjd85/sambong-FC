@@ -96,7 +96,7 @@ window.renderSimMatchTab();
 /** 경기 탭의 팀 이름 자리 채우기 */
 function paintSimSlotNames() {
 document.querySelectorAll('[data-sim-slot-name]').forEach((el) => { el.textContent = simSlotName(el.getAttribute('data-sim-slot-name')); });
-document.querySelectorAll('[data-sim-slot-short]').forEach((el) => { el.textContent = simTeamInfo(simSlotTeam(el.getAttribute('data-sim-slot-short'))).short; });
+document.querySelectorAll('[data-sim-slot-short]').forEach((el) => { const ti = simTeamInfo(simSlotTeam(el.getAttribute('data-sim-slot-short'))); el.textContent = ti.short; el.style.color = ti.hex; });
 }
 
 const ROLE_KR = { Goleiro: 'GK', Fixo: 'DF', Ala: 'MF', Pivo: 'FW', 미정: '?' };

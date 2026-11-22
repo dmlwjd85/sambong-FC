@@ -1,6 +1,6 @@
 /** 풋살 경기장 그리기 */
 import { liveScene } from './liveScene.js';
-import { getSimMatchRoster, padSimRosterWithBots } from './roster.js';
+import { getSimMatchRoster, padSimRosterWithBots, simSlotTeam } from './roster.js';
 import { buildSimSituationMeta, applySimPitchCaptionMeta, drawSimPitchFxOverlay } from './broadcast.js';
 import { simPlayerLiveNorm } from './formation.js';
 import { buildSimPitchPortraitMap, drawSoccerBallSprite, drawSimPlayersOnPitch } from './tactical.js';
@@ -309,5 +309,6 @@ export function resetSimPitchCanvas() {
 const rosterOf = (slot) => padSimRosterWithBots(getSimMatchRoster(slot), slot).roster;
 let plA = []; let plB = [];
 try { plA = rosterOf('A'); plB = rosterOf('B'); } catch (e) { /* 명단 없음 */ }
+try { liveScene.setKits(simSlotTeam('A'), simSlotTeam('B')); } catch (e) { /* 무시 */ }
 liveScene.idle(plA, plB);
 }

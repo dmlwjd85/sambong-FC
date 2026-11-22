@@ -4,6 +4,8 @@ import { runSimBroadcastFx, pulseSimPitchCanvas, buildSimSituationMeta, simBroad
 import { ensureSimFieldPositions, simHolderBallNorm } from './formation.js';
 import { resetSimPitchCanvas } from './pitch.js';
 import { liveScene } from './liveScene.js';
+import { getTactic, channelWeights } from './tactics.js';
+import { simSlotTeam } from './roster.js';
 import { countSimTeam, getSimLineup, padSimRosterWithBots, simPosShort, simPickTwoDistinct, simSlotName, fitOVR, asRole } from './roster.js';
 import { getStat, getOVR } from '../stats.js';
 import { escapeAttr, sleep } from '../utils.js';
@@ -122,6 +124,10 @@ const strB = plB.reduce((s, p) => s + getOVR(p), 0);
 const ratio = strA + strB > 0 ? strA / (strA + strB) : 0.5;
 const mentA = document.getElementById('simMentalityA')?.value || 'balanced';
 const mentB = document.getElementById('simMentalityB')?.value || 'balanced';
+const tacA = getTactic(simSlotTeam('A'));
+const tacB = getTactic(simSlotTeam('B'));
+liveScene.tactics = { A: tacA, B: tacB };
+liveScene.setKits(simSlotTeam('A'), simSlotTeam('B'));
 const mentDelta = (code) => (code === 'attack' ? 0.07 : code === 'defend' ? -0.06 : 0);
 const live = { possA: 0, possB: 0, shotA: 0, shotB: 0, onA: 0, onB: 0, xgA: 0, xgB: 0 };
 const ratings = {};
@@ -189,7 +195,9 @@ if (el) el.textContent = `${halfLabel} ${String(m).padStart(2, '0')}:${String(s)
 };
 
 /** 중계 텍스트(하단) + 상단 경기장 캔버스 갱신 */
+window.__simLastLog = [];
 const append = async (line, pitchOpts) => {
+window.__simLastLog.push(line);
 if (!logEl) return;
 const fx = pitchOpts?.broadcastFx || null;
 const plAll = pitchOpts ? [...(pitchOpts.plA || []), ...(pitchOpts.plB || [])] : [];
@@ -241,21 +249,21 @@ if (r < xg) {
 if (attackA) { sa++; live.onA++; } else { sb++; live.onB++; }
 updScore(); paintHud();
 bumpStat('goals', shooter.id); bumpRating(shooter.id, 1.0); bumpRating(gk.id, -0.25);
-await append(`${prefix} ⚽ ${label} 골! ${shooter.name}의 슈팅이 그대로 꽂힙니다! ${sa}-${sb}`, pitch('danger', 'success', ch, shooter, { isGoalShot: true, broadcastFx: 'goal', motion: { kind: 'setpiece', actor: shooter, gk, result: 'goal', label, dist: label.includes('10m') ? 10 : 8 } }));
+await append(`${prefix} ⚽ ${label} 골! ${shooter.name}의 슈팅이 그대로 꽂힙니다! ${sa}-${sb}`, pitch('danger', 'success', ch, shooter, { isGoalShot: true, broadcastFx: 'goal', motion: { kind: 'setpiece', actor: shooter, gk, result: 'goal', label, dist: label.includes('10m') ? 10 : label.includes('페널티') ? 6 : 12 } }));
 await goalContext(attackA, shooter, prefix);
 } else if (r < xg + 0.35) {
 if (attackA) live.onA++; else live.onB++;
 paintHud();
 bumpStat('saves', gk.id); bumpRating(gk.id, 0.6);
-await append(`${prefix} 🧤 ${label} — ${shooter.name}의 슈팅을 ${gk.name}가 막아냅니다!`, pitch('danger', 'neutral', ch, gk, { broadcastFx: 'superSave', motion: { kind: 'setpiece', actor: shooter, gk, result: 'save', label, dist: label.includes('10m') ? 10 : 8 } }));
+await append(`${prefix} 🧤 ${label} — ${shooter.name}의 슈팅을 ${gk.name}가 막아냅니다!`, pitch('danger', 'neutral', ch, gk, { broadcastFx: 'superSave', motion: { kind: 'setpiece', actor: shooter, gk, result: 'save', label, dist: label.includes('10m') ? 10 : label.includes('페널티') ? 6 : 12 } }));
 } else {
 paintHud();
-await append(`${prefix} ${label} — ${shooter.name}의 슈팅이 벽에 맞고 나갑니다.`, pitch('danger', 'fail', ch, shooter, { motion: { kind: 'setpiece', actor: shooter, gk, result: 'miss', label, dist: label.includes('10m') ? 10 : 8 } }));
+await append(`${prefix} ${label} — ${shooter.name}의 슈팅이 벽에 맞고 나갑니다.`, pitch('danger', 'fail', ch, shooter, { motion: { kind: 'setpiece', actor: shooter, gk, result: 'miss', label, dist: label.includes('10m') ? 10 : label.includes('페널티') ? 6 : 12 } }));
 }
 };
 
 /** 파울: 팀 누적 파울, 경고, 프리킥 / 6번째부터 10m 프리킥 */
-const handleFoul = async (attackA, victim, fouler, prefix, ch, pitch, atk, def, gk, atkName, defName) => {
+const handleFoul = async (attackA, victim, fouler, prefix, ch, pitch, atk, def, gk, atkName, defName, inBox = false) => {
 const side = attackA ? 'B' : 'A';
 halfFouls[side]++;
 if (side === 'A') extra.foulsA++; else extra.foulsB++;
@@ -274,10 +282,21 @@ await append(`${prefix} 누적 파울 6개 — ${atkName}에게 10m 프리킥! �
 await setPieceShot({ attackA, shooter, gk, baseXg: 0.42, prefix, ch: 'center', pitch, label: '10m 프리킥' });
 return;
 }
-if (Math.random() < 0.3) {
-await setPieceShot({ attackA, shooter, gk, baseXg: 0.11, prefix, ch, pitch, label: '직접 프리킥' });
+// 골키퍼 구역(페널티 에어리어) 안 파울 → 페널티킥
+if (inBox && Math.random() < 0.55) {
+await append(`${prefix} 페널티 에어리어 안 파울! 주심이 페널티 마크(6m)를 가리킵니다. 키커 ${shooter.name}.`);
+await setPieceShot({ attackA, shooter, gk, baseXg: 0.62, prefix, ch: 'center', pitch, label: '페널티킥' });
 return;
 }
+// 그 밖에는 프리킥: 골문 가까우면 직접 슈팅, 멀면 짧게 이어서 다시 공격
+if (inBox || Math.random() < 0.25) {
+await setPieceShot({ attackA, shooter, gk, baseXg: 0.13, prefix, ch, pitch, label: '직접 프리킥' });
+return;
+}
+const mates = atk.filter((p) => p.id !== victim.id && p.pos !== 'Goleiro');
+const recv = mates.length ? pick(mates) : victim;
+await append(`${prefix} ${atkName} 프리킥 — 수비벽 5m. ${victim.name}가 ${recv.name}에게 짧게 연결해 다시 공격합니다.`,
+pitch('progress', 'success', ch, recv, { motion: { kind: 'freekick', actor: victim, target: recv } }));
 possessionNextAttackA = attackA;
 };
 
@@ -338,10 +357,11 @@ await append(`[${t}] 🔁 ${teamName} 교체 — OUT ${out.name} (체력 ${Math.
 };
 
 /** 풋살: 사이드 전개 비중↑ (좌·우 약 38%씩) */
-const pickSimChannel = () => {
+const pickSimChannel = (attackA) => {
+const w = channelWeights(attackA ? tacA : tacB);
 const u = Math.random();
-if (u < 0.38) return 'left';
-if (u < 0.76) return 'right';
+if (u < w.left) return 'left';
+if (u < w.left + w.right) return 'right';
 return 'center';
 };
 /** 공격 측 연속 성공 — 2·3·4연속일 때 골 확률 가중 */
@@ -421,7 +441,7 @@ const def = attackA ? plB : plA;
 const atkName = attackA ? teamAName : teamBName;
 const defName = attackA ? teamBName : teamAName;
 
-let ch = pickSimChannel();
+let ch = pickSimChannel(attackA);
 const pitch = (phase, outcome, chOverride, ballHolder, extra) => ({
 attackA,
 channel: chOverride !== undefined ? chOverride : ch,
@@ -468,7 +488,8 @@ simChainSuccess = Math.max(simChainSuccess, 2);
 
 const sideHint = ch === 'left' ? '왼쪽 측면' : ch === 'right' ? '오른쪽 측면' : '중앙';
 const atkCtrl = teamMean(atk, 'pas') * 0.55 + teamMean(atk, 'dri') * 0.45 + (mentDelta(attackA ? mentA : mentB) * 40);
-const defCtrl = teamMean(def, 'int') * 0.5 + teamMean(def, 'def') * 0.5 - (mentDelta(attackA ? mentB : mentA) * 20);
+const defTac = attackA ? tacB : tacA;
+const defCtrl = teamMean(def, 'int') * 0.5 + teamMean(def, 'def') * 0.5 - (mentDelta(attackA ? mentB : mentA) * 20) + (defTac.press === 'high' ? 3 : defTac.press === 'low' ? -2 : 0);
 const success = Math.random() < clash(atkCtrl, defCtrl);
 
 if (!success) {
@@ -476,7 +497,18 @@ const intr = pick(def);
 const marker = pick(def.filter((p) => p.id !== intr.id)) || intr;
 lastPasser = null;
 if (Math.random() < 0.2) {
-await handleFoul(attackA, actor, intr === gk ? marker : intr, prefix, ch, pitch, atk, def, gk, atkName, defName);
+await handleFoul(attackA, actor, intr === gk ? marker : intr, prefix, ch, pitch, atk, def, gk, atkName, defName, simChainSuccess >= 2 || (simChainSuccess >= 1 && Math.random() < 0.3));
+return;
+}
+// 공이 터치라인 밖으로 → 상대 킥인 (풋살은 스로인 대신 킥인, 수비는 5m, 4초 안에)
+if (ch !== 'center' && Math.random() < 0.3) {
+const kicker = intr.pos === 'Goleiro' ? marker : intr;
+const mates = def.filter((p) => p.id !== kicker.id && p.pos !== 'Goleiro');
+const recv = mates.length ? pick(mates) : kicker;
+simChainSuccess = 0;
+await append(`${prefix} ${sideHint}에서 공이 터치라인 밖으로 — ${defName} 킥인! 수비는 5m 물러서고, ${kicker.name}가 4초 안에 차야 합니다. ${kicker.name} → ${recv.name}.`,
+pitch('build', 'neutral', ch, recv, { motion: { kind: 'kickin', actor, defender: kicker, target: recv, side: ch } }));
+possessionNextAttackA = !attackA;
 return;
 }
 // 빠른 팀이 공을 뺏으면 역습
@@ -499,20 +531,26 @@ return;
 
 const nextChain = simChainSuccess + 1;
 /** 풋살은 코트가 좁아 슈팅이 잦아요 (한 경기 양 팀 합쳐 약 15~25개) */
-const shotChance = nextChain >= 4 ? 0.85 : nextChain === 3 ? 0.72 : nextChain === 2 ? 0.58 : 0.4;
+const atkTac = attackA ? tacA : tacB;
+// 첫 연결에서 바로 차는 건 중거리슛 → 잘 안 차고 잘 안 들어감. 박스 근처까지 들어가서 차는 게 대부분
+const shotChance = (nextChain >= 4 ? 0.85 : nextChain === 3 ? 0.74 : nextChain === 2 ? 0.6 : 0.12) + (defTac.press === 'high' && nextChain >= 2 ? 0.05 : 0);
+const longShot = nextChain <= 1;
 const isShot = shotChance > 0 && Math.random() < shotChance;
 
 if (isShot) {
 const actorSho = effStat(actor, 'sho') + effStat(actor, 'cmp') * 0.25 + effStat(actor, 'pst') * 0.15;
 const gkRef = effStat(gk, 'ref') + effStat(gk, 'pst') * 0.2;
 const shotQuality = clash(actorSho + nextChain * 3, gkRef);
-let xg = (nextChain >= 4 ? 0.8 : nextChain === 3 ? 0.66 : nextChain === 2 ? 0.55 : 0.42) * shotQuality;
+let xg = (nextChain >= 4 ? 0.84 : nextChain === 3 ? 0.74 : nextChain === 2 ? 0.64 : 0.24) * shotQuality;
+if (defTac.press === 'low' && !longShot) xg *= 0.9;
+void atkTac;
 if ((attackA ? mentA : mentB) === 'attack') xg *= 1.12;
 if ((attackA ? mentB : mentA) === 'defend') xg *= 0.88;
 xg = Math.max(0.05, Math.min(0.6, xg));
 if (attackA) { live.shotA++; live.xgA += xg; } else { live.shotB++; live.xgB += xg; }
 paintHud();
 const rollGoal = Math.random() < xg;
+const lsTag = longShot ? ' (중거리 슛)' : '';
 
 if (rollGoal) {
 if (attackA) { sa++; live.onA++; } else { sb++; live.onB++; }
@@ -539,7 +577,7 @@ const goalLines = assi
 `${prefix} ⚽ 골! ${actor.name}가 골 앞 혼전을 가르며 강슛. ${defName} ${gk.name} 반응했으나 꺾이지 않습니다. ${sa}-${sb}`,
 `${prefix} ⚽ ${actor.name} 결정적 한 방! 풋살 골문 앞 각도 좁혔는데도 넣습니다. ${gk.name} 아쉬운 실점. ${sa}-${sb}`
 ];
-await append(goalLines[Math.floor(Math.random() * goalLines.length)], pitch('danger', 'success', ch, actor, { isGoalShot: true, broadcastFx: 'goal', motion: { kind: 'shot', actor, gk, result: 'goal', assist: assi } }));
+await append(goalLines[Math.floor(Math.random() * goalLines.length)] + lsTag, pitch('danger', 'success', ch, actor, { isGoalShot: true, broadcastFx: 'goal', motion: { kind: 'shot', long: longShot, actor, gk, result: 'goal', assist: assi } }));
 await goalContext(attackA, actor, prefix);
 return;
 }
@@ -558,7 +596,7 @@ const saveLines = [
 ];
 const corner = Math.random() < 0.4;
 if (corner) { setPiece = { kind: 'corner', attackA }; if (attackA) extra.cornersA++; else extra.cornersB++; }
-await append(saveLines[Math.floor(Math.random() * saveLines.length)] + (corner ? ' 공이 라인 밖으로 — 코너킥!' : ''), pitch('danger', 'neutral', ch, gk, { broadcastFx: 'superSave', motion: { kind: 'shot', actor, gk, result: 'save', corner } }));
+await append(saveLines[Math.floor(Math.random() * saveLines.length)] + lsTag + (corner ? ' 공이 라인 밖으로 — 코너킥!' : ''), pitch('danger', 'neutral', ch, gk, { broadcastFx: 'superSave', motion: { kind: 'shot', long: longShot, actor, gk, result: 'save', corner } }));
 return;
 }
 
@@ -567,7 +605,7 @@ lastPasser = null;
 if (Math.random() < 0.15) {
 if (attackA) live.onA++; else live.onB++;
 paintHud();
-await append(`${prefix} 🥅 땡! ${actor.name}의 슈팅이 골대를 강타합니다! ${gk.name}도 얼어붙었습니다. (xG ${xg.toFixed(2)})`, pitch('danger', 'fail', ch, actor, { motion: { kind: 'shot', actor, gk, result: 'post' } }));
+await append(`${prefix} 🥅 땡! ${actor.name}의 슈팅이 골대를 강타합니다! ${gk.name}도 얼어붙었습니다. (xG ${xg.toFixed(2)})`, pitch('danger', 'fail', ch, actor, { motion: { kind: 'shot', long: longShot, actor, gk, result: 'post' } }));
 return;
 }
 const missLines = [
@@ -575,7 +613,7 @@ const missLines = [
 `${prefix} ${sideHint}에서 ${actor.name} 감아차기 — ${gk.name}가 손 쓸 필요 없이 아웃.`,
 `${prefix} ${actor.name} vs ${gk.name}, 각도는 좋았으나 빗맞습니다. ${defName} 한숨 돌립니다.`
 ];
-await append(missLines[Math.floor(Math.random() * missLines.length)], pitch('danger', 'fail', ch, actor, { motion: { kind: 'shot', actor, gk, result: 'miss' } }));
+await append(missLines[Math.floor(Math.random() * missLines.length)] + lsTag, pitch('danger', 'fail', ch, actor, { motion: { kind: 'shot', long: longShot, actor, gk, result: 'miss' } }));
 return;
 }
 
@@ -639,7 +677,7 @@ lastPasser = { attackA, id: gkA.id };
 const longLines = [
 `${prefix} 골레이로 ${gkA.name} 롱킥! ${high.name} 라인 위로 넘겨 ${lon.name}가 잡았습니다. 상대 압박 한 번에 벗어납니다.`,
 `${prefix} ${gkA.name}가 손으로 배급 — ${lon.name}에게 직접. ${defName} ${high.name}는 높이 못 올렸습니다.`,
-`${prefix} 풋살에서 보는 롱 드로잉. ${gkA.name}→${lon.name} 연결 성공, 전환 타이밍 좋습니다.`
+`${prefix} 골키퍼 ${gkA.name}의 빠른 스로 — ${lon.name}에게 바로 연결, 전환 타이밍 좋습니다.`
 ];
 await append(longLines[Math.floor(Math.random() * longLines.length)], pitch('build', 'success', ch, lon, { broadcastFx: 'keyPass', motion: { kind: 'long', actor: gkA, target: lon } }));
 } else {

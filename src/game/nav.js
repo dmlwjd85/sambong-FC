@@ -2,9 +2,10 @@
 import { featureOn } from '../config/features.js';
 import { DAILY_TIPS } from './constants.js';
 import { renderLeaderboard, renderMasterDashboard } from './records.js';
+import { openTacticsBoard } from './sim/tacticsBoard.js';
 
 window.switchTab = (tabId) => {
-['tabWorkspace', 'tabTips', 'tabShop', 'tabAchievements', 'tabRank', 'tabCompare', 'tabSim', 'tabGuide', 'tabMaster', 'tabMasterStats'].forEach(id => {
+['tabWorkspace', 'tabTips', 'tabShop', 'tabAchievements', 'tabRank', 'tabCompare', 'tabSim', 'tabTactics', 'tabGuide', 'tabMaster', 'tabMasterStats'].forEach(id => {
 document.getElementById(id)?.classList.add('hidden');
 });
 document.getElementById(tabId)?.classList.remove('hidden');
@@ -35,6 +36,7 @@ if(tabId === 'tabAchievements') window.renderAchievements();
 if(tabId === 'tabRank') renderLeaderboard();
 if(tabId === 'tabCompare') window.renderCompareList();
 if(tabId === 'tabSim') window.renderSimMatchTab();
+if(tabId === 'tabTactics') openTacticsBoard();
 if(tabId === 'tabMaster') renderMasterDashboard();
 if(tabId === 'tabMasterStats') window.renderMasterStats();
 updateNavBongChip();
@@ -43,6 +45,12 @@ updateNavBongChip();
 window.appNav = { hub: 'home', sub: null };
 
 function getAppHubChips(hub) {
+if (hub === 'match') {
+return [
+{ id: 'tabSim', label: '매치 센터' },
+{ id: 'tabTactics', label: '전술판' }
+];
+}
 if (hub === 'career') {
 return [
 { id: 'tabAchievements', label: '트로피' },
@@ -144,6 +152,7 @@ const MENU_ITEMS = [
 { key: 'teams', label: '팀 짜기', icon: 'fa-scale-balanced', hub: 'home', page: 'tabWorkspace', scroll: 'teamBuilderPanel' },
 { key: 'board', label: '분류표', icon: 'fa-people-group', hub: 'home', page: 'tabWorkspace', scroll: 'lockerSimTeamsPreview' },
 { key: 'match', label: '매치', icon: 'fa-futbol', hub: 'match', page: 'tabSim' },
+{ key: 'tactics', label: '전술판', icon: 'fa-chalkboard', hub: 'match', page: 'tabTactics' },
 { key: 'trophy', label: '트로피', icon: 'fa-trophy', hub: 'career', page: 'tabAchievements' },
 { key: 'compare', label: '비교', icon: 'fa-code-compare', hub: 'career', page: 'tabCompare' },
 { key: 'news', label: '소식', icon: 'fa-bullhorn', hub: 'more', page: 'tabTips' },
