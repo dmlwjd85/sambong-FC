@@ -1,6 +1,7 @@
 /** 모의경기 명단과 팀 자동 편성 */
 import { SIM_TEAM_KEYS, isSimTeamKey, simTeamInfo } from '../constants.js';
 import { buildTeams, pickLineup, TEAM_MODES } from '../teamBuilder.js';
+import { paintSimOrientButton } from './liveScene.js';
 import { getOVRForPos, getBonusStats, getStat } from '../stats.js';
 import { ensureSimFieldPositions } from './formation.js';
 import { resetSimPitchCanvas } from './pitch.js';
@@ -118,6 +119,7 @@ return starters.map((p) => row(p, p.pos, false)).join('') + bench.sort((a, b) =>
 
 window.renderSimMatchTab = () => {
 renderSimMatchupPicker();
+paintSimOrientButton();
 paintSimSlotNames();
 const na = countSimTeam('A');
 const nb = countSimTeam('B');

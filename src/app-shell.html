@@ -457,9 +457,9 @@
 <label class="flex items-center justify-between gap-2 rounded-xl border border-amber-700/40 bg-amber-950/20 px-3 py-2 text-[12px] text-amber-100 min-h-[44px]">
 <span class="font-bold">경기 속도</span>
 <select id="simSpeed" class="bg-slate-900 border border-amber-700/50 rounded-lg px-2 py-1.5 text-white text-[12px]">
-<option value="real">실감 (약 4분)</option>
-<option value="normal" selected>보통 (약 2분)</option>
-<option value="fast">빠르게 (약 30초)</option>
+<option value="real">실감 (약 5분)</option>
+<option value="normal" selected>보통 (약 3분)</option>
+<option value="fast">빠르게 (약 1분)</option>
 </select>
 </label>
 <label class="flex items-center justify-between gap-2 rounded-xl border border-red-800/40 bg-red-950/20 px-3 py-2 text-[12px] text-red-100 min-h-[44px]">
@@ -573,17 +573,22 @@
 
 <!-- 시뮬레이션: 상단 경기장(캔버스) / 하단 텍스트 중계 -->
 <div id="simLiveSplit" class="flex flex-col gap-3 w-full min-w-0 max-w-full min-h-[min(78vh,820px)] overflow-x-hidden box-border">
-<div id="simPitchPanel" class="flex flex-col rounded-2xl border border-emerald-500/30 overflow-hidden shrink-0 min-h-[220px] max-h-[min(50vh,460px)] h-[min(46vh,440px)] w-full max-w-full ring-1 ring-emerald-900/40 box-border">
+<div id="simPitchPanel" class="flex flex-col rounded-2xl border border-emerald-500/30 overflow-hidden shrink-0 w-full max-w-full ring-1 ring-emerald-900/40 box-border">
 <div class="flex items-center justify-between px-2 sm:px-3 py-2 bg-gradient-to-r from-red-950/70 via-black/60 to-blue-950/70 border-b border-emerald-800/60 gap-2 min-w-0">
-<span class="text-[10px] sm:text-[11px] text-emerald-300 font-bold tracking-wide drop-shadow truncate">라이브 코트 · <span data-sim-slot-name="A">레드팀</span> vs <span data-sim-slot-name="B">블루팀</span></span>
-<span id="simPitchBadge" class="text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 shrink-0">대기</span>
+<span class="text-[11px] sm:text-xs text-slate-100 font-bold truncate min-w-0"><span class="text-red-300" data-sim-slot-short="A">레드</span> <b id="simPitchScore" class="font-bebas text-lg text-fut-gold mx-1 align-middle">0 - 0</b> <span class="text-sky-300" data-sim-slot-short="B">블루</span></span>
+<div class="flex items-center gap-1.5 shrink-0">
+<span id="simPitchBadge" class="text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-slate-800 text-slate-300 shrink-0">대기</span>
+<button type="button" id="btnSimOrient" onclick="window.toggleSimOrientation()" class="min-h-[36px] px-2.5 rounded-lg bg-slate-800 border border-slate-600 text-slate-100 text-xs font-bold" aria-label="경기장 방향 바꾸기"><i class="fa-solid fa-mobile-screen-button mr-1"></i><span id="simOrientLabel">세로로 보기</span></button>
 </div>
-<div class="relative flex-1 min-h-[160px] min-w-0 flex items-center justify-center p-1 sm:p-2 overflow-hidden">
-<canvas id="simPitchCanvas" width="800" height="360" class="w-full max-w-full h-auto max-h-[min(38vh,360px)] object-contain object-center"></canvas>
 </div>
-<div class="px-2 sm:px-3 py-1.5 bg-black/45 border-t border-emerald-900/50 min-h-[28px]">
-<p id="simPitchCaption" class="text-[10px] sm:text-[11px] text-slate-300 font-semibold leading-snug break-keep">경기 시작 시 상황 요약이 표시됩니다</p>
+<div class="px-3 py-2 bg-black/60 border-b border-emerald-900/50 min-h-[48px] flex items-center gap-2">
+<i class="fa-solid fa-microphone-lines text-amber-300 shrink-0"></i>
+<p id="simPitchCaption" class="text-sm text-white font-bold leading-snug break-keep">경기 시작을 누르면 선수들이 움직이며 중계해요</p>
 </div>
+<div class="relative min-w-0 flex items-center justify-center p-1 sm:p-2 overflow-hidden bg-[#06101c]">
+<canvas id="simPitchCanvas" width="800" height="360" class="block max-w-full"></canvas>
+</div>
+
 </div>
 <div class="flex flex-col flex-1 min-h-0 min-h-[240px]">
 <p class="text-[10px] text-slate-500 mb-1 font-bold">텍스트 중계</p>

@@ -22,7 +22,8 @@
 | `records.js` | 기록실: 전체 능력치표, 리더보드, 비교, 업적 |
 | `sim/roster.js` | 팀 짜기 화면, 경기 대진(홈·원정), 출전 5명·교체 명단 |
 | `sim/broadcast.js` | 중계 자막·효과 |
-| `sim/pitch.js` | 경기장 그리기 |
+| `sim/pitch.js` | 경기장 그리기(전술판용), 대기 화면 |
+| `sim/liveScene.js` | 라이브 코트: 선수·공 연속 애니메이션(패스·드리블·슛·선방·가로채기·파울·코너킥), 가로/세로 보기, 단계별 자막 |
 | `sim/formation.js` | 포메이션 위치 저장(localStorage)·계산 |
 | `sim/tactical.js` | 전술판 선수 그리기, 드래그·기본 포메이션 |
 | `sim/match.js` | 경기 진행(`runSimMatch`): 체력·교체, 파울·경고·10m 프리킥, 코너킥, 역습, 어시스트, 경기 속도, 경기 후 기록 |

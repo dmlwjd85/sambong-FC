@@ -1,4 +1,6 @@
 /** 풋살 경기장 그리기 */
+import { liveScene } from './liveScene.js';
+import { getSimMatchRoster, padSimRosterWithBots } from './roster.js';
 import { buildSimSituationMeta, applySimPitchCaptionMeta, drawSimPitchFxOverlay } from './broadcast.js';
 import { simPlayerLiveNorm } from './formation.js';
 import { buildSimPitchPortraitMap, drawSoccerBallSprite, drawSimPlayersOnPitch } from './tactical.js';
@@ -303,36 +305,9 @@ badge.className = opts.outcome === 'success'
 
 /** 경기 전·중계 지움 후 상단 패널 초기화 */
 export function resetSimPitchCanvas() {
-const canvas = document.getElementById('simPitchCanvas');
-const badge = document.getElementById('simPitchBadge');
-if (!canvas || !canvas.getContext) return;
-const ctx = canvas.getContext('2d');
-const wrap = canvas.parentElement;
-const maxCssW = typeof window !== 'undefined' ? Math.min(window.innerWidth - 20, 720) : 720;
-const cssW = Math.max(260, Math.min(maxCssW, wrap?.clientWidth || maxCssW));
-const cssH = Math.max(188, Math.min(380, Math.floor(cssW * 0.5)));
-const dpr = Math.min(2, window.devicePixelRatio || 1);
-canvas.width = Math.floor(cssW * dpr);
-canvas.height = Math.floor(cssH * dpr);
-canvas.style.width = `${cssW}px`;
-canvas.style.height = `${cssH}px`;
-ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-const px0 = 16;
-const py0 = 12;
-const pw = cssW - 32;
-const ph = cssH - 44;
-paintFutsalPitchSurface(ctx, cssW, cssH, px0, py0, pw, ph);
-ctx.fillStyle = 'rgba(254, 240, 138, 0.95)';
-ctx.font = '800 14px ' + fontStack('num');
-ctx.textAlign = 'center';
-ctx.fillText('RED  vs  BLUE', cssW / 2, py0 + ph / 2 - 10);
-ctx.font = '600 11px ' + fontStack('body');
-ctx.fillStyle = 'rgba(226, 232, 240, 0.92)';
-ctx.fillText('레드팀 vs 블루팀 · 경기 시작 시 공의 방향이 표시됩니다', cssW / 2, py0 + ph / 2 + 10);
-ctx.textAlign = 'left';
-if (badge) {
-badge.textContent = '대기';
-badge.className = 'text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-slate-800 text-slate-300';
-}
-applySimPitchCaptionMeta(null);
+// 새 라이브 코트(가로·세로)로 대기 화면을 그림. 출전 선수는 기본 위치에 서 있음
+const rosterOf = (slot) => padSimRosterWithBots(getSimMatchRoster(slot), slot).roster;
+let plA = []; let plB = [];
+try { plA = rosterOf('A'); plB = rosterOf('B'); } catch (e) { /* 명단 없음 */ }
+liveScene.idle(plA, plB);
 }
