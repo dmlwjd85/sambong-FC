@@ -634,8 +634,8 @@ input[type="number"] { -moz-appearance: textfield; }
 .app-dialog { font-size: 14px; }
 .app-dialog button { min-height: 44px; font-size: 15px; }
 
-@media (max-width: 480px) {
-  #lockerGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 360px) {
+  #lockerGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 /* 전체 메뉴 시트 */
@@ -646,3 +646,174 @@ input[type="number"] { -moz-appearance: textfield; }
 }
 .menu-sheet-item i { font-size: 18px; color: #38ff8e; }
 .menu-sheet-item.is-fav { border-color: rgba(56,255,142,0.55); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   테마: FM27(어두운 남색 데이터 화면) × FC 온라인(FUT 카드·민트/골드 포인트)
+   위의 예전 스타일을 덮어써요. 색은 여기 변수만 바꾸면 돼요.
+   ═══════════════════════════════════════════════════════════════════ */
+:root {
+  --ui-bg-0: #060a12;
+  --ui-bg-1: #0b1220;
+  --ui-panel: #0f1828;
+  --ui-panel-2: #131f33;
+  --ui-line: #1f2d44;
+  --ui-line-2: #2a3b57;
+  --ui-text-dim: #8a9ab3;
+  --ui-mint: #2ee6a6;      /* FC 온라인 포인트 */
+  --ui-gold: #f2c35b;
+  --ui-sky: #4cb4ff;
+}
+body, #root {
+  background-color: var(--ui-bg-0);
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(46,230,166,0.10), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(76,180,255,0.07), transparent 60%),
+    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px),
+    linear-gradient(180deg, #0a1322 0%, var(--ui-bg-0) 45%, #04070d 100%);
+  background-size: auto, auto, 32px 32px, 32px 32px, auto;
+  background-attachment: fixed;
+}
+
+/* 패널: FM 데이터 패널처럼 각지고 얇은 테두리, 위쪽에 포인트 줄 */
+.glass-panel, .fm-panel, .locker-panel {
+  background: linear-gradient(180deg, rgba(19,31,51,0.96), rgba(13,21,36,0.96)) !important;
+  border: 1px solid var(--ui-line) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04) !important;
+  backdrop-filter: none;
+}
+.glass-panel[class*="border-t-"], .fm-panel { border-top: 2px solid var(--ui-mint) !important; }
+.glass-panel.border-t-blue-500 { border-top-color: var(--ui-sky) !important; }
+.glass-panel.border-t-amber-500, .glass-panel.border-t-fut-gold { border-top-color: var(--ui-gold) !important; }
+.locker-panel { border-top: 2px solid var(--ui-gold) !important; }
+.fm-panel-title { font-size: 15px; font-weight: 800; color: #fff; letter-spacing: 0.02em; display: flex; align-items: center; gap: 8px; }
+.fm-panel-title::before { content: ''; width: 4px; height: 16px; border-radius: 2px; background: var(--ui-mint); }
+.fm-section-title { font-size: 12px; font-weight: 800; color: var(--ui-text-dim); letter-spacing: 0.08em; text-transform: uppercase; }
+.fm-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 8px; background: rgba(0,0,0,0.35); border: 1px solid var(--ui-line-2); }
+
+/* 상단 바·하단 탭 */
+#mainUI > nav { background: rgba(7,12,22,0.94) !important; border-bottom: 1px solid var(--ui-line) !important; box-shadow: 0 6px 20px rgba(0,0,0,0.35); }
+#subHubNav { background: rgba(9,15,27,0.9) !important; border-top: 1px solid var(--ui-line) !important; }
+#appBottomNav { background: rgba(6,10,18,0.96) !important; border-top: 1px solid var(--ui-line) !important; box-shadow: 0 -8px 24px rgba(0,0,0,0.45); }
+.app-tab { color: #6b7a93; position: relative; }
+.app-tab.active { color: var(--ui-mint); text-shadow: none; }
+.app-tab.active::before { content: ''; position: absolute; top: 0; left: 22%; right: 22%; height: 3px; border-radius: 0 0 3px 3px; background: var(--ui-mint); box-shadow: 0 0 12px rgba(46,230,166,0.7); }
+.subhub-chip { background: rgba(15,24,40,0.9); border-color: var(--ui-line-2); color: #c7d2e3; }
+.subhub-chip.active { background: linear-gradient(180deg, rgba(46,230,166,0.22), rgba(46,230,166,0.08)); border-color: rgba(46,230,166,0.6); color: #d1fae5; }
+
+/* ── 선수 카드 (FC 온라인 FUT 카드, 작게) ── */
+.player-hub { padding-bottom: 14px; }
+.fut-compact {
+  position: relative; width: 100%; aspect-ratio: 0.68; display: flex; flex-direction: column;
+  padding: 9% 8% 7%; overflow: hidden; isolation: isolate;
+  clip-path: polygon(50% 0, 88% 3%, 100% 10%, 100% 86%, 92% 93%, 50% 100%, 8% 93%, 0 86%, 0 10%, 12% 3%);
+}
+.fut-compact::after { clip-path: inherit; }
+.fut-compact:hover { transform: none; }
+.fut-compact::before {
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(ellipse 90% 55% at 50% 30%, rgba(255,255,255,0.35), transparent 60%),
+    repeating-linear-gradient(135deg, rgba(255,255,255,0.06) 0 2px, transparent 2px 9px);
+  mix-blend-mode: overlay;
+}
+.fut-compact-top { display: flex; flex: 1; min-height: 0; position: relative; }
+.fut-compact-meta { display: flex; flex-direction: column; align-items: center; width: 34%; z-index: 2; gap: 2px; }
+.fut-compact-ovr { font-size: clamp(30px, 10.5vw, 44px); line-height: 0.82; text-shadow: 0 2px 0 rgba(0,0,0,0.25); }
+.fut-compact-pos { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 900; letter-spacing: 0.06em; min-height: 26px; padding: 0 2px; background: transparent; border: 0; color: inherit; }
+.fut-compact-pos i { font-size: 8px; opacity: 0.7; }
+.fut-compact-flag { width: 20px; border-radius: 2px; margin-top: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.4); }
+.fut-compact-crest { font-size: 16px; opacity: 0.75; margin-top: 4px; }
+.fut-compact-portrait { position: absolute; right: -4%; bottom: 0; width: 76%; height: 100%; display: flex; align-items: flex-end; justify-content: center; z-index: 1; }
+.fut-compact-portrait .manga-face { width: 100% !important; height: 100% !important; border: 0 !important; background: transparent !important; box-shadow: none !important; border-radius: 0 !important; }
+.fut-compact-portrait .manga-face-img, .locker-card-face .manga-face-img { transform: none !important;
+  -webkit-mask-image: radial-gradient(ellipse 62% 70% at 55% 42%, #000 58%, transparent 100%); mask-image: radial-gradient(ellipse 62% 70% at 55% 42%, #000 58%, transparent 100%); }
+.fut-compact-portrait .manga-face-img { width: 100%; height: 100%; object-fit: cover; object-position: center 18%; }
+.fut-compact-name { text-align: center; font-weight: 900; font-size: clamp(13px, 4.2vw, 17px); line-height: 1.1; padding: 5px 0 4px; border-top: 1px solid currentColor; border-bottom: 1px solid currentColor; border-color: rgba(0,0,0,0.18); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fut-compact-face { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px 4px; padding-top: 4px; font-size: 9px; font-weight: 800; letter-spacing: 0.04em; }
+.fut-compact-face span { display: flex; align-items: baseline; justify-content: center; gap: 3px; opacity: 0.92; }
+.fut-compact-face b { font-family: var(--font-num); font-size: 15px; font-weight: 400; line-height: 1; }
+#detailFutCard .item-slot-row { gap: 2px; }
+
+/* 티어 카드 색 (FUT 동·은·금·특수) */
+.fut-compact.card-rookie { background: linear-gradient(160deg, #f6dcb6 0%, #d3a06a 35%, #a76a32 70%, #6e4019 100%); color: #3b2410; }
+.fut-compact.card-semipro { background: linear-gradient(160deg, #ffffff 0%, #dfe5ee 35%, #a8b3c4 70%, #6c788c 100%); color: #1e293b; }
+.fut-compact.card-pro { background: linear-gradient(160deg, #fff6c9 0%, #f3d36b 33%, #d6a52a 66%, #8f6a10 100%); color: #3a2a05; }
+.fut-compact.card-worldclass { background: linear-gradient(160deg, #1b1240 0%, #3b1f8a 40%, #7c3aed 75%, #c4b5fd 100%); color: #f5f3ff; }
+.fut-compact.card-challenger { background: linear-gradient(160deg, #04150f 0%, #0b3b2c 40%, #10b981 80%, #a7f3d0 100%); color: #ecfdf5; }
+.fut-compact.card-worldclass .fut-compact-name, .fut-compact.card-challenger .fut-compact-name { border-color: rgba(255,255,255,0.25); }
+
+/* FM 정보 줄·기록 */
+.fm-info-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding: 5px 8px; border-radius: 8px; background: rgba(0,0,0,0.25); border: 1px solid var(--ui-line); }
+.fm-info-row span { color: var(--ui-text-dim); font-weight: 700; }
+.fm-info-row b { color: #fff; font-weight: 800; }
+.fm-bar { height: 8px; border-radius: 99px; background: rgba(0,0,0,0.45); border: 1px solid var(--ui-line); overflow: hidden; }
+.fm-bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #0ea5e9, var(--ui-mint)); box-shadow: 0 0 10px rgba(46,230,166,0.6); }
+.fm-rec { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px 2px; border-radius: 8px; background: rgba(0,0,0,0.28); border: 1px solid var(--ui-line); min-height: 42px; }
+.fm-rec span { font-size: 10px; color: var(--ui-text-dim); font-weight: 700; line-height: 1.1; }
+.fm-rec b { font-family: var(--font-num); font-weight: 400; font-size: 20px; line-height: 1; color: #fff; }
+.fm-rec b.text-emerald-300 { color: #6ee7b7; } .fm-rec b.text-fut-gold { color: var(--ui-gold); }
+
+/* FM 능력치 표 */
+.fm-attr-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px; }
+.fm-attr {
+  display: flex; align-items: center; justify-content: space-between; gap: 4px; min-height: 34px; padding: 0 8px;
+  background: rgba(0,0,0,0.28); border: 1px solid var(--ui-line); border-left: 3px solid transparent; border-radius: 6px;
+  font-size: 12.5px; font-weight: 700; color: #cbd5e1; text-align: left;
+}
+.fm-attr:active { background: rgba(255,255,255,0.06); }
+.fm-attr-core { border-left-color: #f87171; }
+.fm-attr-sub { border-left-color: #fbbf24; }
+.fm-attr-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; background: none; border: 0; color: inherit; font: inherit; padding: 0; text-align: left; }
+.fm-val { font-family: var(--font-num); font-size: 19px; line-height: 1; min-width: 1.6em; text-align: right; }
+.fm-v-1 { color: #f87171; } .fm-v-2 { color: #fbbf24; } .fm-v-3 { color: #86efac; } .fm-v-4 { color: #38bdf8; }
+.fm-v-5 { color: #fde047; text-shadow: 0 0 8px rgba(253,224,71,0.6); }
+.fm-key { display: inline-block; width: 3px; height: 10px; vertical-align: -1px; margin-right: 3px; border-radius: 1px; }
+.fm-key-core { background: #f87171; } .fm-key-sub { background: #fbbf24; }
+.fm-attr-grid-gm { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.fm-attr-grid-gm .fm-attr { padding: 0 4px 0 8px; min-height: 40px; }
+.fm-attr-grid-gm .fm-attr-label { flex: 1; }
+.fm-step { width: 30px; height: 32px; border-radius: 6px; background: rgba(255,255,255,0.06); border: 1px solid var(--ui-line-2); color: #e2e8f0; font-size: 11px; flex-shrink: 0; }
+.fm-step:active { background: rgba(46,230,166,0.25); }
+
+
+/* ── 라커룸 작은 카드 (FUT 미니) ── */
+.locker-card {
+  position: relative; display: flex; flex-direction: column; cursor: pointer; overflow: hidden; isolation: isolate;
+  aspect-ratio: 0.72; border-radius: 10px; padding: 6px 6px 5px;
+  clip-path: polygon(50% 0, 90% 3%, 100% 9%, 100% 88%, 92% 95%, 50% 100%, 8% 95%, 0 88%, 0 9%, 10% 3%);
+  transition: transform 0.18s ease, filter 0.18s ease;
+}
+.locker-card::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(ellipse 90% 55% at 50% 25%, rgba(255,255,255,0.3), transparent 60%), repeating-linear-gradient(135deg, rgba(255,255,255,0.05) 0 2px, transparent 2px 8px); mix-blend-mode: overlay; }
+.locker-card:active { transform: scale(0.97); }
+@media (hover: hover) { .locker-card:hover { transform: translateY(-3px); } }
+.locker-card.card-rookie { background: linear-gradient(160deg, #f6dcb6, #c38b52 45%, #7a4a1f); color: #3b2410; }
+.locker-card.card-semipro { background: linear-gradient(160deg, #ffffff, #c9d2df 45%, #7d899c); color: #1e293b; }
+.locker-card.card-pro { background: linear-gradient(160deg, #fff6c9, #e9c04f 45%, #a67c12); color: #3a2a05; }
+.locker-card.card-worldclass { background: linear-gradient(160deg, #1b1240, #4c1d95 50%, #8b5cf6); color: #f5f3ff; }
+.locker-card.card-challenger { background: linear-gradient(160deg, #04150f, #065f46 50%, #10b981); color: #ecfdf5; }
+.locker-card.checked-out { filter: grayscale(0.55) brightness(0.62); }
+.locker-card.selected { outline: none; filter: drop-shadow(0 0 0 #fff); }
+.locker-card-wrap { position: relative; }
+.locker-card-wrap.selected::after { content: ''; position: absolute; inset: -3px; border-radius: 12px; border: 2px solid var(--ui-mint); box-shadow: 0 0 14px rgba(46,230,166,0.6); pointer-events: none; }
+.locker-card-head { display: flex; align-items: flex-start; justify-content: space-between; position: relative; z-index: 2; }
+.locker-card-ovr { font-family: var(--font-num); font-size: 24px; line-height: 0.85; }
+.locker-card-pos { font-size: 9px; font-weight: 900; letter-spacing: 0.04em; display: block; margin-top: 1px; }
+.locker-card-face { position: absolute; left: 14%; right: -2%; top: 8%; bottom: 24%; z-index: 1; display: flex; align-items: flex-end; justify-content: center; }
+.locker-card-face .manga-face { width: 100% !important; height: 100% !important; border: 0 !important; background: transparent !important; box-shadow: none !important; border-radius: 0 !important; }
+.locker-card-face .manga-face-img { width: 100%; height: 100%; object-fit: cover; object-position: center 15%; }
+.locker-card-name { margin-top: auto; position: relative; z-index: 2; text-align: center; font-size: 12px; font-weight: 900; line-height: 1.15; padding-top: 3px; border-top: 1px solid rgba(0,0,0,0.18); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.locker-card-team { position: relative; z-index: 2; text-align: center; font-size: 9px; font-weight: 900; line-height: 1.1; }
+.locker-card .locker-checkbox { position: absolute; top: 4px; right: 4px; left: auto; width: 26px !important; height: 26px !important; z-index: 5; border-radius: 8px; border-width: 2px; background-color: rgba(0,0,0,0.45); border-color: rgba(255,255,255,0.55); }
+.locker-card .locker-checkbox:checked { background-color: var(--ui-mint); border-color: #fff; }
+.locker-card .locker-checkbox:checked::after { font-size: 14px; color: #052e1f; }
+
+/* 큰 페이지 제목: FM처럼 담백하게 (아이콘만 포인트 색) */
+.glass-panel > h3.font-display, .glass-panel > .relative > h3.font-display, .glass-panel > div > h3.font-display,
+.glass-panel > h2.font-display, .glass-panel > div > h2.font-display {
+  font-size: 19px !important; line-height: 1.3 !important; color: #fff !important;
+  -webkit-text-stroke: 0 !important; filter: none !important; text-shadow: none !important; letter-spacing: 0.01em;
+}
+.glass-panel > h3.font-display i, .glass-panel > div > h3.font-display i, .glass-panel > .relative > h3.font-display i { font-size: 17px; }

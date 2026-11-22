@@ -228,11 +228,12 @@ document.getElementById('gmAttendanceTools')?.classList.remove('hidden');
 document.getElementById('gmAttendanceTools')?.classList.add('flex');
 }
 applyFeatureChrome();
-if (ps.isGM) window.switchAppTab('more', 'tabMaster');
-else {
+// 앱을 열면 누구든 라커룸 + 선수 카드가 첫 화면 (학생은 본인 카드, 감독은 첫 선수)
 window.switchAppTab('home');
-if (window.selectedPlayerId && window.allPlayersData.length > 0) window.selectPlayer(window.selectedPlayerId);
-}
+if (!ps.isGM && !ps.isGuest && ps.id) window.selectedPlayerId = ps.id;
+if (window.selectedPlayerId && window.allPlayersData.length > 0) window.renderSelectedCard(window.selectedPlayerId);
+if (window.renderLockerRoom) window.renderLockerRoom();
+window.scrollTo(0, 0);
 if (ps.isGuest || !db) return;
 const annRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'announcement');
 getDoc(annRef).then((snap) => {

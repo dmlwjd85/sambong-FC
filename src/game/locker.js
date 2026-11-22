@@ -6,32 +6,24 @@ import { getOVR, getTierInfo, getPosColor, getPosBg } from './stats.js';
 import { getAvatarHtml } from './ui.js';
 import { playerDisplayName, escapeHtml, isVisible, escapeAttr } from './utils.js';
 
-/** 라커룸 한 선수 카드 HTML */
+/** 라커룸 한 선수 카드 HTML (FUT 미니 카드) */
 function lockerPlayerCardHtml(p) {
 const isChecked = window.checkedInPlayers.has(p.id);
 const isSelected = window.selectedPlayerId === p.id;
 const ovr = getOVR(p); const tier = getTierInfo(ovr);
-let borderClass = 'border-slate-700';
-if(ovr >= 85) borderClass = 'border-purple-500'; else if (ovr >= 75) borderClass = 'border-fut-gold'; else if (ovr >= 65) borderClass = 'border-gray-300';
-const posText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정';
+const posShort = { Goleiro: 'GK', Fixo: 'DF', Ala: 'MF', Pivo: 'FW' }[p.pos] || '—';
 const st = p.simTeam;
-let simRow = '';
-if (isSimTeamKey(st)) {
-const ti = simTeamInfo(st);
-simRow = `<div class="mt-1 text-sm font-bold ${ti.text}" onclick="event.stopPropagation()">${ti.name}</div>`;
-}
-return `
-                     <div class="mini-card fut-mini ${tier.cardClass} flex flex-col items-center p-2 rounded-xl border-2 ${borderClass} cursor-pointer ${isSelected ? 'selected' : ''} ${isChecked ? 'checked-in' : 'checked-out'}" onclick="window.selectPlayer('${p.id}')">
-                         <input type="checkbox" class="locker-checkbox absolute top-1.5 left-1.5 w-5 h-5 shadow-lg z-10" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); window.toggleCheck('${p.id}')">
-                         <div class="absolute top-1 right-1 ${tier.class} text-[8px] font-black px-1.5 py-0.5 rounded shadow whitespace-nowrap tracking-wide">${tier.name.split(' ')[0]}</div>
-                         <div class="flex items-center justify-center min-h-[4.4rem] mt-3">${getAvatarHtml(p, 'locker')}</div>
-                         <div class="fut-mini-ovr-plate fut-mini-ovr text-[1.55rem] font-bold leading-none text-current drop-shadow mt-1">${ovr}</div>
-                         <div class="flex flex-col items-center mt-0.5 w-full px-0.5">
-                         <span class="text-[9px] font-black ${getPosColor(p.pos)} tracking-wider">${posText}</span>
-                         <span class="text-sm font-black text-current truncate max-w-full drop-shadow">${playerDisplayName(p)}</span>
-                         </div>
-                         ${simRow}
-                     </div>`;
+const team = isSimTeamKey(st) ? `<div class="locker-card-team"><span class="inline-block w-1.5 h-1.5 rounded-full ${simTeamInfo(st).dot} mr-0.5 align-middle"></span>${simTeamInfo(st).short}</div>` : '';
+const canCheck = !(window.playerState && window.playerState.isGuest);
+return `<div class="locker-card-wrap ${isSelected ? 'selected' : ''}">
+<div class="locker-card ${tier.cardClass} ${isChecked ? 'checked-in' : 'checked-out'}" onclick="window.selectPlayer('${p.id}')" role="button" aria-label="${escapeAttr(playerDisplayName(p))} OVR ${ovr}">
+${canCheck ? `<input type="checkbox" class="locker-checkbox" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); window.toggleCheck('${p.id}')" aria-label="${escapeAttr(playerDisplayName(p))} 출석">` : ''}
+<div class="locker-card-head"><div><span class="locker-card-ovr">${ovr}</span><span class="locker-card-pos">${posShort}</span></div></div>
+<div class="locker-card-face">${getAvatarHtml(p, 'locker')}</div>
+<div class="locker-card-name">${escapeHtml(playerDisplayName(p))}</div>
+${team}
+</div>
+</div>`;
 }
 
 function lockerLockedSlotHtml(name) {
@@ -283,13 +275,13 @@ LOCKER_POS_ORDER.forEach(pos => {
 const list = buckets[pos];
 if (!list.length) return;
 html += `<div class="col-span-full flex items-center gap-2 pt-3 first:pt-0 border-t border-slate-700/50 first:border-0"><span class="text-emerald-400 font-bold text-sm">${LOCKER_POS_HEAD[pos]}</span><span class="text-[10px] text-slate-500">${list.length}명</span></div>`;
-html += `<div class="col-span-full grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 sm:gap-4">`;
+html += `<div class="col-span-full grid grid-cols-4 sm:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3">`;
 list.forEach(p => { html += lockerPlayerCardHtml(p); });
 html += `</div>`;
 });
 if (pendingNames.length) {
 html += `<div class="col-span-full flex items-center gap-2 pt-3 border-t border-slate-700/50"><span class="text-slate-500 font-bold text-sm">등록 대기</span><span class="text-[10px] text-slate-600">${pendingNames.length}명</span></div>`;
-html += `<div class="col-span-full grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 sm:gap-4">`;
+html += `<div class="col-span-full grid grid-cols-4 sm:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3">`;
 pendingNames.forEach(n => { html += lockerLockedSlotHtml(n); });
 html += `</div>`;
 }
@@ -412,7 +404,8 @@ window.renderLockerRoom(); window.renderSelectedCard(pId);
 if(isVisible('tabAchievements')) window.renderAchievements();
 if(isVisible('tabShop')) window.renderShop();
 if(isVisible('tabCompare')) window.renderCompareList();
-if(window.innerWidth < 1024) document.getElementById('detailPanelTitle')?.scrollIntoView();
+// 휴대폰: 카드가 맨 위에 있으니 맨 위로 올려 카드 전체가 한 화면에 보이게
+if(window.innerWidth < 1024) window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 export function renderActivePool() {
