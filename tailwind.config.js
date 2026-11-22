@@ -10,8 +10,8 @@ export default {
         bebas: ['var(--font-num)'],
       },
       colors: {
-        'pitch-bg': '#0a1912',
-        'pitch-panel': '#11291d',
+        'pitch-bg': '#0b1220',
+        'pitch-panel': '#111b2e',
         'fut-gold': '#e8c271',
         'fut-gold-dark': '#b08d41',
         'fut-rare': '#38ff8e',

@@ -34,19 +34,19 @@ const bonus = getBonusStats(p);
 const kitItem = SHOP_ITEMS.find((x) => x.id === p.equipKit && x.type === 'kit');
 
 const shownName = playerDisplayName(p);
-document.getElementById('detailPanelTitle') && (document.getElementById('detailPanelTitle').innerText = isMe ? '내 선수 정보' : `${shownName} 선수의 정보`);
+document.getElementById('detailPanelTitle') && (document.getElementById('detailPanelTitle').innerText = isMe ? '내 선수' : `${shownName} 선수`);
 document.getElementById('detailLevel') && (document.getElementById('detailLevel').innerText = lv);
 
 const badge = document.getElementById('detailTierBadge');
-if(badge) { badge.innerText = tier.name; badge.className = `px-2 py-1 rounded border text-[10px] font-bold shadow-md whitespace-nowrap ${tier.class}`; }
+if(badge) { badge.innerText = tier.name.split(' ')[0]; badge.title = tier.name; badge.className = `px-2 py-0.5 rounded border text-[10px] font-bold whitespace-nowrap ${tier.class}`; }
 
 const card = document.getElementById('detailFutCard');
 const kitClass = featureOn('shop') && kitItem && kitItem.kitClass ? kitItem.kitClass : '';
-if(card) { card.className = `fut-card fut-career-card w-full max-w-[320px] min-h-[530px] h-auto p-0 flex flex-col relative shadow-2xl z-10 mx-auto transition-all duration-300 overflow-hidden ${tier.cardClass} ${kitClass}`.trim(); }
+if(card) { card.className = `fut-card fut-compact ${tier.cardClass} ${kitClass}`.trim(); }
 const aura = document.getElementById('cardAuraWrapper');
 if (aura) {
 const auraTier = (tier.cardClass || 'card-rookie').replace('card-', 'card-aura-');
-aura.className = `card-aura ${auraTier} mx-auto w-full max-w-[320px] transition-all duration-500 z-10 relative`;
+aura.className = `card-aura ${auraTier} relative shrink-0 w-[44%] max-w-[180px]`;
 }
 
 const detailAv = document.getElementById('detailAvatar');
@@ -54,7 +54,15 @@ if (detailAv) detailAv.innerHTML = getAvatarHtml(p, 'detail');
 document.getElementById('detailName') && (document.getElementById('detailName').innerText = shownName);
 document.getElementById('detailAge') && (document.getElementById('detailAge').innerText = Number(p.age) || 13);
 document.getElementById('detailOvr') && (document.getElementById('detailOvr').innerText = ovr);
-document.getElementById('detailPos') && (document.getElementById('detailPos').innerText = POS_KR[p.pos] ? POS_KR[p.pos].split('(')[0] : '미정');
+document.getElementById('detailPos') && (document.getElementById('detailPos').innerText = ({ Goleiro: 'GK', Fixo: 'DF', Ala: 'MF', Pivo: 'FW' })[p.pos] || '미정');
+const posFull = document.getElementById('detailPosFull');
+if (posFull) posFull.textContent = POS_KR[p.pos] || '포지션 미정';
+const rankEl = document.getElementById('detailRank');
+if (rankEl) {
+const all = (window.allPlayersData || []).map((x) => getOVR(x)).sort((a, b) => b - a);
+const rank = all.indexOf(ovr) + 1;
+rankEl.innerHTML = `<span class="text-fut-gold font-bebas text-base">${rank}</span><span class="text-slate-400 text-[11px]"> / ${all.length}명</span>`;
+}
 document.getElementById('detailExpText') && (document.getElementById('detailExpText').innerText = `${exp} / ${expNeeded}`);
 document.getElementById('detailExpBar') && (document.getElementById('detailExpBar').style.width = `${expPercent}%`);
 
@@ -67,14 +75,14 @@ simTeamPanel.innerHTML = '';
 simTeamPanel.classList.add('hidden');
 } else {
 simTeamPanel.classList.remove('hidden');
-simTeamPanel.innerHTML = `<p class="mt-3 text-sm font-bold ${simTeamInfo(st).text}">${teamLabel}</p>`;
+simTeamPanel.innerHTML = `<div class="fm-info-row"><span>팀</span><b class="${simTeamInfo(st).text}">${teamLabel}</b></div>`;
 }
 }
 
 const renderRecord = (id, key, val) => {
 const el = document.getElementById(id); if(!el) return;
 const safeVal = Number(val) || 0;
-if (isGM) { el.innerHTML = `<input type="number" value="${safeVal}" class="w-full max-w-[50px] bg-transparent text-center border-b border-slate-600 focus:border-emerald-500 focus:outline-none transition-colors m-0 p-0 text-white font-bold text-lg" onchange="window.setRecord('${p.id}', '${key}', this.value)">`; } 
+if (isGM) { el.innerHTML = `<input type="number" value="${safeVal}" class="w-full max-w-[3rem] bg-transparent text-center border-b border-slate-600 focus:border-emerald-500 focus:outline-none m-0 p-0 text-current font-bebas text-lg leading-none" onchange="window.setRecord('${p.id}', '${key}', this.value)">`; } 
 else { el.innerText = safeVal; }
 };
 
@@ -95,45 +103,38 @@ const stats = [
 { id: 'dis', label: '볼배급' }, { id: 'cmp', label: '평정심' }, { id: 'wrk', label: '활동량' }
 ];
 
+/** FM처럼 숫자 크기에 따라 색 (낮음 빨강 → 보통 노랑 → 좋음 초록 → 뛰어남 하늘 → 최상 금색) */
+const fmTone = (v) => (v >= 85 ? 'fm-v-5' : v >= 75 ? 'fm-v-4' : v >= 65 ? 'fm-v-3' : v >= 55 ? 'fm-v-2' : 'fm-v-1');
+const posConfig = POS_WEIGHTS[p.pos];
 let gridHtml = '';
 stats.forEach(s => {
 const baseVal = getStat(p, s.id); const bVal = bonus.flat[s.id] || 0; const totalVal = Math.min(99, baseVal + bVal);
-let bonusBadge = (featureOn('shop') && bVal > 0) ? `<span class="text-xs text-emerald-300 font-bold leading-none">+${bVal}</span>` : '';
-const barW = Math.max(8, Math.min(100, totalVal));
-
-const posConfig = POS_WEIGHTS[p.pos];
-let highlightClass = '';
-let labelIcon = '';
-if (posConfig) {
-if (posConfig.core.includes(s.id)) {
-highlightClass = 'text-red-400 font-black scale-110 drop-shadow-[0_0_8px_rgba(248,113,113,0.8)] z-10';
-labelIcon = '<i class="fa-solid fa-fire text-red-500 text-[9px] ml-0.5 animate-pulse"></i>';
-} else if (posConfig.sub.includes(s.id)) {
-highlightClass = 'text-yellow-300 font-bold drop-shadow-md';
-labelIcon = '<i class="fa-solid fa-star text-yellow-400 text-[8px] ml-0.5"></i>';
-}
-}
-
-if(isGM) {
-gridHtml += `
-                     <div class="flex flex-col items-center justify-center text-current w-full">
-                         <span class="font-oswald text-xl leading-none ${highlightClass}">${baseVal}</span>
-                         ${bonusBadge}
-                         <button type="button" class="tap-44 w-full text-sm font-bold" onclick="window.showStatDesc('${s.id}')">${s.label}</button>
-                         <div class="flex w-full">
-                           <button type="button" onclick="window.modStat('${p.id}', '${s.id}', -1)" class="tap-44 flex-1 rounded-lg bg-black/55 text-white border border-white/20" aria-label="내리기"><i class="fa-solid fa-minus"></i></button>
-                           <button type="button" onclick="window.modStat('${p.id}', '${s.id}', 1)" class="tap-44 flex-1 rounded-lg bg-black/55 text-white border border-white/20" aria-label="올리기"><i class="fa-solid fa-plus"></i></button>
-                         </div>
-                     </div>`;
+const bonusBadge = (featureOn('shop') && bVal > 0) ? `<sup class="text-[9px] text-emerald-300 font-bold">+${bVal}</sup>` : '';
+const role = posConfig && posConfig.core.includes(s.id) ? 'fm-attr-core' : posConfig && posConfig.sub.includes(s.id) ? 'fm-attr-sub' : '';
+if (isGM) {
+gridHtml += `<div class="fm-attr ${role}">
+<button type="button" class="fm-attr-label" onclick="window.showStatDesc('${s.id}')">${s.label}</button>
+<button type="button" onclick="window.modStat('${p.id}', '${s.id}', -1)" class="fm-step" aria-label="${s.label} 내리기"><i class="fa-solid fa-minus"></i></button>
+<span class="fm-val ${fmTone(baseVal)}">${baseVal}${bonusBadge}</span>
+<button type="button" onclick="window.modStat('${p.id}', '${s.id}', 1)" class="fm-step" aria-label="${s.label} 올리기"><i class="fa-solid fa-plus"></i></button>
+</div>`;
 } else {
-gridHtml += `
-                     <button type="button" class="tap-44 flex flex-col items-center justify-center text-current w-full" onclick="window.showStatDesc('${s.id}')">
-                         <span class="font-bebas text-2xl leading-none ${highlightClass}">${totalVal}</span>
-                         ${bonusBadge}
-                         <span class="text-sm font-bold">${s.label}</span>
-                     </button>`;
+gridHtml += `<button type="button" class="fm-attr ${role}" onclick="window.showStatDesc('${s.id}')">
+<span class="fm-attr-label">${s.label}</span>
+<span class="fm-val ${fmTone(totalVal)}">${totalVal}${bonusBadge}</span>
+</button>`;
 }
 });
+const statsGridElGM = document.getElementById('detailStatsGrid');
+if (statsGridElGM) statsGridElGM.classList.toggle('fm-attr-grid-gm', !!isGM);
+
+/** 카드 아래 FUT식 대표 능력치 6개 */
+const faceKeys = p.pos === 'Goleiro'
+? [['ref', 'REF'], ['dis', 'DIS'], ['pst', 'POS'], ['cmp', 'CMP'], ['phy', 'PHY'], ['pac', 'SPD']]
+: [['pac', 'PAC'], ['sho', 'SHO'], ['pas', 'PAS'], ['dri', 'DRI'], ['def', 'DEF'], ['phy', 'PHY']];
+const faceEl = document.getElementById('detailFaceStats');
+if (faceEl) faceEl.innerHTML = faceKeys.map(([k, ab]) => `<span><b>${Math.min(99, getStat(p, k) + (bonus.flat[k] || 0))}</b>${ab}</span>`).join('');
+
 const statsGridEl = document.getElementById('detailStatsGrid');
 if(statsGridEl) statsGridEl.innerHTML = gridHtml;
 
@@ -215,6 +216,9 @@ document.getElementById('gmWalletManager')?.classList.add('hidden');
 document.getElementById('gmAgeManager')?.classList.add('hidden');
 document.getElementById('gmStatHint')?.classList.add('hidden');
 }
+// 아래 '기록 입력·감독 도구' 칸: 보여 줄 게 없으면 통째로 숨김
+const trainingShown = !document.getElementById('playerTrainingPanel')?.classList.contains('hidden');
+document.getElementById('playerActionsPanel')?.classList.toggle('hidden', !trainingShown && !isGM);
 };
 
 export async function processExp(p, expGained, docRef, updatesObj, activityType) {
