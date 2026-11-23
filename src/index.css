@@ -863,7 +863,7 @@ body, #root {
 .manga-cutin {
   position: fixed;
   inset: 0;
-  z-index: 5000;
+  z-index: 8000;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -933,7 +933,10 @@ body, #root {
   cursor: pointer;
 }
 
+.manga-cutin.is-static,
+.manga-cutin.is-static.is-out { transition: none; }
 @media (prefers-reduced-motion: reduce) {
-  .manga-cutin { display: none; }
+  .manga-cutin,
+  .manga-cutin.is-out { transition: none; }
 }
 
