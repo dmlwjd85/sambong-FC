@@ -10,7 +10,7 @@ import { simSlotTeam } from './roster.js';
 import { countSimTeam, getSimLineup, padSimRosterWithBots, simPosShort, simPickTwoDistinct, simSlotName, fitOVR, asRole } from './roster.js';
 import { getStat, getOVR } from '../stats.js';
 import { escapeAttr, sleep } from '../utils.js';
-import { peekFcGoalSpecial, pickFcMangaScene, preloadMangaCutIns, showMangaCutIn } from './mangaCutIn.js';
+import { mangaGenderOf, peekFcGoalSpecial, pickFcMangaScene, preloadMangaCutIns, showMangaCutIn } from './mangaCutIn.js';
 
 /** 모의경기 종료 후 평점·xG·골·어시·킬패스·세이브 요약 (FM 스타일) */
 function renderSimPostMatchStats(plA, plB, teamAName, teamBName, simStats, live, ratings, minutes, extra) {
@@ -266,7 +266,7 @@ theirs: attackA ? sb : sa,
 lastLeader,
 attackA,
 });
-const id = pickFcMangaScene({ kind: 'goal', attackA, special });
+const id = pickFcMangaScene({ kind: 'goal', attackA, special, gender: mangaGenderOf(scorer), team: attackA ? 'red' : 'blue' });
 if (id) await playManga(id);
 };
 
@@ -290,7 +290,7 @@ if (attackA) live.onA++; else live.onB++;
 paintHud();
 bumpStat('saves', gk.id); bumpRating(gk.id, 0.6);
 await append(`${prefix} 🧤 ${label} — ${shooter.name}의 슈팅을 ${gk.name}가 막아냅니다!`, pitch('danger', 'neutral', ch, gk, { broadcastFx: 'superSave', motion: { kind: 'setpiece', actor: shooter, gk, result: 'save', label, dist: label.includes('10m') ? 10 : label.includes('페널티') ? 6 : 12 } }));
-await playManga(pickFcMangaScene({ kind: 'superSave' }));
+await playManga(pickFcMangaScene({ kind: 'superSave', gender: mangaGenderOf(gk), team: attackA ? 'blue' : 'red' }));
 } else {
 paintHud();
 await append(`${prefix} ${label} — ${shooter.name}의 슈팅이 벽에 맞고 나갑니다.`, pitch('danger', 'fail', ch, shooter, { motion: { kind: 'setpiece', actor: shooter, gk, result: 'miss', label, dist: label.includes('10m') ? 10 : label.includes('페널티') ? 6 : 12 } }));
@@ -723,7 +723,7 @@ const saveLines = [
 const corner = Math.random() < 0.4;
 if (corner) { setPiece = { kind: 'corner', attackA }; if (attackA) extra.cornersA++; else extra.cornersB++; }
 await append(saveLines[Math.floor(Math.random() * saveLines.length)] + lsTag + (corner ? ' 공이 라인 밖으로 — 코너킥!' : ''), pitch('danger', 'neutral', ch, gk, { broadcastFx: 'superSave', motion: { kind: 'shot', long: longShot, actor, gk, result: 'save', corner } }));
-await playManga(pickFcMangaScene({ kind: 'superSave' }));
+await playManga(pickFcMangaScene({ kind: 'superSave', gender: mangaGenderOf(gk), team: attackA ? 'blue' : 'red' }));
 return;
 }
 

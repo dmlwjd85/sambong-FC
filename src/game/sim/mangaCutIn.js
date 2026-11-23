@@ -1,16 +1,28 @@
 /** 결정적 순간의 열혈 만화 한 컷. 점수·로그인·저장 값은 건드리지 않아요. */
+import { GENDER_MAP } from '../constants.js';
 
 const APPEAR_MS = 200;
 const HOLD_MS = 2000;
 const LEAVE_MS = 120;
 
-export const MANGA_SCENES = {
-  'fc-goal-red': { src: 'manga/fc-goal-open-red.webp', sfx: '골!!!!', tone: 'gold' },
-  'fc-goal-blue': { src: 'manga/fc-goal-setpiece-blue.webp', sfx: '골!!!!', tone: 'gold' },
-  'fc-save': { src: 'manga/fc-supersave-red.webp', sfx: '선방!!', tone: 'ice' },
-  'fc-comeback': { src: 'manga/fc-comeback-blue.webp', sfx: '역전!!!!', tone: 'gold' },
-  'fc-hattrick': { src: 'manga/fc-hattrick-red.webp', sfx: '해트트릭!', tone: 'gold' },
+const sfxOf = {
+  goal: { sfx: '골!!!!', tone: 'gold' },
+  save: { sfx: '선방!!', tone: 'ice' },
+  comeback: { sfx: '역전!!!!', tone: 'gold' },
+  hattrick: { sfx: '해트트릭!', tone: 'gold' },
 };
+
+function scene(kind, team, gender) {
+  const id = `fc-${kind}-${team}-${gender}`;
+  const { sfx, tone } = sfxOf[kind];
+  return [id, { src: `manga/${id}.webp`, sfx, tone }];
+}
+
+export const MANGA_SCENES = Object.fromEntries(
+  ['goal', 'save', 'comeback', 'hattrick'].flatMap((kind) =>
+    ['red', 'blue'].flatMap((team) =>
+      ['m', 'f'].map((gender) => scene(kind, team, gender))))
+);
 
 export const FC_PRELOAD_IDS = Object.keys(MANGA_SCENES);
 
@@ -25,6 +37,11 @@ export function mangaAssetUrl(rel) {
   }
   if (!base.endsWith('/')) base += '/';
   return `${base}${String(rel).replace(/^\//, '')}`;
+}
+
+/** 저장된 성별 → 이름 기본값 → 모르면 남. 저장 값은 읽기만 해요. */
+export function mangaGenderOf(p) {
+  return (p && (p.gender || GENDER_MAP[p.name])) === 'F' ? 'F' : 'M';
 }
 
 export function shouldSkipMangaCutIn({ timeScale, reducedMotion } = {}) {
@@ -48,11 +65,20 @@ export function peekFcGoalSpecial({ scorerGoalsBefore, mine, theirs, lastLeader,
   return null;
 }
 
-export function pickFcMangaScene({ kind, attackA, special } = {}) {
-  if (special === 'hattrick') return 'fc-hattrick';
-  if (special === 'comeback') return 'fc-comeback';
-  if (kind === 'save' || kind === 'superSave') return 'fc-save';
-  if (kind === 'goal') return attackA === false ? 'fc-goal-blue' : 'fc-goal-red';
+function teamKey({ team, attackA } = {}) {
+  if (team === 'blue' || team === false) return 'blue';
+  if (team === 'red' || team === true) return 'red';
+  if (attackA === false) return 'blue';
+  return 'red';
+}
+
+export function pickFcMangaScene({ kind, attackA, special, gender, team } = {}) {
+  const g = gender === 'F' ? 'f' : 'm';
+  const t = teamKey({ team, attackA });
+  if (special === 'hattrick') return `fc-hattrick-${t}-${g}`;
+  if (special === 'comeback') return `fc-comeback-${t}-${g}`;
+  if (kind === 'save' || kind === 'superSave') return `fc-save-${t}-${g}`;
+  if (kind === 'goal') return `fc-goal-${t}-${g}`;
   return null;
 }
 
