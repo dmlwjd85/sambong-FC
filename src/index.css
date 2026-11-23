@@ -858,3 +858,82 @@ body, #root {
 .tac-btn.is-on { background: rgba(46,230,166,0.2); border-color: var(--ui-mint); }
 .tac-btn-main { background: linear-gradient(180deg, #f2c35b, #c98e1e); color: #2a1d02; border-color: #fde68a; font-size: 14px; }
 .tac-wrap.tac-full { position: fixed; inset: 0; z-index: 7000; background: #050a12; padding: 10px 8px calc(env(safe-area-inset-bottom) + 8px); overflow-y: auto; }
+
+/* 결정적 순간 열혈 만화 한 컷 (점수·저장 값은 안 바꿈) */
+.manga-cutin {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+  background: rgba(0, 0, 0, 0.88);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  cursor: pointer;
+}
+.manga-cutin.is-in { opacity: 1; }
+.manga-cutin.is-out { opacity: 0; transition-duration: 0.12s; }
+.manga-cutin-card {
+  position: relative;
+  width: min(328px, calc(100vw - 32px));
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+  background: #0b1220;
+}
+@media (min-width: 768px) {
+  .manga-cutin-card { width: min(520px, 42vw); }
+}
+.manga-cutin-art {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  pointer-events: none;
+}
+.manga-cutin-sfx {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 10px;
+  text-align: center;
+  font-family: "JJAEM Body", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  font-weight: 700;
+  font-size: clamp(28px, 9vw, 44px);
+  line-height: 1.05;
+  letter-spacing: 0;
+  word-break: keep-all;
+  font-synthesis: none;
+  paint-order: stroke fill;
+  -webkit-text-stroke: 0.07em #1a1008;
+  text-shadow: 0 2px 0 #1a1008, 0 6px 12px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+@media (min-width: 768px) {
+  .manga-cutin-sfx { font-size: clamp(36px, 4.2vw, 56px); }
+}
+.manga-cutin-sfx-gold { color: #fde047; }
+.manga-cutin-sfx-ice { color: #7dd3fc; }
+.manga-cutin-sfx-fire { color: #fb923c; }
+.manga-cutin-hint {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(7, 17, 28, 0.96);
+  color: #e2e8f0;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .manga-cutin { display: none; }
+}
+

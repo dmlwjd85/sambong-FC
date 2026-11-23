@@ -10,6 +10,7 @@ import { simSlotTeam } from './roster.js';
 import { countSimTeam, getSimLineup, padSimRosterWithBots, simPosShort, simPickTwoDistinct, simSlotName, fitOVR, asRole } from './roster.js';
 import { getStat, getOVR } from '../stats.js';
 import { escapeAttr, sleep } from '../utils.js';
+import { peekFcGoalSpecial, pickFcMangaScene, preloadMangaCutIns, showMangaCutIn } from './mangaCutIn.js';
 
 /** 모의경기 종료 후 평점·xG·골·어시·킬패스·세이브 요약 (FM 스타일) */
 function renderSimPostMatchStats(plA, plB, teamAName, teamBName, simStats, live, ratings, minutes, extra) {
@@ -110,6 +111,7 @@ postStatsEl.innerHTML = '';
 }
 if (logEl) logEl.innerHTML = '';
 resetSimPitchCanvas();
+preloadMangaCutIns();
 if (scoreBar) scoreBar.classList.remove('hidden');
 // 휴대폰에서도 바로 경기 화면이 보이게
 requestAnimationFrame(() => {
@@ -255,6 +257,19 @@ simBallFlowTrail = [];
 possessionNextAttackA = !attackA;
 };
 let lastLeader = null;
+const playManga = (id) => showMangaCutIn(id, { timeScale: liveScene.timeScale });
+const playGoalManga = async (attackA, scorer) => {
+const special = peekFcGoalSpecial({
+scorerGoalsBefore: goalCount[scorer.id] || 0,
+mine: attackA ? sa : sb,
+theirs: attackA ? sb : sa,
+lastLeader,
+attackA,
+});
+const id = pickFcMangaScene({ kind: 'goal', attackA, special });
+if (id) await playManga(id);
+};
+
 
 /** 세트피스 슈팅 (프리킥·10m 킥) */
 const setPieceShot = async ({ attackA, shooter, gk, baseXg, prefix, ch, pitch, label }) => {
@@ -268,12 +283,14 @@ if (attackA) { sa++; live.onA++; } else { sb++; live.onB++; }
 updScore(); paintHud();
 bumpStat('goals', shooter.id); bumpRating(shooter.id, 1.0); bumpRating(gk.id, -0.25);
 await append(`${prefix} ⚽ ${label} 골! ${shooter.name}의 슈팅이 그대로 꽂힙니다! ${sa}-${sb}`, pitch('danger', 'success', ch, shooter, { isGoalShot: true, broadcastFx: 'goal', motion: { kind: 'setpiece', actor: shooter, gk, result: 'goal', label, dist: label.includes('10m') ? 10 : label.includes('페널티') ? 6 : 12 } }));
+await playGoalManga(attackA, shooter);
 await goalContext(attackA, shooter, prefix);
 } else if (r < xg + 0.35) {
 if (attackA) live.onA++; else live.onB++;
 paintHud();
 bumpStat('saves', gk.id); bumpRating(gk.id, 0.6);
 await append(`${prefix} 🧤 ${label} — ${shooter.name}의 슈팅을 ${gk.name}가 막아냅니다!`, pitch('danger', 'neutral', ch, gk, { broadcastFx: 'superSave', motion: { kind: 'setpiece', actor: shooter, gk, result: 'save', label, dist: label.includes('10m') ? 10 : label.includes('페널티') ? 6 : 12 } }));
+await playManga(pickFcMangaScene({ kind: 'superSave' }));
 } else {
 paintHud();
 await append(`${prefix} ${label} — ${shooter.name}의 슈팅이 벽에 맞고 나갑니다.`, pitch('danger', 'fail', ch, shooter, { motion: { kind: 'setpiece', actor: shooter, gk, result: 'miss', label, dist: label.includes('10m') ? 10 : label.includes('페널티') ? 6 : 12 } }));
@@ -686,6 +703,7 @@ const goalLines = assi
 `${prefix} ⚽ ${actor.name} 결정적 한 방! 풋살 골문 앞 각도 좁혔는데도 넣습니다. ${gk.name} 아쉬운 실점. ${sa}-${sb}`
 ];
 await append(goalLines[Math.floor(Math.random() * goalLines.length)] + lsTag, pitch('danger', 'success', ch, actor, { isGoalShot: true, broadcastFx: 'goal', motion: { kind: 'shot', long: longShot, actor, gk, result: 'goal', assist: assi } }));
+await playGoalManga(attackA, actor);
 await goalContext(attackA, actor, prefix);
 return;
 }
@@ -705,6 +723,7 @@ const saveLines = [
 const corner = Math.random() < 0.4;
 if (corner) { setPiece = { kind: 'corner', attackA }; if (attackA) extra.cornersA++; else extra.cornersB++; }
 await append(saveLines[Math.floor(Math.random() * saveLines.length)] + lsTag + (corner ? ' 공이 라인 밖으로 — 코너킥!' : ''), pitch('danger', 'neutral', ch, gk, { broadcastFx: 'superSave', motion: { kind: 'shot', long: longShot, actor, gk, result: 'save', corner } }));
+await playManga(pickFcMangaScene({ kind: 'superSave' }));
 return;
 }
 
